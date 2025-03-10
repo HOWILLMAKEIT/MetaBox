@@ -15,3 +15,4 @@ from .rl_das_agent import RL_DAS_Agent
 from .les_agent import LES_Agent
 from .nrlpso_agent import NRLPSO_Agent
 from .symbol_agent import Symbol_Agent
+from .surr_rlde_agent import Surr_RLDE_Agent
