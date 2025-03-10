@@ -41,6 +41,45 @@ class ReplayBuffer:
         return len(self.buffer)
 
 
+class ReplayBuffer_torch:
+    def __init__(self, capacity, state_dim, device):
+
+        self.capacity = capacity
+        self.device = device
+        self.position = 0
+        self.size = 0  
+
+    
+        self.states = torch.zeros((capacity, state_dim), device=device)
+        self.actions = torch.zeros(capacity, dtype=torch.long, device=device)
+        self.rewards = torch.zeros(capacity, device=device)
+        self.next_states = torch.zeros((capacity, state_dim), device=device)
+        self.dones = torch.zeros(capacity, dtype=torch.float, device=device)
+
+    def append(self, state, action, reward, next_state, done):
+
+        self.states[self.position] = state
+        self.actions[self.position] = action
+        self.rewards[self.position] = reward
+        self.next_states[self.position] = next_state
+        self.dones[self.position] = done
+
+
+        self.position = (self.position + 1) % self.capacity
+        self.size = min(self.size + 1, self.capacity)
+
+    def sample(self, batch_size):
+
+        indices = torch.randint(0, self.size, (batch_size,), device=self.device)
+        states = self.states[indices]
+        actions = self.actions[indices]
+        rewards = self.rewards[indices]
+        next_states = self.next_states[indices]
+        dones = self.dones[indices]
+        return states, actions, rewards, next_states, dones
+
+    def __len__(self):
+        return self.size
 def save_class(dir, file_name, saving_class):
     if not os.path.exists(dir):
         os.makedirs(dir)
