@@ -75,7 +75,6 @@ class Surr_RLDE_Agent(Basic_Agent):
 			action = torch.randint(0, self.n_act, (1,)).item()
 		if action is None:
 			action = torch.argmax(Q_list).item()
-		# print(action)
 		return action
 
 
@@ -103,7 +102,7 @@ class Surr_RLDE_Agent(Basic_Agent):
 				 'learn_steps': int
 				 }
 		"""
-		# 更新一下epsilon 一个epoch更新一次
+
 		if self.learned_steps == 3136 or self.learned_steps - 3200 == self.learned_steps_history:
 			self.learned_steps_history = self.learned_steps
 			self.epsilon = self.epsilon - (0.5 - 0.05) / 468
