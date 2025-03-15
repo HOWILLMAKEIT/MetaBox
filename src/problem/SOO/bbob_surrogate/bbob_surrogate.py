@@ -2,7 +2,7 @@ from .kan import *
 from .mlp import MLP
 from .basic_problem import Basic_Problem
 from problem.SOO.bbob_numpy.bbob import *
-
+from os import path
 from torch.utils.data import Dataset
 
 class bbob_surrogate_model(Basic_Problem):
@@ -16,13 +16,15 @@ class bbob_surrogate_model(Basic_Problem):
 		self.device = config.device
 		self.optimum = None
 
-
-		if func_id in [1, 3, 4, 6, 7, 10, 12, 13, 14, 15, 23, 24]:
-			self.model = KAN.loadckpt(f'./problem/data_files/surrogate_model/Dim{dim}/KAN/{self.instance}/model')
-		elif func_id in [2, 5, 8, 9, 11, 16, 17, 18, 19, 20, 21, 22]:
+		base_dir = path.dirname(path.dirname(path.dirname(path.abspath(__file__))))
+		data_folder = path.join(base_dir, 'datafiles', 'SOO', 'protein_docking_data')
+		if func_id in [2, 3, 4, 6, 7, 10, 12, 13, 14, 15, 23, 24]:
+			self.model = KAN.loadckpt(path.join(base_dir, f'datafiles\\SOO\\surrogate_model\\Dim{dim}\\KAN\\{self.instance}\\model'))
+			# self.model = KAN.loadckpt(f'./problem/data_files/surrogate_model/Dim{dim}/KAN/{self.instance}/model')
+		elif func_id in [1, 5, 8, 9, 11, 16, 17, 18, 19, 20, 21, 22]:
 			self.model = MLP(dim)
 			self.model.load_state_dict(
-				torch.load(f'./problem/data_files/surrogate_model/Dim{dim}/MLP/{self.instance}/model.pth')
+				torch.load(path.join(base_dir, f'datafiles\\SOO\\surrogate_model\\Dim{dim}\\MLP\\{self.instance}\\model.pth'))
 			)
 		self.model.to(self.device)
 		# KAN: 1,3,4,6,7,10,12,13,14,15,23,24  MLP:2,5,8,9,11,16,17,18,19,20,21,22
@@ -40,11 +42,13 @@ class bbob_surrogate_model(Basic_Problem):
 
 		# 	return self.instance.eval(x)
 		if isinstance(x, np.ndarray):
-			x = torch.tenor(x).to(self.device)
+			x = torch.tensor(x).to(self.device)
 		input_x = (x - self.lb) / (self.ub - self.lb)
+		input_x = input_x.to(torch.float32)
 		with torch.no_grad():
 			y = self.model(input_x)
-		return y.detach().numpy()
+		# print(y.shape)
+		return y.flatten().cpu().numpy()
 		# return y
 
 	def __str__(self):

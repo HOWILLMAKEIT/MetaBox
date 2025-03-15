@@ -130,6 +130,8 @@ class Surr_RLDE_Optimizer(Learnable_Optimizer):
 
 		if isinstance(self.fitness, np.ndarray):
 			self.fitness = torch.from_numpy(self.fitness).to(self.device)
+		if self.fitness.shape == (self.pop_size,):
+			self.fitness = self.fitness.unsqueeze(1)
 
 		self.pop_cur_best = self.population[torch.argmin(self.fitness)].clone()
 		self.pop_history_best = self.population[torch.argmin(self.fitness)].clone()
