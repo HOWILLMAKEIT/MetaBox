@@ -6,7 +6,7 @@ from torch.utils.data import Dataset
 import time
 
 
-def sr_func(x, Os, Mr):  # shift and rotate
+def sr_func(x, Os, Mr):   #shift and rotate
     y = x[:, :Os.shape[-1]] - Os
     return torch.matmul(Mr, y.t()).t()
 

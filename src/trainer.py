@@ -71,7 +71,7 @@ class Trainer(object):
         self.optimizer = eval(config.train_optimizer)(config)
 
         if config.problem =='bbob-surrogate':
-            config.isTrain = True
+            config.is_train = True
         self.train_set, self.test_set = construct_problem_set(config)
 
     def save_log(self, epochs, steps, cost, returns, normalizer):

@@ -64,8 +64,10 @@ class bbob_surrogate_Dataset(Dataset):
 
 	@staticmethod
 	def get_datasets(dim, config, upperbound=5, train_batch_size=1,
-					 test_batch_size=1, difficulty='easy',is_train=True,seed=3849,
+					 test_batch_size=1, difficulty='easy',seed=3849,
 					 shifted=False, biased=False, rotated=False):
+
+		is_train = config.is_train
 		
 		# train_id = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
 		# 			20]

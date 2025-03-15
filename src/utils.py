@@ -1,5 +1,5 @@
-from problem import bbob, bbob_torch, protein_docking
-from problem.SOO import bbob_numpy,bbob_surrogate,bbob_torch
+# from problem import bbob, bbob_torch, protein_docking
+from problem.SOO import bbob_numpy,bbob_surrogate,bbob_torch,protein_docking
 
 def construct_problem_set(config):
     problem = config.problem
@@ -23,5 +23,13 @@ def construct_problem_set(config):
                                                                     train_batch_size=config.train_batch_size,
                                                                     test_batch_size=config.test_batch_size,
                                                                     difficulty=config.difficulty)
+
+    elif problem in ['bbob-surrogate']:
+        return bbob_surrogate.bbob_surrogate_Dataset.get_datasets(config=config,
+                                              dim=config.dim,
+                                              upperbound=config.upperbound,
+                                              train_batch_size=config.train_batch_size,
+                                              test_batch_size=config.test_batch_size,
+                                              difficulty=config.difficulty)
     else:
         raise ValueError(problem + ' is not defined!')
