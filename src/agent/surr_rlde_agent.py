@@ -75,7 +75,6 @@ class Surr_RLDE_Agent(Basic_Agent):
 			action = torch.randint(0, self.n_act, (1,)).item()
 		if action is None:
 			action = torch.argmax(Q_list).item()
-		# print(action)
 		return action
 
 
@@ -103,7 +102,7 @@ class Surr_RLDE_Agent(Basic_Agent):
 				 'learn_steps': int
 				 }
 		"""
-		# 更新一下epsilon 一个epoch更新一次
+
 		if self.learned_steps == 3136 or self.learned_steps - 3200 == self.learned_steps_history:
 			self.learned_steps_history = self.learned_steps
 			self.epsilon = self.epsilon - (0.5 - 0.05) / 468
@@ -119,20 +118,8 @@ class Surr_RLDE_Agent(Basic_Agent):
 			R += reward
 			self.replay_buffer.append(state, action, reward, next_state, is_done)
 			if len(self.replay_buffer) > self.warm_up_size:
-
-				# print('q')
 				batch_state, batch_action, batch_reward, batch_next_state, batch_done = self.replay_buffer.sample(self.batch_size)
-				# print(batch_state, batch_action, batch_reward, batch_next_state, batch_done)
-
-				# batch_state = batch_state.to(self.device)
-				# batch_action = batch_action.to(self.device)
-				# batch_reward = batch_reward.to(self.device)
-				# batch_next_state = batch_next_state.to(self.device)
-				# batch_done = batch_done.to(self.device)
-				# print(batch_done)
 				pred_Q = (self.pred_Qnet(batch_state)).gather(1, batch_action.unsqueeze(-1)).squeeze(-1)
-				# print(pred_Q.shape)
-				# target_Q = batch_reward + self.gamma * (1 - batch_done) * pred_Q
 
 				# Target Q values
 				with torch.no_grad():
@@ -146,9 +133,6 @@ class Surr_RLDE_Agent(Basic_Agent):
 				loss.backward()
 				self.optimizer.step()
 				self.learned_steps += 1
-				# print(self.max_learning_step)
-				# print(self.cur_checkpoint,self.config.save_interval)
-
 				# save agent model if checkpoint arrives
 				if self.learned_steps >= (self.config.save_interval * self.cur_checkpoint):
 					save_class(self.config.agent_save_dir, 'checkpoint' + str(self.cur_checkpoint), self)

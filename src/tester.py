@@ -112,7 +112,10 @@ class Tester(object):
 
         if self.config.problem[-6:]=='-torch':
             self.config.problem=self.config.problem[:-6]
-            
+
+        if config.problem =='bbob-surrogate':
+            config.is_train = False
+
         _, self.test_set = construct_problem_set(self.config)
         # if 'L2L_Agent' in config.agent_for_cp or 'L2L_Agent' == config.agent:
         #     pre_problem=config.problem
@@ -271,6 +274,8 @@ def rollout(config):
     if config.problem[-6:]=='-torch':
         config.problem=config.problem[:-6]
 
+    if config.problem == 'bbob-surrogate':
+        config.is_train = False
     train_set,_=construct_problem_set(config)
     # if 'L2L_Agent' in config.agent_for_rollout:
     #     pre_problem=config.problem
@@ -356,6 +361,9 @@ def rollout(config):
 
 def test_for_random_search(config):
     # get entire problem set
+    if config.problem == 'bbob-surrogate':
+        config.is_train = False
+
     train_set, test_set = construct_problem_set(config)
     entire_set = train_set + test_set
     # get optimizer
@@ -423,6 +431,10 @@ def name_translate(problem):
 def mgd_test(config):
     print(f'start MGD_test: {config.run_time}')
     # get test set
+
+    if config.problem == 'bbob-surrogate':
+        config.is_train = False
+
     _, test_set = construct_problem_set(config)
     # get agents
     with open(config.model_from, 'rb') as f:
