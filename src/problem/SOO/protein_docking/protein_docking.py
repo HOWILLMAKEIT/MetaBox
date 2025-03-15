@@ -160,8 +160,10 @@ class Protein_Docking_Dataset(Dataset):
             test_proteins_set.extend(permutated[n_train_proteins:])
         # construct problem instances
         data = []
-        data_folder = path.join(path.dirname(__file__), 'protein_docking_data')
-        # data_folder = ''
+        # data_folder = path.join(path.dirname(__file__), 'protein_docking_data')
+        base_dir = path.dirname(path.dirname(path.dirname(path.abspath(__file__))))
+        data_folder = path.join(base_dir, 'datafiles', 'SOO', 'protein_docking_data')
+
         for i in train_proteins_set + test_proteins_set:
             for j in range(Protein_Docking_Dataset.n_start_points):
                 problem_id = i + '_' + str(j + 1)

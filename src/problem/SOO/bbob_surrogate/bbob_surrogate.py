@@ -1,5 +1,5 @@
-from kan import *
-from mlp import MLP
+from .kan import *
+from .mlp import MLP
 from .basic_problem import Basic_Problem
 from problem.SOO.bbob_numpy.bbob import *
 

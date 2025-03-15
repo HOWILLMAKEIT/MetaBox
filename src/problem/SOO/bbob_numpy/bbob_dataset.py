@@ -2,7 +2,7 @@ from .bbob import *
 from torch.utils.data import Dataset
 from .utils import *
 
-class BBOB_Dataset(Dataset,BBOB_Basic_Problem):
+class BBOB_Dataset(Dataset):
     def __init__(self,
                  data,
                  batch_size=1):
