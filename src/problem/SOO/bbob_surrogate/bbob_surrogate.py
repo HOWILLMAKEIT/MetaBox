@@ -6,22 +6,20 @@ from os import path
 from torch.utils.data import Dataset
 
 class bbob_surrogate_model(Basic_Problem):
-	def __init__(self, dim, func_id, lb, ub, shift, rotate, bias, difficulty, config):
+	def __init__(self, dim, func_id, lb, ub, shift, rotate, bias, config):
 		self.dim = dim
 		self.func_id = func_id
-		# shift = np.zeros(dim)
-		# bias = 0
-		# rotate = np.eye(dim)
+
 		self.instance = eval(f'F{func_id}')(dim=dim, shift=shift, rotate=rotate, bias=bias, lb=lb, ub=ub)
 		self.device = config.device
 		self.optimum = None
 
 		base_dir = path.dirname(path.dirname(path.dirname(path.abspath(__file__))))
-		data_folder = path.join(base_dir, 'datafiles', 'SOO', 'protein_docking_data')
-		if func_id in [2, 3, 4, 6, 7, 10, 12, 13, 14, 15, 23, 24]:
+
+		if func_id in [1, 3, 4, 6, 7, 10, 12, 13, 14, 15, 23, 24]:
 			self.model = KAN.loadckpt(path.join(base_dir, f'datafiles\\SOO\\surrogate_model\\Dim{dim}\\KAN\\{self.instance}\\model'))
 			# self.model = KAN.loadckpt(f'./problem/data_files/surrogate_model/Dim{dim}/KAN/{self.instance}/model')
-		elif func_id in [1, 5, 8, 9, 11, 16, 17, 18, 19, 20, 21, 22]:
+		elif func_id in [2, 5, 8, 9, 11, 16, 17, 18, 19, 20, 21, 22]:
 			self.model = MLP(dim)
 			self.model.load_state_dict(
 				torch.load(path.join(base_dir, f'datafiles\\SOO\\surrogate_model\\Dim{dim}\\MLP\\{self.instance}\\model.pth'))
@@ -33,21 +31,14 @@ class bbob_surrogate_model(Basic_Problem):
 		self.lb = lb
 
 	def eval(self, x):
-		# if is_train:
-		# 	input_x = (x - self.lb) / (self.ub - self.lb)
-		# 	with torch.no_grad():
-		# 		y = self.model(input_x)
-		# 	return y
-		# else:
 
-		# 	return self.instance.eval(x)
 		if isinstance(x, np.ndarray):
 			x = torch.tensor(x).to(self.device)
 		input_x = (x - self.lb) / (self.ub - self.lb)
 		input_x = input_x.to(torch.float32)
 		with torch.no_grad():
 			y = self.model(input_x)
-		# print(y.shape)
+
 		return y.flatten().cpu().numpy()
 		# return y
 
@@ -86,18 +77,15 @@ class bbob_surrogate_Dataset(Dataset):
 		else:
 			raise ValueError(f'{difficulty} difficulty is invalid.')
 
+		if dim not in[2, 5, 10] and config.is_train:
+			raise ValueError(f'dim{dim} is not supported yet.')
+
 		np.random.seed(seed)
 		train_set = []
 		test_set = []
 		ub = upperbound
 		lb = -upperbound
 
-		# shift = torch.zeros(dim, dtype=torch.float64)
-		# bias = 0.0
-		# rotate = torch.eye(dim, dtype=torch.float64)
-		# shift = np.zeros(dim)
-		# bias = 0.0
-		# rotate = np.eye(dim)
 		func_id = [i for i in range(1, 25)]
 		for id in func_id:
 			if shifted:
@@ -112,14 +100,11 @@ class bbob_surrogate_Dataset(Dataset):
 				bias = np.random.randint(1, 26) * 100
 			else:
 				bias = 0
-			# instance = eval(f'F{id}')(dim=dim, shift=shift, rotate=H, bias=bias, lb=lb, ub=ub)
-			# print(bias)
-
 			if id in train_id:
 			
 				if is_train:
 					train_instance = bbob_surrogate_model(dim, id, ub=ub, lb=lb, shift=shift, rotate=H, bias=bias,
-												difficulty=difficulty,config=config)
+												config=config)
 				else:
 					train_instance = eval(f'F{id}')(dim=dim, shift=shift, rotate=H, bias=bias, lb=lb, ub=ub)
 				

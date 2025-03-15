@@ -47,11 +47,6 @@ class Surr_RLDE_Optimizer(Learnable_Optimizer):
 		self.cur_logpoint = None  # record the current logpoint
 		self.log_interval = config.log_interval
 
-		self.is_train = True
-	# if self.__cur_checkpoint == 0:
-	# 	save_class(self.__config.agent_save_dir, 'checkpoint' + str(self.__cur_checkpoint), self)
-	# 	self.__cur_checkpoint += 1
-
 	def get_state(self, problem):
 		state = torch.zeros(9)
 		# state 1
@@ -106,23 +101,6 @@ class Surr_RLDE_Optimizer(Learnable_Optimizer):
 		self.population = torch.rand(self.pop_size, self.dim) * (problem.ub - problem.lb) + problem.lb
 		#(-5,5)
 		self.population = self.population.to(self.device)
-  
-		# if self.is_train:
-		# 	self.fitness = problem.eval(self.population)
-		# 	if isinstance(self.fitness, np.ndarray):
-		# 		self.fitness = torch.from_numpy(self.fitness).to(self.device)
-		# else:
-		# 	self.population = self.population.numpy()
-		#
-		# 	if problem.optimum is None:
-		# 		self.fitness = problem.eval(self.population)
-		# 	else:
-		# 		self.fitness = problem.eval(self.population) - problem.optimum
-		#
-		# 	self.population = torch.from_numpy(self.population).to(self.device)
-		# 	self.fitness = torch.from_numpy(self.fitness).to(self.device)
-
-
 		if problem.optimum is None:
 			self.fitness = problem.eval(self.population.clone().cpu().numpy())
 		else:
@@ -204,19 +182,6 @@ class Surr_RLDE_Optimizer(Learnable_Optimizer):
 		mut_population = self.mutation(mut_way)
 		crossover_population = self.crossover(mut_population)
 
-		# with torch.no_grad():
-
-			# if self.is_train:
-			# 	input = crossover_population.to(self.device)
-			# 	temp_fit = problem.eval(input,is_train=True).flatten()
-			# else:
-			# 	input = crossover_population.cpu().numpy()
-			# 	if problem.optimum is None:
-			# 		temp_fit = problem.eval(input)
-			# 	else:
-			# 		temp_fit = problem.eval(input) - problem.optimum
-			# 	temp_fit = torch.from_numpy(temp_fit.flatten())
-
 		if problem.optimum is None:
 			temp_fit = problem.eval(crossover_population.clone().cpu().numpy())
 		else:
@@ -224,6 +189,8 @@ class Surr_RLDE_Optimizer(Learnable_Optimizer):
 
 		if isinstance(temp_fit, np.ndarray):
 			temp_fit = torch.from_numpy(temp_fit).to(self.device)
+		if temp_fit.shape == (self.pop_size,):
+			temp_fit = temp_fit.unsqueeze(1)
 
 		for i in range(self.pop_size):
 			if temp_fit[i].item() < self.fitness[i].item():
