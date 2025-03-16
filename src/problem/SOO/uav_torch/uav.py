@@ -1,0 +1,440 @@
+"""
+=========================================================
+File Name: uav.py
+Author: Sijie Ma (GitHub: Feather_red)
+Date: 2025-03-07
+=========================================================
+
+Description:
+This script implements UAV path planning based on the paper:
+"Benchmarking Global Optimization Techniques for Unmanned Aerial Vehicle Path Planning."
+It provides a Python migration of a MATLAB implementation.
+
+Features:
+- Implements UAV path planning in a real-world scenario.
+- Uses torch for numerical computations.
+- Translates MATLAB code to Python.
+
+Dependencies:
+- numpy
+- torch
+- pickle
+
+Usage:
+Provide a brief explanation of how to run or use the script.
+
+References:
+- Shehadeh, M. A., & Kudela, J. (2025). Benchmarking global optimization techniques for unmanned aerial vehicle path planning.
+  arXiv. https://arxiv.org/abs/2501.14503
+
+Version:
+- Python implementation using Torch
+
+=========================================================
+"""
+from problem.basic_problem import Basic_Problem
+import numpy as np
+import torch
+from torch.utils.data import Dataset
+import pickle
+import time
+
+class UAV_Basic_Problem(Basic_Problem):
+    def __init__(self):
+        self.terrain_model = None
+        self.FES = 0
+        self.optimum = None
+        self.problem_id = None
+        self.dim = None
+        self.lb = None
+        self.ub = None
+
+    def __str__(self):
+        return f"Terrain {self.problem_id}"
+
+    def __boundaries__(self):
+        model = self.terrain_model
+
+        nVar = model['n']
+
+        # Initialize the boundaries dictionaries
+        VarMin = {'x': model['xmin'], 'y': model['ymin'], 'z': model['zmin'],
+                  'r': 0, 'psi': -np.pi / 4, 'phi': None}
+        VarMax = {'x': model['xmax'], 'y': model['ymax'], 'z': model['zmax'],
+                  'r': None, 'psi': np.pi / 4, 'phi': None}
+
+        # Calculate the radial distance range based on the model's start and end points
+        distance = np.linalg.norm(np.array(model['start']) - np.array(model['end']))
+        VarMax['r'] = 2 * distance / nVar
+
+        # Inclination (elevation) limits (angle range is pi/4)
+        AngleRange = np.pi / 4
+        VarMin['psi'] = -AngleRange
+        VarMax['psi'] = AngleRange
+
+        # Azimuth (phi)
+        dirVector = np.array(model['end']) - np.array(model['start'])
+        phi0 = np.arctan2(dirVector[1], dirVector[0])
+        VarMin['phi'] = (phi0 - AngleRange).item()
+        VarMax['phi'] = (phi0 + AngleRange).item()
+
+        # Lower and upper Bounds of velocity
+        alpha = 0.5
+        VelMax = {'r': alpha * (VarMax['r'] - VarMin['r']),
+                  'psi': alpha * (VarMax['psi'] - VarMin['psi']),
+                  'phi': alpha * (VarMax['phi'] - VarMin['phi'])}
+        VelMin = {'r': -VelMax['r'],
+                  'psi': -VelMax['psi'],
+                  'phi': -VelMax['phi']}
+
+        # Create bounds by stacking both position and velocity limits
+        bounds = np.array([
+            [VarMin['r'], VarMax['r']],
+            [VarMin['psi'], VarMax['psi']],
+            [VarMin['phi'], VarMax['phi']],
+        ])
+        # Since we are interested in r, phi, psi for nVar points in each item of the population
+        bounds = np.tile(bounds, (int(nVar), 1))
+
+        # Assign the 0th column to self.lb and the 1st column to self.ub
+        self.lb = bounds[:, 0]
+        self.ub = bounds[:, 1]
+
+    def spherical_to_cart_vec(self, solve):
+        # solve : 2D [NP, 3 * n]
+        # Extracting r, phi, and psi from the solution row
+        r = solve[:, 0::3]  # r values are in indices 0, 3, 6, ...
+        psi = solve[:, 1::3]  # psi values are in indices 1, 4, 7, ...
+        phi = solve[:, 2::3]  # phi values are in indices 2, 5, 8, ...
+        # [NP, n]
+        model = self.terrain_model
+        xs, ys, zs = model['start'] # 1D
+
+        # [NP, n]
+        x = torch.zeros_like(r)
+        y = torch.zeros_like(r)
+        z = torch.zeros_like(r)
+
+        xs = torch.tensor(xs, dtype = torch.float64)
+        ys = torch.tensor(ys, dtype = torch.float64)
+        zs = torch.tensor(zs, dtype = torch.float64)
+
+        x[:, 0] = xs + r[:, 0] * torch.cos(psi[:, 0]) * torch.sin(phi[:, 0])
+        y[:, 0] = ys + r[:, 0] * torch.cos(psi[:, 0]) * torch.cos(phi[:, 0])
+        z[:, 0] = zs + r[:, 0] * torch.sin(psi[:, 0])
+
+        x[:, 0] = torch.clip(x[:, 0], model['xmin'], model['xmax'])
+        y[:, 0] = torch.clip(y[:, 0], model['ymin'], model['ymax'])
+        z[:, 0] = torch.clip(z[:, 0], model['zmin'], model['zmax'])
+
+        # Next Cartesian coordinates
+        for i in range(1, x.shape[1]):
+            x[:, i] = x[:, i - 1] + r[:, i] * torch.cos(psi[:, i]) * torch.sin(phi[:, i])
+            x[:, i] = torch.clip(x[:, i], model['xmin'], model['xmax'])
+
+            y[:, i] = y[:, i - 1] + r[:, i] * torch.cos(psi[:, i]) * torch.cos(phi[:, i])
+            y[:, i] = torch.clip(y[:, i], model['ymin'], model['ymax'])
+
+            z[:, i] = z[:, i - 1] + r[:, i] * torch.sin(psi[:, i])
+            z[:, i] = torch.clip(z[:, i], model['zmin'], model['zmax'])
+
+        return x, y, z
+
+    def DistP2S(self, xs, a, b):
+        """
+        Compute the shortest distance from a point xs to a line segment defined by points a and b.
+
+        Args:
+            xs: Tensor of shape [2], representing the point.
+            a: Tensor of shape [2, NP], representing the start points of the segments.
+            b: Tensor of shape [2, NP], representing the end points of the segments.
+
+        Returns:
+            dist: Tensor of shape [NP], representing the shortest distances.
+        """
+
+        # Convert xs to shape [2, 1] to match broadcasting
+        x = xs[:, None]  # Shape: [2, 1]
+
+        # Compute distances
+        d_ab = torch.norm(a - b, dim = 0)  # [NP]
+        d_ax = torch.norm(a - x, dim = 0)  # [NP]
+        d_bx = torch.norm(b - x, dim = 0)  # [NP]
+
+        # Initialize distance: If d_ab == 0, use d_ax; otherwise, use min(d_ax, d_bx)
+        dist = torch.where(d_ab == 0, d_ax, torch.minimum(d_ax, d_bx))
+
+        # Compute dot products
+        dot_product_ab_ax = torch.sum((b - a) * (x - a), dim = 0)  # [NP]
+        dot_product_ba_bx = torch.sum((a - b) * (x - b), dim = 0)  # [NP]
+
+        # Compute perpendicular distance
+        cross_product = torch.abs((b - a)[0] * (x - a)[1] - (b - a)[1] * (x - a)[0])  # 2D cross product
+        perpendicular_dist = cross_product / d_ab
+
+        # Update distance if within valid range
+        mask = (d_ab != 0) & (dot_product_ab_ax >= 0) & (dot_product_ba_bx >= 0)
+        dist = torch.where(mask, perpendicular_dist, dist)
+
+        return dist
+
+    def eval(self, x):
+        """
+                A general version of func() with adaptation to evaluate both individual and population.
+                """
+        start = time.perf_counter()
+        if not isinstance(x, torch.Tensor):
+            x = torch.tensor(x)
+        if x.dtype != torch.float64:
+            x = x.type(torch.float64)
+        if x.ndim == 1:  # x is a single individual
+            y = self.func(x.reshape(1, -1))[0]
+            end = time.perf_counter()
+            self.T1 += (end - start) * 1000
+            return y
+        elif x.ndim == 2:  # x is a whole population
+            y = self.func(x)
+            end = time.perf_counter()
+            self.T1 += (end - start) * 1000
+            return y
+        else:
+            y = self.func(x.reshape(-1, x.shape[-1]))
+            end = time.perf_counter()
+            self.T1 += (end - start) * 1000
+            return y
+
+    def func(self, x):
+        raise NotImplementedError
+
+class Terrain(UAV_Basic_Problem):
+    def __init__(self, terrain_model, problem_id):
+        super(Terrain, self).__init__()
+        self.terrain_model = terrain_model
+        self.dim = 3 * terrain_model['n']
+        self.problem_id = problem_id
+        self.optimum = None
+        self.__boundaries__()
+        # self.SphCost = eng.CreateSphCost(self.terrain_model)
+
+
+    def func(self, solve):
+        # solve : 2D [NP, 3 * nv]
+        model = self.terrain_model
+
+        J_pen = torch.tensor(model['J_pen'], dtype = torch.float64)
+        H = torch.tensor(model['H'], dtype = torch.float64)
+
+        x, y, z = self.spherical_to_cart_vec(solve) # 2D : [NP, nv]
+
+        NP, n = x.shape
+        # Start location
+        xs, ys, zs = model['start'] # 1D
+
+        # Final location
+        xf, yf, zf = model['end'] # 1D
+
+        xs = torch.tensor(xs, dtype = torch.float64)
+        ys = torch.tensor(ys, dtype = torch.float64)
+        zs = torch.tensor(zs, dtype = torch.float64)
+
+        xf = torch.tensor(xf, dtype = torch.float64)
+        yf = torch.tensor(yf, dtype = torch.float64)
+        zf = torch.tensor(zf, dtype = torch.float64)
+
+        # REPEAT
+        xs = torch.tile(xs, (NP, 1))
+        ys = torch.tile(ys, (NP, 1))
+        zs = torch.tile(zs, (NP, 1))
+
+        xf = torch.tile(xf, (NP, 1))
+        yf = torch.tile(yf, (NP, 1))
+        zf = torch.tile(zf, (NP, 1))
+
+        # Concatenate
+        x_all = torch.cat((xs, x, xf), dim = 1)
+        y_all = torch.cat((ys, y, yf), dim = 1)
+        z_all = torch.cat((zs, z, zf), dim = 1)
+
+        N = x_all.shape[1] # Full path length
+
+        # Altitude wrt sea level = z_relative + ground_level
+        z_abs = torch.zeros((NP, N), dtype = torch.float64)
+        for i in range(N):
+            x_index = np.round(x_all[:, i].cpu().numpy()).astype(int) - 1
+            y_index = np.round(y_all[:, i].cpu().numpy()).astype(int) - 1
+            z_abs[:, i] = z_all[:, i] + H[y_index, x_index]
+
+        # ---------- J1 Cost for path length ----------
+        diff = torch.stack((x_all[:, 1:] - x_all[:, :-1],
+                            y_all[:, 1:] - y_all[:, :-1],
+                            z_abs[:, 1:] - z_abs[:, :-1]), dim = -1)  # [NP, N-1, 3]
+        J1 = torch.sum(torch.norm(diff, dim = 2), dim = 1)  # Shape: [NP]
+
+        # ---------- J2 - threats / obstacles Cost ----------
+        threats = model['threats']
+        threat_num = threats.shape[0]
+
+        # Checking if UAV passes through a threat
+        J2 = torch.zeros(NP, dtype = torch.float64)
+        for i in range(threat_num):
+            threat = threats[i, :]
+            threat_x = threat[0]
+            threat_y = threat[1]
+            threat_radius = threat[3]
+
+            for j in range(N - 1):
+                dist = self.DistP2S(torch.tensor([threat_x, threat_y], dtype = torch.float64),
+                                    torch.cat((x_all[:, j][None, :], y_all[:, j][None, :]), dim = 0),
+                                    torch.cat((x_all[:, j + 1][None, :], y_all[:, j + 1][None, :]), dim = 0))
+                # dist 1D NP
+                threat_cost = threat_radius + model['drone_size'] + model['danger_dist'] - dist
+                # threat_cost = torch.full([NP], threat_radius + model['drone_size'] + model['danger_dist'] - dist, dtype = torch.float64) # Dangerous Zone
+                threat_cost = torch.where(dist > threat_radius + model['drone_size'] + model['danger_dist'], torch.tensor(0.0, dtype = torch.float64), threat_cost)  # No Collision
+                threat_cost = torch.where(dist < threat_radius + model['drone_size'], J_pen, threat_cost)  # Collision
+
+                J2 += threat_cost
+
+        # ---------- J3 - Altitude cost ----------
+        z_max = torch.tensor(model['zmax'], dtype = torch.float64)
+        z_min = torch.tensor(model['zmin'], dtype = torch.float64)
+        J3 = torch.sum(torch.where(z < 0, J_pen, torch.abs(z - (z_max + z_min) / 2)), dim = 1)
+
+        # ---------- J4 - Smooth cost ----------
+        J4 = torch.zeros(NP, dtype = torch.float64)
+        turning_max = 45
+        climb_max = 45
+
+        # Calculate the projections of the segments in the xy-plane (x, y, 0) for all paths at once
+        diff_1 = torch.stack((x_all[:, 1:] - x_all[:, :-1], y_all[:, 1:] - y_all[:, :-1], torch.zeros((NP, N - 1))),  dim = -1)  # [NP, N-1, 3]
+        diff_2 = torch.stack((x_all[:, 2:] - x_all[:, 1:-1], y_all[:, 2:] - y_all[:, 1:-1], torch.zeros((NP, N - 2))), dim = -1)  # [NP, N-2, 3]
+
+        for i in range(0, N - 2):
+            segment1_proj = diff_1[:, i, :] # [NP, 3]
+            segment2_proj = diff_2[:, i, :] # [NP, 3]
+
+            # Find rows where all values in segment1_proj are zero (no movement in this segment)
+            zero_segment1 = torch.all(segment1_proj == 0, dim = 1)  # [NP,] - boolean array, True where all are zeros
+
+            # Find rows where all values in segment2_proj are zero (no movement in this segment)
+            zero_segment2 = torch.all(segment2_proj == 0, dim = 1)  # [NP,] - boolean array, True where all are zeros
+
+            # Handle zero segments: if a segment is all zeros, use the previous or next valid segment
+            # For segment1_proj, if it's zero, we will use the previous segment (diff_1[i-1])
+            i1 = i - 1
+            i2 = i + 1
+            while i1 >= 0 and torch.any(zero_segment1):
+                segment1_proj[zero_segment1] = diff_1[zero_segment1, i1, :]
+                zero_segment1 = torch.all(segment1_proj == 0, dim = 1)
+                i1 -= 1
+
+            while i2 < N - 2 and torch.any(zero_segment2):
+                segment2_proj[zero_segment2] = diff_2[zero_segment2, i2, :]
+                zero_segment2 = torch.all(segment2_proj == 0, dim = 1)
+                i2 += 1
+
+            # segment1_proj and segment2_proj [NP, 3]
+            # Calculate the climb angles
+            climb_angle1 = torch.atan2(z_abs[:, i + 1] - z_abs[:, i], torch.norm(segment1_proj, dim = 1)) * (180.0 / np.pi)
+            climb_angle2 = torch.atan2(z_abs[:, i + 2] - z_abs[:, i + 1], torch.norm(segment2_proj, dim = 1)) * (180.0 / np.pi)
+
+            # Calculate the turning angle
+            turning_angle = torch.atan2(torch.norm(torch.cross(segment1_proj, segment2_proj, dim = 1), dim = 1),
+                                        torch.sum(segment1_proj * segment2_proj, dim = 1)) * (180.0 / np.pi)
+
+            addition_J_1 = torch.where(torch.abs(turning_angle) > turning_max, torch.abs(turning_angle), torch.tensor(0.0, dtype = torch.float64))
+            addition_J_2 = torch.where(torch.abs(climb_angle2 - climb_angle1) > climb_max, torch.abs(climb_angle2 - climb_angle1), torch.tensor(0.0, dtype = torch.float64))
+
+            J4 += addition_J_1 + addition_J_2
+
+        b1 = 5
+        b2 = 1
+        b3 = 10
+        b4 = 1
+        return b1 * J1 + b2 * J2 + b3 * J3 + b4 * J4
+
+class UAV_Dataset(Dataset):
+    def __init__(self, data, batch_size = 1):
+        super().__init__()
+        self.data = data
+        self.batch_size = batch_size
+        self.N = len(self.data)
+        self.ptr = [i for i in range(0, self.N, batch_size)]
+        self.index = np.arange(self.N)
+
+    @staticmethod
+    def get_datasets(train_batch_size=1,
+                     test_batch_size = 1,
+                     dv = 5.0,
+                     j_pen = 1e4,
+                     difficulty='easy'):
+        # todo 先选择全部读入作为训练集和测试集
+        pkl_file = "problem/datafiles/SOO/uav_terrain/Model56.pkl"
+        with open(pkl_file, 'rb') as f:
+            model_data = pickle.load(f)
+        func_id = range(56) # 56
+        train_set = []
+        test_set = []
+        for id in func_id:
+            terrain_data = model_data[id]
+            terrain_data['n'] = dv
+            terrain_data['J_pen'] = j_pen
+            instance = Terrain(terrain_data, id + 1)
+            train_set.append(instance)
+            test_set.append(instance)
+        return UAV_Dataset(train_set, train_batch_size), UAV_Dataset(test_set, test_batch_size)
+
+    def __getitem__(self, item):
+        if self.batch_size < 2:
+            return self.data[self.index[item]]
+        ptr = self.ptr[item]
+        index = self.index[ptr: min(ptr + self.batch_size, self.N)]
+        res = []
+        for i in range(len(index)):
+            res.append(self.data[index[i]])
+        return res
+
+    def __len__(self):
+        return self.N
+
+    def __add__(self, other: 'UAV_Dataset'):
+        return UAV_Dataset(self.data + other.data, self.batch_size)
+
+    def shuffle(self):
+        self.index = np.random.permutation(self.N)
+
+if __name__ == "__main__":
+    x =  [
+        [
+            102.787067274924, -0.588464384157333, 0.523312419417429, 8.98171798143932,
+            0.0707168743046490, 1.49658000170548, 80.6110279168768, -0.195561226893039,
+            0.574004754481592, 141.203633522607, -0.369189314002375, 0.551542337270883,
+            179.697141403396, 0.604469599761478, 0.521125312856793, 112.889900716559,
+            -0.153310866363274, 0.599568876578121, 156.479010612955, 0.515890617157642,
+            0.761018950795744, 158.169662571115, -0.159932706752021, 0.242214520089881,
+            94.8344807895242, -0.650786093007384, 1.46528689191431, 20.9142143722353,
+            -0.173403956357546, 0.724803312220412
+        ],
+        [
+            102.787067274924, -0.588464384157333, 0.523312419417429, 8.98171798143932,
+            0.0707168743046490, 1.49658000170548, 80.6110279168768, -0.195561226893039,
+            0.574004754481592, 141.203633522607, -0.369189314002375, 0.551542337270883,
+            179.697141403396, 0.604469599761478, 0.521125312856793, 112.889900716559,
+            -0.153310866363274, 0.599568876578121, 156.479010612955, 0.515890617157642,
+            0.761018950795744, 158.169662571115, -0.159932706752021, 0.242214520089881,
+            94.8344807895242, -0.650786093007384, 1.46528689191431, 20.9142143722353,
+            -0.173403956357546, 0.724803312220412
+        ]
+    ]
+    pkl_file = "UAE_terrain_data/Model56.pkl"
+    with open(pkl_file, 'rb') as f:
+        model_data = pickle.load(f)
+    terrain_data = model_data[4]
+    terrain_data['n'] = 10
+    terrain_data['J_pen'] = 1e4
+
+    F5 = Terrain(terrain_data, 5)
+    torch.set_printoptions(10)
+    x_np = np.array(x)
+    x_tensor = torch.tensor(x, dtype = torch.float64)
+    cost = F5.func(x_tensor)
+    print(cost)
