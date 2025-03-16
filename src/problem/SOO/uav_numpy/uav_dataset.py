@@ -66,7 +66,8 @@ class UAV_Dataset_numpy(Dataset):
                                            num_threats = num_threats)
                 terrain_data['n'] = dv
                 terrain_data['J_pen'] = j_pen
-                instance_list.append(terrain_data)
+                instance = Terrain(terrain_data, id + 1)
+                instance_list.append(instance)
             if difficult == "easy":
                 train_set = instance_list[-int(0.75 * num):]
                 test_set = instance_list[:int(0.25 * num)]
