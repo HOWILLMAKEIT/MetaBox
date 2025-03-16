@@ -12,7 +12,7 @@ class UAV_Dataset_torch(Dataset):
         self.index = np.arange(self.N)
 
     @staticmethod
-    def get_datasets(train_batch_size = 1,
+    def get_datasets(train_batch_size=1,
                      test_batch_size = 1,
                      dv = 5.0,
                      j_pen = 1e4,
@@ -21,42 +21,57 @@ class UAV_Dataset_torch(Dataset):
                      num = 56,
                      difficult = "easy",
                      ):
-        # todo 先选择全部读入作为训练集和测试集
+        # easy 15 diff 30
+        easy_id = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54] # 28
+        diff_id = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 35, 37, 39, 41, 43, 45, 47, 49, 51, 53, 55] # 28
+        # if easy |train| = 42 = 14 + 28(easy + diff)
+        # if diff |train| = 42 = 28 + 14(easy + diff)
         train_set = []
         test_set = []
+        np.random.seed(seed)
         if mode == "standard":
             pkl_file = "problem/datafiles/uav_terrain/Model56.pkl"
             with open(pkl_file, 'rb') as f:
                 model_data = pickle.load(f)
-            func_id = range(56)  # 56
+            func_id = range(56) # 56
+            if difficult == "easy":
+                train_id = diff_id
+                easy_train = list(np.random.choice(easy_id, size = 14, replace = False))
+                train_id = train_id + easy_train
+            else:
+                train_id = easy_id
+                diff_train = list(np.random.choice(diff_id, size = 14, replace = False))
+                train_id = train_id + diff_train
+
             for id in func_id:
                 terrain_data = model_data[id]
                 terrain_data['n'] = dv
                 terrain_data['J_pen'] = j_pen
                 instance = Terrain(terrain_data, id + 1)
-                train_set.append(instance)
-                test_set.append(instance)
-        elif mode == "custom":
-            if difficult == "easy":
-                ratio = 0.75
-            else:
-                ratio = 0.25
-            np.random.seed(seed)
-            func_id = range(num)
-            for id in func_id:
-                if id < num * ratio:
-                    num_threats = 10
+                if id in train_id:
+                    train_set.append(instance)
                 else:
-                    num_threats = 20
+                    test_set.append(instance)
+        elif mode == "custom":
+            instance_list = []
+            for id in range(num):
+                if id < 0.5 * num:
+                    num_threats = 15
+                else:
+                    num_threats = 30
                 terrain_data = createmodel(map_size = 900,
                                            r = np.random.rand() * 100,
                                            rr = np.random.rand() * 10,
                                            num_threats = num_threats)
                 terrain_data['n'] = dv
                 terrain_data['J_pen'] = j_pen
-                instance = Terrain(terrain_data, id + 1)
-                train_set.append(instance)
-                test_set.append(instance)
+                instance_list.append(terrain_data)
+            if difficult == "easy":
+                train_set = instance_list[-int(0.75 * num):]
+                test_set = instance_list[:int(0.25 * num)]
+            else:
+                train_set = instance_list[:int(0.75 * num)]
+                test_set = instance_list[-int(0.25 * num):]
 
         return UAV_Dataset_torch(train_set, train_batch_size), \
                UAV_Dataset_torch(test_set, test_batch_size)
