@@ -57,7 +57,7 @@ class UAV_Dataset_numpy(Dataset):
                 instance = Terrain(terrain_data, id + 1)
                 train_set.append(instance)
                 test_set.append(instance)
-                
+
         return UAV_Dataset_numpy(train_set, train_batch_size), \
                UAV_Dataset_numpy(test_set, test_batch_size)
 
@@ -75,7 +75,7 @@ class UAV_Dataset_numpy(Dataset):
         return self.N
 
     def __add__(self, other: 'UAV_Dataset_numpy'):
-        return UAV_Dataset(self.data + other.data, self.batch_size)
+        return UAV_Dataset_numpy(self.data + other.data, self.batch_size)
 
     def shuffle(self):
         self.index = np.random.permutation(self.N)

@@ -292,56 +292,6 @@ class Terrain(UAV_Basic_Problem):
 
         return np.array([J1, J2, J3, J4])
 
-class UAV_Dataset(Dataset):
-    def __init__(self, data, batch_size = 1):
-        super().__init__()
-        self.data = data
-        self.batch_size = batch_size
-        self.N = len(self.data)
-        self.ptr = [i for i in range(0, self.N, batch_size)]
-        self.index = np.arange(self.N)
-
-    @staticmethod
-    def get_datasets(train_batch_size=1,
-                     test_batch_size = 1,
-                     dv = 5.0,
-                     j_pen = 1e4,
-                     difficulty='easy'):
-        # todo 先选择全部读入作为训练集和测试集
-        pkl_file = "problem/datafiles/uav_terrain/Model56.pkl"
-        with open(pkl_file, 'rb') as f:
-            model_data = pickle.load(f)
-        func_id = range(56) # 56
-        train_set = []
-        test_set = []
-        for id in func_id:
-            terrain_data = model_data[id]
-            terrain_data['n'] = dv
-            terrain_data['J_pen'] = j_pen
-            instance = Terrain(terrain_data, id + 1)
-            train_set.append(instance)
-            test_set.append(instance)
-        return UAV_Dataset(train_set, train_batch_size), UAV_Dataset(test_set, test_batch_size)
-
-    def __getitem__(self, item):
-        if self.batch_size < 2:
-            return self.data[self.index[item]]
-        ptr = self.ptr[item]
-        index = self.index[ptr: min(ptr + self.batch_size, self.N)]
-        res = []
-        for i in range(len(index)):
-            res.append(self.data[index[i]])
-        return res
-
-    def __len__(self):
-        return self.N
-
-    def __add__(self, other: 'UAV_Dataset'):
-        return UAV_Dataset(self.data + other.data, self.batch_size)
-
-    def shuffle(self):
-        self.index = np.random.permutation(self.N)
-
 if __name__ == "__main__":
     x =  [
         [

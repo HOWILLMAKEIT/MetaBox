@@ -75,7 +75,7 @@ class UAV_Dataset_torch(Dataset):
         return self.N
 
     def __add__(self, other: 'UAV_Dataset_torch'):
-        return UAV_Dataset(self.data + other.data, self.batch_size)
+        return UAV_Dataset_torch(self.data + other.data, self.batch_size)
 
     def shuffle(self):
         self.index = np.random.permutation(self.N)
