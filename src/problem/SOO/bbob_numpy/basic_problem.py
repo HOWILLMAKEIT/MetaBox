@@ -1,6 +1,6 @@
 import numpy as np
 import time
-
+from .utils import *
 class Basic_Problem:
     """
     Abstract super class for problems and applications.
@@ -67,7 +67,7 @@ class NoisyProblem:
         return self.noisy(ftrue)
 
     def boundaryHandling(self, x):
-        return 100. * self.pen_func(x, self.ub)
+        return 100. * pen_func(x, self.ub)
 
 
 class GaussNoisyProblem(NoisyProblem):
