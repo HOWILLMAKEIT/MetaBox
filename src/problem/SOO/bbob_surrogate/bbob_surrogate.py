@@ -59,7 +59,7 @@ class bbob_surrogate_Dataset(Dataset):
 	@staticmethod
 	def get_datasets(dim, config, upperbound=5, train_batch_size=1,
 					 test_batch_size=1, difficulty='easy',seed=3849,
-					 shifted=False, biased=False, rotated=False):
+					 shifted=True, biased=True, rotated=True):
 
 		is_train = config.is_train
 		
