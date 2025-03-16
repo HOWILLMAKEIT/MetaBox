@@ -30,8 +30,7 @@ class bbob_surrogate_model(Basic_Problem):
 		self.ub = ub
 		self.lb = lb
 
-	def eval(self, x):
-
+	def func(self, x):
 		if isinstance(x, np.ndarray):
 			x = torch.tensor(x).to(self.device)
 		input_x = (x - self.lb) / (self.ub - self.lb)
