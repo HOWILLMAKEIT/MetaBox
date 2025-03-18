@@ -217,4 +217,4 @@ class DE_DDQN_Optimizer(Learnable_Optimizer):
                 self.cost[-1] = self.__c_gbest
             else:
                 self.cost.append(self.__c_gbest)
-        return next_state, reward, is_done
+        return next_state, reward, is_done , {}
