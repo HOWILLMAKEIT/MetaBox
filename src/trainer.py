@@ -6,6 +6,7 @@ from tqdm import tqdm
 from environment.basic_environment import PBO_Env
 from VectorEnv import *
 from logger import Logger
+import copy
 from utils import *
 import numpy as np
 import os
@@ -165,7 +166,7 @@ class Trainer(object):
                 for problem_id, problem in enumerate(self.train_set):
 
                     # env = PBO_Env(problem, self.optimizer)
-                    env_list = [PBO_Env(p, self.optimizer) for p in problem]
+                    env_list = [PBO_Env(p, copy.deepcopy(self.optimizer)) for p in problem]
                     exceed_max_ls, pbar_info_train = self.agent.train_episode(envs = env_list)
                     # exceed_max_ls, pbar_info_train = self.agent.train_episode(env)  # pbar_info -> dict
                     postfix_str = (
