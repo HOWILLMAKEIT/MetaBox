@@ -49,7 +49,6 @@ class GLEET_Optimizer(Learnable_Optimizer):
 
         # record
         self.max_cost=np.min(c_cost)
-
         # store all the information of the paraticles
         self.particles={'current_position': rand_pos.copy(), #  ps, dim
                         'c_cost': c_cost.copy(), #  ps
@@ -60,6 +59,10 @@ class GLEET_Optimizer(Learnable_Optimizer):
                         'velocity': rand_vel.copy(), # ps,dim
                         'gbest_index':gbest_index # 1
                         }
+
+        # transmit information for father basic environment
+        self.gbest_val = gbest_val
+
 
     def get_cat_xy(self):
         cur_x = self.particles['current_position']
@@ -259,7 +262,7 @@ class GLEET_Optimizer(Learnable_Optimizer):
             self.no_improve=0
         else:
             self.no_improve+=1
-        
+
         # update the stagnation steps for singal particle in the population
         filter_per_patience=new_particles['c_cost']<self.particles['c_cost']
         self.per_no_improve+=1
@@ -268,6 +271,9 @@ class GLEET_Optimizer(Learnable_Optimizer):
         
         # update the population
         self.particles=new_particles
+
+        # transmit information for father basic environment
+        self.gbest_val = self.particles['gbest_val']
 
         # see if the end condition is satisfied
         if problem.optimum is None:
@@ -309,6 +315,6 @@ class GLEET_Optimizer(Learnable_Optimizer):
             else:
                 self.cost.append(self.particles['gbest_val'])
         
-        
-        return next_state, reward, is_end
+        info = {}
+        return next_state, reward, is_end, info
 

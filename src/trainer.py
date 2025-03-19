@@ -4,6 +4,7 @@ This file is used to train the agent.(for the kind of optimizer that is learnabl
 import pickle
 from tqdm import tqdm
 from environment.basic_environment import PBO_Env
+from VectorEnv import *
 from logger import Logger
 from utils import *
 import numpy as np
@@ -19,7 +20,6 @@ from agent import (
     RLEPSO_Agent,
     RL_PSO_Agent,
     L2L_Agent,
-    GLEET_Agent,
     RL_DAS_Agent,
     LES_Agent,
     NRLPSO_Agent,
@@ -53,6 +53,11 @@ from optimizer import (
     DEAP_CMAES,
     Random_search
 )
+
+from agents import (
+    GLEET_Agent
+)
+
 matplotlib.use('Agg')
 
 
@@ -150,22 +155,36 @@ class Trainer(object):
         learn_steps = []
         epoch_steps = []
         for problem in self.train_set:
-            cost_record[problem.__str__()] = []
-            normalizer_record[problem.__str__()] = []
+            for p in problem:
+                cost_record[p.__str__()] = []
+                normalizer_record[p.__str__()] = []
         while not exceed_max_ls:
             learn_step = 0
             self.train_set.shuffle()
             with tqdm(range(self.train_set.N), desc=f'Training {self.agent.__class__.__name__} Epoch {epoch}') as pbar:
                 for problem_id, problem in enumerate(self.train_set):
-                    env = PBO_Env(problem, self.optimizer)
-                    exceed_max_ls, pbar_info_train = self.agent.train_episode(env)  # pbar_info -> dict
-                    pbar.set_postfix(pbar_info_train)
-                    pbar.update(1)
-                    name = problem.__str__()
+
+                    # env = PBO_Env(problem, self.optimizer)
+                    env_list = [PBO_Env(p, self.optimizer) for p in problem]
+                    exceed_max_ls, pbar_info_train = self.agent.train_episode(envs = env_list)
+                    # exceed_max_ls, pbar_info_train = self.agent.train_episode(env)  # pbar_info -> dict
+                    postfix_str = (
+                        f"return={[f'{x:.2e}' for x in pbar_info_train['return']]}, "
+                        f"normalizer={[f'{x:.2e}' for x in pbar_info_train['normalizer']]} "
+                        f"gbest={[f'{x:.2e}' for x in pbar_info_train['gbest']]} "
+                        f"learn_steps={pbar_info_train['learn_steps']}"
+                    )
+
+                    pbar.set_postfix_str(postfix_str)
+
+                    # pbar.set_postfix(pbar_info_train)
+                    pbar.update(self.config.train_batch_size)
                     learn_step = pbar_info_train['learn_steps']
-                    cost_record[name].append(pbar_info_train['gbest'])
-                    normalizer_record[name].append(pbar_info_train['normalizer'])
-                    return_record.append(pbar_info_train['return'])
+                    for id, p in enumerate(problem):
+                        name = p.__str__()
+                        cost_record[name].append(pbar_info_train['gbest'][id])
+                        normalizer_record[name].append(pbar_info_train['normalizer'][id])
+                        return_record.append(pbar_info_train['return'][id])
                     learn_steps.append(learn_step)
                     if exceed_max_ls:
                         break
@@ -175,16 +194,18 @@ class Trainer(object):
             #     os.makedirs(agent_save_dir)
             # with open(agent_save_dir+'agent_epoch'+str(epoch)+'.pkl', 'wb') as f:
             #     pickle.dump(self.agent, f, -1)
-            self.save_log(epoch_steps, learn_steps, cost_record, return_record, normalizer_record)
+
+            # todo add log logicality
+            # self.save_log(epoch_steps, learn_steps, cost_record, return_record, normalizer_record)
             epoch += 1
-            if epoch % self.config.draw_interval == 0:
-                self.draw_cost()
-                self.draw_average_cost()
-                self.draw_return()
+            # if epoch % self.config.draw_interval == 0:
+            #     self.draw_cost()
+            #     self.draw_average_cost()
+            #     self.draw_return()
         
-        self.draw_cost()
-        self.draw_average_cost()
-        self.draw_return()
+        # self.draw_cost()
+        # self.draw_average_cost()
+        # self.draw_return()
 
 
 # class Trainer_l2l(object):

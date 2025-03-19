@@ -1,9 +1,9 @@
 from typing import Any
 from problem.basic_problem import Basic_Problem
 from optimizer.learnable_optimizer import Learnable_Optimizer
+import gym
 
-
-class PBO_Env:
+class PBO_Env(gym.Env):
     """
     An environment with a problem and an optimizer.
     """
@@ -11,12 +11,20 @@ class PBO_Env:
                  problem: Basic_Problem,
                  optimizer: Learnable_Optimizer,
                  ):
+        super(PBO_Env, self).__init__()
         self.problem = problem
         self.optimizer = optimizer
+        self.normalizer = None
+        self.gbest = None
 
     def reset(self):
         self.problem.reset()
-        return self.optimizer.init_population(self.problem)
+        reset_ = self.optimizer.init_population(self.problem)
+        self.normalizer = self.optimizer.gbest_val
+        self.gbest = self.optimizer.gbest_val
+        return reset_
 
     def step(self, action: Any):
-        return self.optimizer.update(action, self.problem)
+        update_ = self.optimizer.update(action, self.problem)
+        self.gbest = self.optimizer.gbest_val
+        return update_
