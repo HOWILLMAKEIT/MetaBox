@@ -128,6 +128,9 @@ class RL_HPSDE_Optimizer(Learnable_Optimizer):
         self.fes = self.__population.NP
         self.log_index = 1
         self.cost = [self.__population.gbest]
+        
+        self.gbest_val = self.__population.gbest
+        
         return self.__get_state(problem)
 
     def __simple_random_walk(self, lb, ub):
@@ -274,6 +277,8 @@ class RL_HPSDE_Optimizer(Learnable_Optimizer):
             self.log_index += 1
             self.cost.append(population.gbest)
 
+        self.gbest_val = population.gbest
+        
         reward = optim.shape[0] / NP
         if problem.optimum is None:
             done = self.fes >= self.__maxFEs
@@ -284,4 +289,7 @@ class RL_HPSDE_Optimizer(Learnable_Optimizer):
                 self.cost[-1] = population.gbest
             else:
                 self.cost.append(population.gbest)
-        return self.__get_state(problem), reward, done
+                
+        info = {}        
+        
+        return self.__get_state(problem), reward, done , info

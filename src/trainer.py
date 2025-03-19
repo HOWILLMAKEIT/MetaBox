@@ -17,13 +17,13 @@ from agent import (
     # DEDQN_Agent,
     RL_HPSDE_Agent,
     LDE_Agent,
-    QLPSO_Agent,
+    # QLPSO_Agent,
     RLEPSO_Agent,
     RL_PSO_Agent,
     L2L_Agent,
     RL_DAS_Agent,
     LES_Agent,
-    NRLPSO_Agent,
+    # NRLPSO_Agent,
     Symbol_Agent,
 )
 from optimizer import (
@@ -58,7 +58,10 @@ from optimizer import (
 from agents import (
     GLEET_Agent,
     DE_DDQN_Agent,
-    DEDQN_Agent
+    DEDQN_Agent,
+    QLPSO_Agent,
+    NRLPSO_Agent,
+    RL_HPSDE_Agent
 )
 
 matplotlib.use('Agg')
