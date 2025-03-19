@@ -13,8 +13,8 @@ import os
 import matplotlib
 import matplotlib.pyplot as plt
 from agent import (
-    DE_DDQN_Agent,
-    DEDQN_Agent,
+    # DE_DDQN_Agent,
+    # DEDQN_Agent,
     RL_HPSDE_Agent,
     LDE_Agent,
     QLPSO_Agent,
@@ -56,7 +56,9 @@ from optimizer import (
 )
 
 from agents import (
-    GLEET_Agent
+    GLEET_Agent,
+    DE_DDQN_Agent,
+    DEDQN_Agent
 )
 
 matplotlib.use('Agg')
