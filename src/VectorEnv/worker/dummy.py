@@ -44,7 +44,7 @@ class DummyEnvWorker(EnvWorker):
         self.result = self.env.reset()
 
     def seed(self, seed: Optional[int] = None) -> List[int]:
-        super().seed(seed)
+        # super().seed(seed) # todo 这里有的可以有的不行
         return self.env.seed(seed)
 
     def render(self, **kwargs: Any) -> Any:

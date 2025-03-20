@@ -230,13 +230,16 @@ class GLEET_Agent(PPO_Agent):
 
         super().__init__(self.config)
 
+    def __str__(self):
+        return "GLEET"
+
     def train_episode(self,
                       envs,
                       para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc'] = 'dummy',
                       asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
                       num_cpus: Optional[Union[int, None]] = 1,
                       num_gpus: int = 0,
-                      required_info = ['normalizer', 'gbest']):
+                      required_info = {}):
         if self.device != 'cpu':
             num_gpus = max(num_gpus, 1)
         env = ParallelEnv(envs, para_mode, asynchronous, num_cpus, num_gpus)
@@ -259,6 +262,7 @@ class GLEET_Agent(PPO_Agent):
         t = 0
         # initial_cost = obj
         _R = torch.zeros(len(env))
+        _loss = []
         # sample trajectory
         while not env.all_done():
             t_s = t
@@ -386,7 +390,7 @@ class GLEET_Agent(PPO_Agent):
                 # update gradient step
                 self.optimizer.zero_grad()
                 loss.backward()
-
+                _loss.append(loss.item())
                 # Clip gradient norm and get (clipped) gradient norms for logging
                 # current_step = int(pre_step + t//n_step * K_epochs  + _k)
                 grad_norms = clip_grad_norms(self.optimizer.param_groups, self.config.max_grad_norm)
@@ -401,7 +405,7 @@ class GLEET_Agent(PPO_Agent):
                 if self.learning_time >= self.config.max_learning_step:
                     memory.clear_memory()
                     _Rs = _R.detach().numpy().tolist()
-                    return_info = {'return': _Rs, 'learn_steps': self.learning_time, }
+                    return_info = {'return': _Rs, 'loss': np.mean(_loss),'learn_steps': self.learning_time, }
                     for key in required_info.keys():
                         return_info[key] = env.get_env_attr(required_info[key])
                     env.close()
@@ -411,10 +415,50 @@ class GLEET_Agent(PPO_Agent):
 
         is_train_ended = self.learning_time >= self.config.max_learning_step
         _Rs = _R.detach().numpy().tolist()
-        return_info = {'return': _Rs, 'learn_steps': self.learning_time,}
-        for key in required_info:
-            return_info[key] = env.get_env_attr(key)
+        return_info = {'return': _Rs, 'loss': np.mean(_loss),'learn_steps': self.learning_time,}
+        for key in required_info.keys():
+            return_info[key] = env.get_env_attr(required_info[key])
         env.close()
         return is_train_ended, return_info
+
+    def rollout_batch_episode(self,
+                              envs,
+                              seeds = None,
+                              para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc'] = 'dummy',
+                              asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
+                              num_cpus: Optional[Union[int, None]] = 1,
+                              num_gpus: int = 0,
+                              required_info = {}):
+        if self.device != 'cpu':
+            num_gpus = max(num_gpus, 1)
+        env = ParallelEnv(envs, para_mode, asynchronous, num_cpus, num_gpus)
+        if seeds is not None:
+            env.seed(seeds)
+        state = env.reset()
+        try:
+            state = torch.FloatTensor(state).to(self.device)
+        except:
+            pass
+
+        R = torch.zeros(len(env))
+        # sample trajectory
+        while not env.all_done():
+            with torch.no_grad():
+                action, log_lh, entro_p = self.actor(state)
+
+
+            # state transient
+            state, rewards, is_end, info = env.step(action.cpu().numpy().squeeze())
+            # print('step:{},max_reward:{}'.format(t,torch.max(rewards)))
+            R += torch.FloatTensor(rewards).squeeze()
+            # store info
+            try:
+                state = torch.FloatTensor(state).to(self.device)
+            except:
+                pass
+        results = {'return': R}
+        for key in required_info.keys():
+            results[key] = env.get_env_attr(required_info[key])
+        return results
 
 

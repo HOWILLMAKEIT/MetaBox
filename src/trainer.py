@@ -175,10 +175,9 @@ class Trainer(object):
                     exceed_max_ls, pbar_info_train = self.agent.train_episode(envs = env_list)
                     # exceed_max_ls, pbar_info_train = self.agent.train_episode(env)  # pbar_info -> dict
                     postfix_str = (
-                        f"return={[f'{x:.2e}' for x in pbar_info_train['return']]}, "
-                        f"normalizer={[f'{x:.2e}' for x in pbar_info_train['normalizer']]} "
-                        f"gbest={[f'{x:.2e}' for x in pbar_info_train['gbest']]} "
-                        f"learn_steps={pbar_info_train['learn_steps']}"
+                        f"loss={pbar_info_train['loss']:.2e}, "
+                        f"learn_steps={pbar_info_train['learn_steps']}, "
+                        f"return={[f'{x:.2e}' for x in pbar_info_train['return']]}"
                     )
 
                     pbar.set_postfix_str(postfix_str)
@@ -186,11 +185,11 @@ class Trainer(object):
                     # pbar.set_postfix(pbar_info_train)
                     pbar.update(self.config.train_batch_size)
                     learn_step = pbar_info_train['learn_steps']
-                    for id, p in enumerate(problem):
-                        name = p.__str__()
-                        cost_record[name].append(pbar_info_train['gbest'][id])
-                        normalizer_record[name].append(pbar_info_train['normalizer'][id])
-                        return_record.append(pbar_info_train['return'][id])
+                    # for id, p in enumerate(problem):
+                    #     name = p.__str__()
+                    #     cost_record[name].append(pbar_info_train['gbest'][id])
+                    #     normalizer_record[name].append(pbar_info_train['normalizer'][id])
+                    #     return_record.append(pbar_info_train['return'][id])
                     learn_steps.append(learn_step)
                     if exceed_max_ls:
                         break
