@@ -31,15 +31,15 @@ class DE_DDQN_Agent(DDQN_Agent):
         self.config.device = config.device
         # origin DEDDQN doesn't have clip 
         self.config.max_grad_norm = math.inf
-        
-        self.model = MLP(self.config.net_config).to(self.config.device)        
+
         # self.target_model is defined in DDQN_Agent
 
         self.config.optimizer = 'Adam'
         # origin code does not have lr_scheduler
         self.config.lr_scheduler = 'ExponentialLR'
         self.config.criterion = 'MSELoss'
-        
+
+        model = MLP(self.config.net_config).to(self.config.device)
         # self.__n_act = config.n_act
         # self.__epsilon = config.epsilon
         # self.__gamma = config.gamma
@@ -52,7 +52,7 @@ class DE_DDQN_Agent(DDQN_Agent):
 
         # self.__cur_checkpoint=0
          
-        super().__init__(self.config) 
+        super().__init__(self.config, {'model': model}, self.config.lr_model)
         
         # # save init agent
         # if self.__cur_checkpoint==0:

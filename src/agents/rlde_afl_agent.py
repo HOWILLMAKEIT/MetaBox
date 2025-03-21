@@ -393,9 +393,7 @@ class RLDE_AFL_Agent(PPO_Agent):
 
         critic = Critic(input_dim = self.config.fe_hidden_dim + 16)
 
-        super().__init__(self.config)
-        self.reset({'actor': actor, 'critic': critic, 'fe': fe},
-                   self.config.lr)
+        super().__init__(self.config, {'actor': actor, 'critic': critic, 'fe': fe}, self.config.lr)
 
     def __str__(self):
         return "RLDE-AFL"

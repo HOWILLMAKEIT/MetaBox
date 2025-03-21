@@ -228,9 +228,7 @@ class GLEET_Agent(PPO_Agent):
             hidden_dim2 = self.config.hidden_dim2_critic,
         )
 
-        super().__init__(self.config)
-        self.reset({'actor': actor, 'critic': critic},
-                   [self.config.lr_actor, self.config.lr_critic])
+        super().__init__(self.config, {'actor': actor, 'critic': critic}, [self.config.lr_actor, self.config.lr_critic])
 
     def __str__(self):
         return "GLEET"

@@ -24,14 +24,13 @@ class DEDQN_Agent(DQN_Agent):
         self.config.warm_up_size = config.batch_size
 
         self.config.device = config.device
-        self.model = MLP(self.config.mlp_config).to(self.config.device)
         # origin DEDDQN doesn't have clip 
         self.config.max_grad_norm = math.inf
         self.config.optimizer = 'AdamW'
         # origin code does not have lr_scheduler
         self.config.lr_scheduler = 'ExponentialLR'
         self.config.criterion = 'MSELoss'
-        
+        model = MLP(self.config.mlp_config).to(self.config.device)
         # self.__optimizer = torch.optim.AdamW(self.__dqn.parameters(), lr=config.lr)
         # self.__criterion = torch.nn.MSELoss()
         # self.__n_act = config.n_act
@@ -44,7 +43,7 @@ class DEDQN_Agent(DQN_Agent):
         # self.__global_ls = 0
 
         # self.__cur_checkpoint=0
-        super().__init__(self.config)
+        super().__init__(self.config, {'model': model}, self.config.lr_model)
         # save init agent
         # if self.__cur_checkpoint==0:
         #     save_class(self.__config.agent_save_dir,'checkpoint'+str(self.__cur_checkpoint),self)

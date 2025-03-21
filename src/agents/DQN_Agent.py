@@ -1,5 +1,5 @@
 from typing import Tuple
-from agent.basic_agent import Basic_Agent
+from agents.basic_agent import Basic_Agent
 import torch
 import math, copy
 from typing import Any, Callable, List, Optional, Tuple, Union, Literal
@@ -33,7 +33,7 @@ def clip_grad_norms(param_groups, max_norm=math.inf):
 
 
 class DQN_Agent(Basic_Agent):
-    def __init__(self, config):
+    def __init__(self, config, network: dict, learning_rates: Optional):
         super().__init__(config)
         self.config = config
 
@@ -46,26 +46,28 @@ class DQN_Agent(Basic_Agent):
         self.batch_size = self.config.batch_size
         self.warm_up_size = self.config.warm_up_size
         self.device = self.config.device
-        
+
+        self.replay_buffer = ReplayBuffer(self.memory_size)
+        self.set_network(network, learning_rates)
         # figure out the actor network
         # self.model = None
-        assert hasattr(self, 'model')
-
-        # figure out the optimizer
-        assert hasattr(torch.optim, self.config.optimizer)
-        self.optimizer = eval('torch.optim.' + self.config.optimizer)(
-            [{'params': self.model.parameters(), 'lr': self.config.lr_model}])
-        # figure out the lr schedule
-        assert hasattr(torch.optim.lr_scheduler, self.config.lr_scheduler)
-        self.lr_scheduler = eval('torch.optim.lr_scheduler.' + self.config.lr_scheduler)(self.optimizer, self.config.lr_decay, last_epoch=-1,)
-
-        assert hasattr(torch.nn, self.config.criterion)
-        self.criterion = eval('torch.nn.' + self.config.criterion)()
-        
-        self.replay_buffer = ReplayBuffer(self.memory_size)
-        
-        # move to device
-        self.model.to(self.device)
+        # assert hasattr(self, 'model')
+        #
+        # # figure out the optimizer
+        # assert hasattr(torch.optim, self.config.optimizer)
+        # self.optimizer = eval('torch.optim.' + self.config.optimizer)(
+        #     [{'params': self.model.parameters(), 'lr': self.config.lr_model}])
+        # # figure out the lr schedule
+        # # assert hasattr(torch.optim.lr_scheduler, self.config.lr_scheduler)
+        # # self.lr_scheduler = eval('torch.optim.lr_scheduler.' + self.config.lr_scheduler)(self.optimizer, self.config.lr_decay, last_epoch=-1,)
+        #
+        # assert hasattr(torch.nn, self.config.criterion)
+        # self.criterion = eval('torch.nn.' + self.config.criterion)()
+        #
+        # self.replay_buffer = ReplayBuffer(self.memory_size)
+        #
+        # # move to device
+        # self.model.to(self.device)
 
         # init learning time
         self.learning_time = 0
@@ -74,6 +76,32 @@ class DQN_Agent(Basic_Agent):
         # save init agent
         save_class(self.config.agent_save_dir,'checkpoint'+str(self.cur_checkpoint),self)
         self.cur_checkpoint += 1
+
+    def set_network(self, networks: dict, learning_rates: Optional):
+        if networks:
+            for name, network in networks.items():
+                setattr(self, name, network)  # Assign each network in the dictionary to the class instance
+
+        assert hasattr(self, 'model')  # Ensure that 'model' is set as an attribute of the class
+
+        if isinstance(learning_rates, (int, float)):
+            learning_rates = [learning_rates] * len(networks)
+        elif len(learning_rates) != len(networks):
+            raise ValueError("The length of the learning rates list must match the number of networks!")
+
+        all_params = []
+        for id, network_name in enumerate(networks):
+            network = getattr(self, network_name)
+            all_params.append({'params': network.parameters(), 'lr': learning_rates[id]})
+
+        assert hasattr(torch.optim, self.config.optimizer)
+        self.optimizer = eval('torch.optim.' + self.config.optimizer)(all_params)
+
+        assert hasattr(torch.nn, self.config.criterion)
+        self.criterion = eval('torch.nn.' + self.config.criterion)()
+
+        for network_name in networks:
+            getattr(self, network_name).to(self.device)
 
     def update_setting(self, config):
         self.config.max_learning_step = config.max_learning_step
@@ -114,6 +142,7 @@ class DQN_Agent(Basic_Agent):
             pass
         
         _R = torch.zeros(len(env))
+        _loss = []
         # sample trajectory
         while not env.all_done():
             action = self.get_action(state=state, epsilon_greedy=True)
@@ -149,6 +178,8 @@ class DQN_Agent(Basic_Agent):
                 grad_norms = clip_grad_norms(self.optimizer.param_groups, self.config.max_grad_norm)
                 self.optimizer.step()
 
+                _loss.append(loss.item())
+
                 self.learning_time += 1
                 if self.learning_time >= (self.config.save_interval * self.cur_checkpoint):
                     save_class(self.config.agent_save_dir, 'checkpoint'+str(self.cur_checkpoint), self)
@@ -156,7 +187,7 @@ class DQN_Agent(Basic_Agent):
 
                 if self.learning_time >= self.config.max_learning_step:
                     _Rs = _R.detach().numpy().tolist()
-                    return_info = {'return': _Rs, 'learn_steps': self.learning_time, }
+                    return_info = {'return': _Rs, 'loss': np.mean(_loss), 'learn_steps': self.learning_time, }
                     for key in required_info:
                         return_info[key] = env.get_env_attr(key)
                     env.close()
@@ -165,10 +196,10 @@ class DQN_Agent(Basic_Agent):
 
         is_train_ended = self.learning_time >= self.config.max_learning_step
         _Rs = _R.detach().numpy().tolist()
-        return_info = {'return': _Rs, 'learn_steps': self.learning_time, }
+        return_info = {'return': _Rs, 'loss': np.mean(_loss), 'learn_steps': self.learning_time}
         for key in required_info:
             return_info[key] = env.get_env_attr(key)
-            print(f"{key} : {return_info[key]}")
+            # print(f"{key} : {return_info[key]}")
         env.close()
         
         return is_train_ended, return_info

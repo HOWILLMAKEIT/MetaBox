@@ -21,10 +21,11 @@ Your own agent should have the following methods:
 
 from environment import PBO_Env
 from typing import Tuple
-
+from typing import Optional, Union, Literal
 class Basic_Agent:
     def __init__(self, config):
         self.__config = config
+
 
     def update_setting(self, config):
         pass
@@ -39,3 +40,7 @@ class Basic_Agent:
 
     def train_epoch(self):
         pass
+
+    def set_network(self, networks: dict, learning_rates: Optional):
+        pass
+

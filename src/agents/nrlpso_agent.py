@@ -29,16 +29,18 @@ class NRLPSO_Agent(TabularQ_Agent):
         #     save_class(self.__config.agent_save_dir, 'checkpoint'+str(self.__cur_checkpoint), self)
         #     self.__cur_checkpoint += 1
 
-    def __get_action(self, state):  # make action decision according to given state
-        # print(self.q_table.shape)
-        # print([(type(st),st) for st in state])
-        action = []
-        for i in range(len(state)):
-            # exp = np.exp(self.q_table[state[i]])
-            # prob = exp / exp.sum()
-            prob = softmax(self.q_table[state[i]])  
-            action.append(np.random.choice(self.n_act, size=1, p=prob))
-        return np.array(action)
+    def __get_action(self, state):  # Make action decision according to the given state
+        # Get the corresponding rows from the Q-table and compute the softmax
+        q_values = self.q_table[state]  # shape: (bs, n_actions)
+
+        # Compute the action probabilities for each state
+        prob = softmax(q_values)  # shape: (bs, n_actions)
+
+        # Choose an action based on the probabilities
+        action = torch.multinomial(prob, 1)  # shape: (bs, 1)
+
+        # Return the action
+        return action.squeeze().numpy()  # Return the action and remove unnecessary dimensions
 
     def train_episode(self, 
                       envs, 
@@ -57,23 +59,25 @@ class NRLPSO_Agent(TabularQ_Agent):
         gamma = self.gamma
         
         state = env.reset()
-        state = torch.tensor(state,dtype=torch.int32)
+        state = torch.tensor(state,dtype=torch.int64)
         
         _R = torch.zeros(len(env))
+        _loss = []
         # sample trajectory
         while not env.all_done():
             action = self.__get_action(state)
             # state transient
             next_state, reward, is_end, info = env.step(action)
             _R += reward
-            # update Q-table
-            TD_error = [reward[i] + gamma * self.q_table[next_state[i]].max() - self.q_table[state[i]][action[i]]\
-                for i in range(len(state)) ]
-            
-            for i in range(len(state)):
-                self.q_table[state[i]][action[i]] += self.lr_model * TD_error[i]
 
-            
+            reward = torch.FloatTensor(reward).to(self.device)
+            # update Q-table
+            TD_error = reward + gamma * torch.max(self.q_table[next_state], dim = 1)[0] - self.q_table[state, action]
+
+            _loss.append(TD_error.mean().item())
+            self.q_table[state, action] += self.lr_model * TD_error
+
+
             self.learning_time += 1
 
             if self.learning_time >= (self.config.save_interval * self.cur_checkpoint):
@@ -81,7 +85,8 @@ class NRLPSO_Agent(TabularQ_Agent):
                 self.cur_checkpoint += 1
 
             if self.learning_time >= self.config.max_learning_step:
-                return_info = {'return': _R, 'learn_steps': self.learning_time, }
+                _Rs = _R.detach().numpy().tolist()
+                return_info = {'return': _Rs, 'loss': np.mean(_loss), 'learn_steps': self.learning_time, }
                 for key in required_info.keys():
                     return_info[key] = env.get_env_attr(required_info[key])
                 env.close()
@@ -90,15 +95,16 @@ class NRLPSO_Agent(TabularQ_Agent):
             self.lr_model = self.__alpha_max - (self.__alpha_max - 0.1) * self.learning_time / self.__max_learning_step
             
             # store info
-            state = torch.FloatTensor(next_state)
+            state = torch.tensor(next_state, dtype = torch.int64)
             
-            is_train_ended = self.learning_time >= self.config.max_learning_step
-            return_info = {'return': _R, 'learn_steps': self.learning_time, }
-            for key in required_info.keys():
-                return_info[key] = env.get_env_attr(required_info[key])
-            env.close()
-            
-            return is_train_ended, return_info
+        is_train_ended = self.learning_time >= self.config.max_learning_step
+        _Rs = _R.detach().numpy().tolist()
+        return_info = {'return': _Rs, 'loss': np.mean(_loss), 'learn_steps': self.learning_time, }
+        for key in required_info.keys():
+            return_info[key] = env.get_env_attr(required_info[key])
+        env.close()
+
+        return is_train_ended, return_info
 
     # def rollout_episode(self, env):
     #     state = env.reset()
