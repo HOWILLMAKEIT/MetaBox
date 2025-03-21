@@ -39,6 +39,7 @@ from optimizer import (
     LES_Optimizer,
     NRLPSO_Optimizer,
     Symbol_Optimizer,
+    RLDE_AFL_Optimizer,
 
     DEAP_DE,
     JDE21,
@@ -60,7 +61,8 @@ from agents import (
     DEDQN_Agent,
     QLPSO_Agent,
     NRLPSO_Agent,
-    RL_HPSDE_Agent
+    RL_HPSDE_Agent,
+    RLDE_AFL_Agent
 )
 
 def cal_t0(dim, fes):

@@ -4,4 +4,5 @@ from .dedqn_agent import DEDQN_Agent
 from .qlpso_agent import QLPSO_Agent
 from .nrlpso_agent import NRLPSO_Agent
 from .rl_hpsde_agent import RL_HPSDE_Agent
+from .rlde_afl_agent import RLDE_AFL_Agent
 from .utils import *

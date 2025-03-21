@@ -62,20 +62,57 @@ class PPO_Agent(Basic_Agent):
 
         # figure out the critic network
         # self.critic = None
-        assert hasattr(self, 'actor') and hasattr(self, 'critic')
-
-        # figure out the optimizer
-        assert hasattr(torch.optim, self.config.optimizer)
-        self.optimizer = eval('torch.optim.' + self.config.optimizer)(
-            [{'params': self.actor.parameters(), 'lr': self.config.lr_actor}] +
-            [{'params': self.critic.parameters(), 'lr': self.config.lr_critic}])
+        # assert hasattr(self, 'actor') and hasattr(self, 'critic')
+        #
+        # # figure out the optimizer
+        # assert hasattr(torch.optim, self.config.optimizer)
+        # self.optimizer = eval('torch.optim.' + self.config.optimizer)(
+        #     [{'params': self.actor.parameters(), 'lr': self.config.lr_actor}] +
+        #     [{'params': self.critic.parameters(), 'lr': self.config.lr_critic}])
         # figure out the lr schedule
-        assert hasattr(torch.optim.lr_scheduler, self.config.lr_scheduler)
-        self.lr_scheduler = eval('torch.optim.lr_scheduler.' + self.config.lr_scheduler)(self.optimizer, self.config.lr_decay, last_epoch = -1, )
+        # assert hasattr(torch.optim.lr_scheduler, self.config.lr_scheduler)
+        # self.lr_scheduler = eval('torch.optim.lr_scheduler.' + self.config.lr_scheduler)(self.optimizer, self.config.lr_decay, last_epoch = -1, )
 
         # move to device
-        self.actor.to(self.device)
-        self.critic.to(self.device)
+        # self.actor.to(self.device)
+        # self.critic.to(self.device)
+
+        # # init learning time
+        # self.learning_time = 0
+        # self.cur_checkpoint = 0
+        #
+        # # save init agent
+        # save_class(self.config.agent_save_dir, 'checkpoint' + str(self.cur_checkpoint), self)
+        # self.cur_checkpoint += 1
+
+    def reset(self, networks: dict, learning_rates: Optional):
+        if networks:
+            # 使用传入的字典来设置网络
+            for name, network in networks.items():
+                setattr(self, name, network)
+
+        # 确保网络已经正确设置
+        assert hasattr(self, 'actor') and hasattr(self, 'critic')
+
+        # 如果传入的学习率是一个单一值，将其扩展为与网络数量相等的列表
+        if isinstance(learning_rates, (int, float)):
+            learning_rates = [learning_rates] * len(networks)
+        elif len(learning_rates) != len(networks):
+            raise ValueError("学习率列表长度必须与网络数量匹配！")
+
+        # 初始化优化器（重新初始化）
+        all_params = []
+        for id, network_name in enumerate(networks):
+            network = getattr(self, network_name)
+            all_params.append({'params': network.parameters(), 'lr': learning_rates[id]})
+
+        # 初始化优化器
+        assert hasattr(torch.optim, self.config.optimizer)
+        self.optimizer = eval('torch.optim.' + self.config.optimizer)(all_params)
+
+        # 将所有网络转移到设备
+        for network_name in networks:
+            getattr(self, network_name).to(self.device)
 
         # init learning time
         self.learning_time = 0
@@ -84,6 +121,8 @@ class PPO_Agent(Basic_Agent):
         # save init agent
         save_class(self.config.agent_save_dir, 'checkpoint' + str(self.cur_checkpoint), self)
         self.cur_checkpoint += 1
+
+
 
     def update_setting(self, config):
         self.config.max_learning_step = config.max_learning_step

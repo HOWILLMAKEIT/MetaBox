@@ -206,7 +206,7 @@ class GLEET_Agent(PPO_Agent):
         self.config.max_grad_norm = 0.1
 
         # figure out the actor network
-        self.actor = Actor(
+        actor = Actor(
             embedding_dim = self.config.embedding_dim,
             hidden_dim = self.config.hidden_dim,
             n_heads_actor = self.config.encoder_head_num,
@@ -222,13 +222,15 @@ class GLEET_Agent(PPO_Agent):
         )
 
         # figure out the critic network
-        self.critic = Critic(
+        critic = Critic(
             input_dim = self.config.embedding_dim,
             hidden_dim1 = self.config.hidden_dim1_critic,
             hidden_dim2 = self.config.hidden_dim2_critic,
         )
 
         super().__init__(self.config)
+        self.reset({'actor': actor, 'critic': critic},
+                   [self.config.lr_actor, self.config.lr_critic])
 
     def __str__(self):
         return "GLEET"
@@ -239,7 +241,7 @@ class GLEET_Agent(PPO_Agent):
                       asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
                       num_cpus: Optional[Union[int, None]] = 1,
                       num_gpus: int = 0,
-                      required_info = {}):
+                      required_info = ['normalizer', 'gbest']):
         if self.device != 'cpu':
             num_gpus = max(num_gpus, 1)
         env = ParallelEnv(envs, para_mode, asynchronous, num_cpus, num_gpus)
@@ -353,7 +355,7 @@ class GLEET_Agent(PPO_Agent):
                 Reward = []
                 reward_reversed = memory.rewards[::-1]
                 # get next value
-                R = self.critic(self.actor(state, only_critic = True))[0]
+                R = self.critic(self.actor(state, only_critic = True)).detach()
 
                 for r in range(len(reward_reversed)):
                     R = R * gamma + reward_reversed[r]
@@ -406,8 +408,8 @@ class GLEET_Agent(PPO_Agent):
                     memory.clear_memory()
                     _Rs = _R.detach().numpy().tolist()
                     return_info = {'return': _Rs, 'loss': np.mean(_loss),'learn_steps': self.learning_time, }
-                    for key in required_info.keys():
-                        return_info[key] = env.get_env_attr(required_info[key])
+                    for key in required_info:
+                        return_info[key] = env.get_env_attr(key)
                     env.close()
                     return self.learning_time >= self.config.max_learning_step, return_info
 
@@ -416,8 +418,8 @@ class GLEET_Agent(PPO_Agent):
         is_train_ended = self.learning_time >= self.config.max_learning_step
         _Rs = _R.detach().numpy().tolist()
         return_info = {'return': _Rs, 'loss': np.mean(_loss),'learn_steps': self.learning_time,}
-        for key in required_info.keys():
-            return_info[key] = env.get_env_attr(required_info[key])
+        for key in required_info:
+            return_info[key] = env.get_env_attr(key)
         env.close()
         return is_train_ended, return_info
 

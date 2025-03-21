@@ -40,6 +40,7 @@ from optimizer import (
     LES_Optimizer,
     NRLPSO_Optimizer,
     Symbol_Optimizer,
+    RLDE_AFL_Optimizer,
 
     DEAP_DE,
     JDE21,
@@ -61,7 +62,8 @@ from agents import (
     DEDQN_Agent,
     QLPSO_Agent,
     NRLPSO_Agent,
-    RL_HPSDE_Agent
+    RL_HPSDE_Agent,
+    RLDE_AFL_Agent
 )
 
 matplotlib.use('Agg')
@@ -181,15 +183,13 @@ class Trainer(object):
                     )
 
                     pbar.set_postfix_str(postfix_str)
-
-                    # pbar.set_postfix(pbar_info_train)
                     pbar.update(self.config.train_batch_size)
                     learn_step = pbar_info_train['learn_steps']
-                    # for id, p in enumerate(problem):
-                    #     name = p.__str__()
-                    #     cost_record[name].append(pbar_info_train['gbest'][id])
-                    #     normalizer_record[name].append(pbar_info_train['normalizer'][id])
-                    #     return_record.append(pbar_info_train['return'][id])
+                    for id, p in enumerate(problem):
+                        name = p.__str__()
+                        cost_record[name].append(pbar_info_train['gbest'][id])
+                        normalizer_record[name].append(pbar_info_train['normalizer'][id])
+                        return_record.append(np.mean(pbar_info_train['return']))
                     learn_steps.append(learn_step)
                     if exceed_max_ls:
                         break
