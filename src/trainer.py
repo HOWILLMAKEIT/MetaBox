@@ -16,10 +16,10 @@ from agent import (
     # DE_DDQN_Agent,
     # DEDQN_Agent,
     RL_HPSDE_Agent,
-    LDE_Agent,
+    # LDE_Agent,
     # QLPSO_Agent,
     RLEPSO_Agent,
-    RL_PSO_Agent,
+    # RL_PSO_Agent,
     L2L_Agent,
     RL_DAS_Agent,
     LES_Agent,
@@ -63,7 +63,9 @@ from agents import (
     QLPSO_Agent,
     NRLPSO_Agent,
     RL_HPSDE_Agent,
-    RLDE_AFL_Agent
+    RLDE_AFL_Agent,
+    LDE_Agent,
+    RL_PSO_Agent
 )
 
 matplotlib.use('Agg')
