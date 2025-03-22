@@ -174,6 +174,9 @@ class Trainer(object):
             for p in problem:
                 cost_record[p.__str__()] = []
                 normalizer_record[p.__str__()] = []
+
+        # todo Seed config
+        seed = 4
         while not exceed_max_ls:
             learn_step = 0
             self.train_set.shuffle()
@@ -182,6 +185,9 @@ class Trainer(object):
 
                     # env = PBO_Env(problem, self.optimizer)
                     env_list = [PBO_Env(p, copy.deepcopy(self.optimizer)) for p in problem]
+                    for env in env_list:
+                        env.optimizer.seed(seed)
+
                     exceed_max_ls, pbar_info_train = self.agent.train_episode(envs = env_list)
                     # exceed_max_ls, pbar_info_train = self.agent.train_episode(env)  # pbar_info -> dict
                     postfix_str = (

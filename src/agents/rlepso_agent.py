@@ -332,7 +332,7 @@ class RLEPSO_Agent(PPO_Agent):
         # sample trajectory
         while not env.all_done():
             with torch.no_grad():
-                action, log_lh = self.actor(state)
+                action, log_lh = self.actor(state, require_entropy = False)
 
             # state transient
             state, rewards, is_end, info = env.step(action.detach().cpu().numpy())
