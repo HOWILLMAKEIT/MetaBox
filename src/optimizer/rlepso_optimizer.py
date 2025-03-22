@@ -35,6 +35,8 @@ class RLEPSO_Optimizer(Learnable_Optimizer):
         self.__max_fes = config.maxFEs
         self.__is_done = False
         self.name = 'EPSO'
+        self.gbest_val = None
+
 
     def init_population(self, problem):
         rand_pos=np.random.uniform(low=problem.lb, high=problem.ub, size=(self.__NP, self.__dim))
@@ -47,6 +49,7 @@ class RLEPSO_Optimizer(Learnable_Optimizer):
         gbest_val = np.min(c_cost)
         gbest_index = np.argmin(c_cost)
         gbest_position = rand_pos[gbest_index]
+        self.gbest_val = gbest_val
         self.__max_cost = np.max(c_cost)
 
         self.__particles = {'current_position': rand_pos.copy(),  #  ps, dim
@@ -234,7 +237,7 @@ class RLEPSO_Optimizer(Learnable_Optimizer):
         
         self.__particles = new_particles
         # reinitialize according to c_mutation and per_no_improve
-
+        self.gbest_val = self.__particles['gbest_val']
         filter_reinit = np.random.rand(self.__NP) < coes['c_mutation']*0.01*self.__per_no_improve
         self.__reinit(filter_reinit[:, None], problem)
 
@@ -260,4 +263,5 @@ class RLEPSO_Optimizer(Learnable_Optimizer):
             else:
                 self.cost.append(self.__particles['gbest_val'])
 
-        return next_state, reward, is_end
+        info = {}
+        return next_state, reward, is_end, info

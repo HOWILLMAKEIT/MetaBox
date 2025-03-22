@@ -10,4 +10,5 @@ from .rl_pso_agent import RL_PSO_Agent
 from .symbol_agent import SYMBOL_Agent
 from .rl_das_agent import RL_DAS_Agent
 from .surr_rlde_agent import Surr_RLDE_Agent
+from .rlepso_agent import RLEPSO_Agent
 from .utils import *
