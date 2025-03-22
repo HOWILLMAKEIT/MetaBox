@@ -28,7 +28,7 @@ from .l2l_optimizer import L2L_Optimizer
 from .gleet_optimizer import GLEET_Optimizer
 from .rl_das_optimizer import RL_DAS_Optimizer
 from .les_optimizer import LES_Optimizer
-from .symbol_optimizer import Symbol_Optimizer
+from .symbol_optimizer import SYMBOL_Optimizer
 
 from .nrlpso_optimizer import NRLPSO_Optimizer
 from .rlde_afl_optimizer import RLDE_AFL_Optimizer

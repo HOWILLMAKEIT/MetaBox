@@ -38,7 +38,7 @@ from optimizer import (
     RL_DAS_Optimizer,
     LES_Optimizer,
     NRLPSO_Optimizer,
-    Symbol_Optimizer,
+    SYMBOL_Optimizer,
     RLDE_AFL_Optimizer,
 
     DEAP_DE,
