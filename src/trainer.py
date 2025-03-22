@@ -21,7 +21,7 @@ from agent import (
     RLEPSO_Agent,
     RL_PSO_Agent,
     L2L_Agent,
-    RL_DAS_Agent,
+    # RL_DAS_Agent,
     LES_Agent,
     # NRLPSO_Agent,
     # Symbol_Agent,
@@ -64,7 +64,8 @@ from agents import (
     NRLPSO_Agent,
     RL_HPSDE_Agent,
     RLDE_AFL_Agent,
-    SYMBOL_Agent
+    SYMBOL_Agent,
+    RL_DAS_Agent
 )
 
 matplotlib.use('Agg')
