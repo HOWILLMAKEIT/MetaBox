@@ -41,6 +41,7 @@ from optimizer import (
     NRLPSO_Optimizer,
     SYMBOL_Optimizer,
     RLDE_AFL_Optimizer,
+    Surr_RLDE_Optimizer,
 
     DEAP_DE,
     JDE21,
@@ -64,7 +65,8 @@ from agents import (
     NRLPSO_Agent,
     RL_HPSDE_Agent,
     RLDE_AFL_Agent,
-    SYMBOL_Agent
+    SYMBOL_Agent,
+    Surr_RLDE_Agent
 )
 
 matplotlib.use('Agg')
