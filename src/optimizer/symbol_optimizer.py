@@ -49,7 +49,7 @@ def symbol_config(config):
     config.lr_critic=1e-3
 
 
-class Symbol_Optimizer(Learnable_Optimizer):
+class SYMBOL_Optimizer(Learnable_Optimizer):
 
     # todo: integrate task function into optimizer
     def __init__(self, config):
@@ -102,7 +102,7 @@ class Symbol_Optimizer(Learnable_Optimizer):
 
         self.log_index = 1
         self.cost = [self.population.gbest_cost]
-
+        self.gbest_val = self.population.gbest_cost
         # return state
         return self.observe()
 
@@ -170,11 +170,12 @@ class Symbol_Optimizer(Learnable_Optimizer):
             
             # update population
             self.population.update(next_position, filter_survive=False)
-        
+
+
         if self.population.cur_fes >= self.log_index * self.log_interval:
             self.log_index += 1
             self.cost.append(self.population.gbest_cost)
-
+        self.gbest_val = self.population.gbest_cost
         reward = 0
         if self.is_train:
             tea_pop, _, _, _ = self.teacher_optimizer.update({'skip_step': skip_step})
@@ -197,7 +198,7 @@ class Symbol_Optimizer(Learnable_Optimizer):
                 self.cost.append(self.population.gbest_cost)
             # print(f'problem: {self.problem.__str__()}')
 
-        return self.observe(), reward, is_end
+        return self.observe(), reward, is_end, {}
 
     def cal_reward(self, tea_pop, max_step):
         dist = cal_gap_nearest(self.population, tea_pop)

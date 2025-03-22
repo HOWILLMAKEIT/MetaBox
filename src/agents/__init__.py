@@ -7,4 +7,6 @@ from .rl_hpsde_agent import RL_HPSDE_Agent
 from .rlde_afl_agent import RLDE_AFL_Agent
 from .lde_agent import LDE_Agent
 from .rl_pso_agent import RL_PSO_Agent
+from .symbol_agent import SYMBOL_Agent
+from .rl_das_agent import RL_DAS_Agent
 from .utils import *
