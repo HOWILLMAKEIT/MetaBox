@@ -32,7 +32,7 @@ class Actor(nn.Module):
             action = torch.clamp(policy.sample(), min=0, max=1)
         log_prob = policy.log_prob(action)
 
-        log_prob = torch.sum(log_prob)
+        log_prob = torch.sum(log_prob, dim = 1)
 
         if require_entropy:
             entropy = policy.entropy()  # for logging only bs,ps,2
@@ -218,7 +218,7 @@ class RLEPSO_Agent(PPO_Agent):
 
                     for tt in range(t_time):
                         # get new action_prob
-                        _, log_p, entro_p = self.actor(state, fix_action = old_actions[tt], require_entropy=True)
+                        _, log_p, entro_p = self.actor(state, fixed_action = old_actions[tt], require_entropy=True)
 
                         logprobs.append(log_p)
                         entropy.append(entro_p.detach().cpu())
@@ -253,7 +253,6 @@ class RLEPSO_Agent(PPO_Agent):
                 ratios = torch.exp(logprobs - old_logprobs.detach())
                 # print(Reward.shape,bl_val_detached.shape)
                 # Finding Surrogate Loss:
-                print(logprobs.shape)
                 advantages = Reward - bl_val_detached
 
                 surr1 = ratios * advantages
