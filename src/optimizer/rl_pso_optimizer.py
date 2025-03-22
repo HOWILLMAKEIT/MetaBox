@@ -42,6 +42,8 @@ class RL_PSO_Optimizer(Learnable_Optimizer):
         gbest_position = rand_pos[gbest_index]
         self.__max_cost = np.max(c_cost)
 
+        self.gbest_val = gbest_val
+        
         self.__particles={'current_position': rand_pos.copy(),  # ?ps, dim
                           'c_cost': c_cost.copy(),  # ?ps
                           'pbest_position': rand_pos.copy(),  # ps, dim
@@ -126,6 +128,9 @@ class RL_PSO_Optimizer(Learnable_Optimizer):
             self.__particles['gbest_position'] = new_x
             self.__particles['gbest_index'] = j
 
+        self.gbest_val = self.__particles['gbest_val']
+        
+        
         # see if the end condition is satisfied
         if problem.optimum is None:
             is_done = self.fes >= self.__max_fes
@@ -145,4 +150,7 @@ class RL_PSO_Optimizer(Learnable_Optimizer):
                 self.cost[-1] = self.__particles['gbest_val']
             else:
                 self.cost.append(self.__particles['gbest_val'])
-        return self.__get_state(self.__cur_index), reward, is_done
+                
+        info = {}
+        
+        return self.__get_state(self.__cur_index), reward, is_done , info

@@ -1,8 +1,8 @@
 from torch import nn
 from torch.distributions import Normal
 
-from agent.networks import MultiHeadEncoder, MLP, EmbeddingNet  # todo add
-from agent.utils import *
+from agents.networks import MultiHeadEncoder, MLP, EmbeddingNet
+from agents.utils import *
 from .ppo_agent import *
 
 

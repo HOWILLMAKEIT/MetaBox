@@ -133,6 +133,9 @@ class LDE_Optimizer(Learnable_Optimizer):
         self.__pop = self.__mulgenerate_pop(self.__BATCH_SIZE, self.__config.NP, self.__config.dim, problem.lb, problem.ub, True)   # [bs, NP, dim]
         self.__fit = self.__get_cost([problem], self.__pop)
         self.gbest_cost = np.min(self.__fit)
+        
+        self.gbest_val = self.gbest_cost
+        
         self.fes = self.__config.NP
         self.log_index = 1
         self.cost = [self.gbest_cost]
@@ -159,7 +162,6 @@ class LDE_Optimizer(Learnable_Optimizer):
     def update(self, action, problem):
         self.__pop, self.__fit = self.__order_by_f(self.__pop, self.__fit)
         fitness = self.__maxmin_norm(self.__fit)
-
         # sf_cr = np.squeeze(action.cpu().numpy(), axis=0)  # [bs, NP*2]
         sf = action[:, 0:self.__config.NP]  # scale factor [bs, NP]
         cr = action[:, self.__config.NP:2*self.__config.NP]  # crossover rate  [bs, NP]
@@ -187,6 +189,8 @@ class LDE_Optimizer(Learnable_Optimizer):
         self.__past_histo = np.concatenate((self.__past_histo, hist_fit[:, None, :]), axis=1)
         self.gbest_cost = np.min(self.__fit)
 
+        self.gbest_val = self.gbest_cost
+        
         if self.fes >= self.log_index * self.log_interval:
             self.log_index += 1
             self.cost.append(self.gbest_cost)
@@ -195,4 +199,7 @@ class LDE_Optimizer(Learnable_Optimizer):
                 self.cost[-1] = self.gbest_cost
             else:
                 self.cost.append(self.gbest_cost)
-        return self.__get_feature(), reward, is_done
+        
+        info = {}
+        
+        return self.__get_feature(), reward, is_done, info

@@ -8,7 +8,7 @@ from torch import nn
 import torch
 from torch.distributions import Normal
 import torch.nn.functional as F
-from agent.utils import *
+from agents.utils import *
 from VectorEnv.great_para_env import ParallelEnv
 from .utils import ReplayBuffer
 
