@@ -32,6 +32,7 @@ Version:
 from problem.basic_problem import Basic_Problem
 import numpy as np
 from torch.utils.data import Dataset
+from scipy.interpolate import RegularGridInterpolator
 import pickle
 
 class UAV_Basic_Problem(Basic_Problem):
@@ -290,7 +291,44 @@ class Terrain(UAV_Basic_Problem):
 
             J4 += addition_J_1 + addition_J_2
 
-        return np.array([J1, J2, J3, J4])
+        # ---------- J5 - terrain cost ----------
+        J5 = np.full(NP, J_pen)
+        paths_above = self.are_paths_clear(x_all, y_all, z_abs, H)
+        J5[paths_above] = 0
+        b1 = 5
+        b2 = 1
+        b3 = 10
+        b4 = 1
+        b5 = 1
+        return b1 * J1 + b2 * J2 + b3 * J3 + b4 * J4 + b5 * J4
+
+    def are_paths_clear(self, x_all, y_all, z_abs, H, num_samples = 10):
+        """
+        Check if all the line segments connecting adjacent points of NP paths are completely above the terrain H.
+        :param x_all: (NP, N) shaped array, x coordinates of N points for each of NP paths
+        :param y_all: (NP, N) shaped array, y coordinates of N points for each of NP paths
+        :param z_abs: (NP, N) shaped array, absolute heights of N points for each of NP paths
+        :param H: (H_rows, H_cols) shaped terrain height matrix
+        :param num_samples: The number of sample points along each line segment (excluding the endpoints)
+        :return: A boolean array of shape (NP,) where each value indicates whether all segments of a path are above the terrain
+        """
+        # Generate the interpolation function for the terrain
+
+        H_rows, H_cols = H.shape
+        x_indices = np.arange(H_cols)  # X-direction indices
+        y_indices = np.arange(H_rows)  # Y-direction indices
+        interp_func = RegularGridInterpolator((y_indices, x_indices), H, bounds_error = False, fill_value = np.nan)
+
+        # Calculate the sample points for all line segments
+        x_interp = np.linspace(x_all[:, :-1], x_all[:, 1:], num_samples, axis = 2)  # (NP, N-1, num_samples)
+        y_interp = np.linspace(y_all[:, :-1], y_all[:, 1:], num_samples, axis = 2)
+        z_interp = np.linspace(z_abs[:, :-1], z_abs[:, 1:], num_samples, axis = 2)
+
+        # Compute the terrain heights at all interpolated points
+        terrain_heights = interp_func(np.stack([y_interp, x_interp], axis = -1))  # (NP, N-1, num_samples)
+
+        # Check if all sampled points are above the terrain
+        return np.all(z_interp > terrain_heights, axis = (1, 2))
 
 if __name__ == "__main__":
     x =  [
