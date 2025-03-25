@@ -11,6 +11,8 @@ Your own backbone optimizer should inherit from this class and have the followin
 """
 from typing import Any, Tuple
 from problem.basic_problem import Basic_Problem
+import numpy as np
+import torch
 
 
 class Learnable_Optimizer:
@@ -28,3 +30,10 @@ class Learnable_Optimizer:
                action: Any,
                problem: Basic_Problem) -> Tuple[Any]:
         raise NotImplementedError
+
+    def seed(self, seed = None):
+        self.rng = np.random
+        if seed is not None:
+            np.random.seed(seed)
+            torch.manual_seed(seed)
+            self.rng = np.random.RandomState(seed)

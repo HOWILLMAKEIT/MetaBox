@@ -84,6 +84,7 @@ class ReplayBuffer_torch:
 
     def __len__(self):
         return self.size
+
 def save_class(dir, file_name, saving_class):
     if not os.path.exists(dir):
         os.makedirs(dir)

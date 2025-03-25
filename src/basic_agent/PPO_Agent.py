@@ -1,12 +1,10 @@
-from agents.basic_agent import Basic_Agent
-import math, copy
 import copy
 import math
 from typing import Optional, Union, Literal
 
 from VectorEnv.great_para_env import ParallelEnv
-from agents.basic_agent import Basic_Agent
-from agents.utils import *
+from basic_agent.basic_agent import Basic_Agent
+from basic_agent.utils import *
 
 
 # memory for recording transition during training process

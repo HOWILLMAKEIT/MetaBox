@@ -2,9 +2,7 @@ from torch import nn
 from torch.distributions import Normal
 
 from agents.networks import MultiHeadEncoder, MLP, EmbeddingNet
-from agents.utils import *
-from .ppo_agent import *
-
+from basic_agent.PPO_Agent import *
 
 class mySequential(nn.Sequential):
     def forward(self, *inputs):

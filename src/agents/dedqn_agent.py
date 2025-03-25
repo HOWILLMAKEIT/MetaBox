@@ -1,9 +1,6 @@
-import numpy as np
-import torch
-from .DQN_Agent import DQN_Agent
-from agent.networks import MLP
-from agent.utils import *
-import math
+from agents.networks import MLP
+from basic_agent.DQN_Agent import *
+
 
 class DEDQN_Agent(DQN_Agent):
     def __init__(self, config):
@@ -48,6 +45,8 @@ class DEDQN_Agent(DQN_Agent):
         # if self.__cur_checkpoint==0:
         #     save_class(self.__config.agent_save_dir,'checkpoint'+str(self.__cur_checkpoint),self)
         #     self.__cur_checkpoint+=1
+    def __str__(self):
+        return "DEDQN"
 
     # def __get_action(self, state, options=None):
     #     state = torch.Tensor(state).to(self.__device)

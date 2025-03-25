@@ -1,13 +1,10 @@
-import math
-import torch
 from torch import nn
 from torch.distributions import Normal
-from .REINFORCE_Agent import REINFORCE_Agent
-from agent.networks import MLP
-from .utils import *
-from agent.utils import *
-from VectorEnv.great_para_env import ParallelEnv
-from typing import Any, Callable, List, Optional, Tuple, Union, Literal
+
+from agents.networks import MLP
+from basic_agent.REINFORCE_Agent import *
+from basic_agent.utils import *
+
 
 class PolicyNetwork(nn.Module):
     def __init__(self, config):
@@ -72,6 +69,9 @@ class RL_PSO_Agent(REINFORCE_Agent):
         self.config.max_grad_norm = math.inf
 
         super().__init__(self.config,{'model':model},[self.config.lr_model])
+
+    def __str__(self):
+        return "RL_PSO"
 
     def train_episode(self, 
                       envs, 

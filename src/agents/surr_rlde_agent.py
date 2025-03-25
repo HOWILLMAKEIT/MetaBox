@@ -1,11 +1,7 @@
-import numpy as np
-import torch
-import copy
-from agent.basic_agent import Basic_Agent
-from agent.networks import MLP
-from agents.utils import *
-from .DDQN_Agent import *
-import math
+from agents.networks import MLP
+from basic_agent.DDQN_Agent import *
+
+
 class Surr_RLDE_Agent(DDQN_Agent):
 	def __init__(self, config):
 		self.config = config
@@ -75,6 +71,9 @@ class Surr_RLDE_Agent(DDQN_Agent):
 	# 	if action is None:
 	# 		action = torch.argmax(Q_list).item()
 	# 	return action
+
+	def __str__(self):
+		return "Surr_RLDE"
 
 	def get_epsilon(self, step, start=0.5, end=0.05):
 		total_steps = self.config.max_learning_step

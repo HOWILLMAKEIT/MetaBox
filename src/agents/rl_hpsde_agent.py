@@ -1,10 +1,8 @@
-import numpy as np
-from .TabularQ_Agent import TabularQ_Agent
-from .utils import save_class
-from VectorEnv.great_para_env import ParallelEnv
-import torch
-from typing import Any, Callable, List, Optional, Tuple, Union, Literal
 from scipy.special import softmax
+
+from basic_agent.TabularQ_Agent import *
+from basic_agent.utils import save_class
+
 
 class RL_HPSDE_Agent(TabularQ_Agent):
     def __init__(self, config):
@@ -25,6 +23,8 @@ class RL_HPSDE_Agent(TabularQ_Agent):
         self.device = self.config.device
         super().__init__(self.config)
 
+    def __str__(self):
+        return "RL_HPSDE"
 
     def __get_action(self, state):  # Make action decision according to the given state
         # Get the corresponding rows from the Q-table and compute the softmax

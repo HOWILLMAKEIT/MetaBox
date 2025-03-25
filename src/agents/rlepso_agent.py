@@ -1,11 +1,10 @@
-import torch
 from torch import nn
 from torch.distributions import Normal
-# from agent.basic_agent import Basic_Agent
+
 from agents.networks import MLP
-from agents.utils import *
-from .ppo_agent import *
-import math
+from basic_agent.PPO_Agent import *
+
+
 class Actor(nn.Module):
     def __init__(self,
                  config,
@@ -107,6 +106,8 @@ class RLEPSO_Agent(PPO_Agent):
 
         super().__init__(self.config, {'actor': actor, 'critic': critic}, self.config.lr)
 
+    def __str__(self):
+        return "RLEPSO"
     # def update_setting(self, config):
     #     self.__config.max_learning_step = config.max_learning_step
     #     self.__config.agent_save_dir = config.agent_save_dir

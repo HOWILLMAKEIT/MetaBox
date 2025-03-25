@@ -1,10 +1,9 @@
-import numpy as np
-import torch
 import torch.nn as nn
 from torch.distributions import Normal
-from .ppo_agent import *
-from agents.utils import *
+
 from agents.networks import MLP, MultiHeadEncoder, EmbeddingNet, PositionalEncoding
+from basic_agent.PPO_Agent import *
+
 
 class mySequential(nn.Sequential):
     def forward(self, *input):
@@ -396,7 +395,7 @@ class RLDE_AFL_Agent(PPO_Agent):
         super().__init__(self.config, {'actor': actor, 'critic': critic, 'fe': fe}, self.config.lr)
 
     def __str__(self):
-        return "RLDE-AFL"
+        return "RLDE_AFL"
 
     def train_episode(self,
                       envs,

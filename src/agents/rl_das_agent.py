@@ -1,10 +1,9 @@
-from torch import nn
-from torch.distributions import Normal
+from torch.distributions import Categorical
 
-from agents.networks import MultiHeadEncoder, MLP, EmbeddingNet
-from agents.utils import *
-from .ppo_agent import *
-from torch.distributions import Categorical, Distribution
+from agents.networks import *
+from basic_agent.PPO_Agent import *
+from basic_agent.utils import *
+
 
 class Actor(nn.Module):
     def __init__(self, dim, optimizer_num, feature_dim, device):
@@ -116,7 +115,7 @@ class RL_DAS_Agent(PPO_Agent):
         super().__init__(self.config, {'actor': actor, 'critic': critic}, self.config.lr)
 
     def __str__(self):
-        return "RLDAS"
+        return "RL_DAS"
 
     def train_episode(self,
                       envs,

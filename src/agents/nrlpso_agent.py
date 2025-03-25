@@ -1,10 +1,8 @@
-import numpy as np
-import torch
-from .TabularQ_Agent import TabularQ_Agent
-from .utils import save_class
-from VectorEnv.great_para_env import ParallelEnv
-from typing import Any, Callable, List, Optional, Tuple, Union, Literal
 from scipy.special import softmax
+
+from basic_agent.TabularQ_Agent import *
+from basic_agent.utils import save_class
+
 
 class NRLPSO_Agent(TabularQ_Agent):
     def __init__(self, config):
@@ -28,6 +26,9 @@ class NRLPSO_Agent(TabularQ_Agent):
         # if self.__cur_checkpoint == 0:
         #     save_class(self.__config.agent_save_dir, 'checkpoint'+str(self.__cur_checkpoint), self)
         #     self.__cur_checkpoint += 1
+
+    def __str__(self):
+        return "NRLPSO"
 
     def __get_action(self, state):  # Make action decision according to the given state
         # Get the corresponding rows from the Q-table and compute the softmax

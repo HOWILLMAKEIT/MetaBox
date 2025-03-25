@@ -1,18 +1,7 @@
-import numpy as np
-import torch
-import torch.nn as nn
-from .REINFORCE_Agent import REINFORCE_Agent
-from .utils import *
-import torch
-import math, copy
-from typing import Any, Callable, List, Optional, Tuple, Union, Literal
-
 from torch import nn
-import torch
-from torch.distributions import Normal
-import torch.nn.functional as F
-from agent.utils import *
-from VectorEnv.great_para_env import ParallelEnv
+
+from basic_agent.REINFORCE_Agent import *
+from basic_agent.utils import *
 
 
 class PolicyNet(nn.Module):
@@ -66,6 +55,8 @@ class LDE_Agent(REINFORCE_Agent):
 
         super().__init__(self.config,{'model':model},[self.config.lr_model])
 
+    def __str__(self):
+        return "LDE"
 
     def __discounted_norm_rewards(self, r):
         for ep in range(self.config.TRAJECTORY_NUM * self.__BATCH_SIZE):

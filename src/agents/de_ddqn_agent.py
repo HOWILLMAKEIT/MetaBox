@@ -1,12 +1,5 @@
-import numpy as np
-import torch
-import copy
-from agent.basic_agent import Basic_Agent
-from agent.networks import MLP
-from agent.utils import *
-from VectorEnv.great_para_env import ParallelEnv
-from .DDQN_Agent import *
-from typing import Any, Callable, List, Optional, Tuple, Union, Literal
+from agents.networks import MLP
+from basic_agent.DDQN_Agent import *
 
 class DE_DDQN_Agent(DDQN_Agent):
     def __init__(self, config):
@@ -58,6 +51,8 @@ class DE_DDQN_Agent(DDQN_Agent):
         # if self.__cur_checkpoint==0:
         #     save_class(self.__config.agent_save_dir,'checkpoint'+str(self.__cur_checkpoint),self)
         #     self.__cur_checkpoint+=1
+    def __str__(self):
+        return "DEDDEQN"
 
     # def update_setting(self, config):
     #     self.max_learning_step = config.max_learning_step
