@@ -1,9 +1,12 @@
-# import numpy as th
+import numpy as np
 import geatpy as ea
-import torch as th
-import math
 
-from src.problem.MOO.basic_problem import Basic_Problem
+
+# from pymoo.problems.many import generic_sphere, get_ref_dirs
+# from pymoo.util.function_loader import load_function
+# from pymoo.util.misc import powerset
+
+from src.problem.moo.basic_problem import Basic_Problem
 
 
 class WFG(Basic_Problem):
@@ -12,12 +15,12 @@ class WFG(Basic_Problem):
         super().__init__(n_var=n_var,
                          n_obj=n_obj,
                          lb=0.0,
-                         ub=2 * th.arange(1, n_var + 1).to(th.float32),
-                         vtype=th.float32,
+                         ub=2 * np.arange(1, n_var + 1).astype(float),
+                         vtype=float,
                          **kwargs)
 
-        self.S = th.arange(2, 2 * self.n_obj + 1, 2).to(th.float32)
-        self.A = th.ones(self.n_obj - 1)
+        self.S = np.arange(2, 2 * self.n_obj + 1, 2).astype(float)
+        self.A = np.ones(self.n_obj - 1)
 
         if k:
             self.k = k
@@ -47,19 +50,19 @@ class WFG(Basic_Problem):
     def _post(self, t, a):
         x = []
         for i in range(t.shape[1] - 1):
-            x.append(th.maximum(t[:, -1], a[i]) * (t[:, i] - 0.5) + 0.5)
+            x.append(np.maximum(t[:, -1], a[i]) * (t[:, i] - 0.5) + 0.5)
         x.append(t[:, -1])
-        return th.column_stack(x)
+        return np.column_stack(x)
 
     def _calculate(self, x, s, h):
-        return x[:, -1][:, None] + s * th.column_stack(h)
+        return x[:, -1][:, None] + s * np.column_stack(h)
 
     def _rand_optimal_position(self, n):
-        return th.random.random((n, self.k))
+        return np.random.random((n, self.k))
 
     def _positional_to_optimal(self, K):
-        suffix = th.full((len(K), self.l), 0.35)
-        X = th.column_stack([K, suffix])
+        suffix = np.full((len(K), self.l), 0.35)
+        X = np.column_stack([K, suffix])
         return X * self.ub
 
 
@@ -82,7 +85,7 @@ class WFG1(WFG):
 
     @staticmethod
     def t4(x, m, n, k):
-        w = th.arange(2, 2 * n + 1, 2).to(th.float32)
+        w = np.arange(2, 2 * n + 1, 2)
         gap = k // (m - 1)
         t = []
         for m in range(1, m):
@@ -90,7 +93,7 @@ class WFG1(WFG):
             _w = w[(m - 1) * gap: (m * gap)]
             t.append(_reduction_weighted_sum(_y, _w))
         t.append(_reduction_weighted_sum(x[:, k:n], w[k:n]))
-        return th.column_stack(t)
+        return np.column_stack(t)
 
     def eval(self, x, *args, **kwargs):
         y = x / self.ub
@@ -110,24 +113,23 @@ class WFG1(WFG):
     def get_ref_set(self,n_ref_points=1000):  # 设定目标数参考值（本问题目标函数参考值设定为理论最优值，即“真实帕累托前沿点”）
         N = n_ref_points  # 设置所要生成的全局最优解的个数
         Point, num = ea.crtup(self.n_obj, N)  # 生成N个在各目标的单位维度上均匀分布的参考点
-        Point = th.tensor(Point)
         M = self.n_obj
-        c = th.ones((num, M))
+        c = np.ones((num, M))
         for i in range(num):
             for j in range(1, M):
-                temp = Point[i, j] / Point[i, 0] * th.prod(1 - c[i, M - j: M - 1])
-                c[i, M - j - 1] = (temp ** 2 - temp + th.sqrt(2 * temp)) / (temp ** 2 + 1)
-        x = th.arccos(c) * 2 / math.pi
-        temp = (1 - th.sin(math.pi / 2 * x[:, [1]])) * Point[:, [M - 1]] / Point[:, [M - 2]]
-        a = th.linspace(0, 1, 10000 + 1)
+                temp = Point[i, j] / Point[i, 0] * np.prod(1 - c[i, M - j: M - 1])
+                c[i, M - j - 1] = (temp ** 2 - temp + np.sqrt(2 * temp)) / (temp ** 2 + 1)
+        x = np.arccos(c) * 2 / np.pi
+        temp = (1 - np.sin(np.pi / 2 * x[:, [1]])) * Point[:, [M - 1]] / Point[:, [M - 2]]
+        a = np.linspace(0, 1, 10000 + 1)
         for i in range(num):
-            E = th.abs(
-                temp[i] * (1 - th.cos(math.pi / 2 * a)) - 1 + a + th.cos(10 * math.pi * a + math.pi / 2) / 10 / math.pi)
-            rank = th.argsort(E)
-            x[i, 0] = a[th.min(rank[0: 10])]
+            E = np.abs(
+                temp[i] * (1 - np.cos(np.pi / 2 * a)) - 1 + a + np.cos(10 * np.pi * a + np.pi / 2) / 10 / np.pi)
+            rank = np.argsort(E, kind='mergesort')
+            x[i, 0] = a[np.min(rank[0: 10])]
         Point = convex(x)
         Point[:, [M - 1]] = mixed(x)
-        referenceObjV = th.tile(th.tensor([list(range(2, 2 * self.n_obj + 1, 2))]), (num, 1)) * Point
+        referenceObjV = np.tile(np.array([list(range(2, 2 * self.n_obj + 1, 2))]), (num, 1)) * Point
         return referenceObjV
 
 
@@ -153,7 +155,7 @@ class WFG2(WFG):
             y.append(_reduction_non_sep(x[:, head:tail], 2))
             i += 1
 
-        return th.column_stack(y)
+        return np.column_stack(y)
 
     @staticmethod
     def t3(x, m, n, k):
@@ -163,7 +165,7 @@ class WFG2(WFG):
         t = [_reduction_weighted_sum_uniform(x[:, (m - 1) * gap: (m * gap)]) for m in range(1, m)]
         t.append(_reduction_weighted_sum_uniform(x[:, k:ind_r_sum]))
 
-        return th.column_stack(t)
+        return np.column_stack(t)
 
     def eval(self, x, *args, **kwargs):
         y = x / self.ub
@@ -181,26 +183,24 @@ class WFG2(WFG):
     def get_ref_set(self,n_ref_points=1000):
         N = n_ref_points  # 设置所要生成的全局最优解的个数
         Point, num = ea.crtup(self.n_obj, N)  # 生成N个在各目标的单位维度上均匀分布的参考点
-        Point = th.tensor(Point)
         M = self.n_obj
-        c = th.ones((num, M))
+        c = np.ones((num, M))
         for i in range(num):
             for j in range(1, M):
-                temp = Point[i, j] / Point[i, 0] * th.prod(1 - c[i, M - j: M - 1])
-                c[i, M - j - 1] = (temp ** 2 - temp + th.sqrt(2 * temp)) / (temp ** 2 + 1)
-        x = th.arccos(c) * 2 / math.pi
-        temp = (1 - th.sin(math.pi / 2 * x[:, [1]])) * Point[:, [M - 1]] / Point[:, [M - 2]]
-        a = th.linspace(0, 1, 10000 + 1)
+                temp = Point[i, j] / Point[i, 0] * np.prod(1 - c[i, M - j: M - 1])
+                c[i, M - j - 1] = (temp ** 2 - temp + np.sqrt(2 * temp)) / (temp ** 2 + 1)
+        x = np.arccos(c) * 2 / np.pi
+        temp = (1 - np.sin(np.pi / 2 * x[:, [1]])) * Point[:, [M - 1]] / Point[:, [M - 2]]
+        a = np.linspace(0, 1, 10000 + 1)
         for i in range(num):
-            E = th.abs(temp[i] * (1 - th.cos(math.pi / 2 * a)) - 1 + a * th.cos(5 * math.pi * a) ** 2)
-            rank = th.argsort(E)
-            x[i, 0] = a[th.min(rank[0: 10])]
+            E = np.abs(temp[i] * (1 - np.cos(np.pi / 2 * a)) - 1 + a * np.cos(5 * np.pi * a) ** 2)
+            rank = np.argsort(E, kind='mergesort')
+            x[i, 0] = a[np.min(rank[0: 10])]
         Point = convex(x)
         Point[:, [M - 1]] = disc(x)
-        [levels, criLevel] = ea.ndsortESS(Point.numpy(), None, 1)  # 非支配分层，只分出第一层即可
-        levels = th.tensor(levels)
-        Point = Point[th.where(levels == 1)[0], :]  # 只保留点集中的非支配点
-        referenceObjV = th.tile(th.tensor([list(range(2, 2 * self.n_obj + 1, 2))]), (Point.shape[0], 1)) * Point
+        [levels, criLevel] = ea.ndsortESS(Point, None, 1)  # 非支配分层，只分出第一层即可
+        Point = Point[np.where(levels == 1)[0], :]  # 只保留点集中的非支配点
+        referenceObjV = np.tile(np.array([list(range(2, 2 * self.n_obj + 1, 2))]), (Point.shape[0], 1)) * Point
         return referenceObjV
 
 
@@ -229,9 +229,9 @@ class WFG3(WFG):
 
     def get_ref_set(self,n_ref_points=1000):
         N = n_ref_points # 设置所要生成的全局最优解的个数
-        X = th.hstack([th.linspace(0, 1, N).unsqueeze(1), th.zeros((N, self.n_obj - 2)) + 0.5, th.zeros((N, 1))])
+        X = np.hstack([np.array([np.linspace(0, 1, N)]).T, np.zeros((N, self.n_obj - 2)) + 0.5, np.zeros((N, 1))])
         Point = linear(X)
-        referenceObjV = th.tile(th.tensor([list(range(2, 2 * self.n_obj + 1, 2))]), (Point.shape[0], 1)) * Point
+        referenceObjV = np.tile(np.array([list(range(2, 2 * self.n_obj + 1, 2))]), (Point.shape[0], 1)) * Point
         return referenceObjV
 
 
@@ -246,7 +246,7 @@ class WFG4(WFG):
         gap = k // (m - 1)
         t = [_reduction_weighted_sum_uniform(x[:, (m - 1) * gap: (m * gap)]) for m in range(1, m)]
         t.append(_reduction_weighted_sum_uniform(x[:, k:]))
-        return th.column_stack(t)
+        return np.column_stack(t)
 
     def eval(self, x, *args, **kwargs):
         y = x / self.ub
@@ -262,10 +262,8 @@ class WFG4(WFG):
     def get_ref_set(self,n_ref_points=1000):
         N = n_ref_points  # 设置所要生成的全局最优解的个数
         Point, num = ea.crtup(self.n_obj, N)  # 生成N个在各目标的单位维度上均匀分布的参考点
-        Point = th.tensor(Point)
-        Point = Point / th.tile(th.sqrt(th.sum(Point ** 2, dim=1, keepdim=True)), (1, self.n_obj))
-
-        referenceObjV = th.tile(th.tensor([list(range(2, 2 * self.n_obj + 1, 2))]), (Point.shape[0], 1)) * Point
+        Point = Point / np.tile(np.sqrt(np.array([np.sum(Point ** 2, 1)]).T), (1, self.n_obj))
+        referenceObjV = np.tile(np.array([list(range(2, 2 * self.n_obj + 1, 2))]), (Point.shape[0], 1)) * Point
         return referenceObjV
 
     # def _calc_pareto_front(self, ref_dirs=None):
@@ -294,9 +292,8 @@ class WFG5(WFG):
     def get_ref_set(self,n_ref_points=1000):
         N = n_ref_points  # 设置所要生成的全局最优解的个数
         Point, num = ea.crtup(self.n_obj, N)  # 生成N个在各目标的单位维度上均匀分布的参考点
-        Point = th.tensor(Point)
-        Point = Point / th.tile(th.sqrt(th.sum(Point ** 2, dim=1, keepdim=True)), (1, self.n_obj))
-        referenceObjV = th.tile(th.tensor([list(range(2, 2 * self.n_obj + 1, 2))]), (Point.shape[0], 1)) * Point
+        Point = Point / np.tile(np.sqrt(np.array([np.sum(Point ** 2, 1)]).T), (1, self.n_obj))
+        referenceObjV = np.tile(np.array([list(range(2, 2 * self.n_obj + 1, 2))]), (Point.shape[0], 1)) * Point
         return referenceObjV
 
     # def _calc_pareto_front(self, ref_dirs=None):
@@ -312,7 +309,7 @@ class WFG6(WFG):
         gap = k // (m - 1)
         t = [_reduction_non_sep(x[:, (m - 1) * gap: (m * gap)], gap) for m in range(1, m)]
         t.append(_reduction_non_sep(x[:, k:], n - k))
-        return th.column_stack(t)
+        return np.column_stack(t)
 
     def eval(self, x, *args, **kwargs):
         y = x / self.ub
@@ -328,9 +325,8 @@ class WFG6(WFG):
     def get_ref_set(self,n_ref_points=1000):
         N = n_ref_points  # 设置所要生成的全局最优解的个数
         Point, num = ea.crtup(self.n_obj, N)  # 生成N个在各目标的单位维度上均匀分布的参考点
-        Point = th.tensor(Point)
-        Point = Point / th.tile(th.sqrt(th.sum(Point ** 2, dim=1, keepdim=True)), (1, self.n_obj))
-        referenceObjV = th.tile(th.tensor([list(range(2, 2 * self.n_obj + 1, 2))]), (Point.shape[0], 1)) * Point
+        Point = Point / np.tile(np.sqrt(np.array([np.sum(Point ** 2, 1)]).T), (1, self.n_obj))
+        referenceObjV = np.tile(np.array([list(range(2, 2 * self.n_obj + 1, 2))]), (Point.shape[0], 1)) * Point
         return referenceObjV
 
 
@@ -359,9 +355,8 @@ class WFG7(WFG):
     def get_ref_set(self,n_ref_points=1000):
         N = n_ref_points  # 设置所要生成的全局最优解的个数
         Point, num = ea.crtup(self.n_obj, N)  # 生成N个在各目标的单位维度上均匀分布的参考点
-        Point = th.tensor(Point)
-        Point = Point / th.tile(th.sqrt(th.sum(Point ** 2, dim=1, keepdim=True)), (1, self.n_obj))
-        referenceObjV = th.tile(th.tensor([list(range(2, 2 * self.n_obj + 1, 2))]), (Point.shape[0], 1)) * Point
+        Point = Point / np.tile(np.sqrt(np.array([np.sum(Point ** 2, 1)]).T), (1, self.n_obj))
+        referenceObjV = np.tile(np.array([list(range(2, 2 * self.n_obj + 1, 2))]), (Point.shape[0], 1)) * Point
         return referenceObjV
 class WFG8(WFG):
 
@@ -371,7 +366,7 @@ class WFG8(WFG):
         for i in range(k, n):
             aux = _reduction_weighted_sum_uniform(x[:, :i])
             ret.append(_transformation_param_dependent(x[:, i], aux, A=0.98 / 49.98, B=0.02, C=50.0))
-        return th.column_stack(ret)
+        return np.column_stack(ret)
 
     def eval(self, x,  *args, **kwargs):
         y = x / self.ub
@@ -390,21 +385,20 @@ class WFG8(WFG):
 
         for i in range(k, k + l):
             u = K.sum(axis=1) / K.shape[1]
-            tmp1 = th.abs(th.floor(0.5 - u) + 0.98 / 49.98)
+            tmp1 = np.abs(np.floor(0.5 - u) + 0.98 / 49.98)
             tmp2 = 0.02 + 49.98 * (0.98 / 49.98 - (1.0 - 2.0 * u) * tmp1)
-            suffix = th.pow(0.35, th.pow(tmp2, -1.0))
+            suffix = np.power(0.35, np.power(tmp2, -1.0))
 
-            K = th.column_stack([K, suffix[:, None]])
+            K = np.column_stack([K, suffix[:, None]])
 
-        ret = K * (2 * (th.arange(self.n_var) + 1))
+        ret = K * (2 * (np.arange(self.n_var) + 1))
         return ret
 
     def get_ref_set(self,n_ref_points=1000):
         N = n_ref_points  # 设置所要生成的全局最优解的个数
         Point, num = ea.crtup(self.n_obj, N)  # 生成N个在各目标的单位维度上均匀分布的参考点
-        Point = th.tensor(Point)
-        Point = Point / th.tile(th.sqrt(th.sum(Point ** 2, dim=1, keepdim=True)), (1, self.n_obj))
-        referenceObjV = th.tile(th.tensor([list(range(2, 2 * self.n_obj + 1, 2))]), (Point.shape[0], 1)) * Point
+        Point = Point / np.tile(np.sqrt(np.array([np.sum(Point ** 2, 1)]).T), (1, self.n_obj))
+        referenceObjV = np.tile(np.array([list(range(2, 2 * self.n_obj + 1, 2))]), (Point.shape[0], 1)) * Point
         return referenceObjV
 
 class WFG9(WFG):
@@ -415,20 +409,20 @@ class WFG9(WFG):
         for i in range(0, n - 1):
             aux = _reduction_weighted_sum_uniform(x[:, i + 1:])
             ret.append(_transformation_param_dependent(x[:, i], aux))
-        return th.column_stack(ret)
+        return np.column_stack(ret)
 
     @staticmethod
     def t2(x, n, k):
         a = [_transformation_shift_deceptive(x[:, i], 0.35, 0.001, 0.05) for i in range(k)]
         b = [_transformation_shift_multi_modal(x[:, i], 30.0, 95.0, 0.35) for i in range(k, n)]
-        return th.column_stack(a + b)
+        return np.column_stack(a + b)
 
     @staticmethod
     def t3(x, m, n, k):
         gap = k // (m - 1)
         t = [_reduction_non_sep(x[:, (m - 1) * gap: (m * gap)], gap) for m in range(1, m)]
         t.append(_reduction_non_sep(x[:, k:], n - k))
-        return th.column_stack(t)
+        return np.column_stack(t)
 
     def eval(self, x, *args, **kwargs):
         y = x / self.ub
@@ -444,8 +438,8 @@ class WFG9(WFG):
     def _positional_to_optimal(self, K):
         k, l = self.k, self.l
 
-        suffix = th.full((len(K), self.l), 0.0)
-        X = th.column_stack([K, suffix])
+        suffix = np.full((len(K), self.l), 0.0)
+        X = np.column_stack([K, suffix])
         X[:, self.k + self.l - 1] = 0.35
 
         for i in range(self.k + self.l - 2, self.k - 1, -1):
@@ -453,15 +447,14 @@ class WFG9(WFG):
             val = m.sum(axis=1) / m.shape[1]
             X[:, i] = 0.35 ** ((0.02 + 1.96 * val) ** -1)
 
-        ret = X * (2 * (th.arange(self.n_var) + 1))
+        ret = X * (2 * (np.arange(self.n_var) + 1))
         return ret
 
     def get_ref_set(self,n_ref_points=1000):
         N = n_ref_points  # 设置所要生成的全局最优解的个数
         Point, num = ea.crtup(self.n_obj, N)  # 生成N个在各目标的单位维度上均匀分布的参考点
-        Point = th.tensor(Point)
-        Point = Point / th.tile(th.sqrt(th.sum(Point ** 2, dim=1, keepdim=True)), (1, self.n_obj))
-        referenceObjV = th.tile(th.tensor([list(range(2, 2 * self.n_obj + 1, 2))]), (Point.shape[0], 1)) * Point
+        Point = Point / np.tile(np.sqrt(np.array([np.sum(Point ** 2, 1)]).T), (1, self.n_obj))
+        referenceObjV = np.tile(np.array([list(range(2, 2 * self.n_obj + 1, 2))]), (Point.shape[0], 1)) * Point
         return referenceObjV
 
 ## ---------------------------------------------------------------------------------------------------------
@@ -469,32 +462,32 @@ class WFG9(WFG):
 # ---------------------------------------------------------------------------------------------------------
 
 def convex(x):
-    return th.fliplr(
-        th.cumprod(th.hstack([th.ones((x.shape[0], 1)), 1 - th.cos(x[:, :-1] * math.pi / 2)]), 1)) * th.hstack(
-        [th.ones((x.shape[0], 1)), 1 - th.sin(x[:, list(range(x.shape[1] - 1 - 1, -1, -1))] * math.pi / 2)])
+    return np.fliplr(
+        np.cumprod(np.hstack([np.ones((x.shape[0], 1)), 1 - np.cos(x[:, :-1] * np.pi / 2)]), 1)) * np.hstack(
+        [np.ones((x.shape[0], 1)), 1 - np.sin(x[:, list(range(x.shape[1] - 1 - 1, -1, -1))] * np.pi / 2)])
 
 def mixed(x):
-    return 1 - x[:, [0]] - th.cos(10 * math.pi * x[:, [0]] + math.pi / 2) / 10 / math.pi
+    return 1 - x[:, [0]] - np.cos(10 * np.pi * x[:, [0]] + np.pi / 2) / 10 / np.pi
 
 def linear(x):
-    return th.fliplr(th.cumprod(th.hstack([th.ones((x.shape[0], 1)), x[:,:-1]]), 1)) * th.hstack([th.ones((x.shape[0], 1)), 1 - x[:, list(range(x.shape[1] - 1 - 1, -1, -1))]])
+    return np.fliplr(np.cumprod(np.hstack([np.ones((x.shape[0], 1)), x[:,:-1]]), 1)) * np.hstack([np.ones((x.shape[0], 1)), 1 - x[:, list(range(x.shape[1] - 1 - 1, -1, -1))]])
 def s_linear(x, A):
-    return th.abs(x - A) / th.abs(th.floor(A - x) + A)
+    return np.abs(x - A) / np.abs(np.floor(A - x) + A)
 
 def b_flat(x, A, B, C):
-    Output = A + th.min([0 * th.floor(x - B), th.floor(x - B)], 0) * A * (B - x) / B - th.min(
-        [0 * th.floor(C - x), th.floor(C - x)], 0) * (1 - A) * (x - C) / (1 - C)
-    return th.round(Output, 6)
+    Output = A + np.min([0 * np.floor(x - B), np.floor(x - B)], 0) * A * (B - x) / B - np.min(
+        [0 * np.floor(C - x), np.floor(C - x)], 0) * (1 - A) * (x - C) / (1 - C)
+    return np.round(Output, 6)
 
 def b_poly(x, a):
-    return th.sign(x) * th.abs(x) ** a
+    return np.sign(x) * np.abs(x) ** a
 
 def r_sum(x, w):
-    Output = th.sum(x * th.tile(w, (x.shape[0], 1)), 1) / th.sum(w)
+    Output = np.sum(x * np.tile(w, (x.shape[0], 1)), 1) / np.sum(w)
     return Output
 
 def disc(x):
-    return 1 - x[:, [0]] * (th.cos(5 * math.pi * x[:, [0]]))**2
+    return 1 - x[:, [0]] * (np.cos(5 * np.pi * x[:, [0]]))**2
 
 
 # ---------------------------------------------------------------------------------------------------------
@@ -503,26 +496,26 @@ def disc(x):
 
 
 def _transformation_shift_linear(value, shift=0.35):
-    return correct_to_01(th.abs(value - shift) / th.abs(th.floor(shift - value) + shift))
+    return correct_to_01(np.fabs(value - shift) / np.fabs(np.floor(shift - value) + shift))
 
 
 def _transformation_shift_deceptive(y, A=0.35, B=0.005, C=0.05):
-    tmp1 = th.floor(y - A + B) * (1.0 - C + (A - B) / B) / (A - B)
-    tmp2 = th.floor(A + B - y) * (1.0 - C + (1.0 - A - B) / B) / (1.0 - A - B)
-    ret = 1.0 + (th.abs(y - A) - B) * (tmp1 + tmp2 + 1.0 / B)
+    tmp1 = np.floor(y - A + B) * (1.0 - C + (A - B) / B) / (A - B)
+    tmp2 = np.floor(A + B - y) * (1.0 - C + (1.0 - A - B) / B) / (1.0 - A - B)
+    ret = 1.0 + (np.fabs(y - A) - B) * (tmp1 + tmp2 + 1.0 / B)
     return correct_to_01(ret)
 
 
 def _transformation_shift_multi_modal(y, A, B, C):
-    tmp1 = th.abs(y - C) / (2.0 * (th.floor(C - y) + C))
-    tmp2 = (4.0 * A + 2.0) * math.pi * (0.5 - tmp1)
-    ret = (1.0 + th.cos(tmp2) + 4.0 * B * th.pow(tmp1, 2.0)) / (B + 2.0)
+    tmp1 = np.fabs(y - C) / (2.0 * (np.floor(C - y) + C))
+    tmp2 = (4.0 * A + 2.0) * np.pi * (0.5 - tmp1)
+    ret = (1.0 + np.cos(tmp2) + 4.0 * B * np.power(tmp1, 2.0)) / (B + 2.0)
     return correct_to_01(ret)
 
 
 def _transformation_bias_flat(y, a, b, c):
-    ret = a + th.minimum(th.tensor(0), th.floor(y - b)) * (a * (b - y) / b) \
-          - th.minimum(th.tensor(0), th.floor(c - y)) * ((1.0 - a) * (y - c) / (1.0 - c))
+    ret = a + np.minimum(0, np.floor(y - b)) * (a * (b - y) / b) \
+          - np.minimum(0, np.floor(c - y)) * ((1.0 - a) * (y - c) / (1.0 - c))
     return correct_to_01(ret)
 
 
@@ -531,15 +524,15 @@ def _transformation_bias_poly(y, alpha):
 
 
 def _transformation_param_dependent(y, y_deg, A=0.98 / 49.98, B=0.02, C=50.0):
-    aux = A - (1.0 - 2.0 * y_deg) * th.abs(th.floor(0.5 - y_deg) + A)
-    ret = th.pow(y, B + (C - B) * aux)
+    aux = A - (1.0 - 2.0 * y_deg) * np.fabs(np.floor(0.5 - y_deg) + A)
+    ret = np.power(y, B + (C - B) * aux)
     return correct_to_01(ret)
 
 
 def _transformation_param_deceptive(y, A=0.35, B=0.001, C=0.05):
-    tmp1 = th.floor(y - A + B) * (1.0 - C + (A - B) / B) / (A - B)
-    tmp2 = th.floor(A + B - y) * (1.0 - C + (1.0 - A - B) / B) / (1.0 - A - B)
-    ret = 1.0 + (th.abs(y - A) - B) * (tmp1 + tmp2 + 1.0 / B)
+    tmp1 = np.floor(y - A + B) * (1.0 - C + (A - B) / B) / (A - B)
+    tmp2 = np.floor(A + B - y) * (1.0 - C + (1.0 - A - B) / B) / (1.0 - A - B)
+    ret = 1.0 + (np.fabs(y - A) - B) * (tmp1 + tmp2 + 1.0 / B)
     return correct_to_01(ret)
 
 
@@ -549,7 +542,7 @@ def _transformation_param_deceptive(y, A=0.35, B=0.001, C=0.05):
 
 
 def _reduction_weighted_sum(y, w):
-    return correct_to_01(th.matmul(y, w) / w.sum())
+    return correct_to_01(np.dot(y, w) / w.sum())
 
 
 def _reduction_weighted_sum_uniform(y):
@@ -558,13 +551,13 @@ def _reduction_weighted_sum_uniform(y):
 
 def _reduction_non_sep(y, A):
     n, m = y.shape
-    val = th.ceil(th.tensor(A) / 2.0)
+    val = np.ceil(A / 2.0)
 
-    num = th.zeros(n)
+    num = np.zeros(n)
     for j in range(m):
         num += y[:, j]
         for k in range(A - 1):
-            num += th.abs(y[:, j] - y[:, (1 + j + k) % m])
+            num += np.fabs(y[:, j] - y[:, (1 + j + k) % m])
 
     denom = m * val * (1.0 + 2.0 * A - 2 * val) / A
 
@@ -581,33 +574,33 @@ def _reduction_non_sep(y, A):
 def _shape_concave(x, m):
     M = x.shape[1]
     if m == 1:
-        ret = th.prod(th.sin(0.5 * x[:, :M] * math.pi), axis=1)
+        ret = np.prod(np.sin(0.5 * x[:, :M] * np.pi), axis=1)
     elif 1 < m <= M:
-        ret = th.prod(th.sin(0.5 * x[:, :M - m + 1] * math.pi), axis=1)
-        ret *= th.cos(0.5 * x[:, M - m + 1] * math.pi)
+        ret = np.prod(np.sin(0.5 * x[:, :M - m + 1] * np.pi), axis=1)
+        ret *= np.cos(0.5 * x[:, M - m + 1] * np.pi)
     else:
-        ret = th.cos(0.5 * x[:, 0] * math.pi)
+        ret = np.cos(0.5 * x[:, 0] * np.pi)
     return correct_to_01(ret)
 
 
 def _shape_convex(x, m):
     M = x.shape[1]
     if m == 1:
-        ret = th.prod(1.0 - th.cos(0.5 * x[:, :M] * math.pi), axis=1)
+        ret = np.prod(1.0 - np.cos(0.5 * x[:, :M] * np.pi), axis=1)
     elif 1 < m <= M:
-        ret = th.prod(1.0 - th.cos(0.5 * x[:, :M - m + 1] * math.pi), axis=1)
-        ret *= 1.0 - th.sin(0.5 * x[:, M - m + 1] * math.pi)
+        ret = np.prod(1.0 - np.cos(0.5 * x[:, :M - m + 1] * np.pi), axis=1)
+        ret *= 1.0 - np.sin(0.5 * x[:, M - m + 1] * np.pi)
     else:
-        ret = 1.0 - th.sin(0.5 * x[:, 0] * math.pi)
+        ret = 1.0 - np.sin(0.5 * x[:, 0] * np.pi)
     return correct_to_01(ret)
 
 
 def _shape_linear(x, m):
     M = x.shape[1]
     if m == 1:
-        ret = th.prod(x, axis=1)
+        ret = np.prod(x, axis=1)
     elif 1 < m <= M:
-        ret = th.prod(x[:, :M - m + 1], axis=1)
+        ret = np.prod(x[:, :M - m + 1], axis=1)
         ret *= 1.0 - x[:, M - m + 1]
     else:
         ret = 1.0 - x[:, 0]
@@ -615,13 +608,13 @@ def _shape_linear(x, m):
 
 
 def _shape_mixed(x, A=5.0, alpha=1.0):
-    aux = 2.0 * A * math.pi
-    ret = th.pow(1.0 - x - (th.cos(aux * x + 0.5 * math.pi) / aux), alpha)
+    aux = 2.0 * A * np.pi
+    ret = np.power(1.0 - x - (np.cos(aux * x + 0.5 * np.pi) / aux), alpha)
     return correct_to_01(ret)
 
 
 def _shape_disconnected(x, alpha=1.0, beta=1.0, A=5.0):
-    aux = th.cos(A * math.pi * x ** beta)
+    aux = np.cos(A * np.pi * x ** beta)
     return correct_to_01(1.0 - x ** alpha * aux ** 2)
 
 
@@ -635,8 +628,8 @@ def validate_wfg2_wfg3(l):
 
 
 def correct_to_01(X, epsilon=1.0e-10):
-    X[th.logical_and(X < 0, X >= 0 - epsilon)] = 0
-    X[th.logical_and(X > 1, X <= 1 + epsilon)] = 1
+    X[np.logical_and(X < 0, X >= 0 - epsilon)] = 0
+    X[np.logical_and(X > 1, X <= 1 + epsilon)] = 1
     return X
 
 if __name__ == '__main__':
@@ -649,17 +642,7 @@ if __name__ == '__main__':
     wfg7 = WFG7(10,3)
     wfg8 = WFG8(10,3)
     wfg9 = WFG9(10,3)
-    x = th.ones(10, 10)
-    print(wfg1.eval(x))
-    print(wfg2.eval(x)) 
-    print(wfg3.eval(x))
-    print(wfg4.eval(x))
-    print(wfg5.eval(x))
-    print(wfg6.eval(x))
-    print(wfg7.eval(x))
-    print(wfg8.eval(x))
-    print(wfg9.eval(x))
-    
+    x = np.random.rand(10, 10)
     s1=wfg1.get_ref_set()
     s2=wfg2.get_ref_set()
     s3=wfg3.get_ref_set()
