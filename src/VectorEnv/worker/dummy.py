@@ -16,10 +16,10 @@ class DummyEnvWorker(EnvWorker):
         super().__init__(env_fn)
 
     def get_env_attr(self, key: str) -> Any:
-        return getattr(self.env, key)
+        return self.env.get_env_attr(key)
 
     def set_env_attr(self, key: str, value: Any) -> None:
-        setattr(self.env, key, value)
+        self.env.set_env_attr(key, value)
         
     def get_env_obj(self):
         return self.env
@@ -44,7 +44,7 @@ class DummyEnvWorker(EnvWorker):
         self.result = self.env.reset()
 
     def seed(self, seed: Optional[int] = None) -> List[int]:
-        # super().seed(seed) # todo 这里有的可以有的不行
+        super().seed(seed)
         return self.env.seed(seed)
 
     def render(self, **kwargs: Any) -> Any:

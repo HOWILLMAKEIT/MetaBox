@@ -1,8 +1,10 @@
-from typing import Any
+from typing import Any, Callable, List, Optional, Tuple, Union, Literal
 from problem.basic_problem import Basic_Problem
 from optimizer.learnable_optimizer import Learnable_Optimizer
 import gym
 import numpy as np
+
+
 class PBO_Env(gym.Env):
     """
     An environment with a problem and an optimizer.
@@ -36,3 +38,24 @@ class PBO_Env(gym.Env):
 
     def seed(self, seeds):
         self.__seed = seeds
+        
+    def get_env_attr(self, 
+                     key: str):
+        if hasattr(self, key):
+            return getattr(self, key)
+        elif hasattr(self.optimizer, key):
+            return getattr(self.optimizer, key)
+        elif hasattr(self.problem, key):
+            return getattr(self.problem, key)
+        else:
+            return None
+        
+    def set_env_attr(self, key: str, value: Any):
+        if hasattr(self, key):
+            return setattr(self, key, value)
+        elif hasattr(self.optimizer, key):
+            return setattr(self.optimizer, key, value)
+        elif hasattr(self.problem, key):
+            return setattr(self.problem, key, value)
+        else:
+            raise ModuleNotFoundError

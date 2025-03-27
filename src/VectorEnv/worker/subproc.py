@@ -108,9 +108,9 @@ def _worker(
             elif cmd == "seed":
                 p.send(env.seed(data) if hasattr(env, "seed") else None)
             elif cmd == "getattr":
-                p.send(getattr(env, data) if hasattr(env, data) else None)
+                p.send(env.get_env_attr(data))
             elif cmd == "setattr":
-                setattr(env, data["key"], data["value"])
+                env.set_env_attr(data["key"], data["value"])
             elif cmd == "getenv":
                 p.send(CloudpickleWrapper(env))
             else:

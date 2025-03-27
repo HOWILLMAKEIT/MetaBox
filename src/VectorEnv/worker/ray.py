@@ -34,7 +34,7 @@ class RayEnvWorker(EnvWorker):
         super().__init__(env_fn)
 
     def get_env_attr(self, key: str) -> Any:
-        return getattr(self.env, key) if hasattr(self.env, key) else None
+        return self.env.get_env_attr(key)
     
     # @ray.remote(num_cpus=1, num_gpus=0)
     # def ray_getattr(env, key):
@@ -42,7 +42,7 @@ class RayEnvWorker(EnvWorker):
 
     def set_env_attr(self, key: str, value: Any) -> None:
         # ray.get(self.env.set_env_attr.remote(key, value))
-        setattr(self.env, key, value)
+        self.env.set_env_attr(key, value)
         
     def get_env_obj(self):
         return self.env
