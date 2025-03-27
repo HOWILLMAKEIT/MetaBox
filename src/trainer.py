@@ -12,6 +12,7 @@ import numpy as np
 import os
 import matplotlib
 import matplotlib.pyplot as plt
+from basic_agent.utils import save_class
 from agent import (
     # DE_DDQN_Agent,
     # DEDQN_Agent,
@@ -225,6 +226,95 @@ class Trainer(object):
         # self.draw_cost()
         # self.draw_average_cost()
         # self.draw_return()
+
+    def train_new(self):
+        print(f'start training: {self.config.run_time}')
+        is_end = False
+
+        epoch = 0
+        cost_record = {}
+        normalizer_record = {}
+        return_record = []
+        learn_steps = []
+        epoch_steps = []
+
+        # 这里先让train_set bs 一直为1先
+        for problem in self.train_set.data:
+            cost_record[problem.__str__()] = []
+            normalizer_record[problem.__str__] = []
+
+        # 然后根据train_mode 决定 bs
+        # single ---> 从train_set 里取出 bs 个问题训练
+        # multi ---> 每次从train_set 中取出 1 个问题，copy bs 个 训练
+        bs = self.config.train_batch_size
+        if self.config.train_mode == "single":
+            self.train_set.batch_size = 1
+        elif self.config.train_mode == "multi":
+            self.train_set.batch_size = bs
+
+        epoch_seed = self.config.epoch_seed
+        id_seed = self.config.id_seed
+        seed = self.config.seed
+
+        while not is_end:
+            learn_step = 0
+            self.train_set.shuffle()
+            with tqdm(range(self.train_set.N), desc = f'Training {self.agent.__class__.__name__} Epoch {epoch}') as pbar:
+                for problem_id, problem in enumerate(self.train_set):
+                    # set seed
+                    seed_list = (epoch * epoch_seed + id_seed * (np.arange(bs) + bs * problem_id) + seed).tolist()
+
+                    # 这里前面已经判断好 train_mode，这里只需要根据 train_mode 构造env就行
+                    if self.config.train_mode == "single":
+                        env_list = [PBO_Env(copy.deepcopy(problem), copy.deepcopy(self.optimizer)) for _ in range(bs)] # bs
+                    elif self.config.train_mode == "multi":
+                        env_list = [PBO_Env(copy.deepcopy(p), copy.deepcopy(self.optimizer)) for p in problem] # bs
+
+                    # todo config add para
+                    exceed_max_ls, train_meta_data = self.agent.train_episode(envs = env_list,
+                                                                              seeds = seed_list,
+                                                                              para_mode = "dummy",
+                                                                              asynchronous = None,
+                                                                              num_cpus = 1,
+                                                                              num_gpus = 0,
+                                                                              )
+                    # exceed_max_ls, pbar_info_train = self.agent.train_episode(env)  # pbar_info -> dict
+                    postfix_str = (
+                        f"loss={train_meta_data['loss']:.2e}, "
+                        f"learn_steps={train_meta_data['learn_steps']}, "
+                        f"return={[f'{x:.2e}' for x in train_meta_data['return']]}"
+                    )
+
+                    pbar.set_postfix_str(postfix_str)
+                    pbar.update(self.train_set.batch_size)
+                    learn_step = train_meta_data['learn_steps']
+                    # for id, p in enumerate(problem):
+                    #     name = p.__str__()
+                    #     cost_record[name].append(train_meta_data['gbest'][id])
+                    #     normalizer_record[name].append(train_meta_data['normalizer'][id])
+                    #     return_record.append(np.mean(train_meta_data['return']))
+                    # learn_steps.append(learn_step)
+
+                    if self.config.end_mode == "step" and exceed_max_ls:
+                        is_end = True
+                        break
+                self.agent.train_epoch()
+            epoch_steps.append(learn_step)
+            epoch += 1
+
+            # todo save
+            # save_interval = 5
+            # checkpoint0 0
+            # checkpoint1 5
+            if epoch >= (self.config.save_interval * self.agent.cur_checkpoint) and self.config.end_mode == "epoch":
+                save_class(self.config.agent_save_dir, 'checkpoint' + str(self.agent.cur_checkpoint), self.agent)
+                # 记录 checkpoint 和 total_step
+                with open(self.config.agent_save_dir + "/checkpoint_log.txt", "a") as f:
+                    f.write(f"Checkpoint {self.agent.cur_checkpoint}: {learn_step}\n")
+
+                self.agent.cur_checkpoint += 1
+            if self.config.end_mode == "epoch" and epoch >= self.config.max_epoch:
+                is_end = True
 
 
 # class Trainer_l2l(object):

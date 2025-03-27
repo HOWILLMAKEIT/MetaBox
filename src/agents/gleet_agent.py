@@ -233,6 +233,7 @@ class GLEET_Agent(PPO_Agent):
 
     def train_episode(self,
                       envs,
+                      seeds: Optional[Union[int, List[int], np.ndarray]],
                       para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc'] = 'dummy',
                       asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
                       num_cpus: Optional[Union[int, None]] = 1,
@@ -241,7 +242,7 @@ class GLEET_Agent(PPO_Agent):
         if self.device != 'cpu':
             num_gpus = max(num_gpus, 1)
         env = ParallelEnv(envs, para_mode, asynchronous, num_cpus, num_gpus)
-
+        env.seed(seeds)
         memory = Memory()
 
         # params for training
@@ -396,7 +397,7 @@ class GLEET_Agent(PPO_Agent):
                 # perform gradient descent
                 self.optimizer.step()
                 self.learning_time += 1
-                if self.learning_time >= (self.config.save_interval * self.cur_checkpoint):
+                if self.learning_time >= (self.config.save_interval * self.cur_checkpoint) and self.config.end_mode == "step":
                     save_class(self.config.agent_save_dir, 'checkpoint' + str(self.cur_checkpoint), self)
                     self.cur_checkpoint += 1
 

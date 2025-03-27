@@ -28,7 +28,7 @@ class MadDE(Basic_Optimizer):
         NA = archive.shape[0]
 
         count = 0
-        rb = np.random.randint(NB, size=NP)
+        rb = self.rng.randint(NB, size=NP)
         duplicate = np.where(rb == np.arange(NP))[0]
         while duplicate.shape[0] > 0 and count < 25:
             rb[duplicate] = np.random.randint(NB, size=duplicate.shape[0])

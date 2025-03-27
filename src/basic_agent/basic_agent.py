@@ -31,7 +31,8 @@ class Basic_Agent:
         pass
 
     def train_episode(self,
-                      env: PBO_Env) -> Tuple[bool, dict]:
+                      env: PBO_Env,
+                      seeds: Optional) -> Tuple[bool, dict]:
         raise NotImplementedError
 
     def rollout_episode(self,

@@ -119,6 +119,7 @@ class RL_DAS_Agent(PPO_Agent):
 
     def train_episode(self,
                       envs,
+                      seeds,
                       para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc'] = 'dummy',
                       asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
                       num_cpus: Optional[Union[int, None]] = 1,

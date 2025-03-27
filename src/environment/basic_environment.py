@@ -18,13 +18,8 @@ class PBO_Env(gym.Env):
         self.optimizer = optimizer
         self.normalizer = None
         self.gbest = None
-        self.__seed = None
 
     def reset(self):
-        # todo 这里要用Gym的rng
-        if self.__seed is not None:
-            np.random.seed(self.__seed)
-
         self.problem.reset()
         reset_ = self.optimizer.init_population(self.problem)
         self.normalizer = self.optimizer.gbest_val
@@ -36,8 +31,8 @@ class PBO_Env(gym.Env):
         self.gbest = self.optimizer.gbest_val
         return update_
 
-    def seed(self, seeds):
-        self.__seed = seeds
+    def seed(self, seed):
+        self.optimizer.seed(seed)
         
     def get_env_attr(self, 
                      key: str):
