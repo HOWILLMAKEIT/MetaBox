@@ -27,7 +27,8 @@ def construct_problem_set(config):
         return mmo_dataset.MMO_Dataset.get_datasets(version=problem,
                                             train_batch_size=config.train_batch_size,
                                             test_batch_size=config.test_batch_size,
-                                            difficulty=config.difficulty)
+                                            difficulty=config.difficulty,
+                                            user_train_list = config.user_train_list)
 
     else:
         raise ValueError(problem + ' is not defined!')

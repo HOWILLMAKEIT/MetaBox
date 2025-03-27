@@ -44,6 +44,59 @@ class MMO_Basic_Problem_torch(Basic_Problem):
     def func(self, x):
         raise NotImplementedError
 
+    def how_many_goptima_torch(self, pop, accuracy):
+        NP, D = pop.shape[0], pop.shape[1]
+
+        fits = self.eval(torch.tensor(pop)).data.numpy()
+
+        order = np.argsort(fits)
+
+        sorted_pop = pop[order, :]
+        spopfits = fits[order]
+
+        seeds_idx = self.__find_seeds_indices(sorted_pop, self.rho)
+
+        count = 0
+        goidx = []
+        for idx in seeds_idx:
+            seed_fitness = spopfits[idx]
+            if math.fabs(seed_fitness - self.optimum) <= accuracy:
+                count = count + 1
+                goidx.append(idx)
+
+            if count == self.nopt:
+                break
+
+        seeds = sorted_pop[goidx]
+
+        return count, seeds
+
+
+    def __find_seeds_indices(self, sorted_pop, radius):
+        seeds = []
+        seeds_idx = []
+        for i, x in enumerate(sorted_pop):
+            found = False
+            for j, sx in enumerate(seeds):
+                dist = math.sqrt(sum((x - sx) ** 2))
+
+                if dist <= radius:
+                    found = True
+                    break
+            if not found:
+                seeds.append(x)
+                seeds_idx.append(i)
+
+        return seeds_idx
+
+
+
+
+
+
+
+
+
 class CFunction(MMO_Basic_Problem_torch):
     # Abstract composition function
     __nofunc_ = -1
@@ -197,57 +250,6 @@ def FEF8F2(x):
         f = f + F8F2(x[:, [i, i + 1]] + 1)
     f = f + F8F2(x[:, [D - 1, 0]] + 1)
     return f
-
-
-
-def how_many_goptima_torch(pop, f, accuracy):
-    NP, D = pop.shape[0], pop.shape[1]
-
-    fits = f.eval(torch.tensor(pop)).data.numpy()
-
-    order = np.argsort(fits)
-
-    sorted_pop = pop[order, :]
-    spopfits = fits[order]
-
-    seeds_idx = find_seeds_indices(sorted_pop, f.rho)
-
-    count = 0
-    goidx = []
-    for idx in seeds_idx:
-        seed_fitness = spopfits[idx]
-        if math.fabs(seed_fitness - f.optimum) <= accuracy:
-            count = count + 1
-            goidx.append(idx)
-
-        if count == f.nopt:
-            break
-
-    seeds = sorted_pop[goidx]
-
-    return count, seeds
-
-
-def find_seeds_indices(sorted_pop, radius):
-    seeds = []
-    seeds_idx = []
-    for i, x in enumerate(sorted_pop):
-        found = False
-        for j, sx in enumerate(seeds):
-            dist = math.sqrt(sum((x - sx) ** 2))
-
-            if dist <= radius:
-                found = True
-                break
-        if not found:
-            seeds.append(x)
-            seeds_idx.append(i)
-
-    return seeds_idx
-
-
-
-
 
 
 

@@ -19,6 +19,7 @@ class MMO_Dataset(Dataset):
                     train_batch_size=1,
                     test_batch_size=1,
                     difficulty = 'easy',
+                    user_train_list = None,
                     instance_seed=3849):
                     
         problem_id_list = [i for i in range(1, 21)] 
@@ -33,8 +34,18 @@ class MMO_Dataset(Dataset):
             np.random.seed(instance_seed)
             
         if difficulty == 'easy':
-            train_set_pids = [i for i in range(1, 21)]
-            test_set_pids = [i for i in range(1, 21)]
+            train_set_pids = [8,9,13,14,15,16,17,18,19,20]
+            test_set_pids = [1,2,3,4,5,6,7,10,11,12]
+        elif difficulty == 'difficult':
+            train_set_pids = [1,2,3,4,5,6,7,10,11,12]
+            test_set_pids = [8,9,13,14,15,16,17,18,19,20]
+        elif difficulty == 'user-define':
+            if user_train_list == None:
+                raise ValueError(f'Empty train dataset is invalid for the user-defined difficluty')
+            train_set_pids = list(map(int, user_train_list))
+            test_set_pids = [item for item in range(1, 21) if item not in train_set_pids]
+            if test_set_pids == [] or test_set_pids == None:
+                raise ValueError(f'Empty test dataset is invalid for the user-defined difficluty')
         else:
             raise ValueError
         # get problem instances

@@ -31,3 +31,4 @@ from .les_optimizer import LES_Optimizer
 from .symbol_optimizer import Symbol_Optimizer
 
 from .nrlpso_optimizer import NRLPSO_Optimizer
+from .rlemmo_optimizer import RLEMMO_Optimizer
