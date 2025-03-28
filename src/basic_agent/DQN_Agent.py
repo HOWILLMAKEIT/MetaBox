@@ -185,6 +185,9 @@ class DQN_Agent(Basic_Agent):
                 if self.learning_time >= self.config.max_learning_step:
                     _Rs = _R.detach().numpy().tolist()
                     return_info = {'return': _Rs, 'loss': np.mean(_loss), 'learn_steps': self.learning_time, }
+                    env_cost = env.get_env_attr('cost')
+                    return_info['normalizer'] = env_cost[0]
+                    return_info['gbest'] = env_cost[-1]
                     for key in required_info:
                         return_info[key] = env.get_env_attr(key)
                     env.close()
@@ -194,6 +197,9 @@ class DQN_Agent(Basic_Agent):
         is_train_ended = self.learning_time >= self.config.max_learning_step
         _Rs = _R.detach().numpy().tolist()
         return_info = {'return': _Rs, 'loss': np.mean(_loss), 'learn_steps': self.learning_time}
+        env_cost = env.get_env_attr('cost')
+        return_info['normalizer'] = env_cost[0]
+        return_info['gbest'] = env_cost[-1]
         for key in required_info:
             return_info[key] = env.get_env_attr(key)
             # print(f"{key} : {return_info[key]}")
@@ -221,7 +227,9 @@ class DQN_Agent(Basic_Agent):
                 state, reward, is_done = env.step(action)
                 R += reward
             _Rs = R.detach().numpy().tolist()
-            results = {'return': _Rs}
+            env_cost = env.get_env_attr('cost')
+            env_fes = env.get_env_attr('fes')
+            results = {'cost': env_cost, 'fes': env_fes, 'return': _Rs}
             for key in required_info:
                 results[key] = getattr(env, key)
             return results
@@ -262,7 +270,9 @@ class DQN_Agent(Basic_Agent):
             except:
                 pass
         _Rs = R.detach().numpy().tolist()
-        results = {'return': _Rs}
+        env_cost = env.get_env_attr('cost')
+        env_fes = env.get_env_attr('fes')
+        results = {'cost': env_cost, 'fes': env_fes, 'return': _Rs}
         for key in required_info:
             results[key] = env.get_env_attr(key)
         return results

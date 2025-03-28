@@ -102,7 +102,6 @@ class SYMBOL_Optimizer(Learnable_Optimizer):
 
         self.log_index = 1
         self.cost = [self.population.gbest_cost]
-        self.gbest_val = self.population.gbest_cost
         # return state
         return self.observe()
 
@@ -175,7 +174,6 @@ class SYMBOL_Optimizer(Learnable_Optimizer):
         if self.population.cur_fes >= self.log_index * self.log_interval:
             self.log_index += 1
             self.cost.append(self.population.gbest_cost)
-        self.gbest_val = self.population.gbest_cost
         reward = 0
         if self.is_train:
             tea_pop, _, _, _ = self.teacher_optimizer.update({'skip_step': skip_step})

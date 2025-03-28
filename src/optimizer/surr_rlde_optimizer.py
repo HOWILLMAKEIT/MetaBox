@@ -40,7 +40,6 @@ class Surr_RLDE_Optimizer(Learnable_Optimizer):
 		self.pop_history_best = None
 		self.fit_history_best = None
 		self.fit_init_best = None
-		self.gbest_val = None
 
 		self.improved_gen = 0
 
@@ -120,7 +119,6 @@ class Surr_RLDE_Optimizer(Learnable_Optimizer):
 		self.fit_init_best = torch.min(self.fitness).clone()
 		self.fit_cur_best = torch.min(self.fitness).clone()
 		self.fit_history_best = torch.min(self.fitness).clone()
-		self.gbest_val = self.fit_cur_best.clone()
 
 		self.fes = self.pop_size
 		self.cost = [self.fit_cur_best.clone().cpu().item()]  # record the best cost of first generation
@@ -207,7 +205,6 @@ class Surr_RLDE_Optimizer(Learnable_Optimizer):
 
 		self.pop_cur_best = self.population[best_index].clone()
 		self.fit_cur_best = self.fitness[best_index].clone()
-		self.gbest_val = self.fit_cur_best.clone()
 
 		next_state = self.get_state(problem)
 

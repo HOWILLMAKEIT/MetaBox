@@ -45,9 +45,7 @@ class NRLPSO_Optimizer(Learnable_Optimizer):
         gbest_index = np.argmin(self.__cost)
         self.__gbest_cost = self.__cost[gbest_index]
         self.__gbest_pos = self.__population[gbest_index]
-        
-        self.gbest_val = self.__gbest_cost
-        
+
         self.pbest_stag_count = np.zeros((self.NP, ))
         
         self.fes = self.NP
@@ -279,8 +277,6 @@ class NRLPSO_Optimizer(Learnable_Optimizer):
 
         self.__state[self.pointer] = action
         self.pointer = (self.pointer + 1) % self.NP
-
-        self.gbest_val = self.__gbest_cost
 
         if self.fes >= self.log_index * self.log_interval:
             self.log_index += 1

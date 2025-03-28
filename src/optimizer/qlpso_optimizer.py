@@ -80,7 +80,6 @@ class QLPSO_Optimizer(Learnable_Optimizer):
         else:
             self.__cost = problem.eval(self.__population) - problem.optimum
         self.__gbest_cost = self.__cost.min().copy()
-        self.gbest_val = self.__gbest_cost
         self.fes = self.__NP
         self.log_index = 1
         self.cost = [self.__gbest_cost]
@@ -111,8 +110,6 @@ class QLPSO_Optimizer(Learnable_Optimizer):
         self.__state[self.__solution_pointer] = action
         self.__solution_pointer = (self.__solution_pointer + 1) % self.__NP
 
-        self.gbest_val = self.__gbest_cost
-        
         if self.fes >= self.log_index * self.log_interval:
             self.log_index += 1
             self.cost.append(self.__gbest_cost)

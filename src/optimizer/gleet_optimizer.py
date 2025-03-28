@@ -60,10 +60,6 @@ class GLEET_Optimizer(Learnable_Optimizer):
                         'gbest_index':gbest_index # 1
                         }
 
-        # transmit information for father basic environment
-        self.gbest_val = gbest_val
-
-
     def get_cat_xy(self):
         cur_x = self.particles['current_position']
         cur_y = self.particles['c_cost']
@@ -271,9 +267,6 @@ class GLEET_Optimizer(Learnable_Optimizer):
         
         # update the population
         self.particles=new_particles
-
-        # transmit information for father basic environment
-        self.gbest_val = self.particles['gbest_val']
 
         # see if the end condition is satisfied
         if problem.optimum is None:

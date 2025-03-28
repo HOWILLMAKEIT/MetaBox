@@ -49,7 +49,6 @@ class RL_DAS_Optimizer(Learnable_Optimizer):
         self.done = False
         self.cost = [self.population.gbest]
         self.log_index = 1
-        self.gbest_val = self.population.gbest
         return self.observe(problem)
 
     def local_sample(self):
@@ -134,7 +133,6 @@ class RL_DAS_Optimizer(Learnable_Optimizer):
         if self.FEs >= self.log_index * self.log_interval:
             self.log_index += 1
             self.cost.append(self.population.gbest)
-        self.gbest_val = self.population.gbest
         if self.done:
             if len(self.cost) >= self.__config.n_logpoint + 1:
                 self.cost[-1] = self.population.gbest

@@ -124,7 +124,7 @@ class RL_DAS_Agent(PPO_Agent):
                       asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
                       num_cpus: Optional[Union[int, None]] = 1,
                       num_gpus: int = 0,
-                      required_info = ['normalizer', 'gbest']):
+                      required_info = []):
         if self.device != 'cpu':
             num_gpus = max(num_gpus, 1)
         k = 1
@@ -286,6 +286,9 @@ class RL_DAS_Agent(PPO_Agent):
                     memory.clear_memory()
                     _Rs = _R.detach().numpy().tolist()
                     return_info = {'return': _Rs, 'loss': np.mean(_loss),'learn_steps': self.learning_time, }
+                    env_cost = env.get_env_attr('cost')
+                    return_info['normalizer'] = env_cost[0]
+                    return_info['gbest'] = env_cost[-1]
                     for key in required_info:
                         return_info[key] = env.get_env_attr(key)
                     env.close()
@@ -296,6 +299,9 @@ class RL_DAS_Agent(PPO_Agent):
         is_train_ended = self.learning_time >= self.config.max_learning_step
         _Rs = _R.detach().numpy().tolist()
         return_info = {'return': _Rs, 'loss': np.mean(_loss),'learn_steps': self.learning_time,}
+        env_cost = env.get_env_attr('cost')
+        return_info['normalizer'] = env_cost[0]
+        return_info['gbest'] = env_cost[-1]
         for key in required_info:
             return_info[key] = env.get_env_attr(key)
         env.close()
@@ -335,7 +341,10 @@ class RL_DAS_Agent(PPO_Agent):
                 state = torch.FloatTensor(state).to(self.device)
             except:
                 pass
-        results = {'return': R}
+        _Rs = R.detach().numpy().tolist()
+        env_cost = env.get_env_attr('cost')
+        env_fes = env.get_env_attr('fes')
+        results = {'cost': env_cost, 'fes': env_fes, 'return': _Rs}
         for key in required_info.keys():
             results[key] = env.get_env_attr(required_info[key])
         return results

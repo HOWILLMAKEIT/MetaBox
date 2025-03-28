@@ -166,6 +166,9 @@ class REINFORCE_Agent(Basic_Agent):
             
         is_train_ended = self.learning_time >= self.config.max_learning_step
         return_info = {'return': _R, 'loss' : loss,'learn_steps': self.learning_time, }
+        env_cost = env.get_env_attr('cost')
+        return_info['normalizer'] = env_cost[0]
+        return_info['gbest'] = env_cost[-1]
         for key in required_info.keys():
             return_info[key] = env.get_env_attr(required_info[key])
         env.close()
@@ -191,7 +194,9 @@ class REINFORCE_Agent(Basic_Agent):
                 action = action.cpu().numpy().squeeze()
                 state, reward, is_done = env.step(action)
                 R += reward
-            results = {'return': R}
+            env_cost = env.get_env_attr('cost')
+            env_fes = env.get_env_attr('fes')
+            results = {'cost': env_cost, 'fes': env_fes, 'return': R}
             for key in required_info.keys():
                 results[key] = getattr(env, required_info[key])
             return results
@@ -233,7 +238,10 @@ class REINFORCE_Agent(Basic_Agent):
                 state = torch.FloatTensor(state).to(self.device)
             except:
                 pass
-        results = {'return': R}
+        _Rs = R.detach().numpy().tolist()
+        env_cost = env.get_env_attr('cost')
+        env_fes = env.get_env_attr('fes')
+        results = {'cost': env_cost, 'fes': env_fes, 'return': _Rs}
         for key in required_info.keys():
             results[key] = env.get_env_attr(required_info[key])
         return results

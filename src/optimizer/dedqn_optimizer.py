@@ -150,7 +150,6 @@ class DEDQN_Optimizer(Learnable_Optimizer):
             self.__cost = problem.eval(self.__population) - problem.optimum
         self.__gbest = self.__population[self.__cost.argmin()]
         self.__gbest_cost = self.__cost.min()
-        self.gbest_val = self.__gbest_cost
         self.fes = self.__NP
         self.log_index = 1
         self.cost = [self.__gbest_cost]
@@ -194,7 +193,6 @@ class DEDQN_Optimizer(Learnable_Optimizer):
 
         reward = cal_reward(self.__survival, self.__solution_pointer)
 
-        self.gbest_val = self.__gbest_cost
         
         if problem.optimum is None:
             is_done = self.fes >= self.__maxFEs

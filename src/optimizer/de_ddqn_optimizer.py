@@ -57,7 +57,6 @@ class DE_DDQN_Optimizer(Learnable_Optimizer):
         self.__stagcount = 0
         self.__X_gbest = self.__X[np.argmin(self.__cost)]
         self.__c_gbest = np.min(self.__cost)
-        self.gbest_val = self.__c_gbest
         self.__c_gworst = np.max(self.__cost)
         self.__X_prebest = self.__X[np.argmin(self.__cost)]
         self.__c_prebest = np.min(self.__cost)
@@ -202,7 +201,6 @@ class DE_DDQN_Optimizer(Learnable_Optimizer):
             self.__c_gworst = trial_cost
         self.__pointer = (self.__pointer + 1) % self.__NP
 
-        self.gbest_val = self.__c_gbest    
         
         if self.fes >= self.log_index * self.log_interval:
             self.log_index += 1

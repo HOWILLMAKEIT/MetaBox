@@ -49,9 +49,7 @@ class QLPSO_Agent(TabularQ_Agent):
                       asynchronous: Literal[None, 'idle', 'restart', 'continue']=None,
                       num_cpus: Optional[Union[int, None]]=1,
                       num_gpus: int=0,
-                      required_info={'normalizer': 'normalizer',
-                                     'gbest':'gbest'
-                                     }):
+                      required_info={}):
         if self.device != 'cpu':
             num_gpus = max(num_gpus, 1)
         env = ParallelEnv(envs, para_mode, asynchronous, num_cpus, num_gpus)
@@ -89,6 +87,9 @@ class QLPSO_Agent(TabularQ_Agent):
             if self.learning_time >= self.config.max_learning_step:
                 _Rs = _R.detach().numpy().tolist()
                 return_info = {'return': _Rs, 'loss': np.mean(_loss), 'learn_steps': self.learning_time, }
+                env_cost = env.get_env_attr('cost')
+                return_info['normalizer'] = env_cost[0]
+                return_info['gbest'] = env_cost[-1]
                 for key in required_info.keys():
                     return_info[key] = env.get_env_attr(required_info[key])
                 env.close()
@@ -103,6 +104,9 @@ class QLPSO_Agent(TabularQ_Agent):
         is_train_ended = self.learning_time >= self.config.max_learning_step
         _Rs = _R.detach().numpy().tolist()
         return_info = {'return': _Rs, 'loss': np.mean(_loss), 'learn_steps': self.learning_time, }
+        env_cost = env.get_env_attr('cost')
+        return_info['normalizer'] = env_cost[0]
+        return_info['gbest'] = env_cost[-1]
         for key in required_info.keys():
             return_info[key] = env.get_env_attr(required_info[key])
         env.close()

@@ -79,9 +79,7 @@ class TabularQ_Agent(Basic_Agent):
                       asynchronous: Literal[None, 'idle', 'restart', 'continue']=None,
                       num_cpus: Optional[Union[int, None]]=1,
                       num_gpus: int=0,
-                      required_info={'normalizer': 'normalizer',
-                                     'gbest':'gbest'
-                                     }):
+                      required_info={}):
         if self.device != 'cpu':
             num_gpus = max(num_gpus, 1)
         env = ParallelEnv(envs, para_mode, asynchronous, num_cpus, num_gpus)
@@ -127,6 +125,9 @@ class TabularQ_Agent(Basic_Agent):
             
         is_train_ended = self.learning_time >= self.config.max_learning_step
         return_info = {'return': _R, 'learn_steps': self.learning_time, }
+        env_cost = env.get_env_attr('cost')
+        return_info['normalizer'] = env_cost[0]
+        return_info['gbest'] = env_cost[-1]
         for key in required_info.keys():
             return_info[key] = env.get_env_attr(required_info[key])
         env.close()
@@ -136,9 +137,7 @@ class TabularQ_Agent(Basic_Agent):
     def rollout_episode(self, 
                         env,
                         seed=None,
-                      required_info={'normalizer': 'normalizer',
-                                     'gbest':'gbest'
-                                     }):
+                      required_info={}):
         with torch.no_grad():
             if seed is not None:
                 env.seed(seed)
@@ -149,8 +148,9 @@ class TabularQ_Agent(Basic_Agent):
                 action = self.get_action([state])[0]
                 state, reward, is_done = env.step(action)
                 R += reward
-                
-            results = {'return': R}
+            env_cost = env.get_env_attr('cost')
+            env_fes = env.get_env_attr('fes')
+            results = {'cost': env_cost, 'fes': env_fes, 'return': R}
             for key in required_info.keys():
                 results[key] = getattr(env, required_info[key])
             return results
@@ -162,9 +162,7 @@ class TabularQ_Agent(Basic_Agent):
                               asynchronous: Literal[None, 'idle', 'restart', 'continue']=None,
                               num_cpus: Optional[Union[int, None]]=1,
                               num_gpus: int=0,
-                      required_info={'normalizer': 'normalizer',
-                                     'gbest':'gbest'
-                                     }):
+                      required_info={}):
         if self.device != 'cpu':
             num_gpus = max(num_gpus, 1)
         env = ParallelEnv(envs, para_mode, asynchronous, num_cpus, num_gpus)
@@ -181,7 +179,10 @@ class TabularQ_Agent(Basic_Agent):
             # print('step:{},max_reward:{}'.format(t,torch.max(rewards)))
             R += torch.FloatTensor(rewards).squeeze()
             state = torch.FloatTensor(state)
-        results = {'return': R}
+        _Rs = R.detach().numpy().tolist()
+        env_cost = env.get_env_attr('cost')
+        env_fes = env.get_env_attr('fes')
+        results = {'cost': env_cost, 'fes': env_fes, 'return': _Rs}
         for key in required_info.keys():
             results[key] = env.get_env_attr(required_info[key])
         return results
