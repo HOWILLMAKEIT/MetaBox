@@ -406,27 +406,27 @@ def post_processing_test_statics(log_dir: str, logger: Logger) -> None:
         os.makedirs(log_dir + 'tables/')
     gen_overall_tab(results, log_dir+'tables/') # 
     gen_algorithm_complexity_table(results, log_dir+'tables/') # 
-    gen_agent_performance_table(data_type = 'pr', results, log_dir+'tables/') 
-    gen_agent_performance_table(data_type = 'sr', results, log_dir + 'tables/')
+    gen_agent_performance_table('pr', results, log_dir+'tables/') 
+    gen_agent_performance_table('sr', results, log_dir + 'tables/')
 
     # Generate figures
     if not os.path.exists(log_dir + 'pics/'):
         os.makedirs(log_dir + 'pics/')
-    logger.draw_test_cost(data_type = 'pr', results['pr_list'],log_dir + 'pics/', logged=True, categorized=True) #
-    logger.draw_test_cost(data_type = 'sr', results['sr_list'],log_dir + 'pics/', logged=True, categorized=True)
+    logger.draw_test_cost('pr', results['pr_list'],log_dir + 'pics/', logged=True, categorized=True) #
+    logger.draw_test_cost('sr', results['sr_list'],log_dir + 'pics/', logged=True, categorized=True)
     # logger.draw_named_average_test_costs(results['cost'], log_dir + 'pics/',
     #                                     {'MetaBBO-RL': ['DE_DDQN_Agent', 'RL_HPSDE_Agent', 'LDE_Agent', 'QLPSO_Agent', 'RLEPSO_Agent', 'RL_PSO_Agent', 'DEDQN_Agent'],
     #                                      'Classic Optimizer': ['DEAP_DE', 'DEAP_CMAES', 'DEAP_PSO', 'JDE21', 'NL_SHADE_LBC', 'GL_PSO', 'sDMS_PSO', 'MadDE', 'SAHLPSO', 'Random_search']},
     #                                     logged=False) # 各个agent在平均问题上的指标变化曲线
-    logger.draw_rank_hist(data_type = 'pr', results, random, log_dir + 'pics/') 
-    logger.draw_rank_hist(data_type = 'sr', results, random, log_dir + 'pics/')
+    logger.draw_rank_hist('pr', results, random, log_dir + 'pics/') 
+    logger.draw_rank_hist('sr', results, random, log_dir + 'pics/')
 
 def post_processing_rollout_statics(log_dir: str, logger: Logger) -> None:
     with open(log_dir+'rollout.pkl', 'rb') as f:
         results = pickle.load(f)
     if not os.path.exists(log_dir + 'pics/'):
         os.makedirs(log_dir + 'pics/')
-    logger.draw_train_logger(data_type = 'return', results, log_dir + 'pics/', )
-    logger.draw_train_logger(data_type = 'gbest', results, log_dir + 'pics/', )
-    logger.draw_train_logger(data_type = 'pr', results, log_dir + 'pics/',)
-    logger.draw_train_logger(data_type = 'sr', results, log_dir+'pics/',)
+    logger.draw_train_logger('return', results, log_dir + 'pics/', )
+    logger.draw_train_logger('gbest', results, log_dir + 'pics/', )
+    logger.draw_train_logger('pr', results, log_dir + 'pics/',)
+    logger.draw_train_logger('sr', results, log_dir+'pics/',)
