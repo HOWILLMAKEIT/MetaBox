@@ -38,7 +38,7 @@ class DummyEnvWorker(EnvWorker):
         self.result = self.env.step(action)
         
     def customized_method(self, func: str, data) -> Any:
-        return eval('self.env.'+func)(**data)
+        self.result = eval('self.env.'+func)(**data)
             
     def send_reset(self) -> None:
         self.result = self.env.reset()
