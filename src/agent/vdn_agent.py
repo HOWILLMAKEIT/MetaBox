@@ -8,11 +8,11 @@ from torch import nn
 import torch
 from torch.distributions import Normal
 import torch.nn.functional as F
-from src.agent.utils import *
+from agent.utils import *
 from agent.basic_agent import Basic_Agent
 
 
-# from VectorEnv.great_para_env import ParallelEnv
+from VectorEnv.great_para_env import ParallelEnv
 
 
 def clip_grad_norms(param_groups, max_norm=math.inf):
@@ -71,7 +71,7 @@ class VDN_Agent(Basic_Agent):
         assert hasattr(torch.nn, self.config.criterion)
         self.criterion = eval('torch.nn.' + self.config.criterion)()
 
-        self.replay_buffer = ReplayBuffer(self.memory_size)
+        self.replay_buffer = MultiAgent_ReplayBuffer(self.memory_size)
 
         # move to device
         self.model.to(self.device)
@@ -97,10 +97,12 @@ class VDN_Agent(Basic_Agent):
         with torch.no_grad():
             Q_list = self.model(state)
         if epsilon_greedy and np.random.rand() < self.epsilon:
-            action = np.random.randint(low=0, high=self.n_act, size=len(state))
+            action = np.zeros((len(state), self.n_agent), dtype=int)
+            for i in range(self.n_agent):
+                action[:, i] = np.random.randint(low=0, high=self.available_action[i], size=len(state))
         else:
-            action = torch.argmax(Q_list, -1).detach().cpu().numpy().to(int)
-        return action
+            action = torch.argmax(Q_list, -1).detach().cpu().numpy().astype(int)
+        return action,Q_list
 
     def train_episode(self,
                       envs,
@@ -108,8 +110,10 @@ class VDN_Agent(Basic_Agent):
                       asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
                       num_cpus: Optional[Union[int, None]] = 1,
                       num_gpus: int = 0,
-                      required_info={'cost': 'cost',
-                                     }):
+                      required_info=None):
+        if required_info is None:
+            required_info = {'best_igd': 'best_value',
+                             }
         if self.device != 'cpu':
             num_gpus = max(num_gpus, 1)
         env = ParallelEnv(envs, para_mode, asynchronous, num_cpus, num_gpus)
@@ -124,39 +128,42 @@ class VDN_Agent(Basic_Agent):
             pass
 
         _R = torch.zeros(len(env))
+        _Q = []
+        _loss = []
         # sample trajectory
         while not env.all_done():
-            action = self.get_action(state=state, epsilon_greedy=True)
+            action,Q_list = self.get_action(state=state, epsilon_greedy=True)
+            _Q.append(Q_list)
 
             # state transient
             next_state, reward, is_end, info = env.step(action)
             _R += reward[:, 0]
             # store info
-            for s, a, r, ns, d in zip(state, action, reward, next_state, is_end):
+            for s, a, r, ns, d in zip(state.numpy(), action, reward, next_state, is_end):
                 self.replay_buffer.append((s, a, r, ns, d))
             try:
                 state = torch.FloatTensor(next_state).to(self.device)
             except:
                 state = copy.deepcopy(next_state)
-
             # begin update
-            self.model_target = copy.deepcopy(self.model)
+            self.target_model = copy.deepcopy(self.model)
             if len(self.replay_buffer) >= self.warm_up_size:
                 for _ in range(self.update_iter):
                     batch_obs, batch_action, batch_reward, batch_next_obs, batch_done \
-                        = self.replay_buffer.sample(self.batch_size,self.chunk_size)
+                        = self.replay_buffer.sample_chunk(self.batch_size,self.chunk_size)
                     loss = 0
                     for step_i in range(self.chunk_size):
                         q_out = self.model(batch_obs[:,step_i,:,:].to(self.device))
                         q_a = q_out.gather(2, batch_action[:, step_i, :].unsqueeze(-1).long()).squeeze(-1)
                         sum_q = q_a.sum(dim=1, keepdims=True)
-                        max_q_prime = self.model_target(batch_next_obs[:, step_i, :, :])
+                        max_q_prime = self.target_model(batch_next_obs[:, step_i, :, :])
                         max_q_prime = max_q_prime.max(dim=2)[0].squeeze(-1)
                         target_q = batch_reward[:, step_i, :].sum(dim=1, keepdims=True)
                         target_q += self.gamma * max_q_prime.sum(dim=1, keepdims=True) * (1 - batch_done[:, step_i])
 
                         loss += self.criterion(sum_q, target_q.detach())
                     loss = loss / (self.batch_size * self.chunk_size)
+                    _loss.append(loss.item())
                     self.optimizer.zero_grad()
                     loss.backward()
                     grad_norms = clip_grad_norms(self.optimizer.param_groups, self.config.max_grad_norm)
@@ -171,16 +178,16 @@ class VDN_Agent(Basic_Agent):
                     self.cur_checkpoint += 1
 
                 if self.learning_time >= self.config.max_learning_step:
-                    return_info = {'return': _R, 'learn_steps': self.learning_time, }
+                    return_info = {'return': _R, 'learn_steps': self.learning_time, 'Q_values':torch.tensor(Q_list), 'loss':_loss}
                     for key in required_info.keys():
                         return_info[key] = env.get_env_attr(required_info[key])
                     env.close()
                     return self.learning_time >= self.config.max_learning_step, return_info
 
         is_train_ended = self.learning_time >= self.config.max_learning_step
-        return_info = {'return': _R, 'learn_steps': self.learning_time, }
-        for key in required_info.keys():
-            return_info[key] = env.get_env_attr(required_info[key])
+        return_info = {'return': _R, 'learn_steps': self.learning_time, 'q_values':torch.tensor(Q_list), 'loss':_loss}
+        # for key in required_info.keys():
+        #     return_info[key] = env.get_env_attr(required_info[key])
         env.close()
 
         return is_train_ended, return_info

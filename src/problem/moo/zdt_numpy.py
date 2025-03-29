@@ -1,6 +1,6 @@
 
 import numpy as np
-from src.problem.moo.basic_problem import Basic_Problem
+from problem.moo.basic_problem import Basic_Problem
 import geatpy as ea
 # import pymoo.gradient.toolbox as anp
 # from pymoo.core.problem import Problem

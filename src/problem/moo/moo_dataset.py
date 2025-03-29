@@ -2,10 +2,10 @@ import random
 
 from torch.utils.data import Dataset
 import numpy as np
-from src.problem.moo.uf_numpy import *
-from src.problem.moo.zdt_numpy import *
-from src.problem.moo.dtlz_numpy import *
-from src.problem.moo.wfg_numpy import *
+from problem.moo.uf_numpy import *
+from problem.moo.zdt_numpy import *
+from problem.moo.dtlz_numpy import *
+from problem.moo.wfg_numpy import *
 
 
 class Moo_Dataset(Dataset):
@@ -154,7 +154,7 @@ class Moo_Dataset(Dataset):
     def __len__(self):
         return self.N
 
-    def __add__(self, other: 'MOO_Dataset'):
+    def __add__(self, other: 'Moo_Dataset'):
         return Moo_Dataset(self.data + other.data, self.batch_size)
 
     def shuffle(self):

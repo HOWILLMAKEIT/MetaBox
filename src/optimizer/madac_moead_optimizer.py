@@ -3,18 +3,18 @@ import tianshou
 
 from scipy.spatial.distance import cdist
 from operator import itemgetter
-from src.optimizer.moo_related.moo_operators import *
-from src.optimizer.moo_related.moo_indicators import *
-from src.problem.moo.dtlz_numpy import *
+from optimizer.moo_related.moo_operators import *
+from optimizer.moo_related.moo_indicators import *
+from problem.moo.dtlz_numpy import *
 
 #
-from src.optimizer.learnable_optimizer import Learnable_Optimizer
+from optimizer.learnable_optimizer import Learnable_Optimizer
 
 EPSILON = sys.float_info.epsilon
 
 
 class MADAC_MOEAD_Optimizer(Learnable_Optimizer):
-    def __init__(self,config):
+    def __init__(self, config):
         self.__config = config
         # Problem Related
         self.n_ref_points = 1000
@@ -50,6 +50,7 @@ class MADAC_MOEAD_Optimizer(Learnable_Optimizer):
         self.inital_value = self.get_igd()
         self.best_value = self.inital_value
         self.last_value = self.inital_value
+        return self.get_state()
 
     def get_neighborhoods(self):
         neighborhoods = []  # the i-th element save the index of the neighborhoods of it
@@ -61,12 +62,15 @@ class MADAC_MOEAD_Optimizer(Learnable_Optimizer):
         return neighborhoods
 
     def get_weights(self, n_obj):
+        weights = None
         if n_obj == 3:
             weights = normal_boundary_weights(n_obj, 13, 0)
         elif n_obj == 6:
             weights = normal_boundary_weights(n_obj, 4, 1)
         elif n_obj == 8:
             weights = normal_boundary_weights(n_obj, 3, 2)
+        else:
+            weights = normal_boundary_weights(n_obj, 2, 3)
         return weights
 
     def moead_update_ideal(self, solution_obj):
@@ -160,14 +164,13 @@ class MADAC_MOEAD_Optimizer(Learnable_Optimizer):
         if action_idx == 3:
             return weight_agent[action]
 
-    def step(self, action, problem):
+    def update(self, action, problem):
         """
         one step update in moea/d
         inclue solution generation and solution selection
         @param action: neighboor size; operator type; operator parameter
         :return:
         """
-
         self.moead_neighborhood_size = self.get_action(0, action[0])
         self.os = self.get_action(1, action[1])
         self.pc = self.get_action(2, action[2])
@@ -217,7 +220,8 @@ class MADAC_MOEAD_Optimizer(Learnable_Optimizer):
         else:
             self.done = False
         info = {"best_igd": self.best_value, "last_igd": self.last_value}
-        print("{}reward:{},best_igd{},last_igd{}".format(self.moead_generation,reward,self.best_value,self.last_value))
+        print(
+            "generation:{},reward:{},best_igd{},last_igd{}".format(self.moead_generation, reward, self.best_value, self.last_value))
         return self.obs, [reward] * self.n_agents, self.done, info
 
     def find_non_dominated_indices(self, population_list):
@@ -520,6 +524,7 @@ class MADAC_MOEAD_Optimizer(Learnable_Optimizer):
         else:
             raise ValueError("Invaild Reward Type.")
         return reward
+
 
     def close(self):
         self.reset()

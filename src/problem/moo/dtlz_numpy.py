@@ -1,5 +1,5 @@
 
-from src.problem.moo.basic_problem import Basic_Problem
+from problem.moo.basic_problem import Basic_Problem
 import numpy as np
 import geatpy as ea
 # from pymoo.core.problem import Problem
