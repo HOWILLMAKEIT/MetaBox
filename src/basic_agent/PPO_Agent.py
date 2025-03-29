@@ -127,7 +127,7 @@ class PPO_Agent(Basic_Agent):
         if self.device != 'cpu':
             num_gpus = max(num_gpus, 1)
         env = ParallelEnv(envs, para_mode, asynchronous, num_cpus, num_gpus)
-
+        env.seed(seeds)
         memory = Memory()
 
         # params for training
@@ -344,8 +344,7 @@ class PPO_Agent(Basic_Agent):
         if self.device != 'cpu':
             num_gpus = max(num_gpus, 1)
         env = ParallelEnv(envs, para_mode, asynchronous, num_cpus, num_gpus)
-        if seeds is not None:
-            env.seed(seeds)
+        env.seed(seeds)
         state = env.reset()
         try:
             state = torch.FloatTensor(state).to(self.device)

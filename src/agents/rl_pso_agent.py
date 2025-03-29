@@ -1,6 +1,6 @@
 from torch import nn
 from torch.distributions import Normal
-
+from typing import Optional, Union, Literal, List
 from agents.networks import MLP
 from basic_agent.REINFORCE_Agent import *
 from basic_agent.utils import *
@@ -74,7 +74,8 @@ class RL_PSO_Agent(REINFORCE_Agent):
         return "RL_PSO"
 
     def train_episode(self, 
-                      envs, 
+                      envs,
+                      seeds: Optional[Union[int, List[int], np.ndarray]],
                       para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc']='dummy',
                       asynchronous: Literal[None, 'idle', 'restart', 'continue']=None,
                       num_cpus: Optional[Union[int, None]]=1,
@@ -83,7 +84,7 @@ class RL_PSO_Agent(REINFORCE_Agent):
         if self.device != 'cpu':
             num_gpus = max(num_gpus, 1)
         env = ParallelEnv(envs, para_mode, asynchronous, num_cpus, num_gpus)
-        
+        env.seed(seeds)
         # input action_dim should be : bs, ps
         # action in (0,1) the ratio to learn from pbest & gbest
         state = env.reset()
@@ -152,8 +153,8 @@ class RL_PSO_Agent(REINFORCE_Agent):
         if self.device != 'cpu':
             num_gpus = max(num_gpus, 1)
         env = ParallelEnv(envs, para_mode, asynchronous, num_cpus, num_gpus)
-        if seeds is not None:
-            env.seed(seeds)
+
+        env.seed(seeds)
         state = env.reset()
         try:
             state = torch.FloatTensor(state).to(self.device)

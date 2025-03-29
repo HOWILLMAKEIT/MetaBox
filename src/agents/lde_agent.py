@@ -2,7 +2,7 @@ from torch import nn
 
 from basic_agent.REINFORCE_Agent import *
 from basic_agent.utils import *
-
+from typing import Optional, Union, Literal, List
 
 class PolicyNet(nn.Module):
     def __init__(self, config):
@@ -75,12 +75,14 @@ class LDE_Agent(REINFORCE_Agent):
         return all_disc_norm_rs
 
     def train_episode(self, 
-                      envs, 
+                      envs,
+                      seeds: Optional[Union[int, List[int], np.ndarray]],
                       para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc']='dummy',
                       asynchronous: Literal[None, 'idle', 'restart', 'continue']=None,
                       num_cpus: Optional[Union[int, None]]=1,
                       num_gpus: int=0,
                       required_info={}):
+
         self.optimizer.zero_grad()
         inputs_batch = []
         action_batch = []
@@ -90,7 +92,7 @@ class LDE_Agent(REINFORCE_Agent):
         if self.device != 'cpu':
             num_gpus = max(num_gpus, 1)
         env = ParallelEnv(envs, para_mode, asynchronous, num_cpus, num_gpus)
-        
+        env.seed(seeds)
         _R = torch.zeros(len(env))
         for l in range(self.config.TRAJECTORY_NUM):
             input_net = env.reset()
@@ -200,8 +202,8 @@ class LDE_Agent(REINFORCE_Agent):
         if self.device != 'cpu':
             num_gpus = max(num_gpus, 1)
         env = ParallelEnv(envs, para_mode, asynchronous, num_cpus, num_gpus)
-        if seeds is not None:
-            env.seed(seeds)
+
+        env.seed(seeds)
         input_net = env.reset()
         try:
             input_net = torch.FloatTensor(input_net).to(self.device)

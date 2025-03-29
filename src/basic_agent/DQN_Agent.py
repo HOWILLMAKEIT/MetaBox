@@ -1,7 +1,6 @@
 import copy
 import math
-from typing import Optional, Union, Literal
-
+from typing import Optional, Union, Literal, List
 import torch.nn.functional as F
 
 from VectorEnv.great_para_env import ParallelEnv
@@ -119,7 +118,8 @@ class DQN_Agent(Basic_Agent):
         return action
 
     def train_episode(self, 
-                      envs, 
+                      envs,
+                      seeds: Optional[Union[int, List[int], np.ndarray]],
                       para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc']='dummy',
                       asynchronous: Literal[None, 'idle', 'restart', 'continue']=None,
                       num_cpus: Optional[Union[int, None]]=1,
@@ -128,7 +128,7 @@ class DQN_Agent(Basic_Agent):
         if self.device != 'cpu':
             num_gpus = max(num_gpus, 1)
         env = ParallelEnv(envs, para_mode, asynchronous, num_cpus, num_gpus)
-        
+        env.seed(seeds)
         # params for training
         gamma = self.gamma
         
@@ -245,8 +245,7 @@ class DQN_Agent(Basic_Agent):
         if self.device != 'cpu':
             num_gpus = max(num_gpus, 1)
         env = ParallelEnv(envs, para_mode, asynchronous, num_cpus, num_gpus)
-        if seeds is not None:
-            env.seed(seeds)
+        env.seed(seeds)
         state = env.reset()
         try:
             state = torch.FloatTensor(state).to(self.device)

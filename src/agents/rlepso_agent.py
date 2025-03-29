@@ -118,7 +118,7 @@ class RLEPSO_Agent(PPO_Agent):
 
     def train_episode(self,
                       envs,
-                      seeds,
+                      seeds: Optional[Union[int, List[int], np.ndarray]],
                       para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc'] = 'dummy',
                       asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
                       num_cpus: Optional[Union[int, None]] = 1,
@@ -131,7 +131,7 @@ class RLEPSO_Agent(PPO_Agent):
         #     k = max(k, int(0.3*(env.optimizer.MaxFEs // env.optimizer.period)))
 
         env = ParallelEnv(envs, para_mode, asynchronous, num_cpus, num_gpus)
-
+        env.seed(seeds)
         memory = Memory()
 
         # params for training
@@ -328,8 +328,8 @@ class RLEPSO_Agent(PPO_Agent):
         if self.device != 'cpu':
             num_gpus = max(num_gpus, 1)
         env = ParallelEnv(envs, para_mode, asynchronous, num_cpus, num_gpus)
-        if seeds is not None:
-            env.seed(seeds)
+
+        env.seed(seeds)
         state = env.reset()
         try:
             state = torch.FloatTensor(state).to(self.device)

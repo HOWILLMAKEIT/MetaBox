@@ -101,7 +101,7 @@ class SYMBOL_Agent(PPO_Agent):
 
     def train_episode(self,
                       envs,
-                      seeds,
+                      seeds: Optional[Union[int, List[int], np.ndarray]],
                       para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc'] = 'dummy',
                       asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
                       num_cpus: Optional[Union[int, None]] = 1,
@@ -115,7 +115,7 @@ class SYMBOL_Agent(PPO_Agent):
             env.optimizer.is_train = True
         env = ParallelEnv(envs, para_mode, asynchronous, num_cpus, num_gpus)
         # set env.optimizer.is_train = True
-
+        env.seed(seeds)
         memory = Memory()
 
         # params for training
@@ -316,8 +316,8 @@ class SYMBOL_Agent(PPO_Agent):
             env.optimizer.is_train = False
 
         env = ParallelEnv(envs, para_mode, asynchronous, num_cpus, num_gpus)
-        if seeds is not None:
-            env.seed(seeds)
+
+        env.seed(seeds)
         state = env.reset()
         try:
             state = torch.FloatTensor(state).to(self.device)

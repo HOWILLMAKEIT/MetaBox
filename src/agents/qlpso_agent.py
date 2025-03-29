@@ -1,5 +1,5 @@
 from scipy.special import softmax
-
+from typing import Optional, Union, Literal, List
 from basic_agent.TabularQ_Agent import *
 from basic_agent.utils import save_class
 
@@ -44,7 +44,8 @@ class QLPSO_Agent(TabularQ_Agent):
         return action.squeeze().numpy()  # Return the action and remove unnecessary dimensions
 
     def train_episode(self, 
-                      envs, 
+                      envs,
+                      seeds: Optional[Union[int, List[int], np.ndarray]],
                       para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc']='dummy',
                       asynchronous: Literal[None, 'idle', 'restart', 'continue']=None,
                       num_cpus: Optional[Union[int, None]]=1,
@@ -53,7 +54,7 @@ class QLPSO_Agent(TabularQ_Agent):
         if self.device != 'cpu':
             num_gpus = max(num_gpus, 1)
         env = ParallelEnv(envs, para_mode, asynchronous, num_cpus, num_gpus)
-        
+        env.seed(seeds)
         # params for training
         gamma = self.gamma
         
