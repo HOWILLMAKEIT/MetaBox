@@ -45,7 +45,7 @@ class DE_DDQN_Optimizer(Learnable_Optimizer):
 
     def init_population(self, problem):
         # population initialization
-        self.__X = np.random.rand(self.__NP, self.__dim) * (problem.ub - problem.lb) + problem.lb
+        self.__X = self.rng.rand(self.__NP, self.__dim) * (problem.ub - problem.lb) + problem.lb
         if problem.optimum is None:
             self.__cost = problem.eval(self.__X)
         else:
@@ -82,7 +82,7 @@ class DE_DDQN_Optimizer(Learnable_Optimizer):
         features[3] = (self.__maxFEs - self.fes) / self.__maxFEs
         features[4] = self.__dim / self.__dim_max
         features[5] = self.__stagcount / self.__maxFEs
-        self.__r = np.random.randint(0, self.__NP, 5)
+        self.__r = self.rng.randint(0, self.__NP, 5)
         for j in range(0, 5):  # features[6] ~ features[10]
             features[j + 6] = np.linalg.norm(self.__X[self.__pointer] - self.__X[self.__r[j]], 2) / max_dist
         features[11] = np.linalg.norm(self.__X[self.__pointer] - self.__X_prebest, 2) / max_dist
@@ -142,19 +142,19 @@ class DE_DDQN_Optimizer(Learnable_Optimizer):
                     self.__N_succ[op][m].appendleft(0)
         # mutation  ['rand/1', 'rand/2', 'rand-to-best/2', 'cur-to-rand/1']
         if action == 0:
-            donor = rand_1_single(self.__X, self.__F, self.__pointer, self.__r)
+            donor = rand_1_single(self.__X, self.__F, self.__pointer, self.__r, rng=self.rng)
         elif action == 1:
-            donor = rand_2_single(self.__X, self.__F, self.__pointer, self.__r)
+            donor = rand_2_single(self.__X, self.__F, self.__pointer, self.__r, rng=self.rng)
         elif action == 2:
-            donor = rand_to_best_2_single(self.__X, self.__X_gbest, self.__F, self.__pointer, self.__r)
+            donor = rand_to_best_2_single(self.__X, self.__X_gbest, self.__F, self.__pointer, self.__r, rng=self.rng)
         elif action == 3:
-            donor = cur_to_rand_1_single(self.__X, self.__F, self.__pointer, self.__r)
+            donor = cur_to_rand_1_single(self.__X, self.__F, self.__pointer, self.__r, rng=self.rng)
         else:
             raise ValueError('Action error')
         # BC
         donor = clipping(donor, problem.lb, problem.ub)
         # crossover
-        trial = binomial(self.__X[self.__pointer], donor, self.__Cr)
+        trial = binomial(self.__X[self.__pointer], donor, self.__Cr,self.rng)
         # get the cost of the trial vector
         if problem.optimum is None:
             trial_cost = problem.eval(trial)

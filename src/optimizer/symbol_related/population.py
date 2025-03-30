@@ -7,7 +7,7 @@ def dist(x,y):
     
 
 class Population(object):
-    def __init__(self,dim,pop_size,min_x,max_x,max_fes,problem):
+    def __init__(self,dim,pop_size,min_x,max_x,max_fes,problem,rng):
         self.dim=dim
         self.pop_size=pop_size
         self.min_x=min_x
@@ -16,6 +16,7 @@ class Population(object):
         self.problem=problem
         self.max_dist=((max_x-min_x)**2*dim)**0.5
         self.cur_fes=0
+        self.rng = rng
 
     # calculate costs of solutions
     def get_costs(self,position):
@@ -29,7 +30,7 @@ class Population(object):
         return cost
     
     def reset(self,init_pop=None,init_y=None,need_his=True):
-        np.random.seed()
+        self.rng.seed()
         # init fes and stag_count
         if init_y is not None:
             self.cur_fes+=init_y.shape[0]
@@ -40,7 +41,7 @@ class Population(object):
         # init population
         if init_pop is None:
         # randomly generate the position and velocity
-            rand_pos=np.random.uniform(low=-self.max_x,high=self.max_x,size=(self.pop_size,self.dim))
+            rand_pos=self.rng.uniform(low=-self.max_x,high=self.max_x,size=(self.pop_size,self.dim))
         else:
             rand_pos=init_pop
 

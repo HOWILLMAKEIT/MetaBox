@@ -6,11 +6,12 @@ crossover_operators = ["CR1", "CR2", "CR3"]
 mutation_operators = ['DE1', 'DE2', 'DE3', 'DE4', 'DE5', 'DE6', 'DE7', 'DE8', 'DE9', 'DE10', 'DE11', 'DE12', 'DE13', 'DE14']
 
 class select_mutation:
-    def __init__(self):
+    def __init__(self, rng):
         print(mutation_operators)
         operators = {}
+        self.rng = rng
         for operator_name in mutation_operators:
-            operators[operator_name] = eval(operator_name)()
+            operators[operator_name] = eval(operator_name)(rng)
         self.mutation_operators = mutation_operators
 
         self.operators = operators
@@ -22,11 +23,12 @@ class select_mutation:
         return operator_class
 
 class select_crossover:
-    def __init__(self):
+    def __init__(self, rng):
+        self.rng = rng
         print(crossover_operators)
         operators = {}
         for operator_name in crossover_operators:
-            operators[operator_name] = eval(operator_name)()
+            operators[operator_name] = eval(operator_name)(rng)
         self.crossover_operators = crossover_operators
 
         self.operators = operators
@@ -53,8 +55,8 @@ class RLDE_AFL_Optimizer(Learnable_Optimizer):
         self.max_fes = config.maxFEs
         self.__reward_ratio = 1
 
-        self.__mu_selector = select_mutation()
-        self.__cr_selector = select_crossover()
+        self.__mu_selector = select_mutation(self.rng)
+        self.__cr_selector = select_crossover(self.rng)
 
 
         self.log_index = None
@@ -87,7 +89,7 @@ class RLDE_AFL_Optimizer(Learnable_Optimizer):
         self.fes = 0
         NP = self.__NP
         dim = self.__dim
-        rand_vector = np.random.uniform(low = 0, high = 1, size = (NP, dim))
+        rand_vector = self.rng.uniform(low = 0, high = 1, size = (NP, dim))
         c_cost = self.get_costs(rand_vector, problem)
 
         self.__archive = np.array([])
@@ -108,7 +110,7 @@ class RLDE_AFL_Optimizer(Learnable_Optimizer):
         if self.__archive.shape[0] < self.__NP:
             self.__archive = np.append(self.__archive, self.current_vector[old_id]).reshape(-1, self.__dim)
         else:
-            self.__archive[np.random.randint(self.__archive.shape[0])] = self.current_vector[old_id]
+            self.__archive[self.rng.randint(self.__archive.shape[0])] = self.current_vector[old_id]
 
     def update(self, action, problem):
         _, n_action = action.shape
@@ -216,6 +218,8 @@ class Basic_mutation:
     #     pass
 
     # population version
+    def __init__(self, rng):
+        self.rng = rng
     def mutation(self, group, cost, indexs, parameters, archive):
         """
         Perform a mutation operation on a population.
@@ -236,7 +240,7 @@ class Basic_mutation:
             Indices = np.zeros((len(indexs), x_num), dtype = int)
         for i, index in enumerate(indexs):
             temp_indices = indices[indices != index]
-            Indices[i] = np.random.choice(temp_indices, x_num, replace = False)
+            Indices[i] = self.rng.choice(temp_indices, x_num, replace = False)
         return Indices
 
     def construct_extra_random_indices(self, pop_size, indexs, x_num, extra):
@@ -251,7 +255,7 @@ class Basic_mutation:
             for j in range(extra_n):
                 filters = filters & (indices != extra[i, j])
             temp_indices = indices[filters]
-            Indices[i] = np.random.choice(temp_indices, x_num, replace = False)
+            Indices[i] = self.rng.choice(temp_indices, x_num, replace = False)
         return Indices
 
     def construct_pbest(self, group, p):
@@ -261,11 +265,16 @@ class Basic_mutation:
 
 # [binomial] [exponential] [p-binomial]
 class Basic_crossover:
+    def __init__(self, rng):
+        self.rng = rng
     def crossover(self, x, v, parameters, group, cost, archive):
 
         pass
 
 class DE1(Basic_mutation):
+
+    def __init__(self, rng):
+        super().__init__(rng)
     def mutation(self, group, cost, indexs, parameters, archive):
         F = parameters[indexs][:, 0]
         F = F[:, np.newaxis]
@@ -277,6 +286,8 @@ class DE1(Basic_mutation):
         return mutated_vector
 
 class DE2(Basic_mutation):
+    def __init__(self, rng):
+        super().__init__(rng)
     def mutation(self, group, cost, indexs, parameters, archive):
         F = parameters[indexs][:, 0]
         F = F[:, np.newaxis]
@@ -288,6 +299,8 @@ class DE2(Basic_mutation):
         return mutated_vector
 
 class DE3(Basic_mutation):
+    def __init__(self, rng):
+        super().__init__(rng)
     def mutation(self, group, cost, indexs, parameters, archive):
         F = parameters[indexs][:, 0]
         F = F[:, np.newaxis]
@@ -297,6 +310,8 @@ class DE3(Basic_mutation):
         return mutated_vector
 
 class DE4(Basic_mutation):
+    def __init__(self, rng):
+        super().__init__(rng)
     def mutation(self, group, cost, indexs, parameters, archive):
         F = parameters[indexs][:, 0]
         F = F[:, np.newaxis]
@@ -306,6 +321,8 @@ class DE4(Basic_mutation):
         return mutated_vector
 
 class DE5(Basic_mutation):
+    def __init__(self, rng):
+        super().__init__(rng)
     def mutation(self, group, cost, indexs, parameters, archive):
         F = parameters[indexs][:, 0]
         F = F[:, np.newaxis]
@@ -318,6 +335,8 @@ class DE5(Basic_mutation):
         return mutated_vector
 
 class DE6(Basic_mutation):
+    def __init__(self, rng):
+        super().__init__(rng)
     def mutation(self, group, cost, indexs, parameters, archive):
         F = parameters[indexs][:, 0]
         F = F[:, np.newaxis]
@@ -329,6 +348,8 @@ class DE6(Basic_mutation):
         return mutated_vector
 
 class DE7(Basic_mutation):
+    def __init__(self, rng):
+        super().__init__(rng)
     def mutation(self, group, cost, indexs, parameters, archive):
         F = parameters[indexs][:, 0]
         F = F[:, np.newaxis]
@@ -339,6 +360,8 @@ class DE7(Basic_mutation):
         return mutated_vector
 
 class DE8(Basic_mutation):
+    def __init__(self, rng):
+        super().__init__(rng)
     # current-to-pbest/1
     def mutation(self, group, cost, indexs, parameters, archive):
         # Sort
@@ -354,13 +377,15 @@ class DE8(Basic_mutation):
 
         pbest = self.construct_pbest(temp_group, temp_parameters[:, 1])
         NB = pbest.shape[0]
-        rb = np.random.randint(NB, size = len(indexs))
+        rb = self.rng.randint(NB, size = len(indexs))
         random_indices = self.construct_extra_random_indices(temp_group.shape[0], temp_indexs, 2, extra = rb[:, None])
         x1, x2 = temp_group[random_indices.T]
         mutated_vector = current_vector + F * (pbest[rb] - current_vector) + F * (x1 - x2)
         return mutated_vector
 
 class DE9(Basic_mutation):
+    def __init__(self, rng):
+        super().__init__(rng)
     def EuclideanDistance(self, x, y):
         return np.sqrt(np.sum(np.square(x - y)))
 
@@ -388,7 +413,7 @@ class DE9(Basic_mutation):
                 temp_p = np.ones_like(temp_p)
                 temp_p[index] = 0
             temp_p = temp_p / np.sum(temp_p)
-            Indices[i] = np.random.choice(len(temp_p), size = 3, p = temp_p, replace = False)
+            Indices[i] = self.rng.choice(len(temp_p), size = 3, p = temp_p, replace = False)
         return Indices
 
     def mutation(self, group, cost, indexs, parameters, archive):
@@ -400,6 +425,8 @@ class DE9(Basic_mutation):
         return matuated_vector
 
 class DE10(Basic_mutation):
+    def __init__(self, rng):
+        super().__init__(rng)
     def Topograph(self, group, cost):
         """
         generate a kNN matrix indicating the nearest neighbors of each individual
@@ -452,6 +479,8 @@ class DE10(Basic_mutation):
         return mutated_vector
 
 class DE11(Basic_mutation):
+    def __init__(self, rng):
+        super().__init__(rng)
     # current-to-pbest/1+archive
     def mutation(self, group, cost, indexs, parameters, archive):
         # Sort
@@ -468,7 +497,7 @@ class DE11(Basic_mutation):
         pbest = self.construct_pbest(temp_group, temp_parameters[:, 1])
         NB = pbest.shape[0]
         NA = archive.shape[0]
-        rb = np.random.randint(NB, size = len(temp_indexs))
+        rb = self.rng.randint(NB, size = len(temp_indexs))
         r1 = self.construct_extra_random_indices(temp_group.shape[0], temp_indexs, 1, extra = rb[:, None])
         r2 = self.construct_extra_random_indices(temp_group.shape[0] + NA, temp_indexs, 1, extra = np.concatenate((rb[:, None], r1[:,None]), 1))
 
@@ -482,6 +511,8 @@ class DE11(Basic_mutation):
         return mutated_vector
 
 class DE12(Basic_mutation):
+    def __init__(self, rng):
+        super().__init__(rng)
     def mutation(self, group, cost, indexs, parameters, archive):
         # Sort
         ind = np.argsort(cost)
@@ -500,7 +531,7 @@ class DE12(Basic_mutation):
         pbest = self.construct_pbest(temp_group, temp_parameters[:, 1])
         NB = pbest.shape[0]
         NA = archive.shape[0]
-        rb = np.random.randint(NB, size = len(temp_indexs))
+        rb = self.rng.randint(NB, size = len(temp_indexs))
         r1 = self.construct_extra_random_indices(temp_group.shape[0], temp_indexs, 1, extra = rb[:, None])
         r2 = self.construct_extra_random_indices(temp_group.shape[0] + NA, temp_indexs, 1, extra = np.concatenate((rb[:, None], r1[:,None]), 1))
         r3 = self.construct_extra_random_indices(temp_group.shape[0] + NA, temp_indexs, 1, extra = np.concatenate((rb[:, None], r1[:,None], r2[:, None]), 1))
@@ -516,6 +547,8 @@ class DE12(Basic_mutation):
         return mutated_vector
 
 class DE13(Basic_mutation):
+    def __init__(self, rng):
+        super().__init__(rng)
     def mutation(self, group, cost, indexs, parameters, archive):
         F = parameters[indexs][:, 0]
         F = F[:, np.newaxis]
@@ -534,6 +567,8 @@ class DE13(Basic_mutation):
         return mutated_vector
 
 class DE14(Basic_mutation):
+    def __init__(self, rng):
+        super().__init__(rng)
     def mutation(self, group, cost, indexs, parameters, archive):
         # Sort
         ind = np.argsort(cost)
@@ -550,7 +585,7 @@ class DE14(Basic_mutation):
 
         Fa = temp_parameters[:, 2]
         Fa = Fa[:, np.newaxis]
-        rb = np.random.randint(NB, size = len(temp_indexs))
+        rb = self.rng.randint(NB, size = len(temp_indexs))
         random_indices = self.construct_extra_random_indices(temp_group.shape[0], temp_indexs, 2, extra = rb[:, None])
 
         xb = pbest[rb]
@@ -559,29 +594,35 @@ class DE14(Basic_mutation):
         return mutated_vector
 
 class CR1(Basic_crossover):
+    def __init__(self, rng):
+        super().__init__(rng)
     def crossover(self, x, v, parameters, group, cost, archive):
         CR = parameters[:, 0]
         NP, dim = x.shape
-        jrand = np.random.randint(dim, size = NP)
+        jrand = self.rng.randint(dim, size = NP)
         CRs = np.repeat(CR, dim).reshape(NP, dim)
-        u = np.where(np.random.rand(NP, dim) < CRs, v, x)
+        u = np.where(self.rng.rand(NP, dim) < CRs, v, x)
         u[np.arange(NP), jrand] = v[np.arange(NP), jrand]
         return u
 
 class CR2(Basic_crossover):
+    def __init__(self, rng):
+        super().__init__(rng)
     def crossover(self, x, v, parameters, group, cost, archive):
         CR = parameters[:, 0]
         NP, dim = x.shape
         u = x.copy()
-        L = np.random.randint(dim, size = NP).repeat(dim).reshape(NP, dim)
+        L = self.rng.randint(dim, size = NP).repeat(dim).reshape(NP, dim)
         L = L <= np.arange(dim)
-        rvs = np.random.rand(NP, dim)
+        rvs = self.rng.rand(NP, dim)
         CRs = np.repeat(CR, dim).reshape(NP, dim)
         L = np.where(rvs > CRs, L, 0)
         u = u * (1 - L) + v * L
         return u
 
 class CR3(Basic_crossover):
+    def __init__(self, rng):
+        super().__init__(rng)
     def crossover(self, x, v, parameters, group, cost, archive):
         CR = parameters[:, 0]
         p = parameters[:, 1]
@@ -594,9 +635,9 @@ class CR3(Basic_crossover):
             pbest = np.concatenate((temp_group, archive), 0)[:max(int(p * (group.shape[0] + archive.shape[0])), 2)]
 
         NP, dim = x.shape
-        cross_pbest = pbest[np.random.randint(pbest.shape[0], size = NP)]
-        jrand = np.random.randint(dim, size = NP)
+        cross_pbest = pbest[self.rng.randint(pbest.shape[0], size = NP)]
+        jrand = self.rng.randint(dim, size = NP)
         CRs = np.repeat(CR, dim).reshape(NP, dim)
-        u = np.where(np.random.rand(NP, dim) < CRs, v, cross_pbest)
+        u = np.where(self.rng.rand(NP, dim) < CRs, v, cross_pbest)
         u[np.arange(NP), jrand] = v[np.arange(NP), jrand]
         return u

@@ -30,7 +30,7 @@ class NRLPSO_Optimizer(Learnable_Optimizer):
     def init_population(self, problem):
         self.pointer = 0
         # init population
-        self.__population = np.random.rand(self.NP, self.__dim) * (problem.ub - problem.lb) + problem.lb
+        self.__population = self.rng.rand(self.NP, self.__dim) * (problem.ub - problem.lb) + problem.lb
         
         self.v_min = -0.1 * (problem.ub - problem.lb)
         self.v_max = -self.v_min
@@ -52,10 +52,10 @@ class NRLPSO_Optimizer(Learnable_Optimizer):
         self.log_index = 1
         self.cost = [self.__gbest_cost]
 
-        self.r_w = np.random.rand()
+        self.r_w = self.rng.rand()
 
         # init state
-        self.__state = np.random.randint(low=0, high=self.n_state, size=self.NP)
+        self.__state = self.rng.randint(low=0, high=self.n_state, size=self.NP)
         return self.__state[self.pointer]
 
     
@@ -125,18 +125,18 @@ class NRLPSO_Optimizer(Learnable_Optimizer):
         return np.sum(p1 * p2) / (np.sqrt(np.sum(p1**2)) * np.sqrt(np.sum(p2**2)))
 
     def get_p_b(self, ith):
-        r_idx = np.random.randint(0, self.k)
+        r_idx = self.rng.randint(0, self.k)
         return self.pbest_neb[ith][r_idx]
 
     def get_p_a(self):
-        r_idx = np.random.randint(0, self.k)
+        r_idx = self.rng.randint(0, self.k)
         return self.gbest_neb[r_idx]
     
 
     def generate_v_vector(self, action, ith, w):
         c1, c2, P1, P2 = None, None, None, None
-        r1 = np.random.rand()
-        r2 = np.random.rand()
+        r1 = self.rng.rand()
+        r2 = self.rng.rand()
 
         cur_p = self.__population[ith]
 
@@ -186,8 +186,8 @@ class NRLPSO_Optimizer(Learnable_Optimizer):
             c2 = 2.2
             P1 = self.get_p_b(ith)
             P2 = self.get_p_a()
-            r1 = np.random.rand(self.__dim)
-            r2 = np.random.rand(self.__dim)
+            r1 = self.rng.rand(self.__dim)
+            r2 = self.rng.rand(self.__dim)
             self.__velocity[ith] = w * self.__velocity[ith] + c1 * r1 * (P1 - cur_p) + c2 * r2 * (P2 - cur_p)
         
         # clip velocity
@@ -209,7 +209,7 @@ class NRLPSO_Optimizer(Learnable_Optimizer):
         P1 = self.pbest_neb[ith][sort_idx[0]]
         P2 = self.pbest_neb[ith][sort_idx[-1]]
 
-        P3 = self.__pbest_pos[ith] + np.random.rand(self.__dim) * (P1 - P2)
+        P3 = self.__pbest_pos[ith] + self.rng.rand(self.__dim) * (P1 - P2)
         cost = self.cal_cost(P3, problem)
         if cost < self.__pbest_cost[ith]:
             self.__pbest_pos[ith] = P3
@@ -227,7 +227,7 @@ class NRLPSO_Optimizer(Learnable_Optimizer):
         P1 = self.gbest_neb[sort_idx[0]]
         P2 = self.gbest_neb[sort_idx[-1]]
 
-        P3 = self.__gbest_pos + np.random.rand(self.__dim) * (P1 - P2)
+        P3 = self.__gbest_pos + self.rng.rand(self.__dim) * (P1 - P2)
         cost = self.cal_cost(P3, problem)
         if cost < self.__gbest_cost:
             self.__gbest_pos = P3

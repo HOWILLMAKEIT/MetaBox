@@ -4,7 +4,7 @@ import numpy as np
 
 
 class Population:
-    def __init__(self, dim):
+    def __init__(self, dim, rng):
         self.Nmax = 170                         # the upperbound of population size
         self.Nmin = 30                          # the lowerbound of population size
         self.NP = self.Nmax                     # the population size
@@ -24,12 +24,14 @@ class Population:
         self.k = 0                              # the index of updating element in MF and MCr
         self.F = np.ones(self.NP) * 0.5         # the set of successful step length
         self.Cr = np.ones(self.NP) * 0.9        # the set of successful crossover rate
+        
+        self.rng = rng
 
     # generate an initialized population with size(default self population size)
     def initialize_group(self, size=-1):
         if size < 0:
             size = self.NP
-        return np.random.random((size, self.dim)) * (self.Xmax - self.Xmin) + self.Xmin
+        return self.rng.random((size, self.dim)) * (self.Xmax - self.Xmin) + self.Xmin
 
     # initialize cost
     def initialize_costs(self, problem):
@@ -97,8 +99,8 @@ class Population:
     def choose_F_Cr(self):
         # generate Cr can be done simutaneously
         gs = self.NP
-        ind_r = np.random.randint(0, self.MF.shape[0], size=gs)  # index
-        C_r = np.minimum(1, np.maximum(0, np.random.normal(loc=self.MCr[ind_r], scale=0.1, size=gs)))
+        ind_r = self.rng.randint(0, self.MF.shape[0], size=gs)  # index
+        C_r = np.minimum(1, np.maximum(0, self.rng.normal(loc=self.MCr[ind_r], scale=0.1, size=gs)))
         # as for F, need to generate 1 by 1
         cauchy_locs = self.MF[ind_r]
         F = stats.cauchy.rvs(loc=cauchy_locs, scale=0.1, size=gs)
@@ -142,7 +144,7 @@ class Population:
         if self.archive.shape[0] < self.NA:
             self.archive = np.append(self.archive, self.group[old_id]).reshape(-1, self.dim)
         else:
-            self.archive[np.random.randint(self.archive.shape[0])] = self.group[old_id]
+            self.archive[self.rng.randint(self.archive.shape[0])] = self.group[old_id]
 
     # collect all the features of the group  dim = 6
     def get_feature(self,

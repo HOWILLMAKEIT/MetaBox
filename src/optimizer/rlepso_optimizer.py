@@ -38,9 +38,9 @@ class RLEPSO_Optimizer(Learnable_Optimizer):
 
 
     def init_population(self, problem):
-        rand_pos=np.random.uniform(low=problem.lb, high=problem.ub, size=(self.__NP, self.__dim))
+        rand_pos=self.rng.uniform(low=problem.lb, high=problem.ub, size=(self.__NP, self.__dim))
         self.__max_velocity=0.1*(problem.ub-problem.lb)
-        rand_vel = np.random.uniform(low=-self.__max_velocity, high=self.__max_velocity, size=(self.__NP,self.__dim))
+        rand_vel = self.rng.uniform(low=-self.__max_velocity, high=self.__max_velocity, size=(self.__NP,self.__dim))
         self.fes = 0
 
         c_cost = self.__get_costs(problem, rand_pos)  # ps
@@ -75,7 +75,7 @@ class RLEPSO_Optimizer(Learnable_Optimizer):
         return cost
 
     def __get_v_clpso(self):
-        rand = np.random.rand(self.__NP, self.__dim)
+        rand = self.rng.rand(self.__NP, self.__dim)
         filter = rand > self.__pci[:, None]
         # tournament selection 2
         
@@ -86,7 +86,7 @@ class RLEPSO_Optimizer(Learnable_Optimizer):
 
     def __tournament_selection(self):
         nsel = 2
-        rand_index = np.random.randint(low=0, high=self.__NP, size=(self.__NP, self.__dim, nsel))
+        rand_index = self.rng.randint(low=0, high=self.__NP, size=(self.__NP, self.__dim, nsel))
         
         candidate = self.__particles['pbest_position'][rand_index, np.arange(self.__dim)[None, :, None]]       # ps, dim, nsel
         candidate_cost = self.__particles['pbest'][rand_index]                      #ps, dim, nsel
@@ -106,7 +106,7 @@ class RLEPSO_Optimizer(Learnable_Optimizer):
         dim_index = np.arange(self.__dim)[None, :]
         target_pos = pos[target_index, dim_index]
         
-        v_fdr = np.random.rand(self.__NP, self.__dim)*(target_pos-pos)
+        v_fdr = self.rng.rand(self.__NP, self.__dim)*(target_pos-pos)
         return v_fdr
 
     # return coes
@@ -135,8 +135,8 @@ class RLEPSO_Optimizer(Learnable_Optimizer):
     def __reinit(self, filter, problem):
         if not np.any(filter):
             return
-        rand_pos = np.random.uniform(low=problem.lb, high=problem.ub, size=(self.__NP, self.__dim))
-        rand_vel = np.random.uniform(low=-self.__max_velocity, high=self.__max_velocity, size=(self.__NP, self.__dim))
+        rand_pos = self.rng.uniform(low=problem.lb, high=problem.ub, size=(self.__NP, self.__dim))
+        rand_vel = self.rng.uniform(low=-self.__max_velocity, high=self.__max_velocity, size=(self.__NP, self.__dim))
         new_position = np.where(filter, rand_pos, self.__particles['current_position'])
         new_velocity = np.where(filter, rand_vel, self.__particles['velocity'])
         pre_fes = self.fes
@@ -177,8 +177,8 @@ class RLEPSO_Optimizer(Learnable_Optimizer):
         pre_gbest = self.__particles['gbest_val']
         # input action_dim should be : bs, ps
         # action in (0,1) the ratio to learn from pbest & gbest
-        rand1 = np.random.rand(self.__NP, 1)
-        rand2 = np.random.rand(self.__NP, 1)
+        rand1 = self.rng.rand(self.__NP, 1)
+        rand2 = self.rng.rand(self.__NP, 1)
         
         # update velocity
         v_clpso = self.__get_v_clpso()
@@ -235,7 +235,7 @@ class RLEPSO_Optimizer(Learnable_Optimizer):
         
         self.__particles = new_particles
         # reinitialize according to c_mutation and per_no_improve
-        filter_reinit = np.random.rand(self.__NP) < coes['c_mutation']*0.01*self.__per_no_improve
+        filter_reinit = self.rng.rand(self.__NP) < coes['c_mutation']*0.01*self.__per_no_improve
         self.__reinit(filter_reinit[:, None], problem)
 
         if self.fes >= self.log_index * self.log_interval:

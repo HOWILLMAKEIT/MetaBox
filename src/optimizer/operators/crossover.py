@@ -3,30 +3,30 @@ from typing import Union
 import copy
 
 
-def binomial(x: np.ndarray, v: np.ndarray, Cr: Union[np.ndarray, float]) -> np.ndarray:
+def binomial(x: np.ndarray, v: np.ndarray, Cr: Union[np.ndarray, float], rng) -> np.ndarray:
     if x.ndim == 1:
         x = x.reshape(1, -1)
         v = v.reshape(1, -1)
     NP, dim = x.shape
-    jrand = np.random.randint(dim, size=NP)
+    jrand = rng.randint(dim, size=NP)
     if isinstance(Cr, np.ndarray) and Cr.ndim == 1:
         Cr = Cr.reshape(-1, 1)
-    u = np.where(np.random.rand(NP, dim) < Cr, v, x)
+    u = np.where(rng.rand(NP, dim) < Cr, v, x)
     u[np.arange(NP), jrand] = v[np.arange(NP), jrand]
     if u.shape[0] == 1:
         u = u.squeeze(axis=0)
     return u
 
 
-def exponential(x: np.ndarray, v: np.ndarray, Cr: Union[np.ndarray, float]) -> np.ndarray:
+def exponential(x: np.ndarray, v: np.ndarray, Cr: Union[np.ndarray, float], rng) -> np.ndarray:
     if x.ndim == 1:
         x = x.reshape(1, -1)
         v = v.reshape(1, -1)
     NP, dim = x.shape
     u = copy.deepcopy(x)
-    L = np.random.randint(dim, size=(NP, 1)).repeat(dim).reshape(NP, dim)
+    L = rng.randint(dim, size=(NP, 1)).repeat(dim).reshape(NP, dim)
     R = np.ones(NP) * dim
-    rvs = np.random.rand(NP, dim)
+    rvs = rng.rand(NP, dim)
     i = np.arange(dim).repeat(NP).reshape(dim, NP).transpose()
     if isinstance(Cr, np.ndarray) and Cr.ndim == 1:
         Cr = Cr.reshape(-1, 1)

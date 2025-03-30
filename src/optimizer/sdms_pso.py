@@ -43,9 +43,9 @@ class sDMS_PSO(Basic_Optimizer):
         return cost
 
     def __initilize(self,problem):
-        rand_pos=np.random.uniform(low=problem.lb,high=problem.ub,size=(self.__NP,self.__dim))
+        rand_pos=self.rng.uniform(low=problem.lb,high=problem.ub,size=(self.__NP,self.__dim))
         self.__max_velocity=0.1*(problem.ub-problem.lb)
-        rand_vel = np.random.uniform(low=-self.__max_velocity,high=self.__max_velocity,size=(self.__NP,self.__dim))
+        rand_vel = self.rng.uniform(low=-self.__max_velocity,high=self.__max_velocity,size=(self.__NP,self.__dim))
 
         c_cost = self.__get_costs(problem,rand_pos) # ps
 
@@ -127,14 +127,14 @@ class sDMS_PSO(Basic_Optimizer):
 
     def __get_iwt(self):
         if len(self.__parameter_set)<self.__LA or np.sum(self.__success_num)<=self.__LP:
-            self.__iwt=0.5*np.random.rand(self.__n_swarm)+0.4
+            self.__iwt=0.5*self.rng.rand(self.__n_swarm)+0.4
 
         else:
-            self.__iwt=np.random.normal(loc=np.median(self.__parameter_set),scale=0.1,size=(self.__n_swarm,))
+            self.__iwt=self.rng.normal(loc=np.median(self.__parameter_set),scale=0.1,size=(self.__n_swarm,))
 
     def __update(self,problem):
-        rand1=np.random.rand(self.__NP,1)
-        rand2=np.random.rand(self.__NP,1)
+        rand1=self.rng.rand(self.__NP,1)
+        rand2=self.rng.rand(self.__NP,1)
         c1=self.__c1
         c2=self.__c2
         v_pbest=rand1*(self.__particles['pbest_position']-self.__particles['current_position'])

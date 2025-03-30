@@ -57,7 +57,7 @@ class RL_DAS_Optimizer(Learnable_Optimizer):
         min_len = 1e9
         sample_size = self.population.NP
         for i in range(self.sample_times):
-            sample, _ = self.optimizers[np.random.randint(len(self.optimizers))].step(copy.deepcopy(self.population),
+            sample, _ = self.optimizers[self.rng.randint(len(self.optimizers))].step(copy.deepcopy(self.population),
                                                                                          self.problem,
                                                                                          self.FEs,
                                                                                          self.FEs + sample_size,
@@ -75,13 +75,13 @@ class RL_DAS_Optimizer(Learnable_Optimizer):
 
     # observed env state
     def observe(self, problem):
-        
+
         samples, sample_costs = self.local_sample()
         feature = self.population.get_feature(self.problem,
                                             sample_costs,
                                             self.cost_scale_factor,
                                             self.FEs / self.MaxFEs)
-        
+
         # =======================================================================
         best_move = np.zeros((len(self.optimizers), self.dim)).tolist()
         worst_move = np.zeros((len(self.optimizers), self.dim)).tolist()
@@ -96,7 +96,7 @@ class RL_DAS_Optimizer(Learnable_Optimizer):
         return np.array(move, dtype = object)
 
     def seed(self, seed=None):
-        np.random.seed(seed)
+        self.rng.seed(seed)
 
     def update(self, action, problem):
         warnings.filterwarnings("ignore")

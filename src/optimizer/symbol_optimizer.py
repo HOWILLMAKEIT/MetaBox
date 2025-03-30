@@ -94,10 +94,10 @@ class SYMBOL_Optimizer(Learnable_Optimizer):
         self.problem = problem
         if self.is_train:
             tea_pop = self.teacher_optimizer.init_population(copy.deepcopy(problem))
-            self.population=Population(self.dim,self.NP,self.min_x,self.max_x,self.max_fes,copy.deepcopy(problem))
-            get_init_pop(tea_pop=tea_pop, stu_pop=self.population, method=self.__config.init_pop)
+            self.population=Population(self.dim,self.NP,self.min_x,self.max_x,self.max_fes,copy.deepcopy(problem),self.rng)
+            get_init_pop(tea_pop=tea_pop, stu_pop=self.population, method=self.__config.init_pop,rng=self.rng)
         else:
-            self.population=Population(self.dim,self.NP,self.min_x,self.max_x,self.max_fes,problem)
+            self.population=Population(self.dim,self.NP,self.min_x,self.max_x,self.max_fes,problem,self.rng)
             self.population.reset()
 
         self.log_index = 1
@@ -145,14 +145,14 @@ class SYMBOL_Optimizer(Learnable_Optimizer):
             gw=self.population.gworst_position[None,:].repeat(self.NP,0)
 
             dx=self.population.delta_x
-            randx=x[np.random.randint(self.NP, size=self.NP)]
+            randx=x[self.rng.randint(self.NP, size=self.NP)]
             
             pbest=self.population.pbest_position
             
             names = locals()
             inputs=[x,gb,gw,dx,randx,pbest]
             for i in range(1,count):
-                names[f'randx{i}']=x[np.random.randint(self.NP, size=self.NP)]
+                names[f'randx{i}']=x[self.rng.randint(self.NP, size=self.NP)]
                 inputs.append(eval(f'randx{i}'))
                 
             assert x.shape==gb.shape==gw.shape==dx.shape==randx.shape, 'not same shape'
@@ -211,7 +211,7 @@ class SYMBOL_Optimizer(Learnable_Optimizer):
 
 
 '''forming init pop'''
-def get_init_pop(tea_pop,stu_pop,method):
+def get_init_pop(tea_pop,stu_pop,method,rng):
     if method=='best':
         sort_index=np.argsort(tea_pop.c_cost)
         init_pos=tea_pop.current_position[sort_index[:stu_pop.pop_size]]
@@ -221,7 +221,7 @@ def get_init_pop(tea_pop,stu_pop,method):
         init_pos=np.concatenate((tea_pop.current_position[sort_index[:int(stu_pop.pop_size*0.5)]],tea_pop.current_position[sort_index[:stu_pop.pop_size-int(stu_pop.pop_size*0.5)]]),axis=0)
         stu_pop.reset(init_pop=init_pos)
     elif method == 'random':
-        rand_index=np.random.randint(0,tea_pop.pop_size,size=(stu_pop.pop_size,))
+        rand_index=rng.randint(0,tea_pop.pop_size,size=(stu_pop.pop_size,))
         init_pos=tea_pop.current_position[rand_index]
         stu_pop.reset(init_pop=init_pos)
     elif method == 'uniform':

@@ -30,10 +30,10 @@ class RL_PSO_Optimizer(Learnable_Optimizer):
 
     # initialize PSO environment
     def init_population(self, problem):
-        rand_pos = np.random.uniform(low=problem.lb, high=problem.ub, size=(self.__NP, self.__dim))
+        rand_pos = self.rng.uniform(low=problem.lb, high=problem.ub, size=(self.__NP, self.__dim))
         self.fes = 0
         self.__max_velocity=0.1*(problem.ub-problem.lb)
-        rand_vel = np.random.uniform(low=-self.__max_velocity, high=self.__max_velocity, size=(self.__NP, self.__dim))
+        rand_vel = self.rng.uniform(low=-self.__max_velocity, high=self.__max_velocity, size=(self.__NP, self.__dim))
 
         c_cost = self.__get_costs(problem,rand_pos) # ps
 
@@ -87,7 +87,7 @@ class RL_PSO_Optimizer(Learnable_Optimizer):
             self.__w -= 0.5 / (self.__max_fes / self.__NP)
 
         # generate two set of random val for pso velocity update
-        rand1 = np.random.rand()
+        rand1 = self.rng.rand()
         rand2 = np.squeeze(action)
        
         j = self.__cur_index

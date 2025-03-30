@@ -65,9 +65,9 @@ class LES_Optimizer(Learnable_Optimizer):
         self.lb = problem.lb
         self.problem = problem
 
-        mu = problem.lb + (problem.ub-problem.lb) * np.random.rand(problem.dim)
+        mu = problem.lb + (problem.ub-problem.lb) * self.rng.rand(problem.dim)
         sigma = np.ones(problem.dim)*self.ub*self.sigma_ratio
-        population = np.clip(np.random.normal(mu,sigma,(self.NP,problem.dim)), self.lb, self.ub) # is it correct?
+        population = np.clip(self.rng.normal(mu,sigma,(self.NP,problem.dim)), self.lb, self.ub) # is it correct?
         costs = problem.eval(population)
         self.evolution_info = {'parents': population,
                 'parents_cost':costs,
@@ -142,7 +142,7 @@ class LES_Optimizer(Learnable_Optimizer):
             sigma = (1 - alpha_sigma) * self.evolution_info['sigma'] + \
                 alpha_sigma * np.sqrt(np.sum((self.evolution_info['parents'] - self.evolution_info['mu']) ** 2 *W[:,None],axis=0)) # need to be checked!
             # sample childs according new mu and sigma
-            population = np.clip(np.random.normal(mu,sigma,(self.NP,self.problem.dim)), self.lb, self.ub)
+            population = np.clip(self.rng.normal(mu,sigma,(self.NP,self.problem.dim)), self.lb, self.ub)
             # evaluate the childs
             costs = self.problem.eval(population)
             self.FEs += self.NP

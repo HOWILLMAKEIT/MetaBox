@@ -36,8 +36,8 @@ class GLEET_Optimizer(Learnable_Optimizer):
     # initialize GPSO environment
     def initialize_particles(self, problem):
         # randomly generate the position and velocity
-        rand_pos=np.random.uniform(low=problem.lb,high=problem.ub,size=(self.ps,self.dim))
-        rand_vel = np.random.uniform(low=-self.max_velocity,high=self.max_velocity,size=(self.ps,self.dim))
+        rand_pos=self.rng.uniform(low=problem.lb,high=problem.ub,size=(self.ps,self.dim))
+        rand_vel = self.rng.uniform(low=-self.max_velocity,high=self.max_velocity,size=(self.ps,self.dim))
         
         # get the initial cost
         c_cost = self.get_costs(rand_pos, problem) # ps
@@ -196,8 +196,8 @@ class GLEET_Optimizer(Learnable_Optimizer):
             self.w-=0.5/(self.max_fes/self.ps)
 
         # generate two set of random val for pso velocity update
-        rand1=np.random.rand(self.ps,1)
-        rand2=np.random.rand(self.ps,1)
+        rand1=self.rng.rand(self.ps,1)
+        rand2=self.rng.rand(self.ps,1)
         
         
         action = action[:,None]
@@ -216,7 +216,7 @@ class GLEET_Optimizer(Learnable_Optimizer):
         elif self.boarder_method=="random":
             raw_position=self.particles['current_position']+new_velocity
             filter=raw_position.abs()>problem.ub
-            new_position=np.where(filter,np.random.uniform(low=problem.lb,high=problem.ub,size=(self.ps,self.dim)),raw_position)
+            new_position=np.where(filter,self.rng.uniform(low=problem.lb,high=problem.ub,size=(self.ps,self.dim)),raw_position)
         elif self.boarder_method=="periodic":
             raw_position=self.particles['current_position']+new_velocity
             new_position=problem.lb+((raw_position - problem.ub)%(2.*problem.ub))

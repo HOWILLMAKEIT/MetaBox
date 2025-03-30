@@ -76,14 +76,14 @@ def cal_nop(sample, fitness):
     return r / len(fitness)
 
 
-def random_walk_sampling(population, dim, steps):
+def random_walk_sampling(population, dim, steps, rng):
     pmin = np.min(population, axis=0)
     pmax = np.max(population, axis=0)
     walks = []
-    start_point = np.random.rand(dim)
+    start_point = rng.rand(dim)
     walks.append(start_point.tolist())
     for _ in range(steps - 1):
-        move = np.random.rand(dim)
+        move = rng.rand(dim)
         start_point = (start_point + move) % 1
         walks.append(start_point.tolist())
     return pmin + (pmax - pmin) * np.array(walks)
@@ -128,7 +128,7 @@ class DEDQN_Optimizer(Learnable_Optimizer):
         self.log_interval = config.log_interval
 
     def __cal_feature(self, problem):
-        samples = random_walk_sampling(self.__population, self.__dim, self.__rwsteps)
+        samples = random_walk_sampling(self.__population, self.__dim, self.__rwsteps, self.rng)
         if problem.optimum is None:
             samples_cost = problem.eval(self.__population)
         else:
@@ -142,7 +142,7 @@ class DEDQN_Optimizer(Learnable_Optimizer):
         return np.array([fdc, rie, acf, nop])
 
     def init_population(self, problem):
-        self.__population = np.random.rand(self.__NP, self.__dim) * (problem.ub - problem.lb) + problem.lb  # [lb, ub]
+        self.__population = self.rng.rand(self.__NP, self.__dim) * (problem.ub - problem.lb) + problem.lb  # [lb, ub]
         self.__survival = np.ones(self.__population.shape[0])
         if problem.optimum is None:
             self.__cost = problem.eval(self.__population)
@@ -159,17 +159,17 @@ class DEDQN_Optimizer(Learnable_Optimizer):
     def update(self, action, problem):
         # mutate first
         if action == 0:
-            u = Mu.rand_1_single(self.__population, self.__F, self.__solution_pointer)
+            u = Mu.rand_1_single(self.__population, self.__F, self.__solution_pointer, rng=self.rng)
         elif action == 1:
-            u = Mu.cur_to_rand_1_single(self.__population, self.__F, self.__solution_pointer)
+            u = Mu.cur_to_rand_1_single(self.__population, self.__F, self.__solution_pointer, rng=self.rng)
         elif action == 2:
-            u = Mu.best_2_single(self.__population, self.__gbest, self.__F, self.__solution_pointer)
+            u = Mu.best_2_single(self.__population, self.__gbest, self.__F, self.__solution_pointer, rng=self.rng)
         else:
             raise ValueError(f'action error: {action}')
         # BC
         u = BC.clipping(u, problem.lb, problem.ub)
         # then crossover
-        u = Cross.binomial(self.__population[self.__solution_pointer], u, self.__Cr)
+        u = Cross.binomial(self.__population[self.__solution_pointer], u, self.__Cr, self.rng)
         # select from u and x
         if problem.optimum is None:
             u_cost = problem.eval(u)
