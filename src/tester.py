@@ -292,37 +292,6 @@ class Tester(object):
         # random_search_results = test_for_random_search(self.config)
         # with open(self.log_dir + 'random_search_baseline.pkl', 'wb') as f:
         #     pickle.dump(random_search_results, f, -1)
-    def test_parallel_1(self):
-        # todo 测试并行方式有多种 得考虑下
-        # 这里只是对run进行 并行
-        print(f'start testing: {self.config.run_time}')
-        T0 = cal_t0(self.config.dim, self.config.maxFEs)
-        self.test_results['T0'] = T0
-        pbar_len = (len(self.t_optimizer_for_cp) + len(self.agent_for_cp)) * self.test_set.N * 51
-        with tqdm(range(pbar_len), desc='Testing') as pbar:
-            for i,problem in enumerate(self.test_set):
-
-                # run learnable optimizer
-                for agent_id,(agent,optimizer) in enumerate(zip(self.agent_for_cp,self.l_optimizer_for_cp)):
-                    T1 = 0
-                    T2 = 0
-                    for run in range(51):
-                        env_list = [PBO_Env(p, copy.deepcopy(optimizer)) for p in problem]
-
-                        start = time.perf_counter()
-                        info = agent.rollout_batch_episode(envs = env_list,
-                                                           seeds = self.seed[run],
-                                                           para_mode = 'dummy',
-                                                           asynchronous = None,
-                                                           num_cpus = 1,
-                                                           num_gpus = 0,
-                        )
-                        pbar_info = {'agent': agent.__str__(),
-                                     'run': run,
-                                     }
-                        pbar.set_postfix(pbar_info)
-                        pbar.update(len(env_list))
-
     def test_1(self):
         # todo 第一种 并行是 agent for 循环
         # todo 每个 agent 做一个问题 x test_run 的列表环境
@@ -416,6 +385,9 @@ class Tester(object):
                     pbar.set_postfix(pbar_info)
                     pbar.update(1)
 
+
+
+
     def test_3(self):
         # todo 第三种 并行是 agent * bs 个问题 * run
         print(f'start testing: {self.config.run_time}')
@@ -433,8 +405,8 @@ class Tester(object):
 
                 '''
                     example: bs = 3 test_run = 2 agent A1 A2
-                    [   A1   |   A1   |   A1   |   A1   |   A1   |   A1   |   A2   |   A2   |   A2   |   A2   |   A2   |   A2    ]
-                    [O1_F1_r1|O1_F1_r2|O1_F2_r1|O1_F2_r2|O1_F3_r1|O1_F3_r2|O2_F1_r1|O2_F1_r2|O2_F2_r1|O2_F2_r2|O2_F3_r1|O2_F3_r2|]
+                    [   A1   |   A1   |   A1   |   A1   |   A1   |   A1   |   A2   |   A2   |   A2   |   A2   |   A2   |   A2   ]
+                    [O1_F1_r1|O1_F1_r2|O1_F2_r1|O1_F2_r2|O1_F3_r1|O1_F3_r2|O2_F1_r1|O2_F1_r2|O2_F2_r1|O2_F2_r2|O2_F3_r1|O2_F3_r2]
                 '''
                 agent_list = [MetaBBO_Env(copy.deepcopy(agent)) for agent in self.agent_for_cp for _ in range(test_run * bs)]
                 env_list = [{'env': PBO_Env(copy.deepcopy(p), copy.deepcopy(optimizer)), 'seed': seed} for optimizer in self.l_optimizer_for_cp for p in problem for seed in seed_list]
