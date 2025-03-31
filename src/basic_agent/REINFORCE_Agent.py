@@ -63,9 +63,12 @@ class REINFORCE_Agent(Basic_Agent):
         self.cur_checkpoint += 1
 
     def set_network(self, networks: dict, learning_rates: Optional):
+        Network_name = []
         if networks:
             for name, network in networks.items():
+                Network_name.append(name)
                 setattr(self, name, network)   # Assign each network in the dictionary to the class instance
+        self.network = Network_name
 
         # make sure has model or network
         assert hasattr(self, 'model') or hasattr(self, 'net')
@@ -124,7 +127,7 @@ class REINFORCE_Agent(Basic_Agent):
         while not env.all_done():
             entropy = []
 
-            action, log_lh, entro_p  = self.model(state)
+            action, log_lh, entro_p = self.model(state)
             
 
             memory.logprobs.append(log_lh)
@@ -247,3 +250,51 @@ class REINFORCE_Agent(Basic_Agent):
             results[key] = env.get_env_attr(required_info[key])
         return results
 
+    # todo add metric
+    def log_to_tb_train(self, tb_logger, mini_step,
+                        extra_info = {}):
+        # Iterate over the extra_info dictionary and log data to tb_logger
+        # extra_info: Dict[str, Dict[str, Union[List[str], List[Union[int, float]]]]] = {
+        #     "loss": {"name": [], "data": [0.5]},  # No "name", logs under "loss"
+        #     "accuracy": {"name": ["top1", "top5"], "data": [85.2, 92.5]},  # Logs as "accuracy/top1" and "accuracy/top5"
+        #     "learning_rate": {"name": ["adam", "sgd"], "data": [0.001, 0.01]}  # Logs as "learning_rate/adam" and "learning_rate/sgd"
+        # }
+        #
+        # learning rate
+        # for id, network_name in enumerate(self.network):
+        #     tb_logger.add_scalar(f'learnrate/{network_name}', self.optimizer.param_groups[id]['lr'], mini_step)
+        #
+        # # grad and clipped grad
+        # grad_norms, grad_norms_clipped = grad_norms
+        # for id, network_name in enumerate(self.network):
+        #     tb_logger.add_scalar(f'grad/{network_name}', grad_norms[id], mini_step)
+        #     tb_logger.add_scalar(f'grad_clipped/{network_name}', grad_norms_clipped[id], mini_step)
+        #
+        #
+        # # loss
+        # tb_logger.add_scalar('loss/actor_loss', reinforce_loss.item(), mini_step)
+        # tb_logger.add_scalar('loss/critic_loss', baseline_loss.item(), mini_step)
+        # tb_logger.add_scalar('loss/total_loss', (reinforce_loss + baseline_loss).item(), mini_step)
+        #
+        # # train metric
+        # avg_reward = torch.stack(memory_reward).mean().item()
+        # max_reward = torch.stack(memory_reward).max().item()
+        #
+        # tb_logger.add_scalar('train/episode_avg_return', Return.mean().item(), mini_step)
+        # tb_logger.add_scalar('train/target_avg_return_changed', Reward.mean().item(), mini_step)
+        # tb_logger.add_scalar('train/critic_avg_output', critic_output.mean().item(), mini_step)
+        # tb_logger.add_scalar('train/avg_entropy', entropy.mean().item(), mini_step)
+        # tb_logger.add_scalar('train/-avg_logprobs', -logprobs.mean().item(), mini_step)
+        # tb_logger.add_scalar('train/approx_kl', approx_kl_divergence.item(), mini_step)
+        # tb_logger.add_scalar('train/avg_reward', avg_reward, mini_step)
+        # tb_logger.add_scalar('train/max_reward', max_reward, mini_step)
+
+        # extra info
+        for key, value in extra_info.items():
+            if not value['name']:
+                tb_logger.add_scalar(f'{key}', value['data'][0], mini_step)
+            else:
+                name_list = value['name']
+                data_list = value['data']
+                for name, data in zip(name_list, data_list):
+                    tb_logger.add_scalar(f'{key}/{name}', data, mini_step)
