@@ -44,3 +44,6 @@ class Basic_Agent:
     def set_network(self, networks: dict, learning_rates: Optional):
         pass
 
+    @classmethod
+    def log_to_tb_train(self):
+        pass
