@@ -403,7 +403,8 @@ class RLDE_AFL_Agent(PPO_Agent):
                       para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc'] = 'dummy',
                       asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
                       num_cpus: Optional[Union[int, None]] = 1,
-                      num_gpus: int = 0,
+                      num_gpus: int = 0,\
+                      tb_logger = None,
                       required_info = []):
         if self.device != 'cpu':
             num_gpus = max(num_gpus, 1)
@@ -525,7 +526,7 @@ class RLDE_AFL_Agent(PPO_Agent):
                 # get next value
                 feature = self.fe(state) # 3D [bs, ps, hidden_dim + 16]
                 R = self.critic(feature)[0]
-
+                critic_output = R.clone()
                 for r in range(len(reward_reversed)):
                     R = R * gamma + reward_reversed[r]
                     Reward.append(R)
@@ -572,6 +573,13 @@ class RLDE_AFL_Agent(PPO_Agent):
                 if self.learning_time >= (self.config.save_interval * self.cur_checkpoint):
                     save_class(self.config.agent_save_dir, 'checkpoint' + str(self.cur_checkpoint), self)
                     self.cur_checkpoint += 1
+
+                if not self.config.no_tb and self.learning_time % int(self.config.log_step) == 0:
+                    self.log_to_tb_train(tb_logger, self.learning_time,
+                                         grad_norms,
+                                         reinforce_loss, baseline_loss,
+                                         _R, Reward, memory.rewards,
+                                         critic_output, logprobs, entropy, approx_kl_divergence)
 
                 if self.learning_time >= self.config.max_learning_step:
                     memory.clear_memory()

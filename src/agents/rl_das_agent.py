@@ -27,7 +27,7 @@ class Actor(nn.Module):
             nn.Linear(16, optimizer_num),  nn.Softmax(),
         ]).to(device)
 
-    def forward(self, obs, fix_action = None):
+    def forward(self, obs, fix_action = None, require_entropy = False):
         feature = list(obs[:, 0])
         if not isinstance(feature, torch.Tensor):
             feature = torch.tensor(feature, dtype=torch.float).to(self.device)
@@ -46,7 +46,12 @@ class Actor(nn.Module):
             actions = fix_action
         log_prob = policy.log_prob(actions)
 
-        return (actions, log_prob)
+        if require_entropy:
+            entropy = policy.entropy()  # for logging only
+
+            return (actions, log_prob, entropy)
+        else:
+            return (actions, log_prob)
 
 class Critic(nn.Module):
     def __init__(self, dim, optimizer_num, feature_dim, device):
@@ -124,6 +129,7 @@ class RL_DAS_Agent(PPO_Agent):
                       asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
                       num_cpus: Optional[Union[int, None]] = 1,
                       num_gpus: int = 0,
+                      tb_logger = None,
                       required_info = []):
         if self.device != 'cpu':
             num_gpus = max(num_gpus, 1)
@@ -156,6 +162,7 @@ class RL_DAS_Agent(PPO_Agent):
         while not env.all_done():
             t_s = t
             total_cost = 0
+            entropy = []
             bl_val_detached = []
             bl_val = []
 
@@ -163,11 +170,13 @@ class RL_DAS_Agent(PPO_Agent):
             while t - t_s < n_step and not env.all_done():
 
                 memory.states.append(state.copy())
-                action, log_lh = self.actor(state)
+                action, log_lh, entro_p = self.actor(state)
+
 
                 memory.actions.append(action.clone() if isinstance(action, torch.Tensor) else copy.deepcopy(action))
                 memory.logprobs.append(log_lh)
 
+                entropy.append(entro_p.detach().cpu())
 
                 baseline_val_detached, baseline_val = self.critic(state)
 
@@ -213,19 +222,21 @@ class RL_DAS_Agent(PPO_Agent):
                     logprobs = []
                     bl_val_detached = []
                     bl_val = []
+                    entropy = []
 
                     for tt in range(t_time):
                         # get new action_prob
-                        _, log_p = self.actor(state, fix_action = old_actions[tt])
+                        _, log_p, entro_p = self.actor(state, fix_action = old_actions[tt], require_entropy = True)
 
                         logprobs.append(log_p)
-
+                        entropy.append(entro_p.detach().cpu())
                         baseline_val_detached, baseline_val = self.critic(state)
 
                         bl_val_detached.append(baseline_val_detached)
                         bl_val.append(baseline_val)
 
                 logprobs = torch.stack(logprobs).view(-1)
+                entropy = torch.stack(entropy).view(-1)
                 bl_val_detached = torch.stack(bl_val_detached).view(-1)
                 bl_val = torch.stack(bl_val).view(-1)
 
@@ -234,7 +245,7 @@ class RL_DAS_Agent(PPO_Agent):
                 reward_reversed = memory.rewards[::-1]
                 # get next value
                 R = self.critic(state)[0]
-
+                critic_output = R.clone()
                 for r in range(len(reward_reversed)):
                     R = R * gamma + reward_reversed[r]
                     Reward.append(R)
@@ -281,6 +292,13 @@ class RL_DAS_Agent(PPO_Agent):
                 if self.learning_time >= (self.config.save_interval * self.cur_checkpoint):
                     save_class(self.config.agent_save_dir, 'checkpoint' + str(self.cur_checkpoint), self)
                     self.cur_checkpoint += 1
+
+                if not self.config.no_tb and self.learning_time % int(self.config.log_step) == 0:
+                    self.log_to_tb_train(tb_logger, self.learning_time,
+                                         grad_norms,
+                                         reinforce_loss, baseline_loss,
+                                         _R, Reward, memory.rewards,
+                                         critic_output, logprobs, entropy, approx_kl_divergence)
 
                 if self.learning_time >= self.config.max_learning_step:
                     memory.clear_memory()

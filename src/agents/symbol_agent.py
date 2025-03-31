@@ -106,6 +106,7 @@ class SYMBOL_Agent(PPO_Agent):
                       asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
                       num_cpus: Optional[Union[int, None]] = 1,
                       num_gpus: int = 0,
+                      tb_logger=None,
                       required_info = []):
         if self.device != 'cpu':
             num_gpus = max(num_gpus, 1)
@@ -223,7 +224,7 @@ class SYMBOL_Agent(PPO_Agent):
                 reward_reversed = memory.rewards[::-1]
                 # get next value
                 R = self.critic(state)[0]
-
+                critic_output = R.clone()
                 for r in range(len(reward_reversed)):
                     R = R * gamma + reward_reversed[r]
                     Reward.append(R)
@@ -251,8 +252,8 @@ class SYMBOL_Agent(PPO_Agent):
                     baseline_loss = v_max.mean()
 
                 # check K-L divergence (for logging only)
-                # approx_kl_divergence = (.5 * (old_logprobs.detach() - logprobs) ** 2).mean().detach()
-                # approx_kl_divergence[torch.isinf(approx_kl_divergence)] = 0
+                approx_kl_divergence = (.5 * (old_logprobs.detach() - logprobs) ** 2).mean().detach()
+                approx_kl_divergence[torch.isinf(approx_kl_divergence)] = 0
                 # calculate loss
                 loss = baseline_loss + reinforce_loss
 
@@ -265,6 +266,8 @@ class SYMBOL_Agent(PPO_Agent):
                 self.optimizer.zero_grad()
                 loss.backward()
                 _loss.append(loss.item())
+
+                grad_norms = clip_grad_norms(self.optimizer.param_groups, self.config.max_grad_norm)
                 # Clip gradient norm and get (clipped) gradient norms for logging
                 # current_step = int(pre_step + t//n_step * K_epochs  + _k)
                 # grad_norms = clip_grad_norms(self.optimizer.param_groups, self.config.max_grad_norm)
@@ -275,6 +278,13 @@ class SYMBOL_Agent(PPO_Agent):
                 if self.learning_time >= (self.config.save_interval * self.cur_checkpoint):
                     save_class(self.config.agent_save_dir, 'checkpoint' + str(self.cur_checkpoint), self)
                     self.cur_checkpoint += 1
+
+                if not self.config.no_tb and self.learning_time % int(self.config.log_step) == 0:
+                    self.log_to_tb_train(tb_logger, self.learning_time,
+                                         grad_norms,
+                                         reinforce_loss, baseline_loss,
+                                         _R, Reward, memory.rewards,
+                                         critic_output, logprobs, entropy, approx_kl_divergence)
 
                 if self.learning_time >= self.config.max_learning_step:
                     memory.clear_memory()
