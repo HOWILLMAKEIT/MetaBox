@@ -19,7 +19,6 @@ Your own agent should have the following methods:
        }
 """
 
-from environment import PBO_Env
 from typing import Tuple
 from typing import Optional, Union, Literal
 class Basic_Agent:
@@ -31,12 +30,12 @@ class Basic_Agent:
         pass
 
     def train_episode(self,
-                      env: PBO_Env,
+                      env,
                       seeds: Optional) -> Tuple[bool, dict]:
         raise NotImplementedError
 
     def rollout_episode(self,
-                        env: PBO_Env) -> dict:
+                        env) -> dict:
         raise NotImplementedError
 
     def train_epoch(self):

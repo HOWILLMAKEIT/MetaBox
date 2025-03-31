@@ -13,6 +13,7 @@ import os
 import matplotlib
 import matplotlib.pyplot as plt
 from basic_agent.utils import save_class
+from tensorboardX import SummaryWriter
 from agent import (
     # DE_DDQN_Agent,
     # DEDQN_Agent,
@@ -230,6 +231,11 @@ class Trainer(object):
     def train_new(self):
         print(f'start training: {self.config.run_time}')
         is_end = False
+        # todo tensorboard
+        tb_logger = None
+        if not self.config.no_tb:
+            tb_logger = SummaryWriter(os.path.join('output/tensorboard', self.config.run_time))
+            tb_logger.add_scalar("epoch-step", 0, 0)
 
         epoch = 0
         cost_record = {}
@@ -273,6 +279,7 @@ class Trainer(object):
                     # todo config add para
                     exceed_max_ls, train_meta_data = self.agent.train_episode(envs = env_list,
                                                                               seeds = seed_list,
+                                                                              tb_logger = tb_logger,
                                                                               para_mode = "dummy",
                                                                               asynchronous = None,
                                                                               num_cpus = 1,
@@ -301,6 +308,9 @@ class Trainer(object):
                 self.agent.train_epoch()
             epoch_steps.append(learn_step)
             epoch += 1
+
+            if not self.config.no_tb:
+                tb_logger.add_scalar("epoch-step", learn_step, epoch)
 
             # todo save
             # save_interval = 5
