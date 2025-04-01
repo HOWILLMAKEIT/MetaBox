@@ -190,6 +190,8 @@ class TabularQ_Agent(Basic_Agent):
 
 # todo add metric
     def log_to_tb_train(self, tb_logger, mini_step,
+                        loss,
+                        Return, Reward,
                         extra_info = {}):
         # Iterate over the extra_info dictionary and log data to tb_logger
         # extra_info: Dict[str, Dict[str, Union[List[str], List[Union[int, float]]]]] = {
@@ -198,34 +200,24 @@ class TabularQ_Agent(Basic_Agent):
         #     "learning_rate": {"name": ["adam", "sgd"], "data": [0.001, 0.01]}  # Logs as "learning_rate/adam" and "learning_rate/sgd"
         # }
         #
-        # learning rate
-        # for id, network_name in enumerate(self.network):
-        #     tb_logger.add_scalar(f'learnrate/{network_name}', self.optimizer.param_groups[id]['lr'], mini_step)
-        #
-        # # grad and clipped grad
-        # grad_norms, grad_norms_clipped = grad_norms
-        # for id, network_name in enumerate(self.network):
-        #     tb_logger.add_scalar(f'grad/{network_name}', grad_norms[id], mini_step)
-        #     tb_logger.add_scalar(f'grad_clipped/{network_name}', grad_norms_clipped[id], mini_step)
-        #
-        #
-        # # loss
-        # tb_logger.add_scalar('loss/actor_loss', reinforce_loss.item(), mini_step)
-        # tb_logger.add_scalar('loss/critic_loss', baseline_loss.item(), mini_step)
-        # tb_logger.add_scalar('loss/total_loss', (reinforce_loss + baseline_loss).item(), mini_step)
-        #
-        # # train metric
-        # avg_reward = torch.stack(memory_reward).mean().item()
-        # max_reward = torch.stack(memory_reward).max().item()
-        #
-        # tb_logger.add_scalar('train/episode_avg_return', Return.mean().item(), mini_step)
-        # tb_logger.add_scalar('train/target_avg_return_changed', Reward.mean().item(), mini_step)
-        # tb_logger.add_scalar('train/critic_avg_output', critic_output.mean().item(), mini_step)
-        # tb_logger.add_scalar('train/avg_entropy', entropy.mean().item(), mini_step)
-        # tb_logger.add_scalar('train/-avg_logprobs', -logprobs.mean().item(), mini_step)
-        # tb_logger.add_scalar('train/approx_kl', approx_kl_divergence.item(), mini_step)
-        # tb_logger.add_scalar('train/avg_reward', avg_reward, mini_step)
-        # tb_logger.add_scalar('train/max_reward', max_reward, mini_step)
+        # lr_model
+        tb_logger.add_scalar('learnrate', self.lr_model, mini_step)
+
+        # loss
+        tb_logger.add_scalar('loss', loss.item(), mini_step)
+
+        # Q
+        Q = self.q_table.mean(0) # [n_act]
+        for id, q in enumerate(Q):
+            tb_logger.add_scalar("Q_values", q.item(), mini_step)
+        # tb_logger.add_scalars("Q_values", {f"action_{id}": q.item() for id, q in enumerate(Q)}, mini_step)
+
+        # train
+        avg_reward = torch.stack(Reward).mean().item()
+        max_reward = torch.stack(Reward).max().item()
+        tb_logger.add_scalar('train/episode_avg_return', Return.mean().item(), mini_step)
+        tb_logger.add_scalar('train/avg_reward', avg_reward, mini_step)
+        tb_logger.add_scalar('train/max_reward', max_reward, mini_step)
 
         # extra info
         for key, value in extra_info.items():

@@ -50,6 +50,7 @@ class NRLPSO_Agent(TabularQ_Agent):
                       asynchronous: Literal[None, 'idle', 'restart', 'continue']=None,
                       num_cpus: Optional[Union[int, None]]=1,
                       num_gpus: int=0,
+                      tb_logger = None,
                       required_info={}):
         if self.device != 'cpu':
             num_gpus = max(num_gpus, 1)
@@ -63,14 +64,15 @@ class NRLPSO_Agent(TabularQ_Agent):
         
         _R = torch.zeros(len(env))
         _loss = []
+        _reward = []
         # sample trajectory
         while not env.all_done():
             action = self.__get_action(state)
             # state transient
             next_state, reward, is_end, info = env.step(action)
             _R += reward
-
             reward = torch.FloatTensor(reward).to(self.device)
+            _reward.append(reward)
             # update Q-table
             TD_error = reward + gamma * torch.max(self.q_table[next_state], dim = 1)[0] - self.q_table[state, action]
 
@@ -83,6 +85,12 @@ class NRLPSO_Agent(TabularQ_Agent):
             if self.learning_time >= (self.config.save_interval * self.cur_checkpoint):
                 save_class(self.config.agent_save_dir, 'checkpoint'+str(self.cur_checkpoint), self)
                 self.cur_checkpoint += 1
+
+            if not self.config.no_tb and self.learning_time % int(self.config.log_step) == 0:
+                self.log_to_tb_train(tb_logger, self.learning_time,
+                                     TD_error.mean(),
+                                     _R, _reward,
+                                     )
 
             if self.learning_time >= self.config.max_learning_step:
                 _Rs = _R.detach().numpy().tolist()

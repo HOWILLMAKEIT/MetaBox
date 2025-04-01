@@ -83,7 +83,7 @@ class DDQN_Agent(Basic_Agent):
             for name, network in networks.items():
                 Network_name.append(name)
                 setattr(self, name, network)  # Assign each network in the dictionary to the class instance
-        self.networks = Network_name
+        self.network = Network_name
 
         assert hasattr(self, 'model')  # Ensure that 'model' is set as an attribute of the class
         self.target_model = copy.deepcopy(self.model)  # Create a deep copy of the model as the target model
@@ -134,6 +134,7 @@ class DDQN_Agent(Basic_Agent):
                       asynchronous: Literal[None, 'idle', 'restart', 'continue']=None,
                       num_cpus: Optional[Union[int, None]]=1,
                       num_gpus: int=0,
+                      tb_logger = None,
                       required_info=[]):
         if self.device != 'cpu':
             num_gpus = max(num_gpus, 1)
@@ -150,6 +151,7 @@ class DDQN_Agent(Basic_Agent):
         
         _R = torch.zeros(len(env))
         _loss = []
+        _reward = []
         # sample trajectory
         while not env.all_done():
             action = self.get_action(state=state, epsilon_greedy=True)
@@ -157,6 +159,7 @@ class DDQN_Agent(Basic_Agent):
             # state transient
             next_state, reward, is_end, info = env.step(action)
             _R += reward
+            _reward.append(torch.FloatTensor(reward))
             # store info
             # convert next_state into tensor
             try:
@@ -175,10 +178,15 @@ class DDQN_Agent(Basic_Agent):
                 batch_obs, batch_action, batch_reward, batch_next_obs, batch_done = self.replay_buffer.sample(self.batch_size)
                 pred_Vs = self.model(batch_obs.to(self.device))  # [batch_size, n_act]
                 action_onehot = torch.nn.functional.one_hot(batch_action.to(self.device), self.n_act)  # [batch_size, n_act]
-                
+
+                _avg_predict_Q = (pred_Vs * action_onehot).mean(0)  # [n_act]
                 predict_Q = (pred_Vs * action_onehot).sum(1)  # [batch_size]
-                target_Q = batch_reward.to(self.device) + (1 - batch_done.to(self.device)) * gamma * self.target_model(batch_next_obs.to(self.device)).max(1)[0].detach()
-                
+
+                target_output = self.target_model(batch_next_obs.to(self.device))
+                _avg_target_Q = batch_reward.to(self.device)[:, None] + (1 - batch_done.to(self.device))[:, None] * gamma * target_output
+                target_Q = batch_reward.to(self.device) + (1 - batch_done.to(self.device)) * gamma * target_output.max(1)[0].detach()
+                _avg_target_Q = _avg_target_Q.mean(0)  # [n_act]
+
                 self.optimizer.zero_grad()
                 loss = self.criterion(predict_Q, target_Q)
                 loss.backward()
@@ -194,6 +202,13 @@ class DDQN_Agent(Basic_Agent):
                 if self.learning_time % self.target_update_interval == 0:
                     for target_parma, parma in zip(self.target_model.parameters(), self.model.parameters()):
                         target_parma.data.copy_(parma.data)
+
+                if not self.config.no_tb and self.learning_time % int(self.config.log_step) == 0:
+                    self.log_to_tb_train(tb_logger, self.learning_time,
+                                         grad_norms,
+                                         loss,
+                                         _R, _reward,
+                                         _avg_predict_Q, _avg_target_Q)
 
                 if self.learning_time >= self.config.max_learning_step:
                     _Rs = _R.detach().numpy().tolist()
@@ -290,6 +305,10 @@ class DDQN_Agent(Basic_Agent):
 
 # todo add metric
     def log_to_tb_train(self, tb_logger, mini_step,
+                        grad_norms,
+                        loss,
+                        Return, Reward,
+                        predict_Q, target_Q,
                         extra_info = {}):
         # Iterate over the extra_info dictionary and log data to tb_logger
         # extra_info: Dict[str, Dict[str, Union[List[str], List[Union[int, float]]]]] = {
@@ -299,33 +318,29 @@ class DDQN_Agent(Basic_Agent):
         # }
         #
         # learning rate
-        # for id, network_name in enumerate(self.network):
-        #     tb_logger.add_scalar(f'learnrate/{network_name}', self.optimizer.param_groups[id]['lr'], mini_step)
+        for id, network_name in enumerate(self.network):
+            tb_logger.add_scalar(f'learnrate/{network_name}', self.optimizer.param_groups[id]['lr'], mini_step)
         #
         # # grad and clipped grad
-        # grad_norms, grad_norms_clipped = grad_norms
-        # for id, network_name in enumerate(self.network):
-        #     tb_logger.add_scalar(f'grad/{network_name}', grad_norms[id], mini_step)
-        #     tb_logger.add_scalar(f'grad_clipped/{network_name}', grad_norms_clipped[id], mini_step)
-        #
-        #
-        # # loss
-        # tb_logger.add_scalar('loss/actor_loss', reinforce_loss.item(), mini_step)
-        # tb_logger.add_scalar('loss/critic_loss', baseline_loss.item(), mini_step)
-        # tb_logger.add_scalar('loss/total_loss', (reinforce_loss + baseline_loss).item(), mini_step)
-        #
-        # # train metric
-        # avg_reward = torch.stack(memory_reward).mean().item()
-        # max_reward = torch.stack(memory_reward).max().item()
-        #
-        # tb_logger.add_scalar('train/episode_avg_return', Return.mean().item(), mini_step)
-        # tb_logger.add_scalar('train/target_avg_return_changed', Reward.mean().item(), mini_step)
-        # tb_logger.add_scalar('train/critic_avg_output', critic_output.mean().item(), mini_step)
-        # tb_logger.add_scalar('train/avg_entropy', entropy.mean().item(), mini_step)
-        # tb_logger.add_scalar('train/-avg_logprobs', -logprobs.mean().item(), mini_step)
-        # tb_logger.add_scalar('train/approx_kl', approx_kl_divergence.item(), mini_step)
-        # tb_logger.add_scalar('train/avg_reward', avg_reward, mini_step)
-        # tb_logger.add_scalar('train/max_reward', max_reward, mini_step)
+        grad_norms, grad_norms_clipped = grad_norms
+        for id, network_name in enumerate(self.network):
+            tb_logger.add_scalar(f'grad/{network_name}', grad_norms[id], mini_step)
+            tb_logger.add_scalar(f'grad_clipped/{network_name}', grad_norms_clipped[id], mini_step)
+
+        # loss
+        tb_logger.add_scalar('loss', loss.item(), mini_step)
+
+        # Q
+        for id, p_q, t_q in enumerate(zip(predict_Q, target_Q)):
+            tb_logger.add_scalar(f"Predict_Q/action_{id}", p_q.item(), mini_step)
+            tb_logger.add_scalar(f"Target_Q/action_{id}", t_q.item(), mini_step)
+
+        # train metric
+        avg_reward = torch.stack(Reward).mean().item()
+        max_reward = torch.stack(Reward).max().item()
+        tb_logger.add_scalar('train/episode_avg_return', Return.mean().item(), mini_step)
+        tb_logger.add_scalar('train/avg_reward', avg_reward, mini_step)
+        tb_logger.add_scalar('train/max_reward', max_reward, mini_step)
 
         # extra info
         for key, value in extra_info.items():

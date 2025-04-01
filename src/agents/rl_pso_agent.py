@@ -80,6 +80,7 @@ class RL_PSO_Agent(REINFORCE_Agent):
                       asynchronous: Literal[None, 'idle', 'restart', 'continue']=None,
                       num_cpus: Optional[Union[int, None]]=1,
                       num_gpus: int=0,
+                      tb_logger = None,
                       required_info={}):
         if self.device != 'cpu':
             num_gpus = max(num_gpus, 1)
@@ -95,6 +96,7 @@ class RL_PSO_Agent(REINFORCE_Agent):
         
         _R = torch.zeros(len(env))
         _loss = []
+        _reward = []
         # sample trajectory
         while not env.all_done():
             action, log_prob = self.model(state)
@@ -105,19 +107,27 @@ class RL_PSO_Agent(REINFORCE_Agent):
             next_state, reward, is_done,_ = env.step(action)
             reward = torch.FloatTensor(reward).to(self.device)
             _R += reward
+            _reward.append(reward)
             state = torch.FloatTensor(next_state).to(self.device)
             policy_gradient = -log_prob*reward
             loss = policy_gradient.mean()
-
             self.optimizer.zero_grad()
             loss.mean().backward()
+            grad_norms = clip_grad_norms(self.optimizer.param_groups, self.config.max_grad_norm)
             _loss.append(loss.item())
             self.optimizer.step()
             self.learning_time += 1
             if self.learning_time >= (self.config.save_interval * self.cur_checkpoint):
                 save_class(self.config.agent_save_dir,'checkpoint'+str(self.cur_checkpoint),self)
                 self.cur_checkpoint+=1
-  
+
+            if not self.config.no_tb and self.learning_time % int(self.config.log_step) == 0:
+                self.log_to_tb_train(tb_logger, self.learning_time,
+                                     grad_norms,
+                                     loss,
+                                     _R, _reward,
+                                     log_prob)
+
         is_train_ended = self.learning_time >= self.config.max_learning_step
         return_info = {'return': _R.numpy(), 'loss' : np.mean(_loss),'learn_steps': self.learning_time, }
         env_cost = env.get_env_attr('cost')
