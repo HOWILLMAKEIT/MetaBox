@@ -35,9 +35,11 @@ def get_average_data(data_type: str, results: dict, norm: bool=False): # for rol
         std_data[agent]=[]
         for problem in problems:
             if data_type == 'pr' or data_type == 'sr':
-                values = results[problem][agent][:,:,3] # accuracy of 1e-4
-            elif data_type == 'return' or data_type == 'gbest':
+                values = np.array(results[problem][agent])[:,:,-1, 3] # accuracy of 1e-4
+            elif data_type == 'return':
                 values = results[problem][agent]
+            elif data_type == 'cost':
+                values = np.array(results[problem][agent])[:, :, -1]
             else:
                 raise ValueError('Invalid data type')
             if norm:
@@ -63,7 +65,7 @@ def get_test_average_data(data_type: str, results: dict, norm: bool=False): # fo
         std_data[agent]=[]
         for problem in problems:
             if data_type == 'pr' or data_type == 'sr':
-                values = results[problem][agent][:,3] # accuracy of 1e-4
+                values = np.array(results[problem][agent])[:,-1, 3] # accuracy of 1e-4
             else:
                 raise ValueError('Invalid data type')
             if norm:
@@ -77,12 +79,31 @@ def get_test_average_data(data_type: str, results: dict, norm: bool=False): # fo
 
 def gen_algorithm_complexity_table(results: dict, out_dir: str) -> None:
     save_list=[]
-    t0=results['T0']
-    t1=results['T1']
+    len_problem = len(list(results['T0'].keys()))
+    results_0 = 0
+    for p_val in results['T0'].values():
+        results_0 += p_val 
+    results_0 /= len_problem
+    results_1 = {}
+    for agent in list(results['T1'].values())[0].keys():
+        results_1[agent] = 0
+    for problem in results['T1'].keys():
+        for agent in results['T1'][problem].keys():
+            results_1[agent] += results['T1'][problem][agent] / len_problem
+    results_2 = {}
+    for agent in list(results['T2'].values())[0].keys():
+        results_2[agent] = 0
+    for problem in results['T2'].keys():
+        for agent in results['T2'][problem].keys():
+            results_2[agent] += results['T2'][problem][agent] / len_problem
+
+    
+    t0=results_0
+    t1=results_1
     is_dict=False
     if type(t1) is dict:
         is_dict=True
-    t2s=results['T2']
+    t2s=results_2
     ratios=[]
     t2_list=[]
     indexs=[]
@@ -114,12 +135,7 @@ def gen_algorithm_complexity_table(results: dict, out_dir: str) -> None:
 
 
 def gen_agent_performance_table(data_type: str, results: dict, out_dir: str) -> None:
-    if data_type == 'pr':
-        total_data=results['pr']
-    elif data_type == 'sr':
-        total_data = results['sr']
-    else:
-        raise ValueError('Invalid data type')
+    total_data=results
     table_data={}
     indexs=[]
     columns=['Worst','Best','Median','Mean','Std']
@@ -129,7 +145,7 @@ def gen_agent_performance_table(data_type: str, results: dict, out_dir: str) -> 
         for alg,alg_data in problem_data.items():
             n_data=[]
             for run in alg_data:
-                n_data.append(run[3])
+                n_data.append(run[-1][3])
             best=np.min(n_data)
             best=np.format_float_scientific(best,precision=3,exp_digits=3)
             worst=np.max(n_data)
@@ -157,11 +173,11 @@ def gen_agent_performance_table(data_type: str, results: dict, out_dir: str) -> 
 def gen_overall_tab(results: dict, out_dir: str) -> None:
     # get multi-indexes first
     problems = []
-    statics = ['gbest','1e-4 PR', '1e-4 SR']
+    statics = ['Obj','1e-4 PR', '1e-4 SR']
     optimizers = []
-    for problem in results['gbest'].keys():
+    for problem in results['cost'].keys():
         problems.append(problem)
-    for optimizer in results['T2'].keys():
+    for optimizer in results['cost'][problems[0]].keys():
         optimizers.append(optimizer)
     multi_columns = pd.MultiIndex.from_product(
         [problems,statics], names=('Problem', 'metric')
@@ -191,20 +207,31 @@ def gen_overall_tab(results: dict, out_dir: str) -> None:
     # calculate each Obj
     for problem in problems:
         for optimizer in optimizers:
-            obj_problem_optimizer = np.array(results['gbest'][problem][optimizer])
-            avg_obj = np.mean(obj_problem_optimizer)
-            std_obj = np.std(obj_problem_optimizer)
-            df_results.loc[optimizer, (problem, 'gbest')] = np.format_float_scientific(avg_obj, precision=3, exp_digits=1) + "(" + np.format_float_scientific(std_obj, precision=3, exp_digits=1) + ")"
-            pr_problem_optimizer = np.array(results['PR'][problem][optimizer][:, 3])
-            assert len(pr_problem_optimizer) == len(obj_problem_optimizer)
-            avg_pr = np.mean(pr_problem_optimizer)
-            std_pr = np.std(pr_problem_optimizer)
-            df_results.loc[optimizer, (problem, 'PR')] = np.format_float_scientific(avg_pr, precision=3, exp_digits=1) + "(" + np.format_float_scientific(std_pr, precision=3, exp_digits=1) + ")"
-            sr_problem_optimizer = np.array(results['SR'][problem][optimizer][:, 3])
-            assert len(sr_problem_optimizer) == len(obj_problem_optimizer)
-            avg_sr = np.mean(sr_problem_optimizer)
-            std_sr = np.std(sr_problem_optimizer)
-            df_results.loc[optimizer, (problem, 'SR')] = np.format_float_scientific(avg_sr, precision=3, exp_digits=1) + "(" + np.format_float_scientific(std_sr, precision=3, exp_digits=1) + ")"
+            obj_problem_optimizer = results['cost'][problem][optimizer]
+            objs_ = []
+            for run in range(len(obj_problem_optimizer)):
+                objs_.append(obj_problem_optimizer[run][-1])
+            avg_obj = np.mean(objs_)
+            std_obj = np.std(objs_)
+            df_results.loc[optimizer, (problem, 'Obj')] = np.format_float_scientific(avg_obj, precision=3, exp_digits=1) + "(" + np.format_float_scientific(std_obj, precision=3, exp_digits=1) + ")"
+            
+            pr_problem_optimizer = results['pr'][problem][optimizer]
+            prs_ = []
+            for run in range(len(pr_problem_optimizer)):
+                prs_.append(pr_problem_optimizer[run][-1][3])
+            assert len(prs_) == len(objs_)
+            avg_pr = np.mean(prs_)
+            std_pr = np.std(prs_)
+            df_results.loc[optimizer, (problem, '1e-4 PR')] = np.format_float_scientific(avg_pr, precision=3, exp_digits=1) + "(" + np.format_float_scientific(std_pr, precision=3, exp_digits=1) + ")"
+            
+            sr_problem_optimizer = results['sr'][problem][optimizer]
+            srs_ = []
+            for run in range(len(sr_problem_optimizer)):
+                srs_.append(sr_problem_optimizer[run][-1][3])
+            assert len(srs_) == len(objs_)
+            avg_sr = np.mean(srs_)
+            std_sr = np.std(srs_)
+            df_results.loc[optimizer, (problem, '1e-4 SR')] = np.format_float_scientific(avg_sr, precision=3, exp_digits=1) + "(" + np.format_float_scientific(std_sr, precision=3, exp_digits=1) + ")"
 
     df_results.to_excel(out_dir+'overall_table.xlsx')
 
@@ -224,11 +251,13 @@ class MMO_Logger:
         self.color_arrangement = {}
         self.arrange_index = 0
 
-    def draw_test_cost(self, data_type: str, data: dict, output_dir: str, Name: Optional[Union[str, list]]=None, logged: bool=False, categorized: bool=False) -> None:
+    def draw_test_data(self, data_type: str, data: dict, output_dir: str, Name: Optional[Union[str, list]]=None, logged: bool=False, categorized: bool=False) -> None:
         if data_type == 'pr':
             data_name = 'PR'
         elif data_type == 'sr':
             data_name = 'SR'
+        elif data_type == 'cost':
+            data_name = 'Cost'
         else:
             raise ValueError('Invalid data type')
         for problem in list(data.keys()):
@@ -242,7 +271,13 @@ class MMO_Logger:
                     if agent not in self.color_arrangement.keys():
                         self.color_arrangement[agent] = colors[self.arrange_index]
                         self.arrange_index += 1
-                    values = np.array(data[name][agent][:, :, 3])
+                    if data_type == 'pr' or data_type == 'sr':
+                        values = np.array(data[name][agent])[:, :, 3]
+                    elif data_type == 'cost':
+                        values = np.array(data[name][agent])
+                    else:
+                        raise ValueError('Invalid data type')
+
                     x = np.arange(values.shape[-1])
                     x = np.array(x, dtype=np.float64)
                     x *= (self.config.maxFEs / x[-1])
@@ -257,10 +292,10 @@ class MMO_Logger:
                 plt.legend()
                 if logged:
                     plt.ylabel('log ' + data_name)
-                    plt.savefig(output_dir + f'{name}_log_' + data_name + '_1e-4_curve.png', bbox_inches='tight')
+                    plt.savefig(output_dir + f'{name}_log_' + data_name + '_curve.png', bbox_inches='tight')
                 else:
                     plt.ylabel(data_name)
-                    plt.savefig(output_dir + f'{name}_' + data_name + '_1e-4_curve.png', bbox_inches='tight')
+                    plt.savefig(output_dir + f'{name}_' + data_name + '_curve.png', bbox_inches='tight')
                 plt.close()
             else:
                 plt.figure()
@@ -270,7 +305,12 @@ class MMO_Logger:
                     if agent not in self.color_arrangement.keys():
                         self.color_arrangement[agent] = colors[self.arrange_index]
                         self.arrange_index += 1
-                    values = np.array(data[name][agent][:, :, 3])
+                    if data_type == 'pr' or data_type == 'sr':
+                        values = np.array(data[name][agent])[:, :, 3]
+                    elif data_type == 'cost':
+                        values = np.array(data[name][agent])
+                    else:
+                        raise ValueError('Invalid data type')
                     x = np.arange(values.shape[-1])
                     x = np.array(x, dtype=np.float64)
                     x *= (self.config.maxFEs / x[-1])
@@ -285,10 +325,10 @@ class MMO_Logger:
                 plt.legend()
                 if logged:
                     plt.ylabel('log ' + data_name)
-                    plt.savefig(output_dir + f'learnable_{name}_log_' + data_name + '_1e-4_curve.png', bbox_inches='tight')
+                    plt.savefig(output_dir + f'learnable_{name}_log_' + data_name + '_curve.png', bbox_inches='tight')
                 else:
                     plt.ylabel(data_name)
-                    plt.savefig(output_dir + f'learnable_{name}_' + data_name + '_1e-4_curve.png', bbox_inches='tight')
+                    plt.savefig(output_dir + f'learnable_{name}_' + data_name + '_curve.png', bbox_inches='tight')
                 plt.close()
                 
                 # todo traditional optimizer
@@ -324,7 +364,7 @@ class MMO_Logger:
     
     # in class Logger for rollout
     def draw_train_logger(self, data_type: str, data: dict, output_dir: str, norm: bool = False) -> None:
-        means, stds = get_average_data(data_type, data[data_type], norm=norm)
+        means, stds = get_average_data(data_type, data, norm=norm)
         plt.figure()
         for agent in means.keys():
             x = np.arange(len(means[agent]), dtype=np.float64)
@@ -353,9 +393,9 @@ class MMO_Logger:
         elif data_type == 'sr':
             plt.ylabel('SR')
             plt.savefig(output_dir + f'avg_SR_1e-4_curve.png', bbox_inches='tight')
-        elif data_type == 'gbest':
-            plt.ylabel('Avg gbest')
-            plt.savefig(output_dir + f'avg_gbest_curve.png', bbox_inches='tight')
+        elif data_type == 'cost':
+            plt.ylabel('Avg cost')
+            plt.savefig(output_dir + f'avg_cost_curve.png', bbox_inches='tight')
         elif data_type == 'return':
             plt.ylabel('Avg Return')
             plt.savefig(output_dir + f'avg_return_curve.png', bbox_inches='tight')
@@ -364,12 +404,7 @@ class MMO_Logger:
         plt.close()
 
     def draw_rank_hist(self, data_type : str, data: dict, random: dict, output_dir: str, ignore: Optional[list]=None) -> None:
-        if data_type == 'pr':
-            metric, metric_std = get_test_average_data('pr', data['pr'], norm=norm) # (len(agent), )
-        elif data_type == 'sr':
-            metric, metric_std = get_test_average_data('sr', data['sr'], norm=norm)
-        else:
-            raise ValueError('Invalid data type')
+        metric, metric_std = get_test_average_data(data_type, data,) # (len(agent), )
         X, Y = list(metric.keys()), list(metric.values())
         _, S = list(metric_std.keys()), list(metric_std.values())
         n_agents = len(X)
@@ -385,7 +420,7 @@ class MMO_Logger:
         plt.yticks(fontsize=60)
         plt.ylim(0, np.max(np.array(Y) + np.array(S)) * 1.1)
         if data_type == 'pr':
-            plt.title(f'The 1e-4 R for {self.config.problem}-{self.config.difficulty}', fontsize=70)
+            plt.title(f'The 1e-4 PR for {self.config.problem}-{self.config.difficulty}', fontsize=70)
             plt.ylabel('PR', fontsize=60)
             plt.savefig(output_dir + f'PR_1e-4_rank_hist.png', bbox_inches='tight')
         elif data_type == 'sr':
@@ -396,37 +431,38 @@ class MMO_Logger:
             raise ValueError('Invalid data type')
         
 
-def post_processing_test_statics(log_dir: str, logger: Logger) -> None:
+def post_processing_test_statics(log_dir: str, logger: MMO_Logger) -> None:
     with open(log_dir+'test.pkl', 'rb') as f:
         results = pickle.load(f)
-    with open(log_dir+'random_search_baseline.pkl', 'rb') as f:
-        random = pickle.load(f)
+    # with open(log_dir+'random_search_baseline.pkl', 'rb') as f:
+    #     random = pickle.load(f)
     # Generate excel tables
     if not os.path.exists(log_dir + 'tables/'):
         os.makedirs(log_dir + 'tables/')
     gen_overall_tab(results, log_dir+'tables/') # 
     gen_algorithm_complexity_table(results, log_dir+'tables/') # 
-    gen_agent_performance_table('pr', results, log_dir+'tables/') 
-    gen_agent_performance_table('sr', results, log_dir + 'tables/')
+    gen_agent_performance_table('pr', results['pr'], log_dir+'tables/') 
+    gen_agent_performance_table('sr', results['sr'], log_dir + 'tables/')
 
     # Generate figures
     if not os.path.exists(log_dir + 'pics/'):
         os.makedirs(log_dir + 'pics/')
-    logger.draw_test_cost('pr', results['pr_list'],log_dir + 'pics/', logged=True, categorized=True) #
-    logger.draw_test_cost('sr', results['sr_list'],log_dir + 'pics/', logged=True, categorized=True)
+    # logger.draw_test_cost('cost', results['cost'],log_dir + 'pics/', logged=True, categorized=True) #
+    logger.draw_test_data('pr', results['pr'],log_dir + 'pics/', logged=False, categorized=True) #
+    logger.draw_test_data('sr', results['sr'],log_dir + 'pics/', logged=False, categorized=True)
     # logger.draw_named_average_test_costs(results['cost'], log_dir + 'pics/',
     #                                     {'MetaBBO-RL': ['DE_DDQN_Agent', 'RL_HPSDE_Agent', 'LDE_Agent', 'QLPSO_Agent', 'RLEPSO_Agent', 'RL_PSO_Agent', 'DEDQN_Agent'],
     #                                      'Classic Optimizer': ['DEAP_DE', 'DEAP_CMAES', 'DEAP_PSO', 'JDE21', 'NL_SHADE_LBC', 'GL_PSO', 'sDMS_PSO', 'MadDE', 'SAHLPSO', 'Random_search']},
     #                                     logged=False) # 各个agent在平均问题上的指标变化曲线
-    logger.draw_rank_hist('pr', results, random, log_dir + 'pics/') 
-    logger.draw_rank_hist('sr', results, random, log_dir + 'pics/')
+    logger.draw_rank_hist('pr', results['pr'], None, log_dir + 'pics/') 
+    logger.draw_rank_hist('sr', results['sr'], None, log_dir + 'pics/')
 
-def post_processing_rollout_statics(log_dir: str, logger: Logger) -> None:
+def post_processing_rollout_statics(log_dir: str, logger: MMO_Logger) -> None:
     with open(log_dir+'rollout.pkl', 'rb') as f:
         results = pickle.load(f)
     if not os.path.exists(log_dir + 'pics/'):
         os.makedirs(log_dir + 'pics/')
-    logger.draw_train_logger('return', results, log_dir + 'pics/', )
-    logger.draw_train_logger('gbest', results, log_dir + 'pics/', )
-    logger.draw_train_logger('pr', results, log_dir + 'pics/',)
-    logger.draw_train_logger('sr', results, log_dir+'pics/',)
+    logger.draw_train_logger('return', results['return'], log_dir + 'pics/', )
+    logger.draw_train_logger('cost', results['cost'], log_dir + 'pics/', )
+    logger.draw_train_logger('pr', results['pr'], log_dir + 'pics/',)
+    logger.draw_train_logger('sr', results['sr'], log_dir+'pics/',)

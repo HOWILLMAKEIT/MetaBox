@@ -17,7 +17,11 @@ class RLEMMO_Optimizer(Learnable_Optimizer):
         self.eps = 0.2
         self.min_samples = 3
         self.reward_scale = 1000
-        self.log_interval = config.log_interval
+
+
+        self.cost = None
+        self.PRs = None
+        self.SRs = None
 
     # calculate costs of solutions
     def get_costs(self,position, problem):
@@ -109,7 +113,20 @@ class RLEMMO_Optimizer(Learnable_Optimizer):
         r3 = stacked_rs[:, 2]
         v = population[r1] + self.FF * (population[r2] - population[r3])
         return v
-        
+
+    def cal_pr_sr(self, problem):
+        raw_PR = np.zeros(5)
+        raw_SR = np.zeros(5)
+        solu = self.particles['current_position'].copy()
+        accuracy = [1e-1, 1e-2, 1e-3, 1e-4, 1e-5]
+        total_pkn = problem.nopt
+        for acc_level in range(5):
+            nfp, _ = problem.how_many_goptima(solu, accuracy[acc_level])
+            raw_PR[acc_level] = nfp / total_pkn
+            if nfp >= total_pkn:
+                raw_SR[acc_level] = 1
+        return raw_PR, raw_SR
+
     # initialize GPSO environment
     def initialize_particles(self, problem):
         rand_pos = np.random.rand(self.ps, problem.dim) * (problem.ub - problem.lb) + problem.lb
@@ -152,6 +169,7 @@ class RLEMMO_Optimizer(Learnable_Optimizer):
         self.max_fes = problem.maxfes
         self.dim = problem.dim
         self.max_dist=np.sqrt((problem.ub - problem.lb)**2*self.dim)
+        self.log_interval = (problem.maxfes // self.__config.n_logpoint)
 
         # maintain
         self.fes = 0
@@ -160,6 +178,9 @@ class RLEMMO_Optimizer(Learnable_Optimizer):
         # initialize the population
         self.initialize_particles(problem)
         self.cost = [self.particles['gbest_val']]
+        raw_pr, raw_sr = self.cal_pr_sr(problem)
+        self.PRs = [raw_pr]
+        self.SRs = [raw_sr]
         # get state
         state=self.observe() # ps, 9
         
@@ -239,6 +260,7 @@ class RLEMMO_Optimizer(Learnable_Optimizer):
             minval = np.min(val[now_cluster])
             rewards += (1 - minval / self.max_cost)
         return rewards
+
 
     def update(self, action, problem):
         is_end=False
@@ -335,12 +357,21 @@ class RLEMMO_Optimizer(Learnable_Optimizer):
         if self.fes >= self.log_index * self.log_interval:
             self.log_index += 1
             self.cost.append(self.particles['gbest_val'])
+            raw_pr, raw_sr = self.cal_pr_sr(problem)
+            self.PRs.append(raw_pr)
+            self.SRs.append(raw_sr)
 
         if is_end:
             if len(self.cost) >= self.__config.n_logpoint + 1:
                 self.cost[-1] = self.particles['gbest_val']
+                raw_pr, raw_sr = self.cal_pr_sr(problem)
+                self.PRs[-1] = raw_pr
+                self.SRs[-1] = raw_sr
             else:
                 self.cost.append(self.particles['gbest_val'])
+                raw_pr, raw_sr = self.cal_pr_sr(problem)
+                self.PRs.append(raw_pr)
+                self.SRs.append(raw_sr)
         
         info = {}
         return next_state, reward, is_end, info

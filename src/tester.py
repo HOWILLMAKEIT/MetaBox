@@ -7,25 +7,23 @@ from scipy.signal import savgol_filter
 import time
 from tqdm import tqdm
 import os
-from environment.basic_environment import PBO_Env
+from environment.basic_environment import PBO_Env, BBO_Env, MetaBBO_Env
 from logger import Logger
 
 
 from agent import (
-    DE_DDQN_Agent,
-    DEDQN_Agent,
+    # DE_DDQN_Agent,
+    # DEDQN_Agent,
     RL_HPSDE_Agent,
     LDE_Agent,
-    QLPSO_Agent,
+    # QLPSO_Agent,
     RLEPSO_Agent,
     RL_PSO_Agent,
     L2L_Agent,
-    GLEET_Agent,
-    RL_DAS_Agent,
+    # RL_DAS_Agent,
     LES_Agent,
-    NRLPSO_Agent,
-    Symbol_Agent,
-    RLEMMO_Agent
+    # NRLPSO_Agent,
+    # Symbol_Agent,
 )
 from optimizer import (
     DE_DDQN_Optimizer,
@@ -40,7 +38,9 @@ from optimizer import (
     RL_DAS_Optimizer,
     LES_Optimizer,
     NRLPSO_Optimizer,
-    Symbol_Optimizer,
+    SYMBOL_Optimizer,
+    RLDE_AFL_Optimizer,
+    Surr_RLDE_Optimizer,
     RLEMMO_Optimizer,
 
     DEAP_DE,
@@ -54,9 +54,24 @@ from optimizer import (
     SAHLPSO,
 
     DEAP_CMAES,
-    Random_search,
-    BayesianOptimizer
+    Random_search
 )
+
+from agents import (
+    GLEET_Agent,
+    DE_DDQN_Agent,
+    DEDQN_Agent,
+    QLPSO_Agent,
+    NRLPSO_Agent,
+    RL_HPSDE_Agent,
+    RLDE_AFL_Agent,
+    SYMBOL_Agent,
+    RL_DAS_Agent,
+    Surr_RLDE_Agent,
+    RLEMMO_Agent
+)
+
+from VectorEnv.great_para_env import ParallelEnv
 
 def cal_t0(dim, fes):
     T0 = 0
@@ -123,10 +138,11 @@ class Tester(object):
         self.seed = range(51)
         # initialize the dataframe for logging
         self.test_results = {'cost': {},
-                             'fes': {},
-                             'T0': 0.,
+                             'T0': {},
                              'T1': {},
-                             'T2': {}}
+                             'T2': {},
+                             'pr': {},
+                             'sr': {}}
 
         # prepare experimental optimizers and agents
         self.agent_for_cp = []
@@ -162,24 +178,36 @@ class Tester(object):
             for t_optmizer in self.t_optimizer_for_cp:
                 print(f't_optmizer:{type(t_optmizer).__name__}')
 
-        for agent_name in self.agent_name_list:
-            self.test_results['T1'][agent_name] = 0.
-            self.test_results['T2'][agent_name] = 0.
-        for optimizer in self.t_optimizer_for_cp:
-            self.test_results['T1'][type(optimizer).__name__] = 0.
-            self.test_results['T2'][type(optimizer).__name__] = 0.
+        # for agent_name in self.agent_name_list:
+        #     self.test_results['T1'][agent_name] = 0.
+        #     self.test_results['T2'][agent_name] = 0.
+        # for optimizer in self.t_optimizer_for_cp:
+        #     self.test_results['T1'][type(optimizer).__name__] = 0.
+        #     self.test_results['T2'][type(optimizer).__name__] = 0.
 
         for problem in self.test_set:
             self.test_results['cost'][problem.__str__()] = {}
-            self.test_results['fes'][problem.__str__()] = {}
+            self.test_results['pr'][problem.__str__()] = {}
+            self.test_results['sr'][problem.__str__()] = {}
+            self.test_results['T1'][problem.__str__()] = {}
+            self.test_results['T2'][problem.__str__()] = {}
+            self.test_results['T0'][problem.__str__()] = 0.
             for agent_name in self.agent_name_list:
                 self.test_results['cost'][problem.__str__()][agent_name] = []  # 51 np.arrays
-                self.test_results['fes'][problem.__str__()][agent_name] = []  # 51 scalars
+                self.test_results['pr'][problem.__str__()][agent_name] = []  # 51 scalars
+                self.test_results['sr'][problem.__str__()][agent_name] = []  # 51 scalars
+                self.test_results['T1'][problem.__str__()][agent_name] = 0.
+                self.test_results['T2'][problem.__str__()][agent_name] = 0.
             for optimizer in self.t_optimizer_for_cp:
                 self.test_results['cost'][problem.__str__()][type(optimizer).__name__] = []  # 51 np.arrays
-                self.test_results['fes'][problem.__str__()][type(optimizer).__name__] = []  # 51 scalars
+                self.test_results['pr'][problem.__str__()][agent_name] = []  # 51 scalars
+                self.test_results['sr'][problem.__str__()][agent_name] = []  # 51 scalars
+                self.test_results['T1'][problem.__str__()][type(optimizer).__name__] = 0.
+                self.test_results['T2'][problem.__str__()][type(optimizer).__name__] = 0.
 
     def test(self):
+        # todo 测试并行方式有多种 得考虑下
+
         print(f'start testing: {self.config.run_time}')
         # calculate T0
         T0 = cal_t0(self.config.dim, self.config.maxFEs)
@@ -196,81 +224,301 @@ class Tester(object):
                     T1 = 0
                     T2 = 0
                     for run in range(51):
-                        start = time.perf_counter()
-                        np.random.seed(self.seed[run])
-                        problem.reset()
-                        # construct an ENV for (problem,optimizer)
-                        env = PBO_Env(problem,optimizer)
-                        info = agent.rollout_episode(env)
-                        cost = info['cost']
-                        while len(cost) < 51:
-                            cost.append(cost[-1])
-                        fes = info['fes']
-                        end = time.perf_counter()
-                        if i == 0:
-                            T2 += (end - start) * 1000  # ms
-                            T1 += env.problem.T1
-                        self.test_results['cost'][problem.__str__()][self.agent_name_list[agent_id]].append(cost)
-                        self.test_results['fes'][problem.__str__()][self.agent_name_list[agent_id]].append(fes)
-                        pbar_info = {'problem': problem.__str__(),
-                                     'optimizer': self.agent_name_list[agent_id],
-                                     'run': run,
-                                     'cost': cost[-1],
-                                     'fes': fes}
-                        pbar.set_postfix(pbar_info)
-                        pbar.update(1)
-                    if i == 0:
-                        self.test_results['T1'][self.agent_name_list[agent_id]] = T1/51
-                        self.test_results['T2'][self.agent_name_list[agent_id]] = T2/51
-                        if type(agent).__name__ == 'L2L_Agent':
-                            self.test_results['T1'][self.agent_name_list[agent_id]] *= self.config.maxFEs/100
-                            self.test_results['T2'][self.agent_name_list[agent_id]] *= self.config.maxFEs/100
-                # run traditional optimizer
-                for optimizer in self.t_optimizer_for_cp:
-                    T1 = 0 
-                    T2 = 0
-                    for run in range(51):
-                        start = time.perf_counter()
-                        np.random.seed(self.seed[run])
+                        env_list = [PBO_Env(p, copy.deepcopy(optimizer)) for p in problem]
 
-                        problem.reset()
-                        info = optimizer.run_episode(problem)
-                        cost = info['cost']
-                        while len(cost) < 51:
-                            cost.append(cost[-1])
-                        fes = info['fes']
-                        end = time.perf_counter()
-                        if i == 0:
-                            T1 += problem.T1
-                            T2 += (end - start) * 1000  # ms
-                        self.test_results['cost'][problem.__str__()][type(optimizer).__name__].append(cost)
-                        self.test_results['fes'][problem.__str__()][type(optimizer).__name__].append(fes)
-                        pbar_info = {'problem': problem.__str__(),
-                                     'optimizer': type(optimizer).__name__,
+                        start = time.perf_counter()
+                        info = agent.rollout_batch_episode(envs = env_list,
+                                                           seeds = self.seed[run],
+                                                           para_mode = 'dummy',
+                                                           asynchronous = None,
+                                                           num_cpus = 1,
+                                                           num_gpus = 0,
+                        )
+                        # np.random.seed(self.seed[run])
+                        # problem.reset() 这里env_list reset有了
+                        # construct an ENV for (problem,optimizer)
+                        # env = PBO_Env(problem,optimizer)
+
+                        # info = agent.rollout_episode(env)
+                        # cost = info['cost']
+                        # while len(cost) < 51:
+                        #     cost.append(cost[-1])
+                        # fes = info['fes']
+                        # end = time.perf_counter()
+                        # if i == 0:
+                        #     T2 += (end - start) * 1000  # ms
+                        #     T1 += env.problem.T1
+                        # self.test_results['cost'][problem.__str__()][self.agent_name_list[agent_id]].append(cost)
+                        # self.test_results['fes'][problem.__str__()][self.agent_name_list[agent_id]].append(fes)
+                        pbar_info = {'agent': agent.__str__(),
                                      'run': run,
-                                     'cost': cost[-1],
-                                     'fes': fes, }
+                                     }
+
+                        # pbar_info = {'problem': problem.__str__(),
+                        #              'optimizer': self.agent_name_list[agent_id],
+                        #              'run': run,
+                        #              'cost': cost[-1],
+                        #              'fes': fes}
                         pbar.set_postfix(pbar_info)
-                        pbar.update(1)
-                    if i == 0:
-                        self.test_results['T1'][type(optimizer).__name__] = T1/51
-                        self.test_results['T2'][type(optimizer).__name__] = T2/51
-                        if type(optimizer).__name__ == 'BayesianOptimizer':
-                            self.test_results['T1'][type(optimizer).__name__] *= (self.config.maxFEs/self.config.bo_maxFEs)
-                            self.test_results['T2'][type(optimizer).__name__] *= (self.config.maxFEs/self.config.bo_maxFEs)
+                        pbar.update(len(env_list))
+                    # if i == 0:
+                    #     self.test_results['T1'][self.agent_name_list[agent_id]] = T1/51
+                    #     self.test_results['T2'][self.agent_name_list[agent_id]] = T2/51
+                    #     if type(agent).__name__ == 'L2L_Agent':
+                    #         self.test_results['T1'][self.agent_name_list[agent_id]] *= self.config.maxFEs/100
+                    #         self.test_results['T2'][self.agent_name_list[agent_id]] *= self.config.maxFEs/100
+                # run traditional optimizer
+        #         for optimizer in self.t_optimizer_for_cp:
+        #             T1 = 0
+        #             T2 = 0
+        #             for run in range(51):
+        #                 start = time.perf_counter()
+        #                 np.random.seed(self.seed[run])
+        #
+        #                 problem.reset()
+        #                 info = optimizer.run_episode(problem)
+        #                 cost = info['cost']
+        #                 while len(cost) < 51:
+        #                     cost.append(cost[-1])
+        #                 fes = info['fes']
+        #                 end = time.perf_counter()
+        #                 if i == 0:
+        #                     T1 += problem.T1
+        #                     T2 += (end - start) * 1000  # ms
+        #                 self.test_results['cost'][problem.__str__()][type(optimizer).__name__].append(cost)
+        #                 self.test_results['fes'][problem.__str__()][type(optimizer).__name__].append(fes)
+        #                 pbar_info = {'problem': problem.__str__(),
+        #                              'optimizer': type(optimizer).__name__,
+        #                              'run': run,
+        #                              'cost': cost[-1],
+        #                              'fes': fes, }
+        #                 pbar.set_postfix(pbar_info)
+        #                 pbar.update(1)
+        #             if i == 0:
+        #                 self.test_results['T1'][type(optimizer).__name__] = T1/51
+        #                 self.test_results['T2'][type(optimizer).__name__] = T2/51
+        #                 if type(optimizer).__name__ == 'BayesianOptimizer':
+        #                     self.test_results['T1'][type(optimizer).__name__] *= (self.config.maxFEs/self.config.bo_maxFEs)
+        #                     self.test_results['T2'][type(optimizer).__name__] *= (self.config.maxFEs/self.config.bo_maxFEs)
+        # with open(self.log_dir + 'test.pkl', 'wb') as f:
+        #     pickle.dump(self.test_results, f, -1)
+        # random_search_results = test_for_random_search(self.config)
+        # with open(self.log_dir + 'random_search_baseline.pkl', 'wb') as f:
+        #     pickle.dump(random_search_results, f, -1)
+    def test_1(self):
+        # todo 第一种 并行是 agent for 循环
+        # todo 每个 agent 做一个问题 x test_run 的列表环境
+        print(f'start testing: {self.config.run_time}')
+ 
+        test_run = self.config.test_run
+        seed_list = list(range(1, test_run + 1))
+        pbar_len = (len(self.agent_for_cp) + len(self.t_optimizer_for_cp)) * self.test_set.N
+        with tqdm(range(pbar_len), desc = "Testing") as pbar:
+            for i, problem in enumerate(self.test_set.data):
+                T0 = cal_t0(problem.dim, problem.maxfes)
+                self.test_results['T0'][problem.__str__()] = T0
+                for agent_id, (agent, optimizer) in enumerate(zip(self.agent_for_cp, self.l_optimizer_for_cp)):
+                    # for agent an env_list [1 * len(test_run)]
+                    env_list = [PBO_Env(copy.deepcopy(problem), copy.deepcopy(optimizer)) for _ in range(test_run)]
+                    start = time.perf_counter()
+                    meta_test_data = agent.rollout_batch_episode(envs = env_list,
+                                                                 seeds = seed_list,
+                                                                 para_mode = 'dummy',
+                                                                 asynchronous = None,
+                                                                 num_cpus = 1,
+                                                                 num_gpus = 0,
+                                                                 )
+                    cost = meta_test_data['cost'] # 假设已经对齐不同环境的长度
+                    pr = meta_test_data['pr']
+                    sr = meta_test_data['sr']
+                    end = time.perf_counter()
+                    T2 = (end - start) * 1000  # ms
+                    T1 = np.sum(meta_test_data['T1'])
+                    self.test_results['cost'][problem.__str__()][self.agent_name_list[agent_id]] = np.array(cost)
+                    self.test_results['pr'][problem.__str__()][self.agent_name_list[agent_id]] = np.array(pr)
+                    self.test_results['sr'][problem.__str__()][self.agent_name_list[agent_id]] = np.array(sr)
+                    self.test_results['T1'][problem.__str__()][self.agent_name_list[agent_id]] = T1/test_run
+                    self.test_results['T2'][problem.__str__()][self.agent_name_list[agent_id]] = T2/test_run
+                    # meta_test_data : {cost, fes, return} {'return': _Rs, 'cost': env_cost, 'pr': raw_PRs, 'sr': raw_SRs}
+                    pbar_info = {'MetaBBO': agent.__str__(),
+                                 'problem': problem.__str__(),
+                                 }
+                    pbar.set_postfix(pbar_info)
+                    pbar.update(1)
+
+                    
+                # run traditional optimizer
+                # for optimizer in self.t_optimizer_for_cp:
+                #     # env_list = [BBO_Env(copy.deepcopy(optimizer)) for _ in range(test_run)]
+                #     # action_list = [copy.deepcopy(problem) for _ in range(test_run)]
+                #     # env = ParallelEnv(env_list, para_mode = 'dummy', asynchronous = None, num_cpus = 1, num_gpus = 0)
+
+                #     env_list = [BBO_Env(copy.deepcopy(optimizer)) for _ in range(test_run)]
+                #     problem_list = [{'problem': copy.deepcopy(problem)} for _ in range(test_run)]
+                #     # problem_list = [copy.deepcopy(problem) for _ in range(test_run)]
+                #     env = ParallelEnv(env_list, para_mode = 'dummy', asynchronous = None, num_cpus = 1, num_gpus = 0)
+                #     if seed_list is not None:
+                #         env.seed(seed_list)
+                #     test_data = env.customized_method('run_batch_episode', problem_list) # List:[dict{cost, fes}] (test_run)
+                #     pbar_info = {'BBO': type(optimizer).__name__,
+                #                  'problem': problem.__str__(),
+                #                  }
+                #     pbar.set_postfix(pbar_info)
+                #     pbar.update(1)
+
         with open(self.log_dir + 'test.pkl', 'wb') as f:
             pickle.dump(self.test_results, f, -1)
-        random_search_results = test_for_random_search(self.config)
-        with open(self.log_dir + 'random_search_baseline.pkl', 'wb') as f:
-            pickle.dump(random_search_results, f, -1)
+
+    def test_2(self):
+        # todo 第二种 并行是 agent for 循环
+        # todo 每个 agent 做 bs 个问题 x test_run 的列表环境
+        print(f'start testing: {self.config.run_time}')
+
+        test_run = self.config.test_run
+        bs = self.config.test_batch_size
+
+        seed_list = list(range(1, test_run + 1)) * bs # test_run * bs
+        pbar_len = (len(self.agent_for_cp) + len(self.t_optimizer_for_cp)) * (self.test_set.N // bs + self.test_set.N % bs)
+        with tqdm(range(pbar_len), desc = "Testing") as pbar:
+            for i, problem in enumerate(self.test_set):
+                for agent_id, (agent, optimizer) in enumerate(zip(self.agent_for_cp, self.l_optimizer_for_cp)):
+                    # for agent an env_list [bs * len(test_run)]
+                    # [F1 F1 F1 F2 F2 F2 F3 F3 F3...]
+                    env_list = [
+                        PBO_Env(copy.deepcopy(p), copy.deepcopy(optimizer))
+                        for p in problem  # bs
+                        for _ in range(test_run) # test_run
+                    ]
+
+                    env_list = [PBO_Env(copy.deepcopy(problem), copy.deepcopy(optimizer)) for _ in range(test_run)]
+                    meta_test_data = agent.rollout_batch_episode(envs = env_list,
+                                                                 seeds = seed_list,
+                                                                 para_mode = 'dummy',
+                                                                 asynchronous = None,
+                                                                 num_cpus = 1,
+                                                                 num_gpus = 0,
+                                                                 )
+                    # meta_test_data : {cost, fes, return}
+                    pbar_info = {'MetaBBO': agent.__str__(),
+                                 }
+                    pbar.set_postfix(pbar_info)
+                    pbar.update(1)
+                # run traditional optimizer
+                for optimizer in self.t_optimizer_for_cp:
+                    env_list = [BBO_Env(copy.deepcopy(optimizer)) for _ in range(test_run) for _ in range(bs)]
+                    problem_list = [{'problem': copy.deepcopy(p)} for p in problem for _ in range(test_run)]
+                    # problem_list = [copy.deepcopy(problem) for _ in range(test_run)]
+                    env = ParallelEnv(env_list, para_mode = 'dummy', asynchronous = None, num_cpus = 1, num_gpus = 0)
+                    env.seed(seed_list)
+                    test_data = env.customized_method('run_batch_episode', problem_list)  # List:[dict{cost, fes}] (test_run * bs)
+                    pbar_info = {'BBO': type(optimizer).__name__,
+                                 }
+                    pbar.set_postfix(pbar_info)
+                    pbar.update(1)
 
 
-def rollout(config):
+
+
+    def test_3(self):
+        # todo 第三种 并行是 agent * bs 个问题 * run
+        print(f'start testing: {self.config.run_time}')
+
+        test_run = self.config.test_run
+        bs = self.config.test_batch_size
+
+        seed_list = list(range(1, test_run + 1)) # test_run
+        pbar_len = 2 * (self.test_set.N // bs + self.test_set.N % bs)
+        with tqdm(range(pbar_len), desc = "Testing") as pbar:
+            for i, problem in enumerate(self.test_set):
+                # env_list [bs * len(agent) * len(test_run)]
+                # agent_list [bs * len(agent) * len(test_run)]
+
+
+                '''
+                    example: bs = 3 test_run = 2 agent A1 A2
+                    [   A1   |   A1   |   A1   |   A1   |   A1   |   A1   |   A2   |   A2   |   A2   |   A2   |   A2   |   A2   ]
+                    [O1_F1_r1|O1_F1_r2|O1_F2_r1|O1_F2_r2|O1_F3_r1|O1_F3_r2|O2_F1_r1|O2_F1_r2|O2_F2_r1|O2_F2_r2|O2_F3_r1|O2_F3_r2]
+                '''
+                agent_list = [MetaBBO_Env(copy.deepcopy(agent)) for agent in self.agent_for_cp for _ in range(test_run * bs)]
+                env_list = [{'env': PBO_Env(copy.deepcopy(p), copy.deepcopy(optimizer)), 'seed': seed} for optimizer in self.l_optimizer_for_cp for p in problem for seed in seed_list]
+
+                # env_list = []
+                #
+                # # 拼字典
+                # for optimizer in self.t_optimizer_for_cp:
+                #     temp_list = [{'env': PBO_Env(copy.deepcopy(p), copy.deepcopy(optimizer)), 'seed': seed} for p in problem for seed in seed_list]
+                #     env_list = env_list + temp_list
+
+                # agent parallel
+
+                MetaBBO = ParallelEnv(agent_list, para_mode = 'ray', asynchronous = None, num_cpus = 1, num_gpus = 0)
+
+                meta_test_data = MetaBBO.customized_method('run_batch_episode', env_list)
+                pbar_info = {'Testing': "MetaBBO",
+                             }
+                pbar.set_postfix(pbar_info)
+                pbar.update(1)
+
+                # tradition
+                optimizer_list = [BBO_Env(copy.deepcopy(optimizer)) for optimizer in self.t_optimizer_for_cp for _ in range(test_run * bs)]
+                problem_list = [{'problem': copy.deepcopy(p)} for _ in range(len(self.t_optimizer_for_cp)) for p in problem for _ in range(test_run)]
+
+
+                # optimizer_list = []
+                # problem_list = []
+                # for optimizer in self.t_optimizer_for_cp:
+                #     for _ in range(test_run * bs):
+                #         optimizer_list.append(BBO_Env(copy.deepcopy(optimizer)))
+                #     problem_list.append({'problem': copy.deepcopy(p)} for p in problem for _ in range(test_run))
+                BBO = ParallelEnv(optimizer_list, para_mode = 'ray', asynchronous = None, num_cpus = 1, num_gpus = 0)
+                BBO.seed(seed_list * bs * len(self.agent_for_cp))
+                test_data = BBO.customized_method('run_batch_episode', problem_list)
+                pbar_info = {'Testing': "BBO",}
+                pbar.set_postfix(pbar_info)
+                pbar.update(1)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def rollout_batch(config):
     print(f'start rollout: {config.run_time}')
 
     if config.problem[-6:]=='-torch':
         config.problem=config.problem[:-6]
 
+    config.train_batch_size = 1
     train_set,_=construct_problem_set(config)
     # if 'L2L_Agent' in config.agent_for_rollout:
     #     pre_problem=config.problem
@@ -282,7 +530,8 @@ def rollout(config):
     n_checkpoint=config.n_checkpoint
 
     train_rollout_results = {'cost': {},
-                             'fes': {},
+                             'pr': {},
+                             'sr': {},
                              'return':{}}
 
     agent_for_rollout=config.agent_for_rollout
@@ -300,18 +549,22 @@ def rollout(config):
         optimizer_for_rollout.append(eval(optimizer_name)(copy.deepcopy(config)))
     for problem in train_set:
         train_rollout_results['cost'][problem.__str__()] = {}
-        train_rollout_results['fes'][problem.__str__()] = {}
+        train_rollout_results['pr'][problem.__str__()] = {}
+        train_rollout_results['sr'][problem.__str__()] = {}
         train_rollout_results['return'][problem.__str__()] = {}
         for agent_name in agent_for_rollout:
             train_rollout_results['cost'][problem.__str__()][agent_name] = []
-            train_rollout_results['fes'][problem.__str__()][agent_name] = []
+            train_rollout_results['pr'][problem.__str__()][agent_name] = []
+            train_rollout_results['sr'][problem.__str__()][agent_name] = []
             train_rollout_results['return'][problem.__str__()][agent_name] = []
             for checkpoint in range(0,n_checkpoint+1):
                 train_rollout_results['cost'][problem.__str__()][agent_name].append([])
-                train_rollout_results['fes'][problem.__str__()][agent_name].append([])
+                train_rollout_results['pr'][problem.__str__()][agent_name].append([])
+                train_rollout_results['sr'][problem.__str__()][agent_name].append([])
                 train_rollout_results['return'][problem.__str__()][agent_name].append([])
 
-    pbar_len = (len(agent_for_rollout)) * train_set.N * (n_checkpoint+1) * 5
+    pbar_len = (len(agent_for_rollout)) * train_set.N * (n_checkpoint+1)
+    seed_list = list(range(1, 5 + 1))
     with tqdm(range(pbar_len), desc='Rollouting') as pbar:
         for agent_name,optimizer in zip(agent_for_rollout,optimizer_for_rollout):
             return_list=[]  # n_checkpoint + 1
@@ -320,32 +573,29 @@ def rollout(config):
                 agent=load_agents[agent_name][checkpoint]
                 # return_sum=0
                 for i,problem in enumerate(train_set):
-                    for run in range(5):
-                        np.random.seed(run)
-                        # if type(agent).__name__ == 'L2L_Agent':
-                        #     env = PBO_Env(torch_train_set[i],optimizer)
-                        # else:
-                        env = PBO_Env(problem,optimizer)
+                    env_list = [PBO_Env(copy.deepcopy(problem), copy.deepcopy(optimizer)) for _ in range(5)]
+                    meta_rollout_data = agent.rollout_batch_episode(envs = env_list,
+                                                                seeds = seed_list,
+                                                                para_mode = 'dummy',
+                                                                asynchronous = None,
+                                                                num_cpus = 1,
+                                                                num_gpus = 0,
+                                                                )
+                    cost=meta_rollout_data['cost']
+                    pr=meta_rollout_data['pr']
+                    sr=meta_rollout_data['sr']
+                    R=meta_rollout_data['return']
 
-                        info = agent.rollout_episode(env)
-                        cost=info['cost']
-                        while len(cost)<51:
-                            cost.append(cost[-1])
-                        fes=info['fes']
-                        R=info['return']
+                    train_rollout_results['cost'][problem.__str__()][agent_name][checkpoint] = np.array(cost)
+                    train_rollout_results['pr'][problem.__str__()][agent_name][checkpoint] = np.array(pr)
+                    train_rollout_results['sr'][problem.__str__()][agent_name][checkpoint] = np.array(sr)
+                    train_rollout_results['return'][problem.__str__()][agent_name][checkpoint] = np.array(R)
 
-                        train_rollout_results['cost'][problem.__str__()][agent_name][checkpoint].append(cost)
-                        train_rollout_results['fes'][problem.__str__()][agent_name][checkpoint].append(fes)
-                        train_rollout_results['return'][problem.__str__()][agent_name][checkpoint].append(R)
-
-                        pbar_info = {'problem': problem.__str__(),
-                                    'agent': type(agent).__name__,
-                                    'checkpoint': checkpoint,
-                                    'run':run,
-                                    'cost': cost[-1],
-                                    'fes': fes, }
-                        pbar.set_postfix(pbar_info)
-                        pbar.update(1)
+                    pbar_info = {'problem': problem.__str__(),
+                                'agent': type(agent).__name__,
+                                'checkpoint': checkpoint,}
+                    pbar.set_postfix(pbar_info)
+                    pbar.update(1)
             
     log_dir=config.rollout_log_dir
     if not os.path.exists(log_dir):

@@ -2,7 +2,7 @@ import torch
 from trainer import Trainer
 from tester import *
 from config import get_config
-from logger import *
+from mmo_logger import *
 import shutil
 import warnings
 warnings.filterwarnings("ignore")
@@ -21,27 +21,27 @@ if __name__ == '__main__':
     if config.train:
         torch.set_grad_enabled(True)
         trainer = Trainer(config)
-        trainer.train()
+        trainer.train_new()
 
     # rollout
     if config.rollout:
         torch.set_grad_enabled(False)
-        rollout(config)
-        post_processing_rollout_statics(config.rollout_log_dir, Logger(config))
+        rollout_batch(config)
+        post_processing_rollout_statics(config.rollout_log_dir, MMO_Logger(config))
 
     # test
     if config.test:
         torch.set_grad_enabled(False)
         tester = Tester(config)
-        tester.test()
-        post_processing_test_statics(config.test_log_dir, Logger(config))
+        tester.test_1()
+        post_processing_test_statics(config.test_log_dir, MMO_Logger(config))
 
     # run_experiment
     if config.run_experiment:
         # train
         torch.set_grad_enabled(True)
         trainer = Trainer(config)
-        trainer.train()
+        trainer.train_new()
 
         # rollout
         agent_save_dir = config.agent_save_dir  # user defined agent_save_dir + agent name + run_time
@@ -59,11 +59,12 @@ if __name__ == '__main__':
         config.agent_for_rollout = [config.train_agent]
         config.optimizer_for_rollout = [config.train_optimizer]
         torch.set_grad_enabled(False)
-        rollout(config)
+        rollout_batch(config)
         shutil.rmtree(rollout_save_dir)  # remove rollout model files after rollout
-        post_processing_rollout_statics(config.rollout_log_dir, Logger(config))
+        post_processing_rollout_statics(config.rollout_log_dir, MMO_Logger(config))
 
         # test
+        config.optimizer = None
         if test_agent_load_dir is not None:
             config.agent_load_dir = test_agent_load_dir
         test_model_file = os.path.join(config.agent_load_dir, f'{config.train_agent}.pkl')
@@ -74,10 +75,10 @@ if __name__ == '__main__':
             config.l_optimizer_for_cp.append(config.train_optimizer)
         torch.set_grad_enabled(False)
         tester = Tester(config)
-        tester.test()
+        tester.test_1()
         if test_agent_load_dir is None:
             os.remove(test_model_file)  # remove test model files after test
-        post_processing_test_statics(config.test_log_dir, Logger(config))
+        post_processing_test_statics(config.test_log_dir, MMO_Logger(config))
 
     # mgd_test
     if config.mgd_test:

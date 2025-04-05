@@ -219,15 +219,17 @@ class RLEMMO_Agent(PPO_Agent):
 
     def train_episode(self, 
                       envs, 
+                      seeds: Optional[Union[int, List[int], np.ndarray]],
                       para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc'] = 'dummy',
                       asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
                       num_cpus: Optional[Union[int, None]] = 1,
                       num_gpus: int = 0,
-                      required_info = ['normalizer', 'gbest']):
+                      tb_logger = None,
+                      required_info = []):
         if self.device != 'cpu':
             num_gpus = max(num_gpus, 1)
         env = ParallelEnv(envs, para_mode, asynchronous, num_cpus, num_gpus)
-        
+        env.seed(seeds)
         memory = Memory()
 
         # params for training
@@ -339,7 +341,7 @@ class RLEMMO_Agent(PPO_Agent):
                 reward_reversed = memory.rewards[::-1]
                 # get next value
                 R = self.critic(self.actor(state, only_critic = True, sampling = True)).detach()
-
+                critic_output = R.clone()
                 for r in range(len(reward_reversed)):
                     R = R * gamma + reward_reversed[r]
                     Reward.append(R)
@@ -383,14 +385,24 @@ class RLEMMO_Agent(PPO_Agent):
                 # perform gradient descent
                 self.optimizer.step()
                 self.learning_time += 1
-                if self.learning_time >= (self.config.save_interval * self.cur_checkpoint):
+                if self.learning_time >= (self.config.save_interval * self.cur_checkpoint) and self.config.end_mode == "step":
                     save_class(self.config.agent_save_dir, 'checkpoint' + str(self.cur_checkpoint), self)
                     self.cur_checkpoint += 1
+
+                if not self.config.no_tb and self.learning_time % int(self.config.log_step) == 0:
+                    self.log_to_tb_train(tb_logger, self.learning_time,
+                                         grad_norms,
+                                         reinforce_loss, baseline_loss,
+                                         _R, Reward, memory.rewards,
+                                         critic_output, logprobs, entropy, approx_kl_divergence)
 
                 if self.learning_time >= self.config.max_learning_step:
                     memory.clear_memory()
                     _Rs = _R.detach().numpy().tolist()
                     return_info = {'return': _Rs, 'loss': np.mean(_loss),'learn_steps': self.learning_time, }
+                    env_cost = env.get_env_attr('cost')
+                    return_info['normalizer'] = env.get_env_attr('max_cost')
+                    return_info['gbest'] = env_cost[-1]
                     for key in required_info:
                         return_info[key] = env.get_env_attr(key)
                     env.close()
@@ -401,24 +413,13 @@ class RLEMMO_Agent(PPO_Agent):
         is_train_ended = self.learning_time >= self.config.max_learning_step
         _Rs = _R.detach().numpy().tolist()
         return_info = {'return': _Rs, 'loss': np.mean(_loss),'learn_steps': self.learning_time,}
+        env_cost = env.get_env_attr('cost')
+        return_info['normalizer'] = env.get_env_attr('max_cost')
+        return_info['gbest'] = env_cost[-1]
         for key in required_info:
             return_info[key] = env.get_env_attr(key)
         env.close()
         return is_train_ended, return_info
-
-    def cal_pr_sr(self, env):
-        raw_PR = torch.zeros((len(env), 5))
-        raw_SR = torch.zeros((len(env), 5))
-        for i in range(len(env)):
-            solu = env.envs[i].optimizer.particles['current_position'].copy()
-            accuracy = [1e-1, 1e-2, 1e-3, 1e-4, 1e-5]
-            total_pkn = env.envs[i].problem.nopt
-            for acc_level in range(5):
-                nfp, _ = env.envs[i].problem.how_many_goptima(solu, accuracy[acc_level])
-                raw_PR[i][acc_level] = torch.FloatTensor(nfp / total_pkn)
-                if nfp >= total_pkn:
-                    raw_SR[i][acc_level] = torch.FloatTensor(1)
-        return raw_PR, raw_SR
 
 
     def rollout_batch_episode(self,
@@ -432,8 +433,8 @@ class RLEMMO_Agent(PPO_Agent):
         if self.device != 'cpu':
             num_gpus = max(num_gpus, 1)
         env = ParallelEnv(envs, para_mode, asynchronous, num_cpus, num_gpus)
-        if seeds is not None:
-            env.seed(seeds)
+        
+        env.seed(seeds)
         state = env.reset()
         try:
             state = torch.FloatTensor(state).to(self.device)
@@ -441,16 +442,8 @@ class RLEMMO_Agent(PPO_Agent):
             pass
 
         R = torch.zeros(len(env))
-        gbest = torch.zeros(len(env))
-        raw_PRs = []
-        raw_SRs = []
-        generation = 0
         # sample trajectory
         while not env.all_done():
-            if generation % (env.envs[0].maxfes // env.envs[0].ps // 50) == 0:
-                raw_PR, raw_SR = self.cal_pr_sr(env)
-                raw_PRs.append(raw_PR)
-                raw_SRs.append(raw_SR)
 
             with torch.no_grad():
                 action, log_lh, entro_p = self.actor(state, sampling = False)
@@ -464,24 +457,15 @@ class RLEMMO_Agent(PPO_Agent):
                 state = torch.FloatTensor(state).to(self.device)
             except:
                 pass
-            generation += 1
-        for i in range(len(env)):
-            gbest[i] = torch.FloatTensor(env.envs[i].optimizer.particles['gbest_val'])
-        raw_PR, raw_SR = self.cal_pr_sr(env)
-        raw_PRs.append(raw_PR)
-        raw_SRs.append(raw_SR)
 
-        while len(raw_PRs) < 51:
-            raw_PRs.append(raw_PRs[-1])
-        while len(raw_SRs) < 51:
-            raw_SRs.append(raw_SRs[-1])
-        assert len(raw_PRs) == 51 and len(raw_SRs) == 51
-
-        raw_PRs = np.array(raw_PRs)
-        raw_SRs = np.array(raw_SRs)
+        _Rs = R.detach().numpy().tolist()
+        env_cost = env.get_env_attr('cost')
+        env_PRs = env.get_env_attr('PRs')
+        env_SRs = env.get_env_attr('SRs')
+        env_T1 = env.get_env_attr('T1')
 
 
-        results = {'return': R, 'gbest': gbest, 'pr_list': raw_PRs, 'sr_list': raw_SRs, 'pr': raw_PRs[-1], 'sr': raw_SRs[-1]}
+        results = {'return': _Rs, 'cost': env_cost, 'pr': env_PRs, 'sr': env_SRs, 'T1': env_T1}
         for key in required_info.keys():
             results[key] = env.get_env_attr(required_info[key])
         return results
