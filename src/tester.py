@@ -9,7 +9,7 @@ from tqdm import tqdm
 import os
 from environment.basic_environment import PBO_Env, BBO_Env, MetaBBO_Env
 from logger import Logger
-
+import torch
 
 from agent import (
     # DE_DDQN_Agent,
@@ -196,6 +196,12 @@ class Tester(object):
                 self.test_results['cost'][problem.__str__()][type(optimizer).__name__] = []  # 51 np.arrays
                 self.test_results['fes'][problem.__str__()][type(optimizer).__name__] = []  # 51 scalars
 
+        torch.manual_seed(self.config.seed)
+        torch.cuda.manual_seed(self.config.seed)
+        np.random.seed(self.config.seed)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+
     def test(self):
         # todo 测试并行方式有多种 得考虑下
 
@@ -363,7 +369,6 @@ class Tester(object):
                         for _ in range(test_run) # test_run
                     ]
 
-                    env_list = [PBO_Env(copy.deepcopy(problem), copy.deepcopy(optimizer)) for _ in range(test_run)]
                     meta_test_data = agent.rollout_batch_episode(envs = env_list,
                                                                  seeds = seed_list,
                                                                  para_mode = 'dummy',
@@ -449,41 +454,6 @@ class Tester(object):
                 pbar_info = {'Testing': "BBO",}
                 pbar.set_postfix(pbar_info)
                 pbar.update(1)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 def rollout(config):
     print(f'start rollout: {config.run_time}')

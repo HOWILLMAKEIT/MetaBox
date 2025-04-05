@@ -31,7 +31,7 @@ class UAV_Dataset_numpy(Dataset):
         test_set = []
         np.random.seed(seed)
         if mode == "standard":
-            pkl_file = "problem/datafiles/SOO/uav_terrain/Model56.pkl"
+            pkl_file = "problem/datafiles/SOO/uav_terrain/deal.pkl"
             with open(pkl_file, 'rb') as f:
                 model_data = pickle.load(f)
             func_id = range(56) # 56
