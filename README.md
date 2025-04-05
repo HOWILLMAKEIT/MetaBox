@@ -1,9 +1,19 @@
 # MetaBox: A Benchmark Platform for Meta-Black-Box Optimization with Reinforcement Learning
 
-[![ArXiv](https://img.shields.io/badge/arXiv-2310.08252-b31b1b.svg)](https://arxiv.org/abs/2310.08252)
+[![NeurIPS](https://img.shields.io/badge/NeurIPS-2023-b31b1b.svg)]([https://proceedings.neurips.cc/paper_files/paper/2023/hash/232eee8ef411a0a316efa298d7be3c2b-Abstract-Datasets_and_Benchmarks.html]) **MetaBox has been published at NeurIPS 2023！**
 
 MetaBox is the first benchmark platform expressly tailored for developing and evaluating MetaBBO-RL methods. MetaBox offers a flexible algorithmic template that allows users to effortlessly implement their unique designs within the platform. Moreover, it provides a broad spectrum of over 300 problem instances, collected from synthetic to realistic scenarios, and an extensive library of 19 baseline methods, including both traditional black-box optimizers and recent MetaBBO-RL methods. Besides, MetaBox introduces three standardized performance metrics, enabling a more thorough assessment of the methods.
 
+## 😁Contact Us
+👨‍💻👩‍💻We are a research team mainly focus on Meta-Black-Box-Optimization (MetaBBO), which assists automated algorithm design for Evolutionary Computation. 
+
+Here is our [homepage](https://gmc-drl.github.io/) and [github](https://github.com/GMC-DRL). **🥰🥰🥰Please feel free to contact us—any suggestions are welcome!**
+
+If you have any question or want to contact us：
+- 🌱Fork, Add, and Merge
+- ❓️Report an [issue](https://github.com/GMC-DRL/MetaBox/issues)
+- 📧Contact WenJie Qiu ([wukongqwj@gmail.com](mailto:wukongqwj@gmail.com))
+- 🚨**We warmly invite you to join our QQ group for further communication (Group Number: 952185139).**
 
 ## Installations
 
@@ -111,12 +121,21 @@ At present, three benchmark suites are integrated in `MetaBox`:
 |  RL-PSO  | 2021 | [Employing reinforcement learning to enhance particle swarm optimization methods](https://www.tandfonline.com/doi/full/10.1080/0305215X.2020.1867120) |
 |  RLEPSO  | 2022 | [RLEPSO:Reinforcement learning based Ensemble particle swarm optimizer✱](https://dl.acm.org/doi/abs/10.1145/3508546.3508599) |
 | RL-HPSDE | 2022 | [Differential evolution with hybrid parameters and mutation strategies based on reinforcement learning](https://www.sciencedirect.com/science/article/pii/S2210650222001602) |
+| GLEET    | 2024 | [Auto-configuring Exploration-Exploitation Tradeoff in Evolutionary Computation via Deep Reinforcement Learning](https://arxiv.org/abs/2404.08239) |
+| SYMBOL   | 2024 | [Symbol: Generating Flexible Black-Box Optimizers through Symbolic Equation Learning](https://iclr.cc/virtual/2024/poster/17539) |
+| RL-DAS   | 2024 | [Deep Reinforcement Learning for Dynamic Algorithm Selection: A Proof-of-Principle Study on Differential Evolution](https://ieeexplore.ieee.org/abstract/document/10496708/) |
 
 **Supported MetaBBO-SL optimizer**:
 
 |  Name  | Year |                        Related paper                         |
 | :----: | :--: | :----------------------------------------------------------: |
 | RNN-OI | 2017 | [Learning to learn without gradient descent by gradient descent](https://dl.acm.org/doi/10.5555/3305381.3305459) |
+
+**Supported MetaBBO-NE optimizer**:
+
+|  Name  | Year |                        Related paper                         |
+| :----: | :--: | :----------------------------------------------------------: |
+| LES      | 2023 | [Discovering evolution strategies via meta-black-box optimization](https://iclr.cc/virtual/2023/poster/11005) |
 
 **Supported classic optimizers**:
 

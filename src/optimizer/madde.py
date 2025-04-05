@@ -28,26 +28,26 @@ class MadDE(Basic_Optimizer):
         NA = archive.shape[0]
 
         count = 0
-        rb = np.random.randint(NB, size=NP)
+        rb = self.rng.randint(NB, size=NP)
         duplicate = np.where(rb == np.arange(NP))[0]
         while duplicate.shape[0] > 0 and count < 25:
-            rb[duplicate] = np.random.randint(NB, size=duplicate.shape[0])
+            rb[duplicate] = self.rng.randint(NB, size=duplicate.shape[0])
             duplicate = np.where(rb == np.arange(NP))[0]
             count += 1
 
         count = 0
-        r1 = np.random.randint(NP, size=NP)
+        r1 = self.rng.randint(NP, size=NP)
         duplicate = np.where((r1 == rb) + (r1 == np.arange(NP)))[0]
         while duplicate.shape[0] > 0 and count < 25:
-            r1[duplicate] = np.random.randint(NP, size=duplicate.shape[0])
+            r1[duplicate] = self.rng.randint(NP, size=duplicate.shape[0])
             duplicate = np.where((r1 == rb) + (r1 == np.arange(NP)))[0]
             count += 1
 
         count = 0
-        r2 = np.random.randint(NP + NA, size=NP)
+        r2 = self.rng.randint(NP + NA, size=NP)
         duplicate = np.where((r2 == rb) + (r2 == np.arange(NP)) + (r2 == r1))[0]
         while duplicate.shape[0] > 0 and count < 25:
-            r2[duplicate] = np.random.randint(NP + NA, size=duplicate.shape[0])
+            r2[duplicate] = self.rng.randint(NP + NA, size=duplicate.shape[0])
             duplicate = np.where((r2 == rb) + (r2 == np.arange(NP)) + (r2 == r1))[0]
             count += 1
 
@@ -66,18 +66,18 @@ class MadDE(Basic_Optimizer):
         NA = archive.shape[0]
 
         count = 0
-        r1 = np.random.randint(NP, size=NP)
+        r1 = self.rng.randint(NP, size=NP)
         duplicate = np.where((r1 == np.arange(NP)))[0]
         while duplicate.shape[0] > 0 and count < 25:
-            r1[duplicate] = np.random.randint(NP, size=duplicate.shape[0])
+            r1[duplicate] = self.rng.randint(NP, size=duplicate.shape[0])
             duplicate = np.where((r1 == np.arange(NP)))[0]
             count += 1
 
         count = 0
-        r2 = np.random.randint(NP + NA, size=NP)
+        r2 = self.rng.randint(NP + NA, size=NP)
         duplicate = np.where((r2 == np.arange(NP)) + (r2 == r1))[0]
         while duplicate.shape[0] > 0 and count < 25:
-            r2[duplicate] = np.random.randint(NP + NA, size=duplicate.shape[0])
+            r2[duplicate] = self.rng.randint(NP + NA, size=duplicate.shape[0])
             duplicate = np.where((r2 == np.arange(NP)) + (r2 == r1))[0]
             count += 1
 
@@ -95,26 +95,26 @@ class MadDE(Basic_Optimizer):
         NB = best.shape[0]
 
         count = 0
-        rb = np.random.randint(NB, size=NP)
+        rb = self.rng.randint(NB, size=NP)
         duplicate = np.where(rb == np.arange(NP))[0]
         while duplicate.shape[0] > 0 and count < 25:
-            rb[duplicate] = np.random.randint(NB, size=duplicate.shape[0])
+            rb[duplicate] = self.rng.randint(NB, size=duplicate.shape[0])
             duplicate = np.where(rb == np.arange(NP))[0]
             count += 1
 
         count = 0
-        r1 = np.random.randint(NP, size=NP)
+        r1 = self.rng.randint(NP, size=NP)
         duplicate = np.where((r1 == rb) + (r1 == np.arange(NP)))[0]
         while duplicate.shape[0] > 0 and count < 25:
-            r1[duplicate] = np.random.randint(NP, size=duplicate.shape[0])
+            r1[duplicate] = self.rng.randint(NP, size=duplicate.shape[0])
             duplicate = np.where((r1 == rb) + (r1 == np.arange(NP)))[0]
             count += 1
 
         count = 0
-        r2 = np.random.randint(NP, size=NP)
+        r2 = self.rng.randint(NP, size=NP)
         duplicate = np.where((r2 == rb) + (r2 == np.arange(NP)) + (r2 == r1))[0]
         while duplicate.shape[0] > 0 and count < 25:
-            r2[duplicate] = np.random.randint(NP, size=duplicate.shape[0])
+            r2[duplicate] = self.rng.randint(NP, size=duplicate.shape[0])
             duplicate = np.where((r2 == rb) + (r2 == np.arange(NP)) + (r2 == r1))[0]
             count += 1
 
@@ -127,8 +127,8 @@ class MadDE(Basic_Optimizer):
 
     def __binomial(self, x, v, Crs):
         NP, dim = x.shape
-        jrand = np.random.randint(dim, size=NP)
-        u = np.where(np.random.rand(NP, dim) < Crs, v, x)
+        jrand = self.rng.randint(dim, size=NP)
+        u = np.where(self.rng.rand(NP, dim) < Crs, v, x)
         u[np.arange(NP), jrand] = v[np.arange(NP), jrand]
         return u
 
@@ -142,7 +142,7 @@ class MadDE(Basic_Optimizer):
         if self.__archive.shape[0] < self.__NA:
             self.__archive = np.append(self.__archive, self.__population[old_id]).reshape(-1, self.__dim)
         else:
-            self.__archive[np.random.randint(self.__archive.shape[0])] = self.__population[old_id]
+            self.__archive[self.rng.randint(self.__archive.shape[0])] = self.__population[old_id]
 
     def __mean_wL(self, df, s):
         w = df / np.sum(df)
@@ -155,8 +155,8 @@ class MadDE(Basic_Optimizer):
     def __choose_F_Cr(self):
         # generate Cr can be done simutaneously
         gs = self.__NP
-        ind_r = np.random.randint(0, self.__MF.shape[0], size=gs)  # index
-        C_r = np.minimum(1, np.maximum(0, np.random.normal(loc=self.__MCr[ind_r], scale=0.1, size=gs)))
+        ind_r = self.rng.randint(0, self.__MF.shape[0], size=gs)  # index
+        C_r = np.minimum(1, np.maximum(0, self.rng.normal(loc=self.__MCr[ind_r], scale=0.1, size=gs)))
         # as for F, need to generate 1 by 1
         cauchy_locs = self.__MF[ind_r]
         F = stats.cauchy.rvs(loc=cauchy_locs, scale=0.1, size=gs)
@@ -179,7 +179,7 @@ class MadDE(Basic_Optimizer):
     def __init_population(self, problem):
         self.__NP = self.__Nmax
         self.__NA = int(2.3 * self.__NP)
-        self.__population = np.random.rand(self.__NP, self.__dim) * (problem.ub - problem.lb) + problem.lb
+        self.__population = self.rng.rand(self.__NP, self.__dim) * (problem.ub - problem.lb) + problem.lb
         if problem.optimum is None:
             self.__cost = problem.eval(self.__population)
         else:
@@ -200,7 +200,7 @@ class MadDE(Basic_Optimizer):
         q = 2 * self.__p - self.__p * self.__FEs / self.__MaxFEs
         Fa = 0.5 + 0.5 * self.__FEs / self.__MaxFEs
         Cr, F = self.__choose_F_Cr()
-        mu = np.random.choice(3, size=NP, p=self.__pm)
+        mu = self.rng.choice(3, size=NP, p=self.__pm)
         p1 = self.__population[mu == 0]
         p2 = self.__population[mu == 1]
         p3 = self.__population[mu == 2]
@@ -216,7 +216,7 @@ class MadDE(Basic_Optimizer):
         v[mu == 2] = v3
         v[v < problem.lb] = (v[v < problem.lb] + problem.lb) / 2
         v[v > problem.ub] = (v[v > problem.ub] + problem.ub) / 2
-        rvs = np.random.rand(NP)
+        rvs = self.rng.rand(NP)
         Crs = Cr.repeat(dim).reshape(NP, dim)
         u = np.zeros((NP, dim))
         if np.sum(rvs <= self.__PqBX) > 0:
@@ -224,7 +224,7 @@ class MadDE(Basic_Optimizer):
             if self.__archive.shape[0] > 0:
                 qbest = np.concatenate((self.__population, self.__archive), 0)[
                         :max(int(q * (NP + self.__archive.shape[0])), 2)]
-            cross_qbest = qbest[np.random.randint(qbest.shape[0], size=qu.shape[0])]
+            cross_qbest = qbest[self.rng.randint(qbest.shape[0], size=qu.shape[0])]
             qu = self.__binomial(cross_qbest, qu, Crs[rvs <= self.__PqBX])
             u[rvs <= self.__PqBX] = qu
         bu = v[rvs > self.__PqBX]

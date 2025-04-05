@@ -36,8 +36,8 @@ class GLEET_Optimizer(Learnable_Optimizer):
     # initialize GPSO environment
     def initialize_particles(self, problem):
         # randomly generate the position and velocity
-        rand_pos=np.random.uniform(low=problem.lb,high=problem.ub,size=(self.ps,self.dim))
-        rand_vel = np.random.uniform(low=-self.max_velocity,high=self.max_velocity,size=(self.ps,self.dim))
+        rand_pos=self.rng.uniform(low=problem.lb,high=problem.ub,size=(self.ps,self.dim))
+        rand_vel = self.rng.uniform(low=-self.max_velocity,high=self.max_velocity,size=(self.ps,self.dim))
         
         # get the initial cost
         c_cost = self.get_costs(rand_pos, problem) # ps
@@ -49,7 +49,6 @@ class GLEET_Optimizer(Learnable_Optimizer):
 
         # record
         self.max_cost=np.min(c_cost)
-
         # store all the information of the paraticles
         self.particles={'current_position': rand_pos.copy(), #  ps, dim
                         'c_cost': c_cost.copy(), #  ps
@@ -84,7 +83,7 @@ class GLEET_Optimizer(Learnable_Optimizer):
         if self.w_decay:
             self.w=0.9
         
-        self.max_dist=np.sqrt((problem.ub - problem.lb)**2*self.dim)
+        self.max_dist=np.sqrt(np.sum((problem.ub - problem.lb)**2))
 
         self.no_improve-=self.no_improve
         self.fes-=self.fes
@@ -117,7 +116,10 @@ class GLEET_Optimizer(Learnable_Optimizer):
     def get_costs(self,position, problem):
         ps=position.shape[0]
         self.fes+=ps
-        cost=problem.func(position)
+        if problem.optimum is None:
+            cost=problem.eval(position)
+        else:
+            cost=problem.eval(position) - problem.optimum
         return cost
     
     # feature encoding
@@ -194,8 +196,8 @@ class GLEET_Optimizer(Learnable_Optimizer):
             self.w-=0.5/(self.max_fes/self.ps)
 
         # generate two set of random val for pso velocity update
-        rand1=np.random.rand(self.ps,1)
-        rand2=np.random.rand(self.ps,1)
+        rand1=self.rng.rand(self.ps,1)
+        rand2=self.rng.rand(self.ps,1)
         
         
         action = action[:,None]
@@ -214,7 +216,7 @@ class GLEET_Optimizer(Learnable_Optimizer):
         elif self.boarder_method=="random":
             raw_position=self.particles['current_position']+new_velocity
             filter=raw_position.abs()>problem.ub
-            new_position=np.where(filter,np.random.uniform(low=problem.lb,high=problem.ub,size=(self.ps,self.dim)),raw_position)
+            new_position=np.where(filter,self.rng.uniform(low=problem.lb,high=problem.ub,size=(self.ps,self.dim)),raw_position)
         elif self.boarder_method=="periodic":
             raw_position=self.particles['current_position']+new_velocity
             new_position=problem.lb+((raw_position - problem.ub)%(2.*problem.ub))
@@ -256,7 +258,7 @@ class GLEET_Optimizer(Learnable_Optimizer):
             self.no_improve=0
         else:
             self.no_improve+=1
-        
+
         # update the stagnation steps for singal particle in the population
         filter_per_patience=new_particles['c_cost']<self.particles['c_cost']
         self.per_no_improve+=1
@@ -306,6 +308,6 @@ class GLEET_Optimizer(Learnable_Optimizer):
             else:
                 self.cost.append(self.particles['gbest_val'])
         
-        
-        return next_state, reward, is_end
+        info = {}
+        return next_state, reward, is_end, info
 

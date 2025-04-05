@@ -4,24 +4,29 @@ This file is used to train the agent.(for the kind of optimizer that is learnabl
 import pickle
 from tqdm import tqdm
 from environment.basic_environment import PBO_Env
+from VectorEnv import *
 from logger import Logger
+import copy
 from utils import *
 import numpy as np
 import os
 import matplotlib
 import matplotlib.pyplot as plt
+from basic_agent.utils import save_class
+from tensorboardX import SummaryWriter
 from agent import (
-    DE_DDQN_Agent,
-    DEDQN_Agent,
+    # DE_DDQN_Agent,
+    # DEDQN_Agent,
     RL_HPSDE_Agent,
-    LDE_Agent,
-    QLPSO_Agent,
-    RLEPSO_Agent,
-    RL_PSO_Agent,
+    # LDE_Agent,
+    # QLPSO_Agent,
+    # RLEPSO_Agent,
+    # RL_PSO_Agent,
     L2L_Agent,
-    GLEET_Agent,
-    RL_DAS_Agent,
+    # RL_DAS_Agent,
     LES_Agent,
+    # NRLPSO_Agent,
+    # Symbol_Agent,
 )
 from optimizer import (
     DE_DDQN_Optimizer,
@@ -35,6 +40,10 @@ from optimizer import (
     GLEET_Optimizer,
     RL_DAS_Optimizer,
     LES_Optimizer,
+    NRLPSO_Optimizer,
+    SYMBOL_Optimizer,
+    RLDE_AFL_Optimizer,
+    Surr_RLDE_Optimizer,
 
     DEAP_DE,
     JDE21,
@@ -49,6 +58,24 @@ from optimizer import (
     DEAP_CMAES,
     Random_search
 )
+
+from agents import (
+    GLEET_Agent,
+    DE_DDQN_Agent,
+    DEDQN_Agent,
+    QLPSO_Agent,
+    NRLPSO_Agent,
+    RL_HPSDE_Agent,
+    RLEPSO_Agent,
+    RLDE_AFL_Agent,
+    LDE_Agent,
+    RL_PSO_Agent,
+    SYMBOL_Agent,
+    RL_DAS_Agent,
+    SYMBOL_Agent,
+    Surr_RLDE_Agent
+)
+
 matplotlib.use('Agg')
 
 
@@ -135,7 +162,7 @@ class Trainer(object):
         plt.savefig(log_dir+f'pic/return.png')
         plt.close()
 
-    def train(self):
+    def train_new(self):
         print(f'start training: {self.config.run_time}')
         # agent_save_dir = self.config.agent_save_dir + self.agent.__class__.__name__ + '/' + self.config.run_time + '/'
         exceed_max_ls = False
@@ -146,22 +173,39 @@ class Trainer(object):
         learn_steps = []
         epoch_steps = []
         for problem in self.train_set:
-            cost_record[problem.__str__()] = []
-            normalizer_record[problem.__str__()] = []
+            for p in problem:
+                cost_record[p.__str__()] = []
+                normalizer_record[p.__str__()] = []
+
+        # todo Seed config
+        seed = 4
         while not exceed_max_ls:
             learn_step = 0
             self.train_set.shuffle()
             with tqdm(range(self.train_set.N), desc=f'Training {self.agent.__class__.__name__} Epoch {epoch}') as pbar:
                 for problem_id, problem in enumerate(self.train_set):
-                    env = PBO_Env(problem, self.optimizer)
-                    exceed_max_ls, pbar_info_train = self.agent.train_episode(env)  # pbar_info -> dict
-                    pbar.set_postfix(pbar_info_train)
-                    pbar.update(1)
-                    name = problem.__str__()
+
+                    # env = PBO_Env(problem, self.optimizer)
+                    env_list = [PBO_Env(p, copy.deepcopy(self.optimizer)) for p in problem]
+                    for env in env_list:
+                        env.optimizer.seed(seed)
+
+                    exceed_max_ls, pbar_info_train = self.agent.train_episode(envs = env_list)
+                    # exceed_max_ls, pbar_info_train = self.agent.train_episode(env)  # pbar_info -> dict
+                    postfix_str = (
+                        f"loss={pbar_info_train['loss']:.2e}, "
+                        f"learn_steps={pbar_info_train['learn_steps']}, "
+                        f"return={[f'{x:.2e}' for x in pbar_info_train['return']]}"
+                    )
+
+                    pbar.set_postfix_str(postfix_str)
+                    pbar.update(self.config.train_batch_size)
                     learn_step = pbar_info_train['learn_steps']
-                    cost_record[name].append(pbar_info_train['gbest'])
-                    normalizer_record[name].append(pbar_info_train['normalizer'])
-                    return_record.append(pbar_info_train['return'])
+                    for id, p in enumerate(problem):
+                        name = p.__str__()
+                        cost_record[name].append(pbar_info_train['gbest'][id])
+                        normalizer_record[name].append(pbar_info_train['normalizer'][id])
+                        return_record.append(np.mean(pbar_info_train['return']))
                     learn_steps.append(learn_step)
                     if exceed_max_ls:
                         break
@@ -171,16 +215,116 @@ class Trainer(object):
             #     os.makedirs(agent_save_dir)
             # with open(agent_save_dir+'agent_epoch'+str(epoch)+'.pkl', 'wb') as f:
             #     pickle.dump(self.agent, f, -1)
-            self.save_log(epoch_steps, learn_steps, cost_record, return_record, normalizer_record)
+
+            # todo add log logicality
+            # self.save_log(epoch_steps, learn_steps, cost_record, return_record, normalizer_record)
             epoch += 1
-            if epoch % self.config.draw_interval == 0:
-                self.draw_cost()
-                self.draw_average_cost()
-                self.draw_return()
+            # if epoch % self.config.draw_interval == 0:
+            #     self.draw_cost()
+            #     self.draw_average_cost()
+            #     self.draw_return()
         
-        self.draw_cost()
-        self.draw_average_cost()
-        self.draw_return()
+        # self.draw_cost()
+        # self.draw_average_cost()
+        # self.draw_return()
+
+    def train(self):
+        print(f'start training: {self.config.run_time}')
+        is_end = False
+        # todo tensorboard
+        tb_logger = None
+        if not self.config.no_tb:
+            tb_logger = SummaryWriter(os.path.join('output/tensorboard', self.config.run_time))
+            tb_logger.add_scalar("epoch-step", 0, 0)
+
+        epoch = 0
+        cost_record = {}
+        normalizer_record = {}
+        return_record = []
+        learn_steps = []
+        epoch_steps = []
+
+        # 这里先让train_set bs 一直为1先
+        for problem in self.train_set.data:
+            cost_record[problem.__str__()] = []
+            normalizer_record[problem.__str__] = []
+
+        # 然后根据train_mode 决定 bs
+        # single ---> 从train_set 里取出 bs 个问题训练
+        # multi ---> 每次从train_set 中取出 1 个问题，copy bs 个 训练
+        bs = self.config.train_batch_size
+        if self.config.train_mode == "single":
+            self.train_set.batch_size = 1
+        elif self.config.train_mode == "multi":
+            self.train_set.batch_size = bs
+
+        epoch_seed = self.config.epoch_seed
+        id_seed = self.config.id_seed
+        seed = self.config.seed
+
+        while not is_end:
+            learn_step = 0
+            self.train_set.shuffle()
+            with tqdm(range(self.train_set.N), desc = f'Training {self.agent.__class__.__name__} Epoch {epoch}') as pbar:
+                for problem_id, problem in enumerate(self.train_set):
+                    # set seed
+                    seed_list = (epoch * epoch_seed + id_seed * (np.arange(bs) + bs * problem_id) + seed).tolist()
+
+                    # 这里前面已经判断好 train_mode，这里只需要根据 train_mode 构造env就行
+                    if self.config.train_mode == "single":
+                        env_list = [PBO_Env(copy.deepcopy(problem), copy.deepcopy(self.optimizer)) for _ in range(bs)] # bs
+                    elif self.config.train_mode == "multi":
+                        env_list = [PBO_Env(copy.deepcopy(p), copy.deepcopy(self.optimizer)) for p in problem] # bs
+
+                    # todo config add para
+                    exceed_max_ls, train_meta_data = self.agent.train_episode(envs = env_list,
+                                                                              seeds = seed_list,
+                                                                              tb_logger = tb_logger,
+                                                                              para_mode = "dummy",
+                                                                              asynchronous = None,
+                                                                              num_cpus = 1,
+                                                                              num_gpus = 0,
+                                                                              )
+                    # exceed_max_ls, pbar_info_train = self.agent.train_episode(env)  # pbar_info -> dict
+                    postfix_str = (
+                        f"loss={train_meta_data['loss']:.2e}, "
+                        f"learn_steps={train_meta_data['learn_steps']}, "
+                        f"return={[f'{x:.2e}' for x in train_meta_data['return']]}"
+                    )
+
+                    pbar.set_postfix_str(postfix_str)
+                    pbar.update(self.train_set.batch_size)
+                    learn_step = train_meta_data['learn_steps']
+                    # for id, p in enumerate(problem):
+                    #     name = p.__str__()
+                    #     cost_record[name].append(train_meta_data['gbest'][id])
+                    #     normalizer_record[name].append(train_meta_data['normalizer'][id])
+                    #     return_record.append(np.mean(train_meta_data['return']))
+                    # learn_steps.append(learn_step)
+
+                    if self.config.end_mode == "step" and exceed_max_ls:
+                        is_end = True
+                        break
+                self.agent.train_epoch()
+            epoch_steps.append(learn_step)
+            epoch += 1
+
+            if not self.config.no_tb:
+                tb_logger.add_scalar("epoch-step", learn_step, epoch)
+
+            # todo save
+            # save_interval = 5
+            # checkpoint0 0
+            # checkpoint1 5
+            if epoch >= (self.config.save_interval * self.agent.cur_checkpoint) and self.config.end_mode == "epoch":
+                save_class(self.config.agent_save_dir, 'checkpoint' + str(self.agent.cur_checkpoint), self.agent)
+                # 记录 checkpoint 和 total_step
+                with open(self.config.agent_save_dir + "/checkpoint_log.txt", "a") as f:
+                    f.write(f"Checkpoint {self.agent.cur_checkpoint}: {learn_step}\n")
+
+                self.agent.cur_checkpoint += 1
+            if self.config.end_mode == "epoch" and epoch >= self.config.max_epoch:
+                is_end = True
 
 
 # class Trainer_l2l(object):

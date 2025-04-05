@@ -20,8 +20,8 @@ class SAHLPSO(Basic_Optimizer):
 
     def run_episode(self,problem):
         G, fes, NP, H_cr, H_ls = 1, 0, self.NP, self.H_cr, self.H_ls
-        V = -self.v_max + 2 * self.v_max * np.random.rand(NP, self.dim)
-        X = self.lb + (self.ub - self.lb) * np.random.rand(NP, self.dim)
+        V = -self.v_max + 2 * self.v_max * self.rng.rand(NP, self.dim)
+        X = self.lb + (self.ub - self.lb) * self.rng.rand(NP, self.dim)
         if problem.optimum is None:
             f_X = problem.eval(X)
         else:
@@ -44,20 +44,20 @@ class SAHLPSO(Basic_Optimizer):
         nf_ls = np.zeros(H_ls)
         ns_ls = np.zeros(H_ls)
         remain_index = np.array(range(NP))
-        selected_indiv_index = np.random.permutation(remain_index)[:int(self.Lg * NP)]
+        selected_indiv_index = self.rng.permutation(remain_index)[:int(self.Lg * NP)]
         while fes < self.maxFEs and NP >= 4:
 
             for i in remain_index:
                 cr, ls = 0, 0 # start generate exemplar
                 cr_index, ls_index = 0,0
                 if (G%self.LP) or (G==1):
-                    cr_index = np.random.choice(range(H_cr),p=P_cr)
+                    cr_index = self.rng.choice(range(H_cr),p=P_cr)
                     cr = self.M_cr[cr_index]
-                    ls_index = np.random.choice(range(H_ls),p=P_ls)
+                    ls_index = self.rng.choice(range(H_ls),p=P_ls)
                     ls = self.M_ls[ls_index]
                 #exploration indiv
                 if i in selected_indiv_index:
-                    mn = np.random.choice(remain_index,2)
+                    mn = self.rng.choice(remain_index,2)
                     m,n=mn[0],mn[1]
                     o = pBest[m] if f_X[m] < f_X[n] else pBest[n]
                     if (G-ls) >= 0:
@@ -66,21 +66,21 @@ class SAHLPSO(Basic_Optimizer):
                         history_pbest = A[i][-1]
                 else:
                     best_p_index = np.argsort(pBest_cost)[:max(1, int(self.p *NP))]
-                    o = pBest[np.random.choice(best_p_index)]
+                    o = pBest[self.rng.choice(best_p_index)]
                     history_pbest = pBest[i]
                 # execute crossover in each dimensional
-                mask_crossover = np.random.rand(self.dim) < cr
+                mask_crossover = self.rng.rand(self.dim) < cr
                 e = history_pbest
                 e[mask_crossover] = o[mask_crossover]
                 if i not in selected_indiv_index:
-                    rnd1 = np.random.rand(self.dim)
+                    rnd1 = self.rng.rand(self.dim)
                     e =  rnd1 * e + (1 - rnd1) * gBest # end generate exemplar
 
                 # update cr and ls selection times
                 nf_cr[cr_index] += 1
                 nf_ls[ls_index] += 1
                 # generate velocity V and BC(V)
-                V[i] = w[i] * V[i] + self.c1 * np.random.rand(self.dim) * (e - X[i])
+                V[i] = w[i] * V[i] + self.c1 * self.rng.rand(self.dim) * (e - X[i])
                 V[i] = clipping(V[i], -self.v_max, self.v_max)
                 # generate new X and BC(X)
                 X[i] = clipping(X[i] + V[i], self.lb, self.ub)
@@ -99,11 +99,11 @@ class SAHLPSO(Basic_Optimizer):
                     ns_cr[cr_index] += 1
                     ns_ls[ls_index] += 1
                 else:
-                    rnd2 = np.random.rand()
+                    rnd2 = self.rng.rand()
                     if rnd2 < 0.5:
-                        w[i] = 0.7 + 0.1 *np.random.standard_cauchy()
+                        w[i] = 0.7 + 0.1 *self.rng.standard_cauchy()
                     else:
-                        w[i] = 0.3 + 0.1 * np.random.standard_cauchy()
+                        w[i] = 0.3 + 0.1 * self.rng.standard_cauchy()
                     w[i] = np.clip(w[i], 0.2,0.9)
                 A[i].append(pBest[i])
 

@@ -67,11 +67,11 @@ class QLPSO_Optimizer(Learnable_Optimizer):
                 nbest_cost = self.__cost[(i+j) % self.__population.shape[0]]
                 nbest = self.__population[(i+j) % self.__population.shape[0]]
         return self.__W * v \
-               + self.__C * np.random.rand() * (nbest - x) \
-               + self.__C * np.random.rand() * (self.__pbest[i] - x)
+               + self.__C * self.rng.rand() * (nbest - x) \
+               + self.__C * self.rng.rand() * (self.__pbest[i] - x)
 
     def init_population(self, problem):
-        self.__population = np.random.rand(self.__NP, self.__dim) * (problem.ub - problem.lb) + problem.lb  # [lb, ub]
+        self.__population = self.rng.rand(self.__NP, self.__dim) * (problem.ub - problem.lb) + problem.lb  # [lb, ub]
         self.__pbest = self.__population.copy()
         self.__velocity = np.zeros(shape=(self.__NP, self.__dim))
         self.__diversity = self.__cal_diversity()
@@ -83,7 +83,7 @@ class QLPSO_Optimizer(Learnable_Optimizer):
         self.fes = self.__NP
         self.log_index = 1
         self.cost = [self.__gbest_cost]
-        self.__state = np.random.randint(low=0, high=4, size=self.__NP)
+        self.__state = self.rng.randint(low=0, high=4, size=self.__NP)
         return self.__state[self.__solution_pointer]
 
     def update(self, action, problem):
@@ -123,4 +123,6 @@ class QLPSO_Optimizer(Learnable_Optimizer):
                 self.cost[-1] = self.__gbest_cost
             else:
                 self.cost.append(self.__gbest_cost)
-        return self.__state[self.__solution_pointer], reward, is_done
+                
+        info = {}
+        return self.__state[self.__solution_pointer], reward, is_done , info

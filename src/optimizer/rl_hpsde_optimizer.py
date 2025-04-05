@@ -5,7 +5,7 @@ from optimizer.operators import clipping, binomial, cur_to_rand_1, cur_to_best_1
 
 
 class Population:
-    def __init__(self, config):
+    def __init__(self, config, rng):
         self.Nmax = config.NP_max                      # the upperbound of population size
         self.Nmin = config.NP_min                      # the lowerbound of population size
         self.NP = self.Nmax                            # the population size
@@ -21,12 +21,14 @@ class Population:
         self.k = 0                                     # the index of updating element in MF and MCr
 
         self.init_best = None
+        
+        self.rng = rng # random state
 
     # generate an initialized population with size(default self population size)
     def initialize_group(self, lb, ub, size=-1):
         if size < 0:
             size = self.NP
-        self.group = np.random.rand(size, self.dim) * (ub - lb) + lb
+        self.group = self.rng.rand(size, self.dim) * (ub - lb) + lb
 
     # initialize cost
     def initialize_costs(self, problem):
@@ -52,8 +54,8 @@ class Population:
     def choose_F_Cr(self, F_dist):
         # generate Cr
         gs = self.NP
-        ind_r = np.random.randint(0, self.MF.shape[0], size=gs)  # index
-        Cr = np.minimum(1, np.maximum(0, np.random.normal(loc=self.MCr[ind_r], scale=0.1, size=gs)))  # 0~1
+        ind_r = self.rng.randint(0, self.MF.shape[0], size=gs)  # index
+        Cr = np.minimum(1, np.maximum(0, self.rng.normal(loc=self.MCr[ind_r], scale=0.1, size=gs)))  # 0~1
         # generate F
         locs = self.MF[ind_r]
         F = None
@@ -121,26 +123,28 @@ class RL_HPSDE_Optimizer(Learnable_Optimizer):
         self.log_interval = config.log_interval
 
     def init_population(self, problem):
-        self.__population = Population(self.__config)
+        self.__population = Population(self.__config, self.rng)
         self.__population.initialize_group(lb=problem.lb, ub=problem.ub)
         self.__population.initialize_costs(problem)
         self.__population.sort(self.__population.NP)
         self.fes = self.__population.NP
         self.log_index = 1
         self.cost = [self.__population.gbest]
+
+        
         return self.__get_state(problem)
 
     def __simple_random_walk(self, lb, ub):
         samples = np.zeros((self.__rw_steps + 1, self.__dim))
-        samples[0] = lb + np.random.random(self.__dim) * (ub - lb)
+        samples[0] = lb + self.rng.random(self.__dim) * (ub - lb)
         for step in range(1, self.__rw_steps + 1):
-            samples[step] = samples[step - 1] + np.random.uniform(low=-self.__step_size,
+            samples[step] = samples[step - 1] + self.rng.uniform(low=-self.__step_size,
                                                                   high=self.__step_size,
                                                                   size=self.__dim)
             while True:
                 outter_index = np.where(np.any([samples[step] > ub, samples[step] < lb], axis=0))[0]
                 if outter_index.shape[0] > 0:
-                    samples[step][outter_index] = samples[step - 1][outter_index] + np.random.uniform(low=-self.__step_size,
+                    samples[step][outter_index] = samples[step - 1][outter_index] + self.rng.uniform(low=-self.__step_size,
                                                                                                       high=self.__step_size,
                                                                                                       size=outter_index.shape[0])
                 else:
@@ -149,18 +153,18 @@ class RL_HPSDE_Optimizer(Learnable_Optimizer):
 
     def __progressive_random_walk(self, lb, ub):
         samples = np.zeros((self.__rw_steps + 1, self.__dim))
-        startingZone = np.random.rand(self.__dim)
+        startingZone = self.rng.rand(self.__dim)
         startingZone[startingZone < 0.5] = -1
         startingZone[startingZone >= 0.5] = 1
-        r = np.random.rand(self.__dim) * (ub - lb) / 2
+        r = self.rng.rand(self.__dim) * (ub - lb) / 2
         samples[0] = (ub + lb) / 2 + startingZone * r
-        rD = np.random.choice(self.__dim, 1)
+        rD = self.rng.choice(self.__dim, 1)
         if startingZone[rD] == -1:
             samples[0][rD] = lb
         else:
             samples[0][rD] = ub
         for step in range(1, self.__rw_steps + 1):
-            samples[step] = samples[step - 1] + np.random.rand(self.__dim) * (-self.__step_size) * startingZone
+            samples[step] = samples[step - 1] + self.rng.rand(self.__dim) * (-self.__step_size) * startingZone
             cro_ub = samples[step] > ub
             cro_lb = samples[step] < lb
             samples[step][cro_ub] = 2 * ub - samples[step][cro_ub]
@@ -234,22 +238,22 @@ class RL_HPSDE_Optimizer(Learnable_Optimizer):
         # Mu
         if action == 0:
             Cr, F = population.choose_F_Cr("cauchy")
-            v = cur_to_rand_1(population.group, F)
+            v = cur_to_rand_1(population.group, F, rng=self.rng)
         elif action == 1:
             Cr, F = population.choose_F_Cr("cauchy")
-            v = cur_to_best_1(population.group, population.gbest_solution, F)
+            v = cur_to_best_1(population.group, population.gbest_solution, F, rng=self.rng)
         elif action == 2:
             Cr, F = population.choose_F_Cr("levy")
-            v = cur_to_rand_1(population.group, F)
+            v = cur_to_rand_1(population.group, F, rng=self.rng)
         elif action == 3:
             Cr, F = population.choose_F_Cr("levy")
-            v = cur_to_best_1(population.group, population.gbest_solution, F)
+            v = cur_to_best_1(population.group, population.gbest_solution, F, rng=self.rng)
         else:
             raise ValueError(f'action error: {action}')
         # BC
         v = clipping(v, problem.lb, problem.ub)
         # Cr
-        u = binomial(population.group, v, Cr)
+        u = binomial(population.group, v, Cr,self.rng)
         # Selection
         if problem.optimum is None:
             ncost = problem.eval(u)
@@ -284,4 +288,7 @@ class RL_HPSDE_Optimizer(Learnable_Optimizer):
                 self.cost[-1] = population.gbest
             else:
                 self.cost.append(population.gbest)
-        return self.__get_state(problem), reward, done
+                
+        info = {}        
+        
+        return self.__get_state(problem), reward, done , info

@@ -44,8 +44,8 @@ class NL_SHADE_LBC(Basic_Optimizer):
     # Binomial crossover
     def __Binomial(self, x, v, cr):
         NP, dim = x.shape
-        jrand = np.random.randint(dim, size=NP)
-        u = np.where(np.random.rand(NP, dim) < cr.repeat(dim).reshape(NP, dim), v, x)
+        jrand = self.rng.randint(dim, size=NP)
+        u = np.where(self.rng.rand(NP, dim) < cr.repeat(dim).reshape(NP, dim), v, x)
         u[np.arange(NP), jrand] = v[np.arange(NP), jrand]
         return u
 
@@ -54,9 +54,9 @@ class NL_SHADE_LBC(Basic_Optimizer):
         NP, dim = x.shape
         Crs = cr.repeat(dim).reshape(NP, dim)
         u = copy.deepcopy(x)
-        L = np.random.randint(dim, size=(NP, 1)).repeat(dim).reshape(NP, dim)
+        L = self.rng.randint(dim, size=(NP, 1)).repeat(dim).reshape(NP, dim)
         R = np.ones(NP) * dim
-        rvs = np.random.rand(NP, dim)
+        rvs = self.rng.rand(NP, dim)
         i = np.arange(dim).repeat(NP).reshape(dim, NP).transpose()
         rvs[rvs > Crs] = np.inf
         rvs[i <= L] = -np.inf
@@ -111,8 +111,8 @@ class NL_SHADE_LBC(Basic_Optimizer):
     def __choose_F_Cr(self):
         # generate Cr can be done simutaneously
         gs = self.__NP
-        ind_r = np.random.randint(0, self.__H, size=gs)  # index
-        C_r = np.minimum(1, np.maximum(0, np.random.normal(loc=self.__MCr[ind_r], scale=0.1, size=gs)))
+        ind_r = self.rng.randint(0, self.__H, size=gs)  # index
+        C_r = np.minimum(1, np.maximum(0, self.rng.normal(loc=self.__MCr[ind_r], scale=0.1, size=gs)))
         # as for F, need to generate 1 by 1
         cauchy_locs = self.__MF[ind_r]
         F = stats.cauchy.rvs(loc=cauchy_locs, scale=0.1, size=gs)
@@ -130,7 +130,7 @@ class NL_SHADE_LBC(Basic_Optimizer):
         if self.__archive.shape[0] < self.__NA:
             self.__archive = np.append(self.__archive, self.__population[old_id]).reshape(-1, self.__dim)
         else:
-            self.__archive[np.random.randint(self.__archive.shape[0])] = self.__population[old_id]
+            self.__archive[self.rng.randint(self.__archive.shape[0])] = self.__population[old_id]
 
     def __NLPSR(self):
         self.__sort()
@@ -148,7 +148,7 @@ class NL_SHADE_LBC(Basic_Optimizer):
 
     def __init_population(self, problem):
         self.__NP = 23 * self.__dim
-        self.__population = np.random.rand(self.__NP, self.__dim) * (problem.ub - problem.lb) + problem.lb
+        self.__population = self.rng.rand(self.__NP, self.__dim) * (problem.ub - problem.lb) + problem.lb
         self.__cost = self.__evaluate(problem, self.__population)
         self.__FEs = self.__NP
         self.__archive = np.array([])
@@ -182,23 +182,23 @@ class NL_SHADE_LBC(Basic_Optimizer):
         na = 0  # the number of archive usage
         # randomly select a crossover method for the population
         pb_upper = int(np.maximum(2, NP * self.__pb))  # the range of pbest selection
-        pbs = np.random.randint(pb_upper, size=NP)  # select pbest for all individual
+        pbs = self.rng.randint(pb_upper, size=NP)  # select pbest for all individual
         count = 0
         duplicate = np.where(pbs == np.arange(NP))[0]
         while duplicate.shape[0] > 0 and count < 1:
-            pbs[duplicate] = np.random.randint(NP, size=duplicate.shape[0])
+            pbs[duplicate] = self.rng.randint(NP, size=duplicate.shape[0])
             duplicate = np.where(pbs == np.arange(NP))[0]
             count += 1
         xpb = self.__population[pbs]
-        r1 = np.random.randint(NP, size=NP)
+        r1 = self.rng.randint(NP, size=NP)
         count = 0
         duplicate = np.where((r1 == np.arange(NP)) + (r1 == pbs))[0]
         while duplicate.shape[0] > 0 and count < 25:
-            r1[duplicate] = np.random.randint(NP, size=duplicate.shape[0])
+            r1[duplicate] = self.rng.randint(NP, size=duplicate.shape[0])
             duplicate = np.where((r1 == np.arange(NP)) + (r1 == pbs))[0]
             count += 1
         x1 = self.__population[r1]
-        rvs = np.random.rand(NP)
+        rvs = self.rng.rand(NP)
         r2_pop = np.where(rvs >= self.__pa)[0]  # the indices of mutation with population
         r2_arc = np.where(rvs < self.__pa)[0]  # the indices of mutation with archive
         use_arc = np.zeros(NP, dtype=bool)  # a record for archive usage, used in parameter updating
@@ -206,11 +206,11 @@ class NL_SHADE_LBC(Basic_Optimizer):
         if self.__archive.shape[0] < 25:  # if the archive is empty, indices above are canceled
             r2_pop = np.arange(NP)
             r2_arc = np.array([], dtype=np.int32)
-        r2 = np.random.choice(np.arange(NP), size=r2_pop.shape[0], p=pr)
+        r2 = self.rng.choice(np.arange(NP), size=r2_pop.shape[0], p=pr)
         count = 0
         duplicate = np.where((r2 == r2_pop) + (r2 == pbs[r2_pop]) + (r2 == r1[r2_pop]))[0]
         while duplicate.shape[0] > 0 and count < 25:
-            r2[duplicate] = np.random.choice(np.arange(NP), size=duplicate.shape[0], p=pr)
+            r2[duplicate] = self.rng.choice(np.arange(NP), size=duplicate.shape[0], p=pr)
             duplicate = np.where((r2 == r2_pop) + (r2 == pbs[r2_pop]) + (r2 == r1[r2_pop]))[0]
             count += 1
         x2 = np.zeros((NP, self.__dim))
@@ -219,7 +219,7 @@ class NL_SHADE_LBC(Basic_Optimizer):
             x2[r2_pop] = self.__population[r2]
         if r2_arc.shape[0] > 0:
             x2[r2_arc] = self.__archive[
-                np.random.randint(np.minimum(self.__archive.shape[0], self.__NA), size=r2_arc.shape[0])]
+                self.rng.randint(np.minimum(self.__archive.shape[0], self.__NA), size=r2_arc.shape[0])]
         Fs = F.repeat(self.__dim).reshape(NP, self.__dim)  # adjust shape for batch processing
         vs = self.__population + Fs * (xpb - self.__population) + Fs * (x1 - x2)
         # crossover rate for Binomial crossover has a different way for calculating
@@ -231,11 +231,11 @@ class NL_SHADE_LBC(Basic_Optimizer):
         usB = self.__Binomial(self.__population, vs, Crb)
         usE = self.__Exponential(self.__population, vs, Cr)
         us = usB
-        CrossExponential = np.random.rand(NP) > 0.5
+        CrossExponential = self.rng.rand(NP) > 0.5
         CrossExponential = CrossExponential.repeat(self.__dim).reshape(NP, self.__dim)
         us[CrossExponential] = usE[CrossExponential]
         # reinitialize values exceed valid range
-        # us = us * ((-100 <= us) * (us <= 100)) + ((us > 100) + (us < -100)) * (np.random.rand(NP, dim) * 200 - 100)
+        # us = us * ((-100 <= us) * (us <= 100)) + ((us > 100) + (us < -100)) * (self.rng.rand(NP, dim) * 200 - 100)
         us[us < problem.lb] = (us[us < problem.lb] + problem.lb) / 2
         us[us > problem.ub] = (us[us > problem.ub] + problem.ub) / 2
 

@@ -5,7 +5,9 @@ import time
 def get_config(args=None):
     parser = argparse.ArgumentParser()
     # Common config
-    parser.add_argument('--problem', default='bbob', choices=['bbob', 'bbob-noisy', 'bbob-torch', 'bbob-noisy-torch', 'protein', 'protein-torch'],
+    parser.add_argument('--problem', default = 'bbob', choices = ['bbob', 'bbob-torch', 'bbob-noisy', 'bbob-noisy-torch',
+                                                                                'bbob-surrogate', 'Symbolic_bench','Symbolic_bench-torch',
+                                                                                'lsgo-torch', 'protein', 'protein-torch', 'uav', 'uav-torch'],
                         help='specify the problem suite')
     parser.add_argument('--dim', type=int, default=10, help='dimension of search space')
     parser.add_argument('--upperbound', type=float, default=5, help='upperbound of search space')
@@ -70,8 +72,27 @@ def get_config(args=None):
     parser.add_argument('--pre_train_rollout', type=str, help='path of pre-train models rollout result .pkl file')
     parser.add_argument('--scratch_rollout', type=str, help='path of scratch models rollout result .pkl file')
 
+    # todo add new config
+
+    parser.add_argument('--max_epoch', type = int, default = 100)
+    parser.add_argument('--seed', type = int, default = 3849)
+    parser.add_argument('--epoch_seed', type = int, default = 100)
+    parser.add_argument('--id_seed', type = int, default = 5)
+    parser.add_argument('--train_mode', type = str, choices = ['single', 'multi'])
+    parser.add_argument('--end_mode', type = str, choices = ['step', 'epoch'])
+
+    parser.add_argument('--test_run', type = int, default = 51)
+
+    parser.add_argument('--no_tb', action='store_true', default = False, help = 'disable tensorboard logging')
+    parser.add_argument('--log_step', type = int, default = 50, help = 'log every log_step steps')
+
+
     config = parser.parse_args(args)
-    config.maxFEs = 2000 * config.dim
+
+
+
+
+    config.maxFEs = 2500
     # for bo, maxFEs is relatively smaller due to time limit
     config.bo_maxFEs = 10 * config.dim
     config.n_logpoint = 50
@@ -98,7 +119,10 @@ def get_config(args=None):
     if config.train or config.run_experiment:
         config.agent_save_dir = config.agent_save_dir + config.train_agent + '/' + config.run_time + '/'
 
-    config.save_interval = config.max_learning_step // config.n_checkpoint
+    if config.end_mode == "step":
+        config.save_interval = config.max_learning_step // config.n_checkpoint
+    elif config.end_mode == "epoch":
+        config.save_interval = config.max_epoch // config.n_checkpoint
     config.log_interval = config.maxFEs // config.n_logpoint
 
     if 'DEAP_CMAES' not in config.t_optimizer_for_cp:

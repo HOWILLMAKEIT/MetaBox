@@ -12,7 +12,11 @@ class RL_DAS_Optimizer(Learnable_Optimizer):
     def __init__(self, config):
         super().__init__(config)
         self.MaxFEs = config.maxFEs
-        self.period = 2500
+        # self.period = 2500
+        if config.problem in['protein','protein-torch']:
+            self.period = 100
+        else:
+            self.period =2500
         self.max_step = self.MaxFEs // self.period
         self.sample_times = 2
         self.n_dim_obs = 6
@@ -53,7 +57,7 @@ class RL_DAS_Optimizer(Learnable_Optimizer):
         min_len = 1e9
         sample_size = self.population.NP
         for i in range(self.sample_times):
-            sample, _ = self.optimizers[np.random.randint(len(self.optimizers))].step(copy.deepcopy(self.population),
+            sample, _ = self.optimizers[self.rng.randint(len(self.optimizers))].step(copy.deepcopy(self.population),
                                                                                          self.problem,
                                                                                          self.FEs,
                                                                                          self.FEs + sample_size,
@@ -71,13 +75,13 @@ class RL_DAS_Optimizer(Learnable_Optimizer):
 
     # observed env state
     def observe(self, problem):
-        
+
         samples, sample_costs = self.local_sample()
         feature = self.population.get_feature(self.problem,
                                             sample_costs,
                                             self.cost_scale_factor,
                                             self.FEs / self.MaxFEs)
-        
+
         # =======================================================================
         best_move = np.zeros((len(self.optimizers), self.dim)).tolist()
         worst_move = np.zeros((len(self.optimizers), self.dim)).tolist()
@@ -89,10 +93,10 @@ class RL_DAS_Optimizer(Learnable_Optimizer):
                 best_move[i] = np.mean(self.best_history[i], 0).tolist()
                 worst_move[i] = np.mean(self.worst_history[i], 0).tolist()
         move.insert(0, feature)
-        return move
+        return np.array(move, dtype = object)
 
     def seed(self, seed=None):
-        np.random.seed(seed)
+        self.rng.seed(seed)
 
     def update(self, action, problem):
         warnings.filterwarnings("ignore")
@@ -129,7 +133,6 @@ class RL_DAS_Optimizer(Learnable_Optimizer):
         if self.FEs >= self.log_index * self.log_interval:
             self.log_index += 1
             self.cost.append(self.population.gbest)
-        
         if self.done:
             if len(self.cost) >= self.__config.n_logpoint + 1:
                 self.cost[-1] = self.population.gbest

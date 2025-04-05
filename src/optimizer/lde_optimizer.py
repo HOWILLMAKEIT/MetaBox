@@ -41,10 +41,10 @@ class LDE_Optimizer(Learnable_Optimizer):
         batch_size, pop_size, problem_size = pop.shape
         
         # Crossover
-        r = np.random.uniform(size=(batch_size, pop_size, problem_size))
+        r = self.rng.uniform(size=(batch_size, pop_size, problem_size))
         r[np.arange(batch_size)[:, None].repeat(pop_size, axis=1),
           np.arange(pop_size)[None, :].repeat(batch_size, axis=0),
-          np.random.randint(low=0, high=problem_size, size=[batch_size, self.__config.NP])] = 0.
+          self.rng.randint(low=0, high=problem_size, size=[batch_size, self.__config.NP])] = 0.
         cross_pop = np.where(r <= cr_vector[:, :, None].repeat(problem_size, axis=-1), m_pop, pop)
 
         # Boundary Control
@@ -64,10 +64,10 @@ class LDE_Optimizer(Learnable_Optimizer):
 
     def __mulgenerate_pop(self, p, NP, input_dimension, x_min, x_max, same_per_problem):
         if same_per_problem:
-            pop = x_min + np.random.uniform(size=(NP, input_dimension)) * (x_max - x_min)
+            pop = x_min + self.rng.uniform(size=(NP, input_dimension)) * (x_max - x_min)
             pop = pop[None, :, :].repeat(p, axis=0)
         else:
-            pop = x_min + np.random.uniform(size=(p, NP, input_dimension)) * (x_max - x_min)
+            pop = x_min + self.rng.uniform(size=(p, NP, input_dimension)) * (x_max - x_min)
         return pop
 
     def __order_by_f(self, pop, fit):
@@ -87,7 +87,7 @@ class LDE_Optimizer(Learnable_Optimizer):
 
     def __con2mat_current2pbest_Nw(self, mutation_vector, p):
         batch_size, pop_size = mutation_vector.shape[0], mutation_vector.shape[1]
-        p_index_array = np.random.randint(0, int(np.ceil(pop_size*p)), size=(batch_size, pop_size))
+        p_index_array = self.rng.randint(0, int(np.ceil(pop_size*p)), size=(batch_size, pop_size))
         mutation_mat = np.zeros((batch_size, pop_size, pop_size))
         for i in range(pop_size):
             mutation_mat[:, i, i] = 1 - mutation_vector[:, i]
@@ -133,6 +133,7 @@ class LDE_Optimizer(Learnable_Optimizer):
         self.__pop = self.__mulgenerate_pop(self.__BATCH_SIZE, self.__config.NP, self.__config.dim, problem.lb, problem.ub, True)   # [bs, NP, dim]
         self.__fit = self.__get_cost([problem], self.__pop)
         self.gbest_cost = np.min(self.__fit)
+
         self.fes = self.__config.NP
         self.log_index = 1
         self.cost = [self.gbest_cost]
@@ -159,7 +160,6 @@ class LDE_Optimizer(Learnable_Optimizer):
     def update(self, action, problem):
         self.__pop, self.__fit = self.__order_by_f(self.__pop, self.__fit)
         fitness = self.__maxmin_norm(self.__fit)
-
         # sf_cr = np.squeeze(action.cpu().numpy(), axis=0)  # [bs, NP*2]
         sf = action[:, 0:self.__config.NP]  # scale factor [bs, NP]
         cr = action[:, self.__config.NP:2*self.__config.NP]  # crossover rate  [bs, NP]
@@ -195,4 +195,7 @@ class LDE_Optimizer(Learnable_Optimizer):
                 self.cost[-1] = self.gbest_cost
             else:
                 self.cost.append(self.gbest_cost)
-        return self.__get_feature(), reward, is_done
+        
+        info = {}
+        
+        return self.__get_feature(), reward, is_done, info
