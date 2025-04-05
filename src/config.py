@@ -5,7 +5,9 @@ import time
 def get_config(args=None):
     parser = argparse.ArgumentParser()
     # Common config
-    parser.add_argument('--problem', default='bbob', choices=['Symbolic_bench','Symbolic_bench-torch','bbob', 'bbob-noisy', 'bbob-torch', 'bbob-noisy-torch', 'protein', 'protein-torch', 'bbob-surrogate'],
+    parser.add_argument('--problem', default = 'bbob', choices = ['bbob', 'bbob-torch', 'bbob-noisy', 'bbob-noisy-torch',
+                                                                                'bbob-surrogate', 'Symbolic_bench','Symbolic_bench-torch',
+                                                                                'lsgo-torch', 'protein', 'protein-torch', 'uav', 'uav-torch'],
                         help='specify the problem suite')
     parser.add_argument('--dim', type=int, default=10, help='dimension of search space')
     parser.add_argument('--upperbound', type=float, default=5, help='upperbound of search space')
@@ -81,7 +83,7 @@ def get_config(args=None):
 
     parser.add_argument('--test_run', type = int, default = 51)
 
-    parser.add_argument('--no_tb', type = bool, default = False, help = 'disable tensorboard logging')
+    parser.add_argument('--no_tb', action='store_true', default = False, help = 'disable tensorboard logging')
     parser.add_argument('--log_step', type = int, default = 50, help = 'log every log_step steps')
 
 

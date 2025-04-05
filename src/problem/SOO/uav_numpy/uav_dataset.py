@@ -20,7 +20,7 @@ class UAV_Dataset_numpy(Dataset):
                      mode = "standard",
                      seed = 3849,
                      num = 56,
-                     difficult = "easy",
+                     difficulty = "easy",
                      ):
         # easy 15 diff 30
         easy_id = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54] # 28
@@ -31,11 +31,11 @@ class UAV_Dataset_numpy(Dataset):
         test_set = []
         np.random.seed(seed)
         if mode == "standard":
-            pkl_file = "problem/datafiles/uav_terrain/Model56.pkl"
+            pkl_file = "problem/datafiles/SOO/uav_terrain/Model56.pkl"
             with open(pkl_file, 'rb') as f:
                 model_data = pickle.load(f)
             func_id = range(56) # 56
-            if difficult == "easy":
+            if difficulty == "easy":
                 train_id = diff_id
                 easy_train = list(np.random.choice(easy_id, size = 14, replace = False))
                 train_id = train_id + easy_train
@@ -68,7 +68,7 @@ class UAV_Dataset_numpy(Dataset):
                 terrain_data['J_pen'] = j_pen
                 instance = Terrain(terrain_data, id + 1)
                 instance_list.append(instance)
-            if difficult == "easy":
+            if difficulty == "easy":
                 train_set = instance_list[-int(0.75 * num):]
                 test_set = instance_list[:int(0.25 * num)]
             else:

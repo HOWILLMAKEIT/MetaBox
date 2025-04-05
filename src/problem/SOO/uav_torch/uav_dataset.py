@@ -19,7 +19,7 @@ class UAV_Dataset_torch(Dataset):
                      mode = "standard",
                      seed = 3849,
                      num = 56,
-                     difficult = "easy",
+                     difficulty = "easy",
                      ):
         # easy 15 diff 30
         easy_id = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54] # 28

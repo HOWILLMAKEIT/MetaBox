@@ -162,7 +162,7 @@ class Trainer(object):
         plt.savefig(log_dir+f'pic/return.png')
         plt.close()
 
-    def train(self):
+    def train_new(self):
         print(f'start training: {self.config.run_time}')
         # agent_save_dir = self.config.agent_save_dir + self.agent.__class__.__name__ + '/' + self.config.run_time + '/'
         exceed_max_ls = False
@@ -228,7 +228,7 @@ class Trainer(object):
         # self.draw_average_cost()
         # self.draw_return()
 
-    def train_new(self):
+    def train(self):
         print(f'start training: {self.config.run_time}')
         is_end = False
         # todo tensorboard

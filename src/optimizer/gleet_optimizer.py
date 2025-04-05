@@ -83,7 +83,7 @@ class GLEET_Optimizer(Learnable_Optimizer):
         if self.w_decay:
             self.w=0.9
         
-        self.max_dist=np.sqrt((problem.ub - problem.lb)**2*self.dim)
+        self.max_dist=np.sqrt(np.sum((problem.ub - problem.lb)**2))
 
         self.no_improve-=self.no_improve
         self.fes-=self.fes
