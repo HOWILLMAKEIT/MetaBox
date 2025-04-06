@@ -9,7 +9,8 @@ from tqdm import tqdm
 import os
 from environment.basic_environment import PBO_Env, BBO_Env, MetaBBO_Env
 from logger import Logger
-
+from VectorEnv.great_para_env import ParallelEnv
+import json
 
 from agent import (
     # DE_DDQN_Agent,
@@ -69,8 +70,6 @@ from agents import (
     Surr_RLDE_Agent
 )
 
-from VectorEnv.great_para_env import ParallelEnv
-
 def cal_t0(dim, fes):
     T0 = 0
     for i in range(10):
@@ -105,19 +104,7 @@ def cal_t1(problem, dim, fes):
 
 class Tester(object):
     def __init__(self, config):
-        agent_name = config.agent
-        agent_load_dir = config.agent_load_dir
-        self.agent_name_list=config.agent_for_cp
-        self.agent = None
-        if agent_name is not None:  # learnable optimizer
-            file_path = agent_load_dir + agent_name + '.pkl'
-            with open(file_path, 'rb') as f:
-                self.agent = pickle.load(f)
-            self.agent_name_list.append(agent_name)
-            # self.agent = pickle.load(agent_load_dir + agent_name + '.pkl')
-        if config.optimizer is not None:
-            self.optimizer_name = config.optimizer
-            self.optimizer = eval(config.optimizer)(copy.deepcopy(config))
+        self.key_list = config.agent
         self.log_dir = config.test_log_dir
         if not os.path.exists(self.log_dir):
             os.makedirs(self.log_dir)
@@ -143,23 +130,34 @@ class Tester(object):
 
         # prepare experimental optimizers and agents
         self.agent_for_cp = []
-        for agent in config.agent_for_cp:
-            file_path = agent_load_dir + agent + '.pkl'
-            with open(file_path, 'rb') as f:
-                self.agent_for_cp.append(pickle.load(f))
-            # self.agent_for_cp.append(pickle.load(agent_load_dir + agent + '.pkl'))
+        self.agent_name_list = []
         self.l_optimizer_for_cp = []
-        for optimizer in config.l_optimizer_for_cp:
-            self.l_optimizer_for_cp.append(eval(optimizer)(copy.deepcopy(config)))
         self.t_optimizer_for_cp = []
-        for optimizer in config.t_optimizer_for_cp:
-            self.t_optimizer_for_cp.append(eval(optimizer)(copy.deepcopy(config)))
-        if self.agent is not None:
-            self.agent_for_cp.append(self.agent)
-            self.l_optimizer_for_cp.append(self.optimizer)
-        elif config.optimizer is not None:
-            self.t_optimizer_for_cp.append(self.optimizer)
 
+        with open('model.json', 'r', encoding = 'utf-8') as f:
+            json_data = json.load(f)
+        for key in self.key_list:
+            if key not in json_data.keys():
+                raise KeyError(f"Missing key '{key}' in model.json")
+
+            # get key
+            baseline = json_data[key]
+            if "Agent" in baseline.keys():
+                agent_name = baseline["Agent"]
+                l_optimizer = baseline['Optimizer']
+                dir = baseline['dir']
+                # get agent
+                self.agent_name_list.append(key)
+                with open(dir, 'rb') as f:
+                    self.agent_for_cp.append(pickle.load(f))
+                self.l_optimizer_for_cp.append(eval(l_optimizer)(copy.deepcopy(config)))
+
+            else:
+                t_optimizer = baseline['Optimizer']
+                self.t_optimizer_for_cp.append(eval(t_optimizer)(copy.deepcopy(config)))
+
+        for optimizer in config.t_optimizer:
+            self.t_optimizer_for_cp.append(eval(optimizer)(copy.deepcopy(config)))
         # logging
         if len(self.agent_for_cp) == 0:
             print('None of learnable agent')
@@ -173,7 +171,7 @@ class Tester(object):
         else:
             print(f'there are {len(self.t_optimizer_for_cp)} traditional optimizer')
             for t_optmizer in self.t_optimizer_for_cp:
-                print(f't_optmizer:{type(t_optmizer).__name__}')
+                print(f't_optimizer:{type(t_optmizer).__name__}')
 
         for agent_name in self.agent_name_list:
             self.test_results['T1'][agent_name] = 0.
@@ -182,7 +180,7 @@ class Tester(object):
             self.test_results['T1'][type(optimizer).__name__] = 0.
             self.test_results['T2'][type(optimizer).__name__] = 0.
 
-        for problem in self.test_set:
+        for problem in self.test_set.data:
             self.test_results['cost'][problem.__str__()] = {}
             self.test_results['fes'][problem.__str__()] = {}
             for agent_name in self.agent_name_list:
