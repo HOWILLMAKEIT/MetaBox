@@ -36,16 +36,19 @@ def get_config(args=None):
     parser.add_argument('--resume_dir', type=str, help='directory to load previous checkpoint model')
 
     # Testing parameters
-    parser.add_argument('--agent', default=None, help='None: traditional optimizer, else Learnable optimizer')
-    parser.add_argument('--agent_load_dir', type=str,
-                        help='load your own agent model')
-    parser.add_argument('--optimizer', default=None, help='your own learnable or traditional optimizer')
-    parser.add_argument('--agent_for_cp', type=str, nargs='+', default=[],
-                        help='learnable optimizer to compare')
-    parser.add_argument('--l_optimizer_for_cp', type=str, nargs='+', default=[],
-                        help='learnable optimizer to compare')  # same length with "agent_for_cp"
-    parser.add_argument('--t_optimizer_for_cp', type=str, nargs='+', default=[],
-                        help='traditional optimizer to compare')
+    parser.add_argument('--agent', type = str, nargs = '+', default = [], help = 'Key written in key.json')
+    parser.add_argument('--t_optimizer', type = str, nargs = '+', default = [], help = 'traditional optimizer')
+
+    # parser.add_argument('--agent', default=None, help='None: traditional optimizer, else Learnable optimizer')
+    # parser.add_argument('--agent_load_dir', type=str,
+    #                     help='load your own agent model')
+    # parser.add_argument('--optimizer', default=None, help='your own learnable or traditional optimizer')
+    # parser.add_argument('--agent_for_cp', type=str, nargs='+', default=[],
+    #                     help='learnable optimizer to compare')
+    # parser.add_argument('--l_optimizer_for_cp', type=str, nargs='+', default=[],
+    #                     help='learnable optimizer to compare')  # same length with "agent_for_cp"
+    # parser.add_argument('--t_optimizer_for_cp', type=str, nargs='+', default=[],
+    #                     help='traditional optimizer to compare')
     parser.add_argument('--test_batch_size', type=int, default=1, help='batch size of test set')
 
     # Rollout parameters
@@ -125,9 +128,9 @@ def get_config(args=None):
         config.save_interval = config.max_epoch // config.n_checkpoint
     config.log_interval = config.maxFEs // config.n_logpoint
 
-    if 'DEAP_CMAES' not in config.t_optimizer_for_cp:
-        config.t_optimizer_for_cp.append('DEAP_CMAES')
-    if 'Random_search' not in config.t_optimizer_for_cp:
-        config.t_optimizer_for_cp.append('Random_search')
+    if 'DEAP_CMAES' not in config.t_optimizer:
+        config.t_optimizer.append('DEAP_CMAES')
+    if 'Random_search' not in config.t_optimizer:
+        config.t_optimizer.append('Random_search')
 
     return config

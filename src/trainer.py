@@ -2,6 +2,8 @@
 This file is used to train the agent.(for the kind of optimizer that is learnable)
 """
 import pickle
+
+import torch
 from tqdm import tqdm
 from environment.basic_environment import PBO_Env
 from VectorEnv import *
@@ -82,6 +84,13 @@ matplotlib.use('Agg')
 class Trainer(object):
     def __init__(self, config):
         self.config = config
+
+        torch.manual_seed(self.config.seed)
+        torch.cuda.manual_seed_all(self.config.seed)
+        np.random.seed(self.config.seed)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+
         if config.resume_dir is None:
             self.agent = eval(config.train_agent)(config)
         else:
@@ -325,9 +334,53 @@ class Trainer(object):
                 with open(self.config.agent_save_dir + "/checkpoint_log.txt", "a") as f:
                     f.write(f"Checkpoint {self.agent.cur_checkpoint}: {learn_step}\n")
 
+                # todo rollout
+                # 保存状态
+                cpu_state = torch.random.get_rng_state()
+                cuda_state = torch.cuda.get_rng_state()
+                np_state = np.random.get_state()
+                # self.rollout(self.agent.cur_checkpoint)
+
+                # 载入
+                torch.random.set_rng_state(cpu_state)
+                torch.cuda.set_rng_state(cuda_state)
+                np.random.set_state(np_state)
+
                 self.agent.cur_checkpoint += 1
             if self.config.end_mode == "epoch" and epoch >= self.config.max_epoch:
                 is_end = True
+
+    def rollout(self, checkpoint, rollout_run = 10):
+        # 读取 agent
+        torch.manual_seed(self.config.seed)
+        torch.cuda.manual_seed(self.config.seed)
+        np.random.seed(self.config.seed)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+
+        with open(self.config.agent_save_dir + 'checkpoint' + str(checkpoint) + ".pkl", "rb") as f:
+            agent = pickle.load(f)
+        rollout_set = copy.deepcopy(self.test_set)
+        bs = self.config.train_batch_size
+
+        seed_list = list(range(1, rollout_run + 1)) * bs
+        pbar = (rollout_set.N // bs + rollout_set.N % bs)
+        with tqdm(range(pbar), desc = f"Rollout{checkpoint}") as pbar:
+            for i, problem in enumerate(rollout_set):
+                env_list = [PBO_Env(copy.deepcopy(p), copy.deepcopy(self.optimizer))
+                            for p in problem
+                            for _ in range(rollout_run)]
+                with torch.no_grad():
+                    meta_rollout_data = agent.rollout_batch_episode(envs = env_list,
+                                                                    seeds = seed_list,
+                                                                    para_mode = 'dummy',
+                                                                    asynchronous = None,
+                                                                    num_cpus = 1,
+                                                                    num_gpus = 0,
+                                                                    )
+                pbar.set_postfix({'MetaBBO': agent.__str__()})
+                pbar.update(1)
+
 
 
 # class Trainer_l2l(object):
