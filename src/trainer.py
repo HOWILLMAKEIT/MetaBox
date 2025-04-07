@@ -46,6 +46,7 @@ from optimizer import (
     SYMBOL_Optimizer,
     RLDE_AFL_Optimizer,
     Surr_RLDE_Optimizer,
+    RLEMMO_Optimizer,
 
     DEAP_DE,
     JDE21,
@@ -75,8 +76,10 @@ from agents import (
     SYMBOL_Agent,
     RL_DAS_Agent,
     SYMBOL_Agent,
-    Surr_RLDE_Agent
+    Surr_RLDE_Agent,
+    RLEMMO_Agent
 )
+
 
 matplotlib.use('Agg')
 
@@ -235,7 +238,7 @@ class Trainer(object):
             #     self.draw_cost()
             #     self.draw_average_cost()
             #     self.draw_return()
-        
+
         # self.draw_cost()
         # self.draw_average_cost()
         # self.draw_return()

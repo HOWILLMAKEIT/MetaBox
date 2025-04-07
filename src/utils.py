@@ -5,6 +5,9 @@ from problem.SOO.self_generated.Symbolic_bench_torch.Symbolic_bench_Dataset impo
 from problem.SOO.LSGO.classical.cec2013lsgo_torch.cec2013lsgo_dataset import CEC2013LSGO_Dataset
 from problem.SOO.uav_numpy.uav_dataset import UAV_Dataset_numpy
 from problem.SOO.uav_torch.uav_dataset import UAV_Dataset_torch
+from problem import bbob, bbob_torch, protein_docking, mmo_dataset
+
+
 def construct_problem_set(config):
     problem = config.problem
     if problem in ['bbob', 'bbob-noisy']:
@@ -38,11 +41,11 @@ def construct_problem_set(config):
 
     elif problem in ['Symbolic_bench','Symbolic_bench-torch']:
         if problem == 'Symbolic_bench':
-            return Symbolic_bench_Dataset.get_datasets(upperbound=config.upperbound,    
+            return Symbolic_bench_Dataset.get_datasets(upperbound=config.upperbound,
                                                        train_batch_size=config.train_batch_size,
                                                           test_batch_size=config.test_batch_size)
-        else:            
-            return Symbolic_bench_Dataset_torch.get_datasets(upperbound=config.upperbound,    
+        else:
+            return Symbolic_bench_Dataset_torch.get_datasets(upperbound=config.upperbound,
                                                        train_batch_size=config.train_batch_size,
                                                           test_batch_size=config.test_batch_size)
     elif problem in ['lsgo-torch']:
@@ -65,5 +68,12 @@ def construct_problem_set(config):
                                               mode = "standard",
                                               num = 56,
                                               difficulty = config.difficulty)
+    elif problem in ['mmo', 'mmo-torch']:
+        return mmo_dataset.MMO_Dataset.get_datasets(version=problem,
+                                            train_batch_size=config.train_batch_size,
+                                            test_batch_size=config.test_batch_size,
+                                            difficulty=config.difficulty,
+                                            user_train_list = config.user_train_list)
+
     else:
         raise ValueError(problem + ' is not defined!')

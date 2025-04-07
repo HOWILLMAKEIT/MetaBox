@@ -11,7 +11,8 @@ def get_config(args=None):
                         help='specify the problem suite')
     parser.add_argument('--dim', type=int, default=10, help='dimension of search space')
     parser.add_argument('--upperbound', type=float, default=5, help='upperbound of search space')
-    parser.add_argument('--difficulty', default='easy', choices=['easy', 'difficult'], help='difficulty level')
+    parser.add_argument('--difficulty', default='easy', choices=['easy', 'difficult', 'user-define'], help='difficulty level')
+    parser.add_argument('--user_train_list', nargs='+', help = 'user define training list')
     parser.add_argument('--device', default='cpu', help='device to use')
     parser.add_argument('--train', default=None, action='store_true', help='switch to train mode')
     parser.add_argument('--test', default=None, action='store_true', help='switch to inference mode')
@@ -113,7 +114,7 @@ def get_config(args=None):
         config.bo_maxFEs = 10
         config.n_logpoint = 5
 
-    config.run_time = f'{time.strftime("%Y%m%dT%H%M%S")}_{config.problem}_{config.difficulty}_{config.dim}D'
+    config.run_time = f'{time.strftime("%Y%m%dT%H%M%S")}_{config.problem}_{config.difficulty}'
     config.test_log_dir = config.log_dir + '/test/' + config.run_time + '/'
     config.rollout_log_dir = config.log_dir + '/rollout/' + config.run_time + '/'
     config.mgd_test_log_dir = config.log_dir + '/mgd_test/' + config.run_time + '/'
@@ -131,6 +132,6 @@ def get_config(args=None):
     if 'DEAP_CMAES' not in config.t_optimizer:
         config.t_optimizer.append('DEAP_CMAES')
     if 'Random_search' not in config.t_optimizer:
-        config.t_optimizer.append('Random_search')
+        config.t_optimizer.append('Random_search') # todo
 
     return config

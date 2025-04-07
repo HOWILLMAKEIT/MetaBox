@@ -7,3 +7,4 @@ from .logger import *
 from .trainer import *
 from .tester import *
 from .utils import *
+from .mmo_logger import *
