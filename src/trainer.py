@@ -177,7 +177,7 @@ class Trainer(object):
         plt.savefig(log_dir+f'pic/return.png')
         plt.close()
 
-    def train_new(self):
+    def train_old(self):
         print(f'start training: {self.config.run_time}')
         # agent_save_dir = self.config.agent_save_dir + self.agent.__class__.__name__ + '/' + self.config.run_time + '/'
         exceed_max_ls = False
