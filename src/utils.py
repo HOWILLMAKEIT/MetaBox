@@ -52,7 +52,7 @@ class Ma_Moo_Trainer:
         self.train_set, self.test_set = construct_problem_set(config)
         self.indicators = config.indicators
 
-    def save_log(self, epochs, steps, indictors_record, returns):
+    def save_log(self, epochs, steps, indicators_record, returns):
         log_dir = self.config.log_dir + f'/train/{self.agent.__class__.__name__}/{self.config.run_time}/log/'
         if not os.path.exists(log_dir):
             os.makedirs(log_dir)
@@ -60,15 +60,15 @@ class Ma_Moo_Trainer:
         np.save(log_dir+'return', return_save)
         for problem in self.train_set:
             name = problem.__class__.__name__+"_n"+str(problem.n_obj)+"_m"+str(problem.n_var)
-            for indictor in self.indicators:
-                if len(indictors_record[name][indictor]) == 0:
+            for indicator in self.indicators:
+                if len(indicators_record[name][indicator]) == 0:
                     continue
-                while len(indictors_record[name][indictor]) < len(epochs):
-                    indictors_record[name][indictor].append(indictors_record[name][indictor][-1])
-                indictors_record_save = np.stack((epochs, indictors_record[name][indictor]),  0)
-                np.save(log_dir+name+'_'+indictor,indictors_record_save)
+                while len(indicators_record[name][indicator]) < len(epochs):
+                    indicators_record[name][indicator].append(indicators_record[name][indicator][-1])
+                indictors_record_save = np.stack((epochs, indicators_record[name][indicator]),  0)
+                np.save(log_dir+name+'_'+indicator,indictors_record_save)
             
-    def draw_indictors(self, Name=None, normalize=False):
+    def draw_indicators(self, Name=None, normalize=False):
         log_dir = self.config.log_dir + f'/train/{self.agent.__class__.__name__}/{self.config.run_time}/'
         if not os.path.exists(log_dir + 'pic/'):
             os.makedirs(log_dir + 'pic/')
@@ -80,15 +80,15 @@ class Ma_Moo_Trainer:
                 continue
             else:
                 name = Name
-            for indictor in self.indictors:
+            for indicator in self.indictors:
                 plt.figure()
-                plt.title(name + '_' + indictor)
-                values = np.load(log_dir + 'log/' + name+'_'+indictor+'.npy')
+                plt.title(name + '_' + indicator)
+                values = np.load(log_dir + 'log/' + name+'_'+indicator+'.npy')
                 x, y, n = values
                 if normalize:
                     y /= n
                 plt.plot(x, y)
-                plt.savefig(log_dir+f'pic/{name}_'+indictor+'.png')
+                plt.savefig(log_dir+f'pic/{name}_'+indicator+'.png')
                 plt.close()
     
     def draw_average_indictors(self, normalize=True):
