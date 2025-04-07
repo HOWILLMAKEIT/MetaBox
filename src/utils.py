@@ -2,7 +2,8 @@
 from problem.SOO import bbob_numpy,bbob_surrogate,bbob_torch,protein_docking
 from problem.SOO.self_generated.Symbolic_bench_numpy.Symbolic_bench_Dataset import Symbolic_bench_Dataset
 from problem.SOO.self_generated.Symbolic_bench_torch.Symbolic_bench_Dataset import Symbolic_bench_Dataset_torch
-from problem.SOO.LSGO.classical.cec2013lsgo_torch.cec2013lsgo_dataset import CEC2013LSGO_Dataset
+from problem.SOO.LSGO.classical.cec2013lsgo_torch.cec2013lsgo_dataset import CEC2013LSGO_Dataset as LSGO_Dataset_torch
+from problem.SOO.LSGO.classical.cec2013lsgo_numpy.cec2013lsgo_dataset import CEC2013LSGO_Dataset as LSGO_Dataset_numpy
 from problem.SOO.uav_numpy.uav_dataset import UAV_Dataset_numpy
 from problem.SOO.uav_torch.uav_dataset import UAV_Dataset_torch
 from problem import bbob, bbob_torch, protein_docking, mmo_dataset
@@ -49,7 +50,12 @@ def construct_problem_set(config):
                                                        train_batch_size=config.train_batch_size,
                                                           test_batch_size=config.test_batch_size)
     elif problem in ['lsgo-torch']:
-        return CEC2013LSGO_Dataset.get_datasets(train_batch_size = config.train_batch_size,
+        return LSGO_Dataset_torch.get_datasets(train_batch_size = config.train_batch_size,
+                                                 test_batch_size = config.test_batch_size,
+                                                 difficulty = config.difficulty)
+
+    elif problem in ['lsgo']:
+        return LSGO_Dataset_numpy.get_datasets(train_batch_size = config.train_batch_size,
                                                  test_batch_size = config.test_batch_size,
                                                  difficulty = config.difficulty)
     elif problem in ['uav']:

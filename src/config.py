@@ -7,7 +7,7 @@ def get_config(args=None):
     # Common config
     parser.add_argument('--problem', default = 'bbob', choices = ['bbob', 'bbob-torch', 'bbob-noisy', 'bbob-noisy-torch',
                                                                                 'bbob-surrogate', 'Symbolic_bench','Symbolic_bench-torch',
-                                                                                'lsgo-torch', 'protein', 'protein-torch', 'uav', 'uav-torch',
+                                                                                'lsgo', 'lsgo-torch', 'protein', 'protein-torch', 'uav', 'uav-torch',
                                                                                 'mmo', 'mmo-torch'],
                         help='specify the problem suite')
     parser.add_argument('--dim', type=int, default=10, help='dimension of search space')
