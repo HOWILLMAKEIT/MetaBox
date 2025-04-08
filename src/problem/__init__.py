@@ -3,3 +3,4 @@ from .bbob import *
 from .bbob_torch import *
 from .protein_docking import *
 from .mmo import *
+from .SOO.hpo_b import *
