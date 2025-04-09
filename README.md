@@ -1,6 +1,6 @@
 # *Attention everyone！！！！！！, MetaBox v2.0.0 is coming!* 
 
-## <ins>*Now we have change the default branch from the original v1.0.0 to v2.0.0. For users of v1.0.0, change the branch back to get old version directly. For users who wish to explore the fully new features of v2.0.0, we will make v2.0.0 documentation available online soon (before 2025.4.25). We welcome you to explore the new features in v2.0.0 such as the parallel training/inference, more flexible customization and comprehensive baseline gallery. Hope everyone could enjoy learning and using MetaBBO with high efficiency*</ins>!!!
+## <ins>*Now we have changed the default branch from the original v1.0.0 to v2.0.0. For users of v1.0.0, change the branch back to get old version directly. For users who wish to explore the fully new features of v2.0.0, we will make v2.0.0 documentation available online soon (before 2025.4.25). We welcome you to explore the new features in v2.0.0 such as the parallel training/inference, more flexible customization and comprehensive baseline gallery. Hope everyone could enjoy learning and using MetaBBO with high efficiency*</ins>!!!
 
 
 
