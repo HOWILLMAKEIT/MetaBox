@@ -1,9 +1,6 @@
-from optimizer.learnable_optimizer import Learnable_Optimizer
-from optimizer.operators import boundary_control as BC
-from optimizer.operators import mutate as Mu
-from optimizer.operators import crossover as Cross
+from environment.optimizer.learnable_optimizer import Learnable_Optimizer
 import numpy as np
-
+from typing import Union, Iterable
 
 def cal_fdc(sample, fitness):
     best = np.argmin(fitness)
@@ -159,17 +156,17 @@ class DEDQN_Optimizer(Learnable_Optimizer):
     def update(self, action, problem):
         # mutate first
         if action == 0:
-            u = Mu.rand_1_single(self.__population, self.__F, self.__solution_pointer, rng=self.rng)
+            u = rand_1_single(self.__population, self.__F, self.__solution_pointer, rng=self.rng)
         elif action == 1:
-            u = Mu.cur_to_rand_1_single(self.__population, self.__F, self.__solution_pointer, rng=self.rng)
+            u = cur_to_rand_1_single(self.__population, self.__F, self.__solution_pointer, rng=self.rng)
         elif action == 2:
-            u = Mu.best_2_single(self.__population, self.__gbest, self.__F, self.__solution_pointer, rng=self.rng)
+            u = best_2_single(self.__population, self.__gbest, self.__F, self.__solution_pointer, rng=self.rng)
         else:
             raise ValueError(f'action error: {action}')
         # BC
-        u = BC.clipping(u, problem.lb, problem.ub)
+        u = clipping(u, problem.lb, problem.ub)
         # then crossover
-        u = Cross.binomial(self.__population[self.__solution_pointer], u, self.__Cr, self.rng)
+        u = binomial(self.__population[self.__solution_pointer], u, self.__Cr, self.rng)
         # select from u and x
         if problem.optimum is None:
             u_cost = problem.eval(u)
@@ -207,3 +204,44 @@ class DEDQN_Optimizer(Learnable_Optimizer):
 
         info = {}
         return self.__state, reward, is_done , info
+
+def clipping(x: Union[np.ndarray, Iterable],
+             lb: Union[np.ndarray, Iterable, int, float, None],
+             ub: Union[np.ndarray, Iterable, int, float, None]
+             ) -> np.ndarray:
+    return np.clip(x, lb, ub)
+
+def binomial(x: np.ndarray, v: np.ndarray, Cr: Union[np.ndarray, float], rng) -> np.ndarray:
+    if x.ndim == 1:
+        x = x.reshape(1, -1)
+        v = v.reshape(1, -1)
+    NP, dim = x.shape
+    jrand = rng.randint(dim, size=NP)
+    if isinstance(Cr, np.ndarray) and Cr.ndim == 1:
+        Cr = Cr.reshape(-1, 1)
+    u = np.where(rng.rand(NP, dim) < Cr, v, x)
+    u[np.arange(NP), jrand] = v[np.arange(NP), jrand]
+    if u.shape[0] == 1:
+        u = u.squeeze(axis=0)
+    return u
+
+def generate_random_int_single(NP: int, cols: int, pointer: int, rng: np.random.RandomState = None) -> np.ndarray:
+    r = rng.randint(low=0, high=NP, size=cols)
+    while pointer in r:
+        r = rng.randint(low=0, high=NP, size=cols)
+    return r
+
+def rand_1_single(x: np.ndarray, F: float, pointer: int, r: np.ndarray = None, rng: np.random.RandomState = None) -> np.ndarray:
+    if r is None:
+        r = generate_random_int_single(x.shape[0], 3, pointer,rng=rng)
+    return x[r[0]] + F * (x[r[1]] - x[r[2]])
+
+def best_2_single(x: np.ndarray, best: np.ndarray, F: float, pointer: int, r: np.ndarray = None, rng: np.random.RandomState = None) -> np.ndarray:
+    if r is None:
+        r = generate_random_int_single(x.shape[0], 4, pointer, rng=rng)
+    return best + F * (x[r[0]] - x[r[1]] + x[r[2]] - x[r[3]])
+
+def cur_to_rand_1_single(x: np.ndarray, F: float, pointer: int, r: np.ndarray = None, rng: np.random.RandomState = None) -> np.ndarray:
+    if r is None:
+        r = generate_random_int_single(x.shape[0], 3, pointer, rng=rng)
+    return x[pointer] + F * (x[r[0]] - x[pointer] + x[r[1]] - x[r[2]])

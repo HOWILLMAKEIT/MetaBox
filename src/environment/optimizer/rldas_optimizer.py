@@ -53,7 +53,7 @@ class RLDAS_Optimizer(Learnable_Optimizer):
 
         if self.__config.full_meta_data:
             self.meta_X = [self.population.group]
-            self.meta_Cost = [self.cost]
+            self.meta_Cost = [self.population.cost]
 
         return self.observe(problem)
 

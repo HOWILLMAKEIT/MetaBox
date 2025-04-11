@@ -1,7 +1,6 @@
-from optimizer.learnable_optimizer import Learnable_Optimizer
-from optimizer.operators import boundary_control as BC
+from environment.optimizer.learnable_optimizer import Learnable_Optimizer
 import numpy as np
-
+from typing import Union, Iterable
 
 # a function for optimizer to calculate reward
 def cal_reward(f_old, f_new, d_old, d_new):
@@ -90,7 +89,7 @@ class QLPSO_Optimizer(Learnable_Optimizer):
         self.__velocity[self.__solution_pointer] = self.__cal_velocity(action)
         self.__population[self.__solution_pointer] += self.__velocity[self.__solution_pointer]
         # Boundary control
-        self.__population[self.__solution_pointer] = BC.clipping(self.__population[self.__solution_pointer], problem.lb, problem.ub)
+        self.__population[self.__solution_pointer] = clipping(self.__population[self.__solution_pointer], problem.lb, problem.ub)
         # calculate reward's data
         f_old = self.__cost[self.__solution_pointer]
         if problem.optimum is None:
@@ -126,3 +125,9 @@ class QLPSO_Optimizer(Learnable_Optimizer):
                 
         info = {}
         return self.__state[self.__solution_pointer], reward, is_done , info
+
+def clipping(x: Union[np.ndarray, Iterable],
+             lb: Union[np.ndarray, Iterable, int, float, None],
+             ub: Union[np.ndarray, Iterable, int, float, None]
+             ) -> np.ndarray:
+    return np.clip(x, lb, ub)

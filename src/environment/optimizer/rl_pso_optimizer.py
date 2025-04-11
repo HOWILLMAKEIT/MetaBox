@@ -1,7 +1,6 @@
 import numpy as np
-from optimizer.learnable_optimizer import Learnable_Optimizer
-from optimizer.operators import clipping
-
+from environment.optimizer.learnable_optimizer import Learnable_Optimizer
+from typing import Union, Iterable
 
 class RL_PSO_Optimizer(Learnable_Optimizer):
     def __init__(self, config):
@@ -149,4 +148,10 @@ class RL_PSO_Optimizer(Learnable_Optimizer):
                 
         info = {}
         
-        return self.__get_state(self.__cur_index), reward, is_done , info
+        return self.__get_state(self.__cur_index), reward, is_done, info
+
+def clipping(x: Union[np.ndarray, Iterable],
+             lb: Union[np.ndarray, Iterable, int, float, None],
+             ub: Union[np.ndarray, Iterable, int, float, None]
+             ) -> np.ndarray:
+    return np.clip(x, lb, ub)

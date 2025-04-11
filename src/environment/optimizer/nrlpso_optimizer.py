@@ -1,8 +1,6 @@
-from optimizer.learnable_optimizer import Learnable_Optimizer
+from environment.optimizer.learnable_optimizer import Learnable_Optimizer
 import numpy as np
 import math
-
-
 
 class NRLPSO_Optimizer(Learnable_Optimizer):
     def __init__(self, config):
