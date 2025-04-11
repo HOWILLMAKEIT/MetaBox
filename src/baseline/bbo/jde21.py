@@ -37,6 +37,9 @@ class JDE21(Basic_Optimizer):
         self.__n_logpoint = config.n_logpoint
         self.log_interval = config.log_interval
         self.full_meta_data = config.full_meta_data
+        
+    def __str__(self):
+        return 'JADE'
     # check whether the optimization stuck(global best doesn't improve for a while)
     def __prevecEnakih(self, cost, best):
         eqs = len(cost[np.fabs(cost - best) < self.__eps])

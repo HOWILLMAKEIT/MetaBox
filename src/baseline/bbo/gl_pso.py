@@ -19,6 +19,10 @@ class GL_PSO(Basic_Optimizer):
         self.__exemplar_stag=np.zeros(self.__NP)
         self.log_interval = config.log_interval
         self.full_meta_data = config.full_meta_data
+        
+    def __str__(self):
+        return "GLPSO"
+    
     def __exemplar_crossover(self):
         rand_index=self.rng.randint(low=0,high=self.__NP,size=(self.__NP,self.__dim))
         xs=self.__particles['pbest_position']

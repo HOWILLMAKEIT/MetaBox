@@ -22,6 +22,9 @@ class MadDE(Basic_Optimizer):
         self.__n_logpoint = config.n_logpoint
         self.log_interval = config.log_interval
         self.full_meta_data = config.full_meta_data
+        
+    def __str__(self):
+        return 'MadDE'
 
     def __ctb_w_arc(self, group, best, archive, Fs):
         NP, dim = group.shape

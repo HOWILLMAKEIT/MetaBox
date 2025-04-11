@@ -1,5 +1,5 @@
-from optimizer.basic_optimizer import Basic_Optimizer
-from optimizer.operators import clipping
+from .basic_optimizer import Basic_Optimizer
+# from optimizer.operators import clipping
 import numpy as np
 
 
@@ -18,6 +18,9 @@ class SAHLPSO(Basic_Optimizer):
         self.c1 = 1.49445
         self.log_interval = config.log_interval
         self.full_meta_data = config.full_meta_data
+        
+    def __str__(self):  
+        return 'SAHLPSO'
 
     def run_episode(self,problem):
         if self.full_meta_data:
@@ -88,9 +91,9 @@ class SAHLPSO(Basic_Optimizer):
                 nf_ls[ls_index] += 1
                 # generate velocity V and BC(V)
                 V[i] = w[i] * V[i] + self.c1 * self.rng.rand(self.dim) * (e - X[i])
-                V[i] = clipping(V[i], -self.v_max, self.v_max)
+                V[i] = np.clip(V[i], -self.v_max, self.v_max)
                 # generate new X and BC(X)
-                X[i] = clipping(X[i] + V[i], self.lb, self.ub)
+                X[i] = np.clip(X[i] + V[i], self.lb, self.ub)
                 # evaluate X
                 if problem.optimum is None:
                     f_X[i] = problem.eval(X[i])

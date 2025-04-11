@@ -14,13 +14,16 @@ class Random_search(Basic_Optimizer):
         self.__n_logpoint = config.n_logpoint
         self.log_interval = config.log_interval
         self.full_meta_data = config.full_meta_data
+    
+    def __str__(self):
+        return 'RandomSearch'
     def __reset(self,problem):
         self.__fes=0
         self.cost=[]
         self.__random_population(problem,init=True)
         self.cost.append(self.gbest)
         self.log_index=1
-
+    
     def __random_population(self,problem,init):
         rand_pos=self.rng.uniform(low=problem.lb,high=problem.ub,size=(self.__NP,self.__dim))
         if problem.optimum is None:

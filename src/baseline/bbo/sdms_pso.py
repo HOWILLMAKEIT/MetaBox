@@ -33,6 +33,10 @@ class sDMS_PSO(Basic_Optimizer):
         self.__success_num=np.zeros((self.__n_swarm))
         self.log_interval = config.log_interval
         self.full_meta_data = config.full_meta_data
+        
+    def __str__(self):
+        return 'sDMSPSO'
+    
     def __get_costs(self,problem,position):
         ps=position.shape[0]
         self.__fes+=ps

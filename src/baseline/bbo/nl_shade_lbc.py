@@ -34,6 +34,10 @@ class NL_SHADE_LBC(Basic_Optimizer):
         self.__n_logpoint = config.n_logpoint
         self.log_interval = config.log_interval
         self.full_meta_data = config.full_meta_data
+        
+    def __str__(self):
+        return 'NLSHADELBC'
+    
     def __evaluate(self, problem, u):
         if problem.optimum is None:
             cost = problem.eval(u)

@@ -19,6 +19,9 @@ class DEAP_DE(Basic_Optimizer):
         self.__toolbox.register("select", tools.selTournament, tournsize=3)
         self.log_interval = config.log_interval
         self.full_meta_data = config.full_meta_data
+        
+    def __str__(self):
+        return "DE"
     def run_episode(self, problem):
         if self.full_meta_data:
             self.meta_Cost = []

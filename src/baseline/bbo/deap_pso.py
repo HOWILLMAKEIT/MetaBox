@@ -19,6 +19,9 @@ class DEAP_PSO(Basic_Optimizer):
         self.__creator.create("Particle", np.ndarray, fitness=creator.Fitnessmin, speed=list, smin=None, smax=None, best=None)
         self.log_interval = config.log_interval
         self.full_meta_data = config.full_meta_data
+        
+    def __str__(self):
+        return "PSO"
     def run_episode(self, problem):
         if self.full_meta_data:
             self.meta_Cost = []

@@ -20,6 +20,8 @@ class DEAP_CMAES(Basic_Optimizer):
         self.log_interval = config.log_interval
         self.full_meta_data = config.full_meta_data
 
+    def __str__(self):
+        return "CMAES"
     def run_episode(self, problem):
         if self.full_meta_data:
             self.meta_Cost = []
