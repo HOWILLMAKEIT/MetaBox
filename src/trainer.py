@@ -6,31 +6,18 @@ import pickle
 import torch
 from tqdm import tqdm
 from environment.basic_environment import PBO_Env
-from VectorEnv import *
+from environment.VectorEnv import *
 from logger import Logger
 import copy
-from utils import *
+from environment.problem.utils import *
 import numpy as np
 import os
 import matplotlib
 import matplotlib.pyplot as plt
-from basic_agent.utils import save_class
+from rl.utils import save_class
 from tensorboardX import SummaryWriter
-from agents import (
-    # DE_DDQN_Agent,
-    # DEDQN_Agent,
-    RL_HPSDE_Agent,
-    # LDE_Agent,
-    # QLPSO_Agent,
-    # RLEPSO_Agent,
-    # RL_PSO_Agent,
-    L2L_Agent,
-    # RL_DAS_Agent,
-    LES_Agent,
-    # NRLPSO_Agent,
-    # Symbol_Agent,
-)
-from optimizer import (
+
+from environment.optimizer import (
     DE_DDQN_Optimizer,
     DEDQN_Optimizer,
     RL_HPSDE_Optimizer,
@@ -40,14 +27,16 @@ from optimizer import (
     RL_PSO_Optimizer,
     L2L_Optimizer,
     GLEET_Optimizer,
-    RL_DAS_Optimizer,
+    RLDAS_Optimizer,
     LES_Optimizer,
     NRLPSO_Optimizer,
     SYMBOL_Optimizer,
     RLDE_AFL_Optimizer,
     Surr_RLDE_Optimizer,
     RLEMMO_Optimizer,
+)
 
+from baseline.bbo import (
     DEAP_DE,
     JDE21,
     MadDE,
@@ -59,23 +48,19 @@ from optimizer import (
     SAHLPSO,
 
     DEAP_CMAES,
-    Random_search
+    Random_search,
 )
 
-from agents import (
+from baseline.metabbo import (
     GLEET_Agent,
     DE_DDQN_Agent,
     DEDQN_Agent,
     QLPSO_Agent,
     NRLPSO_Agent,
     RL_HPSDE_Agent,
-    RLEPSO_Agent,
     RLDE_AFL_Agent,
-    LDE_Agent,
-    RL_PSO_Agent,
     SYMBOL_Agent,
-    RL_DAS_Agent,
-    SYMBOL_Agent,
+    RLDAS_Agent,
     Surr_RLDE_Agent,
     RLEMMO_Agent
 )
@@ -129,125 +114,6 @@ class Trainer(object):
             os.makedirs(dir)
         with open(dir+file_name+'.pkl', 'wb') as f:
             pickle.dump(saving_class, f, -1)
-    # def draw_cost(self, Name=None, normalize=False):
-    #     log_dir = self.config.log_dir + f'/train/{self.agent.__class__.__name__}/{self.config.run_time}/'
-    #     if not os.path.exists(log_dir + 'pic/'):
-    #         os.makedirs(log_dir + 'pic/')
-    #     for problem in self.train_set:
-    #         if Name is None:
-    #             name = problem.__str__()
-    #         elif (isinstance(Name, str) and problem.__str__() != Name) or (isinstance(Name, list) and problem.__str__() not in Name):
-    #             continue
-    #         else:
-    #             name = Name
-    #         plt.figure()
-    #         plt.title(name + '_cost')
-    #         values = np.load(log_dir + 'log/' + name+'_cost.npy')
-    #         x, y, n = values
-    #         if normalize:
-    #             y /= n
-    #         plt.plot(x, y)
-    #         plt.savefig(log_dir+f'pic/{name}_cost.png')
-    #         plt.close()
-    
-    # def draw_average_cost(self, normalize=True):
-    #     log_dir = self.config.log_dir + f'/train/{self.agent.__class__.__name__}/{self.config.run_time}/'
-    #     if not os.path.exists(log_dir + 'pic/'):
-    #         os.makedirs(log_dir + 'pic/')
-    #     X = []
-    #     Y = []
-    #     for problem in self.train_set:
-    #         name = problem.__str__()
-    #         values = np.load(log_dir + 'log/' + name+'_cost.npy')
-    #         x, y, n = values
-    #         if normalize:
-    #             y /= n
-    #         X.append(x)
-    #         Y.append(y)
-    #     X = np.mean(X, 0)
-    #     Y = np.mean(Y, 0)
-    #     plt.figure()
-    #     plt.title('all problem cost')
-    #     plt.plot(X, Y)
-    #     plt.savefig(log_dir+f'pic/all_problem_cost.png')
-    #     plt.close()
-
-    # def draw_return(self):
-    #     log_dir = self.config.log_dir + f'/train/{self.agent.__class__.__name__}/{self.config.run_time}/'
-    #     if not os.path.exists(log_dir + 'pic/'):
-    #         os.makedirs(log_dir + 'pic/')
-    #     plt.figure()
-    #     plt.title('return')
-    #     values = np.load(log_dir + 'log/return.npy')
-    #     plt.plot(values[0], values[1])
-    #     plt.savefig(log_dir+f'pic/return.png')
-    #     plt.close()
-
-    # def train_old(self):
-    #     print(f'start training: {self.config.run_time}')
-    #     # agent_save_dir = self.config.agent_save_dir + self.agent.__class__.__name__ + '/' + self.config.run_time + '/'
-    #     exceed_max_ls = False
-    #     epoch = 0
-    #     cost_record = {}
-    #     normalizer_record = {}
-    #     return_record = []
-    #     learn_steps = []
-    #     epoch_steps = []
-    #     for problem in self.train_set:
-    #         for p in problem:
-    #             cost_record[p.__str__()] = []
-    #             normalizer_record[p.__str__()] = []
-
-    #     # todo Seed config
-    #     seed = 4
-    #     while not exceed_max_ls:
-    #         learn_step = 0
-    #         self.train_set.shuffle()
-    #         with tqdm(range(self.train_set.N), desc=f'Training {self.agent.__class__.__name__} Epoch {epoch}') as pbar:
-    #             for problem_id, problem in enumerate(self.train_set):
-
-    #                 # env = PBO_Env(problem, self.optimizer)
-    #                 env_list = [PBO_Env(p, copy.deepcopy(self.optimizer)) for p in problem]
-    #                 for env in env_list:
-    #                     env.optimizer.seed(seed)
-
-    #                 exceed_max_ls, pbar_info_train = self.agent.train_episode(envs = env_list)
-    #                 # exceed_max_ls, pbar_info_train = self.agent.train_episode(env)  # pbar_info -> dict
-    #                 postfix_str = (
-    #                     f"loss={pbar_info_train['loss']:.2e}, "
-    #                     f"learn_steps={pbar_info_train['learn_steps']}, "
-    #                     f"return={[f'{x:.2e}' for x in pbar_info_train['return']]}"
-    #                 )
-
-    #                 pbar.set_postfix_str(postfix_str)
-    #                 pbar.update(self.config.train_batch_size)
-    #                 learn_step = pbar_info_train['learn_steps']
-    #                 for id, p in enumerate(problem):
-    #                     name = p.__str__()
-    #                     cost_record[name].append(pbar_info_train['gbest'][id])
-    #                     normalizer_record[name].append(pbar_info_train['normalizer'][id])
-    #                     return_record.append(np.mean(pbar_info_train['return']))
-    #                 learn_steps.append(learn_step)
-    #                 if exceed_max_ls:
-    #                     break
-    #             self.agent.train_epoch()
-    #         epoch_steps.append(learn_step)
-    #         # if not os.path.exists(agent_save_dir):
-    #         #     os.makedirs(agent_save_dir)
-    #         # with open(agent_save_dir+'agent_epoch'+str(epoch)+'.pkl', 'wb') as f:
-    #         #     pickle.dump(self.agent, f, -1)
-
-    #         # todo add log logicality
-    #         # self.save_log(epoch_steps, learn_steps, cost_record, return_record, normalizer_record)
-    #         epoch += 1
-    #         # if epoch % self.config.draw_interval == 0:
-    #         #     self.draw_cost()
-    #         #     self.draw_average_cost()
-    #         #     self.draw_return()
-
-    #     # self.draw_cost()
-    #     # self.draw_average_cost()
-    #     # self.draw_return()
 
     def train(self):
         print(f'start training: {self.config.run_time}')
@@ -259,20 +125,6 @@ class Trainer(object):
             tb_logger.add_scalar("epoch-step", 0, 0)
 
         epoch = 0
-        # cost_record = {}
-        # normalizer_record = {}
-        # return_record = []
-        # learn_steps = []
-        # epoch_steps = []
-
-        # # 这里先让train_set bs 一直为1先
-        # for problem in self.train_set.data:
-        #     cost_record[problem.__str__()] = []
-        #     normalizer_record[problem.__str__] = []
-
-        # 然后根据train_mode 决定 bs
-        # single ---> 从train_set 里取出 bs 个问题训练
-        # multi ---> 每次从train_set 中取出 1 个问题，copy bs 个 训练
         bs = self.config.train_batch_size
         if self.config.train_mode == "single":
             self.train_set.batch_size = 1

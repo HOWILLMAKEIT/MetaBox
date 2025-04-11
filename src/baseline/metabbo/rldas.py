@@ -1,8 +1,8 @@
 from torch.distributions import Categorical
 
-from agents.networks import *
-from basic_agent.PPO_Agent import *
-from basic_agent.utils import *
+from .networks import *
+from rl.PPO_Agent import *
+from rl.utils import *
 
 
 class Actor(nn.Module):
@@ -90,7 +90,7 @@ class Critic(nn.Module):
         bl_val = self.model(feature.view(batch, -1))[:, 0]
         return bl_val.detach(), bl_val
 
-class RL_DAS_Agent(PPO_Agent):
+class RLDAS_Agent(PPO_Agent):
     def __init__(self, config):
         self.config = config
 
