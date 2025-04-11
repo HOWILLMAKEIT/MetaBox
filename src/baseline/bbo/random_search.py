@@ -13,7 +13,7 @@ class Random_search(Basic_Optimizer):
         self.__NP=100
         self.__n_logpoint = config.n_logpoint
         self.log_interval = config.log_interval
-
+        self.full_meta_data = config.full_meta_data
     def __reset(self,problem):
         self.__fes=0
         self.cost=[]
@@ -27,6 +27,10 @@ class Random_search(Basic_Optimizer):
             cost=problem.eval(rand_pos)
         else:
             cost=problem.eval(rand_pos)-problem.optimum
+            
+        if self.full_meta_data:
+            self.meta_Cost.append(cost)
+            self.meta_X.append(rand_pos)
         self.__fes+=self.__NP
         if init:
             self.gbest=np.min(cost)
@@ -35,6 +39,9 @@ class Random_search(Basic_Optimizer):
                 self.gbest=np.min(cost)
 
     def run_episode(self, problem):
+        if self.full_meta_data:
+            self.meta_Cost = []
+            self.meta_X = []
         problem.reset()
         self.__reset(problem)
         is_done = False
@@ -56,4 +63,10 @@ class Random_search(Basic_Optimizer):
                     self.cost.append(self.gbest)
                 break
                 
-        return {'cost':self.cost,'fes':self.__fes}
+        results = {'cost': self.cost, 'fes': self.__FEs}
+
+        if self.full_meta_data:
+            metadata = {'X':self.meta_X, 'Cost':self.meta_Cost}
+            results['metadata'] = metadata
+        # 与agent一致，去除return，加上metadata
+        return results

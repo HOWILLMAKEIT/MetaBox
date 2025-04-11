@@ -2,7 +2,7 @@ import numpy as np
 from deap import base
 from deap import creator
 from deap import tools
-from optimizer.basic_optimizer import Basic_Optimizer
+from .basic_optimizer import Basic_Optimizer
 
 
 class DEAP_DE(Basic_Optimizer):
@@ -18,9 +18,11 @@ class DEAP_DE(Basic_Optimizer):
         creator.create("Individual", list, fitness=creator.Fitnessmin)
         self.__toolbox.register("select", tools.selTournament, tournsize=3)
         self.log_interval = config.log_interval
-
+        self.full_meta_data = config.full_meta_data
     def run_episode(self, problem):
-
+        if self.full_meta_data:
+            self.meta_Cost = []
+            self.meta_X = []
         def problem_eval(x):
             if problem.optimum is None:
                 fitness = problem.eval(x)
@@ -37,6 +39,9 @@ class DEAP_DE(Basic_Optimizer):
 
         pop = self.__toolbox.population(n=self.__config.NP)
         fitnesses = self.__toolbox.map(self.__toolbox.evaluate, pop)
+        if self.full_meta_data:
+            self.meta_Cost.append(fitnesses)
+            self.meta_X.append(pop)
         fes = self.__config.NP
         for ind, fit in zip(pop, fitnesses):
             ind.fitness.values = fit
@@ -80,4 +85,18 @@ class DEAP_DE(Basic_Optimizer):
                     else:
                         cost.append(hof[0].fitness.values[0])
                     break
-        return {'cost': cost, 'fes': fes}
+            if self.full_meta_data:
+                gen_meta_cost = []
+                gen_meta_X = []
+                for i in range(len(pop)):
+                    gen_meta_cost.append(pop[i].fitness.values[0])
+                    gen_meta_X.append(pop[i])
+                self.meta_Cost.append(gen_meta_cost)
+                self.meta_X.append(gen_meta_X)
+        results = {'cost': self.cost, 'fes': self.__FEs}
+
+        if self.full_meta_data:
+            metadata = {'X':self.meta_X, 'Cost':self.meta_Cost}
+            results['metadata'] = metadata
+        # 与agent一致，去除return，加上metadata
+        return results

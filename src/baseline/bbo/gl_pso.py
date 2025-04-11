@@ -1,5 +1,5 @@
 import numpy as np
-from optimizer.basic_optimizer import Basic_Optimizer
+from .basic_optimizer import Basic_Optimizer
 
 
 class GL_PSO(Basic_Optimizer):
@@ -18,7 +18,7 @@ class GL_PSO(Basic_Optimizer):
         self.__fes=0
         self.__exemplar_stag=np.zeros(self.__NP)
         self.log_interval = config.log_interval
-    
+        self.full_meta_data = config.full_meta_data
     def __exemplar_crossover(self):
         rand_index=self.rng.randint(low=0,high=self.__NP,size=(self.__NP,self.__dim))
         xs=self.__particles['pbest_position']
@@ -66,14 +66,24 @@ class GL_PSO(Basic_Optimizer):
             self.__exemplar=np.where(filter[:,None],self.__exemplar_tour_selection(),self.__exemplar)
     
     def run_episode(self,problem):
+        if self.full_meta_data:
+            self.meta_Cost = []
+            self.meta_X = []
         self.__init_population(problem)
         is_done=False
         while not is_done:
             is_done,info=self.__update(problem)
             # print('gbest:{}'.format(self.__particles['gbest_val']))
-        return info
+        results = info
+        if self.full_meta_data:
+            metadata = {'X':self.meta_X, 'Cost':self.meta_Cost}
+            results['metadata'] = metadata
+        # 与agent一致，去除return，加上metadata
+        return results
+    
 
     def __init_population(self,problem):
+        
         self.__ub=problem.ub
         self.__lb=problem.lb
         self.__fes=0
@@ -113,6 +123,9 @@ class GL_PSO(Basic_Optimizer):
             cost=problem.eval(position)
         else:
             cost=problem.eval(position)-problem.optimum
+        if self.full_meta_data:
+                self.meta_Cost.append(cost)
+                self.meta_X.append(position)
         return cost
 
     def __update(self,problem):

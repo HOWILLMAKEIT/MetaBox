@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 from scipy.optimize import minimize
-from optimizer.basic_optimizer import Basic_Optimizer
+from .basic_optimizer import Basic_Optimizer
 
 
 class sDMS_PSO(Basic_Optimizer):
@@ -32,7 +32,7 @@ class sDMS_PSO(Basic_Optimizer):
         self.__parameter_set=[]
         self.__success_num=np.zeros((self.__n_swarm))
         self.log_interval = config.log_interval
-
+        self.full_meta_data = config.full_meta_data
     def __get_costs(self,problem,position):
         ps=position.shape[0]
         self.__fes+=ps
@@ -40,6 +40,10 @@ class sDMS_PSO(Basic_Optimizer):
             cost=problem.eval(position)
         else:
             cost=problem.eval(position) - problem.optimum
+        if self.full_meta_data:
+            self.meta_Cost.append(cost)
+            self.meta_X.append(position)
+        
         return cost
 
     def __initilize(self,problem):
@@ -205,6 +209,9 @@ class sDMS_PSO(Basic_Optimizer):
                 self.__particles['pbest'][self.__lbest_index[refine_index[i]]]=res.fun
 
     def run_episode(self, problem):
+        if self.full_meta_data:
+            self.meta_Cost = []
+            self.meta_X = []
         self.__reset(problem)
         while self.__fes<self.__max_fes:
             while self.__fes<0.95*self.__max_fes:
@@ -240,5 +247,11 @@ class sDMS_PSO(Basic_Optimizer):
                     self.cost.append(self.__particles['gbest_val'])
                 break
 
-        return {'cost': self.cost, 'fes': self.__fes}
+        results = {'cost': self.cost, 'fes': self.__fes}
+
+        if self.full_meta_data:
+            metadata = {'X':self.meta_X, 'Cost':self.meta_Cost}
+            results['metadata'] = metadata
+        # 与agent一致，去除return，加上metadata
+        return results
     

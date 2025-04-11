@@ -17,8 +17,12 @@ class SAHLPSO(Basic_Optimizer):
         self.p=0.2
         self.c1 = 1.49445
         self.log_interval = config.log_interval
+        self.full_meta_data = config.full_meta_data
 
     def run_episode(self,problem):
+        if self.full_meta_data:
+            self.meta_Cost = []
+            self.meta_X = []
         G, fes, NP, H_cr, H_ls = 1, 0, self.NP, self.H_cr, self.H_ls
         V = -self.v_max + 2 * self.v_max * self.rng.rand(NP, self.dim)
         X = self.lb + (self.ub - self.lb) * self.rng.rand(NP, self.dim)
@@ -26,6 +30,9 @@ class SAHLPSO(Basic_Optimizer):
             f_X = problem.eval(X)
         else:
             f_X = problem.eval(X) - problem.optimum
+        if self.full_meta_data:
+            self.meta_Cost.append(f_X)
+            self.meta_X.append(X)
         w = 0.9 * np.ones(NP)
         fes += NP
         pBest,pBest_cost,A = X.copy(), f_X.copy(),[]
@@ -46,7 +53,7 @@ class SAHLPSO(Basic_Optimizer):
         remain_index = np.array(range(NP))
         selected_indiv_index = self.rng.permutation(remain_index)[:int(self.Lg * NP)]
         while fes < self.maxFEs and NP >= 4:
-
+            
             for i in remain_index:
                 cr, ls = 0, 0 # start generate exemplar
                 cr_index, ls_index = 0,0
@@ -89,6 +96,7 @@ class SAHLPSO(Basic_Optimizer):
                     f_X[i] = problem.eval(X[i])
                 else:
                     f_X[i] = problem.eval(X[i]) - problem.optimum
+                    
                 fes += 1
                 if f_X[i] < pBest_cost[i]:
                     pBest[i] = X[i]
@@ -121,7 +129,18 @@ class SAHLPSO(Basic_Optimizer):
                         cost[-1] = gBest_cost
                     else:
                         cost.append(gBest_cost)
-                    return {'cost': cost, 'fes': fes}
+                    results = {'cost': cost, 'fes': fes}
+
+                    if self.full_meta_data:
+                        metadata = {'X':self.meta_X, 'Cost':self.meta_Cost}
+                        results['metadata'] = metadata
+                    # 与agent一致，去除return，加上metadata
+                    return results
+                
+            if self.full_meta_data:
+                self.meta_Cost.append(f_X)
+                self.meta_X.append(X)    
+            
             # after a generation update related statics
             if G % self.LP == 0:
 
@@ -158,4 +177,10 @@ class SAHLPSO(Basic_Optimizer):
             cost[-1] = gBest_cost
         else:
             cost.append(gBest_cost)
-        return {'cost': cost, 'fes': fes}
+        results = {'cost': cost, 'fes': fes}
+
+        if self.full_meta_data:
+            metadata = {'X':self.meta_X, 'Cost':self.meta_Cost}
+            results['metadata'] = metadata
+        # 与agent一致，去除return，加上metadata
+        return results

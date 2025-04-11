@@ -2,7 +2,7 @@ import numpy as np
 from deap import base
 from deap import creator
 from deap import tools
-from optimizer.basic_optimizer import Basic_Optimizer
+from .basic_optimizer import Basic_Optimizer
 
 
 class DEAP_PSO(Basic_Optimizer):
@@ -18,9 +18,11 @@ class DEAP_PSO(Basic_Optimizer):
         self.__creator.create("Fitnessmin", base.Fitness, weights=(-1.0,))
         self.__creator.create("Particle", np.ndarray, fitness=creator.Fitnessmin, speed=list, smin=None, smax=None, best=None)
         self.log_interval = config.log_interval
-
+        self.full_meta_data = config.full_meta_data
     def run_episode(self, problem):
-
+        if self.full_meta_data:
+            self.meta_Cost = []
+            self.meta_X = []
         def generate(size, pmin, pmax, smin, smax):
             part = creator.Particle(np.random.uniform(pmin, pmax, size))
             part.speed = np.random.uniform(smin, smax, size)
@@ -80,6 +82,17 @@ class DEAP_PSO(Basic_Optimizer):
             if best is None or part.fitness.values[0] < best.fitness.values[0]:
                 best = creator.Particle(part)
                 best.fitness.values = part.fitness.values
+        
+        if self.full_meta_data:
+            gen_meta_cost = []
+            gen_meta_X = []
+            for i in range(len(pop)):
+                gen_meta_cost.append(pop[i].fitness.values[0])
+                gen_meta_X.append(pop[i])
+            self.meta_Cost.append(gen_meta_cost)
+            self.meta_X.append(gen_meta_X)
+        
+        
         fes = self.__config.population_size
 
         log_index = 1
@@ -112,4 +125,19 @@ class DEAP_PSO(Basic_Optimizer):
                     else:
                         cost.append(best.fitness.values[0])
                     break
-        return {'cost': cost, 'fes': fes}
+            if self.full_meta_data:
+                gen_meta_cost = []
+                gen_meta_X = []
+                for i in range(len(pop)):
+                    gen_meta_cost.append(pop[i].fitness.values[0])
+                    gen_meta_X.append(pop[i])
+                self.meta_Cost.append(gen_meta_cost)
+                self.meta_X.append(gen_meta_X)
+                
+        results = {'cost': cost, 'fes': fes}
+
+        if self.full_meta_data:
+            metadata = {'X':self.meta_X, 'Cost':self.meta_Cost}
+            results['metadata'] = metadata
+        # 与agent一致，去除return，加上metadata
+        return results

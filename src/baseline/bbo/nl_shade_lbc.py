@@ -1,7 +1,7 @@
 import numpy as np
 import copy
 import scipy.stats as stats
-from optimizer.basic_optimizer import Basic_Optimizer
+from .basic_optimizer import Basic_Optimizer
 
 
 def test(x):
@@ -33,12 +33,15 @@ class NL_SHADE_LBC(Basic_Optimizer):
         self.gbest = 1e15
         self.__n_logpoint = config.n_logpoint
         self.log_interval = config.log_interval
-
+        self.full_meta_data = config.full_meta_data
     def __evaluate(self, problem, u):
         if problem.optimum is None:
             cost = problem.eval(u)
         else:
             cost = problem.eval(u) - problem.optimum
+        if self.full_meta_data:
+            self.meta_Cost.append(cost)
+            self.meta_X.append(u)
         return cost
 
     # Binomial crossover
@@ -273,6 +276,9 @@ class NL_SHADE_LBC(Basic_Optimizer):
             return self.gbest <= 1e-8
 
     def run_episode(self, problem):
+        if self.full_meta_data:
+            self.meta_Cost = []
+            self.meta_X = []
         self.__init_population(problem)
         while self.__FEs < self.__MaxFEs:
             is_done = self.__update(problem)
@@ -282,4 +288,11 @@ class NL_SHADE_LBC(Basic_Optimizer):
             self.cost[-1] = self.gbest
         else:
             self.cost.append(self.gbest)
-        return {'cost': self.cost, 'fes': self.__FEs}
+        results = {'cost': self.cost, 'fes': self.__FEs}
+
+        if self.full_meta_data:
+            metadata = {'X':self.meta_X, 'Cost':self.meta_Cost}
+            results['metadata'] = metadata
+        # 与agent一致，去除return，加上metadata
+        return results
+

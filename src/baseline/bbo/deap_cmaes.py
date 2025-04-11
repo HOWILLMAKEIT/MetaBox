@@ -4,7 +4,7 @@ from deap import creator
 from deap import tools
 from deap import algorithms
 from deap import cma
-from optimizer.basic_optimizer import Basic_Optimizer
+from .basic_optimizer import Basic_Optimizer
 
 
 class DEAP_CMAES(Basic_Optimizer):
@@ -18,17 +18,20 @@ class DEAP_CMAES(Basic_Optimizer):
         self.__creator.create("Fitnessmin", base.Fitness, weights=(-1.0,))
         self.__creator.create("Individual", list, fitness=creator.Fitnessmin)
         self.log_interval = config.log_interval
+        self.full_meta_data = config.full_meta_data
 
     def run_episode(self, problem):
-        meta_Cost = []
-        meta_X = []
+        if self.full_meta_data:
+            self.meta_Cost = []
+            self.meta_X = []
         def problem_eval(x):
             if problem.optimum is None:
                 fitness = problem.eval(x)
             else:
                 fitness = problem.eval(x) - problem.optimum
-            meta_Cost.append(fitness)
-            meta_X.append(x)
+            if self.full_meta_data:
+                self.meta_Cost.append(fitness)
+                self.meta_X.append(x)
             return fitness,   # return a tuple
 
         self.__toolbox.register("evaluate", problem_eval)
@@ -61,6 +64,10 @@ class DEAP_CMAES(Basic_Optimizer):
                 else:
                     cost.append(hof[0].fitness.values[0])
                 break
-        metadata = {'X':meta_X, 'Cost':meta_Cost}
+        results = {'cost': cost, 'fes': fes}
+
+        if self.full_meta_data:
+            metadata = {'X':self.meta_X, 'Cost':self.meta_Cost}
+            results['metadata'] = metadata
         # 与agent一致，去除return，加上metadata
-        return {'cost': cost, 'fes': fes, 'metadata': metadata}
+        return results

@@ -1,6 +1,6 @@
 import numpy as np
 import scipy.stats as stats
-from optimizer.basic_optimizer import Basic_Optimizer
+from .basic_optimizer import Basic_Optimizer
 
 
 class MadDE(Basic_Optimizer):
@@ -21,6 +21,7 @@ class MadDE(Basic_Optimizer):
         self.__MaxFEs = config.maxFEs
         self.__n_logpoint = config.n_logpoint
         self.log_interval = config.log_interval
+        self.full_meta_data = config.full_meta_data
 
     def __ctb_w_arc(self, group, best, archive, Fs):
         NP, dim = group.shape
@@ -191,6 +192,10 @@ class MadDE(Basic_Optimizer):
         self.__k = 0
         self.gbest = np.min(self.__cost)
 
+        if self.full_meta_data:
+            self.meta_Cost.append( self.__cost)
+            self.meta_X.append(self.__population)
+        
         self.log_index = 1
         self.cost = [self.gbest]
 
@@ -260,6 +265,10 @@ class MadDE(Basic_Optimizer):
         self.__cost = self.__cost[:self.__NP]
         self.__archive = self.__archive[:self.__NA]
 
+        if self.full_meta_data:
+            self.meta_Cost.append( self.__cost)
+            self.meta_X.append(self.__population)
+        
         if np.min(self.__cost) < self.gbest:
             self.gbest = np.min(self.__cost)
         if self.__FEs >= self.log_index * self.log_interval:
@@ -272,6 +281,9 @@ class MadDE(Basic_Optimizer):
             return self.gbest <= 1e-8
 
     def run_episode(self, problem):
+        if self.full_meta_data:
+            self.meta_Cost = []
+            self.meta_X = []
         self.__init_population(problem)
         while self.__FEs < self.__MaxFEs:
             is_done = self.__update(problem)
@@ -281,4 +293,11 @@ class MadDE(Basic_Optimizer):
             self.cost[-1] = self.gbest
         else:
             self.cost.append(self.gbest)
-        return {'cost': self.cost, 'fes': self.__FEs}
+            
+        results = {'cost': self.cost, 'fes': self.__FEs}
+
+        if self.full_meta_data:
+            metadata = {'X':self.meta_X, 'Cost':self.meta_Cost}
+            results['metadata'] = metadata
+        # 与agent一致，去除return，加上metadata
+        return results
