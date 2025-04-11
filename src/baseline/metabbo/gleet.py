@@ -1,8 +1,8 @@
 from torch import nn
 from torch.distributions import Normal
 
-from baseline.metabbo_rl.networks import MultiHeadEncoder, MLP, EmbeddingNet
-from rl_agent.PPO_Agent import *
+from baseline.metabbo.networks import MultiHeadEncoder, MLP, EmbeddingNet
+from rl.PPO_Agent import *
 
 class mySequential(nn.Sequential):
     def forward(self, *inputs):
@@ -168,7 +168,7 @@ class Critic(nn.Module):
 
         return baseline_value.squeeze()
 
-class GLEET_Agent(PPO_Agent):
+class GLEET(PPO_Agent):
     def __init__(self, config):
         self.config = config
 
@@ -233,14 +233,19 @@ class GLEET_Agent(PPO_Agent):
                       envs,
                       seeds: Optional[Union[int, List[int], np.ndarray]],
                       para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc'] = 'dummy',
-                      asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
-                      num_cpus: Optional[Union[int, None]] = 1,
-                      num_gpus: int = 0,
+                      # todo: asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
+                      # num_cpus: Optional[Union[int, None]] = 1,
+                      # num_gpus: int = 0,
+                      compute_resource = {},
                       tb_logger = None,
-                      required_info = []):
-        if self.device != 'cpu':
-            num_gpus = max(num_gpus, 1)
-        env = ParallelEnv(envs, para_mode, asynchronous, num_cpus, num_gpus)
+                      required_info = {}):
+        num_cpus = None
+        num_gpus = 0
+        if 'num_cpus' in compute_resource.keys():
+            num_cpus = compute_resource['num_cpus']
+        if 'num_gpus' in compute_resource.keys():
+            num_gpus = compute_resource['num_gpus']
+        env = ParallelEnv(envs, para_mode, num_cpus=num_cpus, num_gpus=num_gpus)
         env.seed(seeds)
         memory = Memory()
 
@@ -400,7 +405,7 @@ class GLEET_Agent(PPO_Agent):
                     save_class(self.config.agent_save_dir, 'checkpoint' + str(self.cur_checkpoint), self)
                     self.cur_checkpoint += 1
 
-                if not self.config.no_tb and self.learning_time % int(self.config.log_step) == 0:
+                if not self.config.no_tb:
                     self.log_to_tb_train(tb_logger, self.learning_time,
                                          grad_norms,
                                          reinforce_loss, baseline_loss,
@@ -410,8 +415,9 @@ class GLEET_Agent(PPO_Agent):
                 if self.learning_time >= self.config.max_learning_step:
                     memory.clear_memory()
                     _Rs = _R.detach().numpy().tolist()
-                    return_info = {'return': _Rs, 'learn_steps': self.learning_time, }
+                    return_info = {'return': _Rs, 'loss': np.mean(_loss),'learn_steps': self.learning_time, }
                     env_cost = env.get_env_attr('cost')
+                    return_info['normalizer'] = env_cost[0]
                     return_info['gbest'] = env_cost[-1]
                     for key in required_info:
                         return_info[key] = env.get_env_attr(key)
@@ -422,18 +428,10 @@ class GLEET_Agent(PPO_Agent):
 
         is_train_ended = self.learning_time >= self.config.max_learning_step
         _Rs = _R.detach().numpy().tolist()
-        return_info = {'return': _Rs,'learn_steps': self.learning_time,}
+        return_info = {'return': _Rs, 'loss': np.mean(_loss),'learn_steps': self.learning_time,}
         env_cost = env.get_env_attr('cost')
+        return_info['normalizer'] = env_cost[0]
         return_info['gbest'] = env_cost[-1]
-
-        '''
-        'return': 奖励
-        'learn_steps': 训练步数
-        'gbest': 最优评估值
-        
-        针对非并行环境,若并行环境则为np.array(len(envs)): 如'learn_steps': np.array(['learn_steps' for env in envs])
-        return_info = {'return': _R -> float, 'learn_steps': self.learning_time -> int, 'gbest': env_cost[-1] -> float}
-        ''' 
         for key in required_info:
             return_info[key] = env.get_env_attr(key)
         env.close()
@@ -443,13 +441,18 @@ class GLEET_Agent(PPO_Agent):
                               envs,
                               seeds = None,
                               para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc'] = 'dummy',
-                              asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
-                              num_cpus: Optional[Union[int, None]] = 1,
-                              num_gpus: int = 0,
+                              # todo: asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
+                              # num_cpus: Optional[Union[int, None]] = 1,
+                              # num_gpus: int = 0,
+                              compute_resource = {},
                               required_info = {}):
-        if self.device != 'cpu':
-            num_gpus = max(num_gpus, 1)
-        env = ParallelEnv(envs, para_mode, asynchronous, num_cpus, num_gpus)
+        num_cpus = None
+        num_gpus = 0
+        if 'num_cpus' in compute_resource.keys():
+            num_cpus = compute_resource['num_cpus']
+        if 'num_gpus' in compute_resource.keys():
+            num_gpus = compute_resource['num_gpus']
+        env = ParallelEnv(envs, para_mode, num_cpus=num_cpus, num_gpus=num_gpus)
 
         env.seed(seeds)
         state = env.reset()
@@ -477,10 +480,40 @@ class GLEET_Agent(PPO_Agent):
         _Rs = R.detach().numpy().tolist()
         env_cost = env.get_env_attr('cost')
         env_fes = env.get_env_attr('fes')
-        env_metadata = env.get_env_attr('metadata') 
-        results = {'cost': env_cost, 'fes': env_fes, 'return': _Rs, 'metadata': env_metadata}
+        results = {'cost': env_cost, 'fes': env_fes, 'return': _Rs}
         for key in required_info.keys():
             results[key] = env.get_env_attr(required_info[key])
         return results
 
+    def rollout_episode(self,
+                        env,
+                        seed = None,
+                        required_info = {}):
+        with torch.no_grad():
+            if seed is not None:
+                env.seed(seed)
+            is_done = False
+            state = env.reset()
+            R = 0
+            while not is_done:
+                try:
+                    state = torch.FloatTensor(state).unsqueeze(0).to(self.device)
+                except:
+                    state = [state]
+                action = self.actor(state)[0]
+                action = action.cpu().numpy().squeeze()
+                state, reward, is_done, info = env.step(action)
+                R += reward
+            env_cost = env.get_env_attr('cost')
+            env_fes = env.get_env_attr('fes')
+            results = {'cost': env_cost, 'fes': env_fes, 'return': R}
 
+            if self.config.full_meta_data:
+                meta_X = env.get_env_attr('meta_X')
+                meta_Cost = env.get_env_attr('meta_Cost')
+                metadata = {'X': meta_X, 'Cost': meta_Cost}
+                results['metadata'] = metadata
+
+            for key in required_info.keys():
+                results[key] = getattr(env, required_info[key])
+            return results

@@ -90,7 +90,7 @@ class Critic(nn.Module):
         bl_val = self.model(feature.view(batch, -1))[:, 0]
         return bl_val.detach(), bl_val
 
-class RLDAS_Agent(PPO_Agent):
+class RLDAS(PPO_Agent):
     def __init__(self, config):
         self.config = config
 
@@ -120,19 +120,24 @@ class RLDAS_Agent(PPO_Agent):
         super().__init__(self.config, {'actor': actor, 'critic': critic}, self.config.lr)
 
     def __str__(self):
-        return "RL_DAS"
+        return "RLDAS"
 
     def train_episode(self,
                       envs,
                       seeds: Optional[Union[int, List[int], np.ndarray]],
                       para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc'] = 'dummy',
-                      asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
-                      num_cpus: Optional[Union[int, None]] = 1,
-                      num_gpus: int = 0,
+                      # todo: asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
+                      # num_cpus: Optional[Union[int, None]] = 1,
+                      # num_gpus: int = 0,
+                      compute_resource = {},
                       tb_logger = None,
-                      required_info = []):
-        if self.device != 'cpu':
-            num_gpus = max(num_gpus, 1)
+                      required_info = {}):
+        num_cpus = None
+        num_gpus = 0
+        if 'num_cpus' in compute_resource.keys():
+            num_cpus = compute_resource['num_cpus']
+        if 'num_gpus' in compute_resource.keys():
+            num_gpus = compute_resource['num_gpus']
         k = 1
         for env in envs:
             k = max(k, int(0.3*(env.optimizer.MaxFEs // env.optimizer.period)))
@@ -329,13 +334,18 @@ class RLDAS_Agent(PPO_Agent):
                               envs,
                               seeds = None,
                               para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc'] = 'dummy',
-                              asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
-                              num_cpus: Optional[Union[int, None]] = 1,
-                              num_gpus: int = 0,
+                              # todo: asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
+                              # num_cpus: Optional[Union[int, None]] = 1,
+                              # num_gpus: int = 0,
+                              compute_resource = {},
                               required_info = {}):
-        if self.device != 'cpu':
-            num_gpus = max(num_gpus, 1)
-        env = ParallelEnv(envs, para_mode, asynchronous, num_cpus, num_gpus)
+        num_cpus = None
+        num_gpus = 0
+        if 'num_cpus' in compute_resource.keys():
+            num_cpus = compute_resource['num_cpus']
+        if 'num_gpus' in compute_resource.keys():
+            num_gpus = compute_resource['num_gpus']
+        env = ParallelEnv(envs, para_mode, num_cpus = num_cpus, num_gpus = num_gpus)
 
         env.seed(seeds)
         state = env.reset()
@@ -367,4 +377,35 @@ class RLDAS_Agent(PPO_Agent):
             results[key] = env.get_env_attr(required_info[key])
         return results
 
+    def rollout_episode(self,
+                        env,
+                        seed = None,
+                        required_info = {}):
+        with torch.no_grad():
+            if seed is not None:
+                env.seed(seed)
+            is_done = False
+            state = env.reset()
+            R = 0
+            while not is_done:
+                try:
+                    state = torch.FloatTensor(state).unsqueeze(0).to(self.device)
+                except:
+                    state = [state]
+                action = self.actor(state)[0]
+                action = action.cpu().numpy().squeeze()
+                state, reward, is_done, info = env.step(action)
+                R += reward
+            env_cost = env.get_env_attr('cost')
+            env_fes = env.get_env_attr('fes')
+            results = {'cost': env_cost, 'fes': env_fes, 'return': R}
 
+            if self.config.full_meta_data:
+                meta_X = env.get_env_attr('meta_X')
+                meta_Cost = env.get_env_attr('meta_Cost')
+                metadata = {'X': meta_X, 'Cost': meta_Cost}
+                results['metadata'] = metadata
+
+            for key in required_info.keys():
+                results[key] = getattr(env, required_info[key])
+            return results

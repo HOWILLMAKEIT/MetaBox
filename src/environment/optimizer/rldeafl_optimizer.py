@@ -1,6 +1,6 @@
 import numpy as np
 
-from optimizer.learnable_optimizer import Learnable_Optimizer
+from environment.optimizer.learnable_optimizer import Learnable_Optimizer
 
 crossover_operators = ["CR1", "CR2", "CR3"]
 mutation_operators = ['DE1', 'DE2', 'DE3', 'DE4', 'DE5', 'DE6', 'DE7', 'DE8', 'DE9', 'DE10', 'DE11', 'DE12', 'DE13', 'DE14']
@@ -39,9 +39,9 @@ class select_crossover:
         operator_class = self.operators[crossover_operator_name]
         return operator_class
 
-class RLDE_AFL_Optimizer(Learnable_Optimizer):
+class RLDEAFL_Optimizer(Learnable_Optimizer):
     def __init__(self, config):
-        super(RLDE_AFL_Optimizer, self).__init__(config)
+        super().__init__(config)
         self.__config = config
 
         self.__mu_operator = 14
@@ -62,6 +62,9 @@ class RLDE_AFL_Optimizer(Learnable_Optimizer):
         self.log_index = None
         self.log_interval = config.log_interval
 
+    def __str__(self):
+        return "RLDEAFL_Optimizer"
+
     # calculate costs of solutions
     def get_costs(self, position, problem):
         ps = position.shape[0]
@@ -80,9 +83,6 @@ class RLDE_AFL_Optimizer(Learnable_Optimizer):
         xs = (self.current_vector - 0) / (1 - 0)
         fes = self.fes / self.max_fes
         pop = np.column_stack((xs, self.current_fitness, np.full(xs.shape[0], fes)))
-        # pop = {'x': xs[None, :],
-        #        'y': self.current_fitness[None, :],
-        #        'fes': np.array([[fes]])}
         return pop
 
     def init_population(self, problem):
@@ -103,6 +103,10 @@ class RLDE_AFL_Optimizer(Learnable_Optimizer):
         self.log_index = 1
         self.cost = [self.gbest_val]
         self.__init_gbest = self.gbest_val
+
+        if self.__config.full_meta_data:
+            self.meta_X = [self.current_vector]
+            self.meta_Cost = [self.current_fitness]
 
         return self.observe()
 
@@ -179,6 +183,10 @@ class RLDE_AFL_Optimizer(Learnable_Optimizer):
             self.log_index += 1
             self.cost.append(self.gbest_val)
 
+        if self.__config.full_meta_data:
+            self.meta_X.append(self.current_vector)
+            self.meta_Cost.append(self.current_fitness)
+
         if problem.optimum is None:
             is_done = self.fes >= self.max_fes
         else:
@@ -221,15 +229,6 @@ class Basic_mutation:
     def __init__(self, rng):
         self.rng = rng
     def mutation(self, group, cost, indexs, parameters, archive):
-        """
-        Perform a mutation operation on a population.
-        Args:
-            env: The environment in which the mutation is performed.
-            pop_index: The index of the population to mutate.
-            parameters: Additional parameters required for the mutation process.
-        Returns:
-            None
-        """
         pass
 
     def construct_random_indices(self, pop_size, indexs, x_num):

@@ -3,8 +3,8 @@ import math
 from typing import Optional, Union, Literal, List
 
 from environment.VectorEnv.great_para_env import ParallelEnv
-from .basic_agent import Basic_Agent
-from .utils import *
+from rl.basic_agent import Basic_Agent
+from rl.utils import *
 import torch
 import numpy as np
 
@@ -44,7 +44,7 @@ def clip_grad_norms(param_groups, max_norm = math.inf):
 
 
 class PPO_Agent(Basic_Agent):
-    def __init__(self, config, networks: dict, learning_rates: float):
+    def __init__(self, config, networks: dict, learning_rates: Optional):
         super().__init__(config)
         self.config = config
 
@@ -84,7 +84,7 @@ class PPO_Agent(Basic_Agent):
         save_class(self.config.agent_save_dir, 'checkpoint' + str(self.cur_checkpoint), self)
         self.cur_checkpoint += 1
 
-    def set_network(self, networks: dict, learning_rates: float):
+    def set_network(self, networks: dict, learning_rates: Optional):
         Network_name = []
         if networks:
             for name, network in networks.items():

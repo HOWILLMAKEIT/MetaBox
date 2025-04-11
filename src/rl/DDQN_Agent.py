@@ -5,13 +5,13 @@ from typing import Optional, Union, Literal
 import torch.nn.functional as F
 from typing import Optional, Union, Literal, List
 from environment.VectorEnv.great_para_env import ParallelEnv
-from .basic_agent import Basic_Agent
-from .utils import *
+from rl.basic_agent import Basic_Agent
+from rl.utils import *
 import torch
 import numpy as np
 
 
-def clip_grad_norms(param_groups, max_norm=math.inf):
+def clip_grad_norms(param_groups, max_norm = math.inf):
     """
     Clips the norms for all param groups to max_norm and returns gradient norms before clipping
     :param optimizer:
@@ -32,7 +32,7 @@ def clip_grad_norms(param_groups, max_norm=math.inf):
 
 
 class DDQN_Agent(Basic_Agent):
-    def __init__(self, config, networks: dict, learning_rates: float):
+    def __init__(self, config, networks: dict, learning_rates: Optional):
         super().__init__(config)
         self.config = config
 
@@ -55,10 +55,10 @@ class DDQN_Agent(Basic_Agent):
         self.cur_checkpoint = 0
 
         # save init agent
-        save_class(self.config.agent_save_dir,'checkpoint'+str(self.cur_checkpoint),self)
+        save_class(self.config.agent_save_dir, 'checkpoint' + str(self.cur_checkpoint), self)
         self.cur_checkpoint += 1
 
-    def set_network(self, networks: dict, learning_rates: float):
+    def set_network(self, networks: dict, learning_rates: Optional):
         Network_name = []
         if networks:
             for name, network in networks.items():
@@ -97,18 +97,18 @@ class DDQN_Agent(Basic_Agent):
         save_class(self.config.agent_save_dir, 'checkpoint0', self)
         self.config.save_interval = config.save_interval
         self.cur_checkpoint = 1
-        
-    def get_action(self, state, epsilon_greedy=False):
+
+    def get_action(self, state, epsilon_greedy = False):
         state = torch.Tensor(state).to(self.device)
         with torch.no_grad():
             Q_list = self.model(state)
         if epsilon_greedy and np.random.rand() < self.epsilon:
-            action = np.random.randint(low=0, high=self.n_act, size=len(state))
+            action = np.random.randint(low = 0, high = self.n_act, size = len(state))
         else:
             action = torch.argmax(Q_list, -1).detach().cpu().numpy()
         return action
 
-    def train_episode(self, 
+    def train_episode(self,
                       envs,
                       seeds: Optional[Union[int, List[int], np.ndarray]],
                       para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc']='dummy',
@@ -124,24 +124,24 @@ class DDQN_Agent(Basic_Agent):
             num_cpus = compute_resource['num_cpus']
         if 'num_gpus' in compute_resource.keys():
             num_gpus = compute_resource['num_gpus']
-        env = ParallelEnv(envs, para_mode, num_cpus=num_cpus, num_gpus=num_gpus)
+        env = ParallelEnv(envs, para_mode, num_cpus = num_cpus, num_gpus = num_gpus)
         env.seed(seeds)
         # params for training
         gamma = self.gamma
-        
+
         state = env.reset()
         try:
             state = torch.FloatTensor(state)
         except:
             pass
-        
+
         _R = torch.zeros(len(env))
         _loss = []
         _reward = []
         # sample trajectory
         while not env.all_done():
-            action = self.get_action(state=state, epsilon_greedy=True)
-                        
+            action = self.get_action(state = state, epsilon_greedy = True)
+
             # state transient
             next_state, reward, is_end, info = env.step(action)
             _R += reward
@@ -158,7 +158,7 @@ class DDQN_Agent(Basic_Agent):
                 state = next_state
             except:
                 state = copy.deepcopy(next_state)
-            
+
             # begin update
             if len(self.replay_buffer) >= self.warm_up_size:
                 batch_obs, batch_action, batch_reward, batch_next_obs, batch_done = self.replay_buffer.sample(self.batch_size)
@@ -182,14 +182,14 @@ class DDQN_Agent(Basic_Agent):
                 _loss.append(loss.item())
                 self.learning_time += 1
                 if self.learning_time >= (self.config.save_interval * self.cur_checkpoint):
-                    save_class(self.config.agent_save_dir, 'checkpoint'+str(self.cur_checkpoint), self)
+                    save_class(self.config.agent_save_dir, 'checkpoint' + str(self.cur_checkpoint), self)
                     self.cur_checkpoint += 1
-                    
+
                 if self.learning_time % self.target_update_interval == 0:
                     for target_parma, parma in zip(self.target_model.parameters(), self.model.parameters()):
                         target_parma.data.copy_(parma.data)
 
-                if not self.config.no_tb and self.learning_time % int(self.config.log_step) == 0:
+                if not self.config.no_tb:
                     self.log_to_tb_train(tb_logger, self.learning_time,
                                          grad_norms,
                                          loss,
@@ -202,28 +202,27 @@ class DDQN_Agent(Basic_Agent):
                     env_cost = env.get_env_attr('cost')
                     return_info['normalizer'] = env_cost[0]
                     return_info['gbest'] = env_cost[-1]
-                    for key in required_info:
-                        return_info[key] = env.get_env_attr(key)
+                    for key in required_info.keys():
+                        return_info[key] = env.get_env_attr(required_info[key])
                     env.close()
                     return self.learning_time >= self.config.max_learning_step, return_info
-        
-            
+
         is_train_ended = self.learning_time >= self.config.max_learning_step
         _Rs = _R.detach().numpy().tolist()
         return_info = {'return': _Rs, 'loss': np.mean(_loss), 'learn_steps': self.learning_time, }
         env_cost = env.get_env_attr('cost')
         return_info['normalizer'] = env_cost[0]
         return_info['gbest'] = env_cost[-1]
-        for key in required_info:
-            return_info[key] = env.get_env_attr(key)
+        for key in required_info.keys():
+            return_info[key] = env.get_env_attr(required_info[key])
         env.close()
-        
+
         return is_train_ended, return_info
-    
-    def rollout_episode(self, 
+
+    def rollout_episode(self,
                         env,
-                        seed=None,
-                        required_info=['normalizer', 'gbest']):
+                        seed = None,
+                        required_info = ['normalizer', 'gbest']):
         with torch.no_grad():
             if seed is not None:
                 env.seed(seed)
@@ -236,19 +235,24 @@ class DDQN_Agent(Basic_Agent):
                 except:
                     state = [state]
                 action = self.get_action(state)[0]
-                state, reward, is_done,info = env.step(action)
+                state, reward, is_done, info = env.step(action)
                 R += reward
             _Rs = R.detach().numpy().tolist()
             env_cost = env.get_env_attr('cost')
             env_fes = env.get_env_attr('fes')
             results = {'cost': env_cost, 'fes': env_fes, 'return': _Rs}
+            if self.config.full_meta_data:
+                meta_X = env.get_env_attr('meta_X')
+                meta_Cost = env.get_env_attr('meta_Cost')
+                metadata = {'X': meta_X, 'Cost': meta_Cost}
+                results['metadata'] = metadata
             for key in required_info:
                 results[key] = getattr(env, key)
             return results
     
     def rollout_batch_episode(self, 
                               envs, 
-                              seeds=None,
+                              seeds = None,
                               para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc']='dummy',
                               # todo: asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
                               # num_cpus: Optional[Union[int, None]] = 1,
@@ -269,13 +273,12 @@ class DDQN_Agent(Basic_Agent):
             state = torch.FloatTensor(state).to(self.device)
         except:
             pass
-        
+
         R = torch.zeros(len(env))
         # sample trajectory
         while not env.all_done():
             with torch.no_grad():
                 action = self.get_action(state)
-            
 
             # state transient
             state, rewards, is_end, info = env.step(action)
@@ -294,7 +297,7 @@ class DDQN_Agent(Basic_Agent):
             results[key] = getattr(env, key)
         return results
 
-# todo add metric
+    # todo add metric
     def log_to_tb_train(self, tb_logger, mini_step,
                         grad_norms,
                         loss,

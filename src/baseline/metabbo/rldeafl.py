@@ -1,9 +1,8 @@
 import torch.nn as nn
 from torch.distributions import Normal
 
-from agents.networks import MLP, MultiHeadEncoder, EmbeddingNet, PositionalEncoding
-from basic_agent.PPO_Agent import *
-
+from baseline.metabbo.networks import MLP, MultiHeadEncoder, EmbeddingNet, PositionalEncoding
+from rl.PPO_Agent import *
 
 class mySequential(nn.Sequential):
     def forward(self, *input):
@@ -356,12 +355,12 @@ class Critic(nn.Module):
         trainable_num = sum(p.numel() for p in self.parameters() if p.requires_grad)  # Number of trainable parameters
         return {'Total': total_num, 'Trainable': trainable_num}
 
-class RLDE_AFL_Agent(PPO_Agent):
+class RLDEAFL(PPO_Agent):
     def __init__(self, config):
         self.config = config
 
         self.config.optimizer = 'Adam'
-        self.config.lr = 1e-5
+        self.config.lr = 1e-4
 
         self.config.fe_hidden_dim = 64
         self.config.fe_n_layers = 1
@@ -395,25 +394,30 @@ class RLDE_AFL_Agent(PPO_Agent):
         super().__init__(self.config, {'actor': actor, 'critic': critic, 'fe': fe}, self.config.lr)
 
     def __str__(self):
-        return "RLDE_AFL"
+        return "RLDEAFL"
 
     def train_episode(self,
                       envs,
                       seeds: Optional[Union[int, List[int], np.ndarray]],
                       para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc'] = 'dummy',
-                      asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
-                      num_cpus: Optional[Union[int, None]] = 1,
-                      num_gpus: int = 0,\
+                      # todo: asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
+                      # num_cpus: Optional[Union[int, None]] = 1,
+                      # num_gpus: int = 0,
+                      compute_resource = {},
                       tb_logger = None,
-                      required_info = []):
-        if self.device != 'cpu':
-            num_gpus = max(num_gpus, 1)
+                      required_info = {}):
+        num_cpus = None
+        num_gpus = 0
+        if 'num_cpus' in compute_resource.keys():
+            num_cpus = compute_resource['num_cpus']
+        if 'num_gpus' in compute_resource.keys():
+            num_gpus = compute_resource['num_gpus']
+        env = ParallelEnv(envs, para_mode, num_cpus=num_cpus, num_gpus=num_gpus)
 
         torch.set_grad_enabled(True)
         self.fe.set_on_train()
         self.actor.train()
         self.critic.train()
-        env = ParallelEnv(envs, para_mode, asynchronous, num_cpus, num_gpus)
         env.seed(seeds)
         memory = Memory()
 
@@ -574,7 +578,7 @@ class RLDE_AFL_Agent(PPO_Agent):
                     save_class(self.config.agent_save_dir, 'checkpoint' + str(self.cur_checkpoint), self)
                     self.cur_checkpoint += 1
 
-                if not self.config.no_tb and self.learning_time % int(self.config.log_step) == 0:
+                if not self.config.no_tb:
                     self.log_to_tb_train(tb_logger, self.learning_time,
                                          grad_norms,
                                          reinforce_loss, baseline_loss,
@@ -588,8 +592,8 @@ class RLDE_AFL_Agent(PPO_Agent):
                     env_cost = env.get_env_attr('cost')
                     return_info['normalizer'] = env_cost[0]
                     return_info['gbest'] = env_cost[-1]
-                    for key in required_info:
-                        return_info[key] = env.get_env_attr(key)
+                    for key in required_info.keys():
+                        return_info[key] = env.get_env_attr(required_info[key])
                     env.close()
                     return self.learning_time >= self.config.max_learning_step, return_info
 
@@ -601,8 +605,8 @@ class RLDE_AFL_Agent(PPO_Agent):
         env_cost = env.get_env_attr('cost')
         return_info['normalizer'] = env_cost[0]
         return_info['gbest'] = env_cost[-1]
-        for key in required_info:
-            return_info[key] = env.get_env_attr(key)
+        for key in required_info.keys():
+            return_info[key] = env.get_env_attr(required_info[key])
         env.close()
         return is_train_ended, return_info
 
@@ -610,19 +614,25 @@ class RLDE_AFL_Agent(PPO_Agent):
                               envs,
                               seeds = None,
                               para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc'] = 'dummy',
-                              asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
-                              num_cpus: Optional[Union[int, None]] = 1,
-                              num_gpus: int = 0,
+                              # todo: asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
+                              # num_cpus: Optional[Union[int, None]] = 1,
+                              # num_gpus: int = 0,
+                              compute_resource = {},
                               required_info = {}):
-        if self.device != 'cpu':
-            num_gpus = max(num_gpus, 1)
+        num_cpus = None
+        num_gpus = 0
+        if 'num_cpus' in compute_resource.keys():
+            num_cpus = compute_resource['num_cpus']
+        if 'num_gpus' in compute_resource.keys():
+            num_gpus = compute_resource['num_gpus']
+        env = ParallelEnv(envs, para_mode, num_cpus=num_cpus, num_gpus=num_gpus)
+
+        env.seed(seeds)
 
         self.fe.set_off_train()
         self.actor.eval()
         self.critic.eval()
-        env = ParallelEnv(envs, para_mode, asynchronous, num_cpus, num_gpus)
 
-        env.seed(seeds)
         state = env.reset()
         try:
             state = torch.FloatTensor(state).to(self.device)
@@ -653,3 +663,37 @@ class RLDE_AFL_Agent(PPO_Agent):
             results[key] = env.get_env_attr(required_info[key])
         return results
 
+    def rollout_episode(self,
+                        env,
+                        seed = None,
+                        required_info = {}):
+        self.fe.set_off_train()
+        self.actor.eval()
+        self.critic.eval()
+        with torch.no_grad():
+            env.seed(seed)
+            is_done = False
+            state = env.reset()
+            R = 0
+            while not is_done:
+                try:
+                    state = torch.FloatTensor(state).to(self.device)
+                except:
+                    pass
+                feature = self.fe(state).to(self.config.device)
+                action = self.actor.get_action(feature)[0].detach().cpu().numpy()
+                state, reward, is_done, info = env.step(action)
+                R += reward
+            env_cost = env.get_env_attr('cost')
+            env_fes = env.get_env_attr('fes')
+            results = {'cost': env_cost, 'fes': env_fes, 'return': R}
+
+            if self.config.full_meta_data:
+                meta_X = env.get_env_attr('meta_X')
+                meta_Cost = env.get_env_attr('meta_Cost')
+                metadata = {'X': meta_X, 'Cost': meta_Cost}
+                results['metadata'] = metadata
+
+            for key in required_info.keys():
+                results[key] = env.get_env_attr(required_info[key])
+            return results
