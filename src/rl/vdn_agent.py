@@ -8,11 +8,11 @@ from torch import nn
 import torch
 from torch.distributions import Normal
 import torch.nn.functional as F
-from agent.utils import *
-from agent.basic_agent import Basic_Agent
-
-
-from VectorEnv.great_para_env import ParallelEnv
+from environment.VectorEnv.great_para_env import ParallelEnv
+from .basic_agent import Basic_Agent
+from .utils import *
+import torch
+import numpy as np
 
 
 def clip_grad_norms(param_groups, max_norm=math.inf):
@@ -107,16 +107,24 @@ class VDN_Agent(Basic_Agent):
     def train_episode(self,
                       envs,
                       para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc'] = 'dummy',
-                      asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
-                      num_cpus: Optional[Union[int, None]] = 1,
-                      num_gpus: int = 0,
-                      required_info=None):
+                      # todo: asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
+                      # num_cpus: Optional[Union[int, None]] = 1,
+                      # num_gpus: int = 0,
+                      compute_resource = {},
+                      tb_logger = None,
+                      required_info = {}):
+        num_cpus = None
+        num_gpus = 0
+        if 'num_cpus' in compute_resource.keys():
+            num_cpus = compute_resource['num_cpus']
+        if 'num_gpus' in compute_resource.keys():
+            num_gpus = compute_resource['num_gpus']
         if required_info is None:
             required_info = {'best_igd': 'best_value',
                              }
         if self.device != 'cpu':
             num_gpus = max(num_gpus, 1)
-        env = ParallelEnv(envs, para_mode, asynchronous, num_cpus, num_gpus)
+        env = ParallelEnv(envs, para_mode, num_cpus, num_gpus)
 
         # params for training
         gamma = self.gamma
@@ -220,13 +228,18 @@ class VDN_Agent(Basic_Agent):
                               envs,
                               seeds=None,
                               para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc'] = 'dummy',
-                              asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
-                              num_cpus: Optional[Union[int, None]] = 1,
-                              num_gpus: int = 0,
-                              required_info={}):
-        if self.device != 'cpu':
-            num_gpus = max(num_gpus, 1)
-        env = ParallelEnv(envs, para_mode, asynchronous, num_cpus, num_gpus)
+                              # todo: asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
+                              # num_cpus: Optional[Union[int, None]] = 1,
+                              # num_gpus: int = 0,
+                              compute_resource = {},
+                              required_info = {}):
+        num_cpus = None
+        num_gpus = 0
+        if 'num_cpus' in compute_resource.keys():
+            num_cpus = compute_resource['num_cpus']
+        if 'num_gpus' in compute_resource.keys():
+            num_gpus = compute_resource['num_gpus']
+        env = ParallelEnv(envs, para_mode, num_cpus=num_cpus, num_gpus=num_gpus)
         if seeds is not None:
             env.seed(seeds)
         state = env.reset()
