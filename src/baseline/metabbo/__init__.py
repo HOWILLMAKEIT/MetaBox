@@ -8,7 +8,7 @@ from .rlde_afl_agent import RLDE_AFL_Agent
 from .lde_agent import LDE_Agent
 from .rl_pso_agent import RL_PSO_Agent
 from .symbol_agent import SYMBOL_Agent
-from .rl_das_agent import RL_DAS_Agent
+from .rldas import RLDAS_Agent
 from .surr_rlde_agent import Surr_RLDE_Agent
 from .rlepso_agent import RLEPSO_Agent
 from .rlemmo_agent import RLEMMO_Agent
