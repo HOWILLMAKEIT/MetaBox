@@ -1,5 +1,5 @@
-from agents.networks import MLP
-from basic_agent.DQN_Agent import *
+from .networks import MLP
+from rl.DQN_Agent import *
 
 
 class DEDQN_Agent(DQN_Agent):

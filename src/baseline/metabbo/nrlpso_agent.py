@@ -1,7 +1,7 @@
 from scipy.special import softmax
 from typing import Optional, Union, Literal, List
-from basic_agent.TabularQ_Agent import *
-from basic_agent.utils import save_class
+from rl.TabularQ_Agent import *
+from rl.utils import save_class
 
 
 class NRLPSO_Agent(TabularQ_Agent):

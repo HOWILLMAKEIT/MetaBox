@@ -1,5 +1,5 @@
 from typing import Tuple
-from agent.basic_agent import Basic_Agent
+from rl.basic_agent import Basic_Agent
 
 import torch
 import math, copy
@@ -9,8 +9,8 @@ from torch import nn
 import torch
 from torch.distributions import Normal
 import torch.nn.functional as F
-from agent.utils import *
-from VectorEnv.great_para_env import ParallelEnv
+from rl.utils import *
+from environment.VectorEnv.great_para_env import ParallelEnv
 
 class Actor(nn.Module):
     def __init__(self, n_state, n_action, hidden_dim=64):

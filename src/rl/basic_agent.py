@@ -31,7 +31,7 @@ class Basic_Agent:
 
     def train_episode(self,
                       env,
-                      seeds: Optional) -> Tuple[bool, dict]:
+                      seeds: int) -> Tuple[bool, dict]:
         raise NotImplementedError
 
     def rollout_episode(self,
@@ -41,7 +41,7 @@ class Basic_Agent:
     def train_epoch(self):
         pass
 
-    def set_network(self, networks: dict, learning_rates: Optional):
+    def set_network(self, networks: dict, learning_rates: int):
         pass
 
     @classmethod

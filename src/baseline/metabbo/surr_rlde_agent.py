@@ -1,5 +1,5 @@
-from agents.networks import MLP
-from basic_agent.DDQN_Agent import *
+from .networks import MLP
+from rl.DDQN_Agent import *
 
 
 class Surr_RLDE_Agent(DDQN_Agent):

@@ -142,7 +142,7 @@ class RLDAS(PPO_Agent):
         for env in envs:
             k = max(k, int(0.3*(env.optimizer.MaxFEs // env.optimizer.period)))
 
-        env = ParallelEnv(envs, para_mode, asynchronous, num_cpus, num_gpus)
+        env = ParallelEnv(envs, para_mode, num_cpus, num_gpus)
         env.seed(seeds)
         memory = Memory()
 

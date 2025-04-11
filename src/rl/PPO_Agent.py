@@ -44,7 +44,7 @@ def clip_grad_norms(param_groups, max_norm = math.inf):
 
 
 class PPO_Agent(Basic_Agent):
-    def __init__(self, config, networks: dict, learning_rates: Optional):
+    def __init__(self, config, networks: dict, learning_rates: float):
         super().__init__(config)
         self.config = config
 
@@ -84,7 +84,7 @@ class PPO_Agent(Basic_Agent):
         save_class(self.config.agent_save_dir, 'checkpoint' + str(self.cur_checkpoint), self)
         self.cur_checkpoint += 1
 
-    def set_network(self, networks: dict, learning_rates: Optional):
+    def set_network(self, networks: dict, learning_rates: float):
         Network_name = []
         if networks:
             for name, network in networks.items():

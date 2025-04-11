@@ -1,9 +1,8 @@
 from torch import nn
 from torch.distributions import Normal
 from typing import Optional, Union, Literal, List
-from agents.networks import MLP
-from basic_agent.REINFORCE_Agent import *
-from basic_agent.utils import *
+from .networks import MLP
+from rl.REINFORCE_Agent import *
 
 
 class PolicyNetwork(nn.Module):

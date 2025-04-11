@@ -1,7 +1,7 @@
 from torch import nn
 
-from basic_agent.REINFORCE_Agent import *
-from basic_agent.utils import *
+from rl.REINFORCE_Agent import *
+from rl.utils import *
 from typing import Optional, Union, Literal, List
 
 class PolicyNet(nn.Module):
