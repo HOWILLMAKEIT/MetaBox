@@ -99,8 +99,8 @@ class SYMBOL_Optimizer(Learnable_Optimizer):
         self.cost = [self.population.gbest_cost]
 
         if self.__config.full_meta_data:
-            self.meta_X = [self.population.current_position]
-            self.meta_Cost = [self.population.c_cost]
+            self.meta_X = [self.population.current_position.copy()]
+            self.meta_Cost = [self.population.c_cost.copy()]
 
         # return state
         return self.observe()
@@ -181,8 +181,8 @@ class SYMBOL_Optimizer(Learnable_Optimizer):
             reward = (self.population.pre_gbest - self.population.gbest_cost) / (self.population.init_cost - 0)
 
         if self.__config.full_meta_data:
-            self.meta_X.append(self.population.current_position)
-            self.meta_Cost.append(self.population.c_cost)
+            self.meta_X.append(self.population.current_position.copy())
+            self.meta_Cost.append(self.population.c_cost.copy())
 
         is_end = False
         # see if the end condition is satisfied

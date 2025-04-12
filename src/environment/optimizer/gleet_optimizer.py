@@ -111,8 +111,8 @@ class GLEET_Optimizer(Learnable_Optimizer):
         gp_cat = self.gp_cat()  # ps, 18
 
         if self.__config.full_meta_data:
-            self.meta_X = [self.particles['current_position']]
-            self.meta_Cost = [self.particles['c_cost']]
+            self.meta_X = [self.particles['current_position'].copy()]
+            self.meta_Cost = [self.particles['c_cost'].copy()]
 
         return np.concatenate((state, gp_cat), axis = -1)  # ps, 9+18
 
@@ -270,8 +270,8 @@ class GLEET_Optimizer(Learnable_Optimizer):
         self.particles = new_particles
 
         if self.__config.full_meta_data:
-            self.meta_X.append(self.particles['current_position'])
-            self.meta_Cost.append(self.particles['c_cost'])
+            self.meta_X.append(self.particles['current_position'].copy())
+            self.meta_Cost.append(self.particles['c_cost'].copy())
 
         # see if the end condition is satisfied
         if problem.optimum is None:

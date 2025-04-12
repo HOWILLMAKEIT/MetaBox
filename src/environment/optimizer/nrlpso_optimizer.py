@@ -50,10 +50,15 @@ class NRLPSO_Optimizer(Learnable_Optimizer):
         self.log_index = 1
         self.cost = [self.__gbest_cost]
 
+        if self.__config.full_meta_data:
+            self.meta_X = [self.__population.copy()]
+            self.meta_Cost = [self.__cost.copy()]
+
         self.r_w = self.rng.rand()
 
         # init state
         self.__state = self.rng.randint(low=0, high=self.n_state, size=self.NP)
+
         return self.__state[self.pointer]
 
     
@@ -284,6 +289,10 @@ class NRLPSO_Optimizer(Learnable_Optimizer):
             is_done = self.fes >= self.__maxFEs
         else:
             is_done = (self.fes >= self.__maxFEs or self.__gbest_cost <= 1e-8)
+
+        if self.__config.full_meta_data:
+            self.meta_X.append(self.__population.copy())
+            self.meta_Cost.append(self.__cost.copy())
         if is_done:
             if len(self.cost) >= self.__config.n_logpoint + 1:
                 self.cost[-1] = self.__gbest_cost

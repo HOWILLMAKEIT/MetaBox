@@ -222,8 +222,8 @@ class DEDDQN_Optimizer(Learnable_Optimizer):
         next_state = self.__get_state(problem)
 
         if self.__config.full_meta_data:
-            self.meta_X.append(self.__X)
-            self.meta_Cost.append(self.__cost)
+            self.meta_X.append(self.__X.copy())
+            self.meta_Cost.append(self.__cost.copy())
 
         if is_done:
             if len(self.cost) >= self.__config.n_logpoint + 1:

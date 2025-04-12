@@ -105,8 +105,8 @@ class RLDEAFL_Optimizer(Learnable_Optimizer):
         self.__init_gbest = self.gbest_val
 
         if self.__config.full_meta_data:
-            self.meta_X = [self.current_vector]
-            self.meta_Cost = [self.current_fitness]
+            self.meta_X = [self.current_vector.copy()]
+            self.meta_Cost = [self.current_fitness.copy()]
 
         return self.observe()
 
@@ -184,8 +184,8 @@ class RLDEAFL_Optimizer(Learnable_Optimizer):
             self.cost.append(self.gbest_val)
 
         if self.__config.full_meta_data:
-            self.meta_X.append(self.current_vector)
-            self.meta_Cost.append(self.current_fitness)
+            self.meta_X.append(self.current_vector.copy())
+            self.meta_Cost.append(self.current_fitness.copy())
 
         if problem.optimum is None:
             is_done = self.fes >= self.max_fes

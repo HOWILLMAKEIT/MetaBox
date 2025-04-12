@@ -8,13 +8,12 @@ class Surr_RLDE_Optimizer(Learnable_Optimizer):
 	def __init__(self, config):
 		super().__init__(config)
 
-
-		self.config = config
 		config.F = 0.5
 		config.Cr = 0.7
 		config.NP = 100
 		self.device = config.device
 		self.config = config
+
 		self.F = config.F
 		self.Cr = config.Cr
 		self.pop_size = config.NP
@@ -22,7 +21,7 @@ class Surr_RLDE_Optimizer(Learnable_Optimizer):
 		self.dim = config.dim
 		self.ub = config.upperbound
 		self.lb = -config.upperbound
-		# 种群与适应度
+
 		self.population = None
 		self.fitness = None
 		self.pop_cur_best = None
@@ -119,6 +118,9 @@ class Surr_RLDE_Optimizer(Learnable_Optimizer):
 		self.cost = [self.fit_cur_best.clone().cpu().item()]  # record the best cost of first generation
 		self.cur_logpoint = 1  # record the current logpoint
 		state = self.get_state(problem)
+		if self.config.full_meta_data:
+			self.meta_X = [self.population.clone().cpu().numpy()]
+			self.meta_Cost = [self.fitness.clone().cpu().numpy()]
 
 		return state
 
@@ -214,6 +216,10 @@ class Surr_RLDE_Optimizer(Learnable_Optimizer):
 		if self.fes >= self.cur_logpoint * self.config.log_interval:
 			self.cur_logpoint += 1
 			self.cost.append(self.fit_history_best.clone().cpu().item())
+
+		if self.config.full_meta_data:
+			self.meta_X.append(self.population.clone().cpu().numpy())
+			self.meta_Cost.append(self.fitness.clone().cpu().numpy())
 
 		if is_done:
 			if len(self.cost) >= self.config.n_logpoint + 1:

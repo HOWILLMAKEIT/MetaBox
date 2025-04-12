@@ -138,8 +138,8 @@ class RLDAS_Optimizer(Learnable_Optimizer):
             self.cost.append(self.population.gbest)
 
         if self.__config.full_meta_data:
-            self.meta_X.append(self.population.group)
-            self.meta_Cost.append(self.population.cost)
+            self.meta_X.append(self.population.group.copy())
+            self.meta_Cost.append(self.population.cost.copy())
 
         if self.done:
             if len(self.cost) >= self.__config.n_logpoint + 1:

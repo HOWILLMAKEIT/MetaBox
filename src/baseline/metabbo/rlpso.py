@@ -46,7 +46,7 @@ class PolicyNetwork(nn.Module):
         return out
 
 
-class RL_PSO_Agent(REINFORCE_Agent):
+class RLPSO(REINFORCE_Agent):
     def __init__(self, config):
         
         # add specified config
@@ -138,18 +138,6 @@ class RL_PSO_Agent(REINFORCE_Agent):
         
         return is_train_ended, return_info
 
-
-    
-    # def rollout_episode(self, env):
-    #     is_done = False
-    #     state = env.reset()
-    #     R=0
-    #     while not is_done:
-    #         state = torch.FloatTensor(state)
-    #         action, _ = self.__nets(state)
-    #         state, reward, is_done = env.step(action.cpu().numpy())
-    #         R+=reward
-    #     return {'cost': env.optimizer.cost, 'fes': env.optimizer.fes,'return':R}
 
     def rollout_batch_episode(self, 
                               envs, 

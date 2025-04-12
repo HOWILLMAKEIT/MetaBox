@@ -65,8 +65,8 @@ class RLEPSO_Optimizer(Learnable_Optimizer):
         self.__per_no_improve -= self.__per_no_improve
 
         if self.__config.full_meta_data:
-            self.meta_X = [self.__particles['current_position']]
-            self.meta_Cost = [self.__particles['c_cost']]
+            self.meta_X = [self.__particles['current_position'].copy()]
+            self.meta_Cost = [self.__particles['c_cost'].copy()]
 
         return self.__get_state()
 
@@ -248,8 +248,8 @@ class RLEPSO_Optimizer(Learnable_Optimizer):
             self.cost.append(self.__particles['gbest_val'])
 
         if self.__config.full_meta_data:
-            self.meta_X.append(self.__particles['current_position'])
-            self.meta_Cost.append(self.__particles['c_cost'])
+            self.meta_X.append(self.__particles['current_position'].copy())
+            self.meta_Cost.append(self.__particles['c_cost'].copy())
 
         if problem.optimum is None:
             is_end = self.fes >= self.__max_fes

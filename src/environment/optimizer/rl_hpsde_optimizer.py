@@ -129,7 +129,12 @@ class RL_HPSDE_Optimizer(Learnable_Optimizer):
         self.__population.sort(self.__population.NP)
         self.fes = self.__population.NP
         self.log_index = 1
+
+        if self.__config.full_meta_data:
+            self.meta_X = [self.__population.group.copy()]
+            self.meta_Cost = [self.__population.cost.copy()]
         self.cost = [self.__population.gbest]
+
 
         
         return self.__get_state(problem)
@@ -283,6 +288,11 @@ class RL_HPSDE_Optimizer(Learnable_Optimizer):
             done = self.fes >= self.__maxFEs
         else:
             done = (self.fes >= self.__maxFEs or population.gbest <= 1e-8)
+
+        if self.__config.full_meta_data:
+            self.meta_X.append(population.group.copy())
+            self.meta_Cost.append(population.cost.copy())
+
         if done:
             if len(self.cost) >= self.__config.n_logpoint + 1:
                 self.cost[-1] = population.gbest

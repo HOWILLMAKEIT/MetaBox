@@ -57,6 +57,11 @@ class RL_PSO_Optimizer(Learnable_Optimizer):
         self.__cur_index = 0
         self.log_index = 1
         self.cost = [self.__particles['gbest_val']]
+
+        if self.__config.full_meta_data:
+            self.meta_X = [rand_pos.copy()]
+            self.meta_Cost = [c_cost.copy()]
+
         return self.__get_state(self.__cur_index)
 
     def __get_state(self, index):
@@ -139,6 +144,10 @@ class RL_PSO_Optimizer(Learnable_Optimizer):
         reward = (pre_cost-new_cost)/(self.__max_cost-self.__particles['gbest_val'])
 
         self.__cur_index = (self.__cur_index+1) % self.__NP
+
+        if self.__config.full_meta_data:
+            self.meta_X.append(self.__particles['current_position'].copy())
+            self.meta_Cost.append(self.__particles['c_cost'].copy())
 
         if is_done:
             if len(self.cost) >= self.__config.n_logpoint + 1:

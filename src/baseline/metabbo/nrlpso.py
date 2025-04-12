@@ -4,31 +4,31 @@ from rl.TabularQ_Agent import *
 from rl.utils import save_class
 
 
-class QLPSO_Agent(TabularQ_Agent):
+class NRLPSO(TabularQ_Agent):
     def __init__(self, config):
+        
         self.config = config
-        # define hyperparameters that agent needs
         self.config.n_state = 4
         self.config.n_act = 4
-        self.config.lr_model = 1
-        self.config.alpha_decay = True
+        # self.__n_actions = 4
         self.config.gamma = 0.8
-
-        self.config.epsilon = None
-
-        # self.__q_table = np.zeros((config.n_states, config.n_actions))
-
+        self.config.lr_model = 1
         self.__alpha_max = self.config.lr_model
-        # self.lr_model = self.config.lr_model
-        self.__alpha_decay = self.config.alpha_decay
-        self.__max_learning_step =  self.config.max_learning_step
-        # self.__global_ls = 0  # a counter of accumulated learned steps
+        # self.__q_table = np.zeros((config.n_states, config.n_actions))
+        self.config.epsilon = None
+        self.__max_learning_step = config.max_learning_step
         self.device = self.config.device
+        # self.__global_ls = 0  # a counter of accumulated learned steps
+
         # self.__cur_checkpoint = 0
         super().__init__(self.config)
+        # # save init agent
+        # if self.__cur_checkpoint == 0:
+        #     save_class(self.__config.agent_save_dir, 'checkpoint'+str(self.__cur_checkpoint), self)
+        #     self.__cur_checkpoint += 1
 
     def __str__(self):
-        return "QLPSO"
+        return "NRLPSO"
 
     def __get_action(self, state):  # Make action decision according to the given state
         # Get the corresponding rows from the Q-table and compute the softmax
@@ -50,6 +50,7 @@ class QLPSO_Agent(TabularQ_Agent):
                       asynchronous: Literal[None, 'idle', 'restart', 'continue']=None,
                       num_cpus: Optional[Union[int, None]]=1,
                       num_gpus: int=0,
+                      tb_logger = None,
                       required_info={}):
         if self.device != 'cpu':
             num_gpus = max(num_gpus, 1)
@@ -63,27 +64,33 @@ class QLPSO_Agent(TabularQ_Agent):
         
         _R = torch.zeros(len(env))
         _loss = []
+        _reward = []
         # sample trajectory
         while not env.all_done():
             action = self.__get_action(state)
             # state transient
             next_state, reward, is_end, info = env.step(action)
             _R += reward
-            # update Q-table
-            # TD_error = [reward[i] + gamma * self.q_table[next_state[i]].max() - self.q_table[state[i]][action[i]]\
-            #     for i in range(len(state)) ]
             reward = torch.FloatTensor(reward).to(self.device)
+            _reward.append(reward)
+            # update Q-table
             TD_error = reward + gamma * torch.max(self.q_table[next_state], dim = 1)[0] - self.q_table[state, action]
 
             _loss.append(TD_error.mean().item())
             self.q_table[state, action] += self.lr_model * TD_error
 
-            
+
             self.learning_time += 1
 
             if self.learning_time >= (self.config.save_interval * self.cur_checkpoint):
                 save_class(self.config.agent_save_dir, 'checkpoint'+str(self.cur_checkpoint), self)
                 self.cur_checkpoint += 1
+
+            if not self.config.no_tb and self.learning_time % int(self.config.log_step) == 0:
+                self.log_to_tb_train(tb_logger, self.learning_time,
+                                     TD_error.mean(),
+                                     _R, _reward,
+                                     )
 
             if self.learning_time >= self.config.max_learning_step:
                 _Rs = _R.detach().numpy().tolist()
@@ -96,8 +103,7 @@ class QLPSO_Agent(TabularQ_Agent):
                 env.close()
                 return self.learning_time >= self.config.max_learning_step, return_info
         
-            if self.__alpha_decay:
-                self.lr_model = self.__alpha_max - (self.__alpha_max - 0.1) * self.learning_time / self.__max_learning_step
+            self.lr_model = self.__alpha_max - (self.__alpha_max - 0.1) * self.learning_time / self.__max_learning_step
             
             # store info
             state = torch.tensor(next_state, dtype = torch.int64)
@@ -113,14 +119,4 @@ class QLPSO_Agent(TabularQ_Agent):
         env.close()
 
         return is_train_ended, return_info
-        
-    # def rollout_episode(self, env):
-    #     state = env.reset()
-    #     done = False
-    #     R = 0  # total reward
-    #     while not done:
-    #         action = self.__get_action(state)
-    #         next_state, reward, done = env.step(action)
-    #         R += reward
-    #         state = next_state
-    #     return {'cost': env.optimizer.cost, 'fes': env.optimizer.fes, 'return': R}
+
