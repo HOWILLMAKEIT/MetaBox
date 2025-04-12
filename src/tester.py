@@ -116,7 +116,7 @@ class BBO_TestUnit():
         self.seed = seed
 
     def run_batch_episode(self):
-        np.random.seed(self.seed)
+        self.optimizer.seed(self.seed)
         self.problem.reset()
         start_time = time.time()
         res = self.optimizer.run_episode(self.problem)

@@ -16,7 +16,7 @@ if __name__ == '__main__':
             (config.mgd_test is not None) +
             (config.mte_test is not None)) == 1, \
         'Among train, rollout, test, run_experiment, mgd_test & mte_test, only one mode can be given at one time.'
-
+    torch.set_default_dtype(torch.float64)
     # train
     if config.train:
         torch.set_grad_enabled(True)

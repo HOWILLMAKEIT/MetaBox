@@ -28,7 +28,7 @@ class GLHF_Optimizer(Learnable_Optimizer):
         else:
             cost = problem.eval(position) - problem.optimum
 
-        return cost, torch.cat([cost.unsqueeze(1), position], dim = 1)
+        return cost
 
     def init_population(self, problem):
         dim = problem.dim
@@ -38,7 +38,7 @@ class GLHF_Optimizer(Learnable_Optimizer):
 
         self.fes = 0
         self.population = (problem.ub - problem.lb) * torch.rand((self.NP, dim), generator = self.rng_torch, device = self.config.device, dtype = torch.float64) + problem.lb
-        self.c_cost, _ = self.get_costs(position = self.population, problem = problem)
+        self.c_cost = self.get_costs(position = self.population, problem = problem)
 
         self.fes += self.NP
 
@@ -53,8 +53,6 @@ class GLHF_Optimizer(Learnable_Optimizer):
             self.meta_X = [self.population.detach().cpu().numpy()]
             self.meta_Cost = [self.c_cost.detach().cpu().numpy()]
 
-        self.cost_fn = lambda position: self.get_costs(position, problem)
-
         return self.get_state()
     def get_state(self):
         X = self.population
@@ -63,17 +61,25 @@ class GLHF_Optimizer(Learnable_Optimizer):
 
     def update(self, action, problem):
         # 这里的action 是policy 网络
-        pre_gbest = self.c_cost.detach().cpu()
-        batch_pop = self.get_state()[None, :]
-        new_batch_pop, _, _ = action(batch_pop, self.cost_fn)
+        pre_gbest = torch.min(self.c_cost.detach()).detach().cpu()
+        batch_pop = self.get_state()[None, :].clone().detach()
 
-        new_cost = new_batch_pop[0, :, 0]
-        new_population = new_batch_pop[0, :, 1:]
+        new_population = action(batch_pop)[0]
+        new_cost = self.get_costs(position = new_population, problem = problem)
 
+        optim = new_cost.detach() < pre_gbest
+        old_population = self.population.clone().detach()
+        old_c_cost = self.c_cost.clone().detach()
+
+        old_population[optim] = new_population[optim]
+        old_c_cost[optim] = new_cost[optim]
+
+        self.population = old_population
+        self.c_cost = old_c_cost
         self.fes += self.NP
 
-        self.population = new_population
-        self.c_cost = new_cost
+        # self.population = new_population
+        # self.c_cost = new_cost
 
         new_gbest_val = torch.min(new_cost).detach().cpu()
 
@@ -81,7 +87,7 @@ class GLHF_Optimizer(Learnable_Optimizer):
 
         new_gbest_val = new_gbest_val.numpy()
 
-        self.gbest_val = np.min(self.gbest_val, new_gbest_val)
+        self.gbest_val = np.minimum(self.gbest_val, new_gbest_val)
 
         if problem.optimum is None:
             is_end = self.fes >= self.MaxFEs
@@ -107,5 +113,3 @@ class GLHF_Optimizer(Learnable_Optimizer):
         info = {}
 
         return next_state, reward, is_end, info
-
-

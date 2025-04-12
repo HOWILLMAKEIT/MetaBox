@@ -9,6 +9,7 @@ import numpy as np
 from rl.utils import clip_grad_norms, save_class
 import math
 
+
 class SMBND(nn.Module):
     def __init__(self, device):
         super().__init__()
@@ -81,6 +82,7 @@ class GBMutModel(nn.Module):
         A = A * mask
         return A
 
+
 class GBLearnCrRate(nn.Module):
     def __init__(self, hdim = 100):
         super().__init__()
@@ -97,6 +99,7 @@ class GBLearnCrRate(nn.Module):
     def forward(self, x):
         x = self.net(x)  # b,n,dim
         return x
+
 
 class Policy(nn.Module):
     def __init__(self, popsize = 100, selmod = '1-to-1', cr_policy = 'learned', muthdim = 1000, crhdim = 4, device = "cpu"):
@@ -209,7 +212,7 @@ class Policy(nn.Module):
         self.gbmut.resetSigma()
         self.improvedFlag = None
 
-    def forward(self, batchPop = None, func = None):
+    def forward(self, batchPop = None):
         '''
         输入：
         已经有适应度的种群（batch,n,d）
@@ -254,23 +257,27 @@ class Policy(nn.Module):
         if self.adapter:
             offpopChrom = self.adapter(offpopChrom)
 
-        _, offpop = func(offpopChrom)  # b,n,d
-        # 选择
-        mixpop = torch.cat((batchPop, offpop), dim = 1)
-        if self.selmod == 'learned':
-            pass
+        return offpopChrom
 
-        if self.selmod == '1-to-1':
-            nextPop = self.sm(offpop, batchPop)
+        # _, offpop = func(offpopChrom[0])  # b,n,d
+        # offpop = offpop[None, :]
+        # # 选择
+        # mixpop = torch.cat((batchPop, offpop), dim = 1)
+        # if self.selmod == 'learned':
+        #     pass
+        #
+        # if self.selmod == '1-to-1':
+        #     nextPop = self.sm(offpop, batchPop)
+        #
+        # if self.selmod == '轮盘赌':
+        #     mixpop = sortIndivBND(mixpop)
+        #     elitePop = mixpop[:, :1, :]
+        #     mixpop = mixpop[:, 1:, :]
+        #     selectednextPop = self.RoulleteSelectWithElite(mixpop, batchPop.shape[1] - 1)
+        #     nextPop = torch.cat((elitePop, selectednextPop), dim = 1)
+        #
+        # return nextPop, params, paramcr
 
-        if self.selmod == '轮盘赌':
-            mixpop = sortIndivBND(mixpop)
-            elitePop = mixpop[:, :1, :]
-            mixpop = mixpop[:, 1:, :]
-            selectednextPop = self.RoulleteSelectWithElite(mixpop, batchPop.shape[1] - 1)
-            nextPop = torch.cat((elitePop, selectednextPop), dim = 1)
-
-        return nextPop, params, paramcr
 
 class GLHF(Basic_Agent):
     def __init__(self, config):
@@ -278,7 +285,6 @@ class GLHF(Basic_Agent):
 
         self.config.optimizer = 'Adam'
         self.config.lr = 1e-4
-
 
         self.config.lamda = 0.005
         self.config.max_grad_norm = math.inf
@@ -317,7 +323,7 @@ class GLHF(Basic_Agent):
             num_cpus = compute_resource['num_cpus']
         if 'num_gpus' in compute_resource.keys():
             num_gpus = compute_resource['num_gpus']
-        env = ParallelEnv(envs, para_mode, num_cpus=num_cpus, num_gpus=num_gpus)
+        env = ParallelEnv(envs, para_mode, num_cpus = num_cpus, num_gpus = num_gpus)
         env.seed(seeds)
 
         if self.Pom is None:
@@ -325,11 +331,11 @@ class GLHF(Basic_Agent):
             ps_list = env.get_env_attr('NP')
             NP = ps_list[0]
             self.Pom = Policy(popsize = NP,
-                                 selmod = self.config.selmod,
-                                 cr_policy = self.config.cr_policy,
-                                 muthdim = self.config.muthdim,
-                                 crhdim = self.config.crhdim,
-                                 device = self.config.device).to(self.config.device)
+                              selmod = self.config.selmod,
+                              cr_policy = self.config.cr_policy,
+                              muthdim = self.config.muthdim,
+                              crhdim = self.config.crhdim,
+                              device = self.config.device).to(self.config.device)
             self.optimizer = torch.optim.Adam(self.Pom.parameters(), lr = self.config.lr)
 
         state = env.reset()  # 给 set 初始化
@@ -343,16 +349,18 @@ class GLHF(Basic_Agent):
         _R = torch.zeros(TS)
         t = 0
         while not env.all_done():
+            state = state.detach()
+
             action = [self.Pom for _ in range(TS)]
             next_state, rewards, is_end, info = env.step(action)
 
             _R += rewards
 
-            loss_1 = (torch.mean(next_state[:, :, 0], dim = 1) - torch.mean(state[:, :, 0], dim = 1)) / (torch.mean(state[:, :, 0], dim = 1)) # bs
+            loss_1 = (torch.mean(next_state[:, :, 0], dim = 1) - torch.mean(state[:, :, 0], dim = 1)) / (torch.mean(state[:, :, 0], dim = 1))  # bs
 
-            loss_2 = torch.mean((torch.std(next_state[:, :, 1:], dim = 1)), dim = 1) # bs
+            loss_2 = torch.mean((torch.std(next_state[:, :, 1:], dim = 1)), dim = 1)  # bs
 
-            loss = loss_1 - lamda * loss_2 # bs
+            loss = loss_1 - lamda * loss_2  # bs
             loss = torch.mean(loss)
 
             _loss.append(loss.item())
@@ -366,7 +374,7 @@ class GLHF(Basic_Agent):
 
             t += 1
 
-            state = next_state # todo
+            state = next_state.clone().detach()
 
             if self.learning_time >= (self.config.save_interval * self.cur_checkpoint) and self.config.end_mode == "step":
                 save_class(self.config.agent_save_dir, 'checkpoint' + str(self.cur_checkpoint), self)
@@ -436,7 +444,7 @@ class GLHF(Basic_Agent):
             num_cpus = compute_resource['num_cpus']
         if 'num_gpus' in compute_resource.keys():
             num_gpus = compute_resource['num_gpus']
-        env = ParallelEnv(envs, para_mode, num_cpus=num_cpus, num_gpus=num_gpus)
+        env = ParallelEnv(envs, para_mode, num_cpus = num_cpus, num_gpus = num_gpus)
 
         env.seed(seeds)
         env.reset()
@@ -496,17 +504,6 @@ class GLHF(Basic_Agent):
                     tb_logger.add_scalar(f'{key}/{name}', data, mini_step)
 
 
-
-
-
-
-
-
-
-
-
-
-
 def sortIndiv(batchPop):
     '''
     作用：
@@ -541,9 +538,6 @@ def sortIndivBND(batchPop):
         y[index] = torch.index_select(pop, 0, fit[index])
     batchPop = y
     return batchPop
-
-
-
 
 
 
