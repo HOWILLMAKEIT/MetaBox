@@ -18,21 +18,21 @@ from rl.utils import save_class
 from tensorboardX import SummaryWriter
 
 from environment.optimizer import (
-    DE_DDQN_Optimizer,
+    DEDDQN_Optimizer,
     DEDQN_Optimizer,
-    RL_HPSDE_Optimizer,
+    RLHPSDE_Optimizer,
     LDE_Optimizer,
     QLPSO_Optimizer,
     RLEPSO_Optimizer,
-    RL_PSO_Optimizer,
+    RLPSO_Optimizer,
     L2L_Optimizer,
     GLEET_Optimizer,
     RLDAS_Optimizer,
     LES_Optimizer,
     NRLPSO_Optimizer,
     SYMBOL_Optimizer,
-    RLDE_AFL_Optimizer,
-    Surr_RLDE_Optimizer,
+    RLDEAFL_Optimizer,
+    SurrRLDE_Optimizer,
     RLEMMO_Optimizer,
 )
 
@@ -41,28 +41,26 @@ from baseline.bbo import (
     JDE21,
     MadDE,
     NL_SHADE_LBC,
-
     DEAP_PSO,
     GL_PSO,
     sDMS_PSO,
     SAHLPSO,
-
     DEAP_CMAES,
     Random_search,
 )
 
 from baseline.metabbo import (
-    GLEET_Agent,
-    DE_DDQN_Agent,
-    DEDQN_Agent,
-    QLPSO_Agent,
-    NRLPSO_Agent,
-    RL_HPSDE_Agent,
-    RLDE_AFL_Agent,
-    SYMBOL_Agent,
-    RLDAS_Agent,
-    Surr_RLDE_Agent,
-    RLEMMO_Agent
+    GLEET,
+    DEDDQN,
+    DEDQN,
+    QLPSO,
+    NRLPSOt,
+    RLHPSDE,
+    RLDEAFL,
+    SYMBOL,
+    RLDAS,
+    SurrRLDE,
+    RLEMMO
 )
 
 
@@ -138,7 +136,9 @@ class Trainer(object):
         while not is_end:
             learn_step = 0
             self.train_set.shuffle()
-            with tqdm(range(self.train_set.N), desc = f'Training {self.agent.__class__.__name__} Epoch {epoch}') as pbar:
+            return_record = 0
+            loss_record = 0
+            with tqdm(range(np.ceil(self.train_set.N / self.train_set.batch_size)), desc = f'Training {self.agent.__class__.__name__} Epoch {epoch}') as pbar:
                 for problem_id, problem in enumerate(self.train_set):
                     # set seed
                     seed_list = (epoch * epoch_seed + id_seed * (np.arange(bs) + bs * problem_id) + seed).tolist()
@@ -153,21 +153,22 @@ class Trainer(object):
                     exceed_max_ls, train_meta_data = self.agent.train_episode(envs = env_list,
                                                                               seeds = seed_list,
                                                                               tb_logger = tb_logger,
-                                                                              para_mode = "dummy",
-                                                                              asynchronous = None,
-                                                                              num_cpus = 1,
-                                                                              num_gpus = 0,
+                                                                              para_mode = self.config.train_parallel_mode,
                                                                               )
                     # exceed_max_ls, pbar_info_train = self.agent.train_episode(env)  # pbar_info -> dict
                     postfix_str = (
                         f"loss={train_meta_data['loss']:.2e}, "
                         f"learn_steps={train_meta_data['learn_steps']}, "
-                        f"return={[f'{x:.2e}' for x in train_meta_data['return']]}"
+                        f"return={f'{torch.mean(train_meta_data['return']):.2e}'}"
                     )
 
                     pbar.set_postfix_str(postfix_str)
                     pbar.update(self.train_set.batch_size)
                     learn_step = train_meta_data['learn_steps']
+                    
+                    return_record += torch.sum(train_meta_data['return'])
+                    loss_record += torch.sum(train_meta_data['loss']).detach()
+                    
                     # for id, p in enumerate(problem):
                     #     name = p.__str__()
                     #     cost_record[name].append(train_meta_data['gbest'][id])
@@ -184,11 +185,9 @@ class Trainer(object):
 
             if not self.config.no_tb:
                 tb_logger.add_scalar("epoch-step", learn_step, epoch)
+                tb_logger.add_scalar("epoch-avg-return", return_record/(self.train_set.N / self.train_set.batch_size * bs), epoch)
+                tb_logger.add_scalar("epoch-avg-loss", loss_record/(self.train_set.N / self.train_set.batch_size * bs), epoch)
 
-            # todo save
-            # save_interval = 5
-            # checkpoint0 0
-            # checkpoint1 5
             if epoch >= (self.config.save_interval * self.agent.cur_checkpoint) and self.config.end_mode == "epoch":
                 save_class(self.config.agent_save_dir, 'checkpoint' + str(self.agent.cur_checkpoint), self.agent)
                 # 记录 checkpoint 和 total_step
@@ -197,15 +196,14 @@ class Trainer(object):
 
                 # todo rollout
                 # 保存状态
-                cpu_state = torch.random.get_rng_state()
-                cuda_state = torch.cuda.get_rng_state()
-                np_state = np.random.get_state()
+                # cpu_state = torch.random.get_rng_state()
+                # cuda_state = torch.cuda.get_rng_state()
+                # np_state = np.random.get_state()
                 # self.rollout(self.agent.cur_checkpoint)
-
                 # 载入
-                torch.random.set_rng_state(cpu_state)
-                torch.cuda.set_rng_state(cuda_state)
-                np.random.set_state(np_state)
+                # torch.random.set_rng_state(cpu_state)
+                # torch.cuda.set_rng_state(cuda_state)
+                # np.random.set_state(np_state)
 
                 self.agent.cur_checkpoint += 1
             if self.config.end_mode == "epoch" and epoch >= self.config.max_epoch:
@@ -241,51 +239,5 @@ class Trainer(object):
                                                                     )
                 pbar.set_postfix({'MetaBBO': agent.__str__()})
                 pbar.update(1)
-
-
-
-# class Trainer_l2l(object):
-#     def __init__(self, config):
-#         self.config = config
-
-#         # two way 
-#         self.agent = eval(config.train_agent)(config)
-#         self.optimizer = eval(config.train_optimizer)(config)
-#         # need to be torch version
-#         self.train_set, self.test_set = construct_problem_set(config)
-
-
-#     def train(self):
-#         print(f'start training: {self.config.run_time}')
-#         agent_save_dir = self.config.agent_save_dir + self.agent.__class__.__name__ + '/' + self.config.run_time + '/'
-#         exceed_max_ls = False
-#         epoch = 0
-#         cost_record = {}
-#         normalizer_record = {}
-#         return_record = []
-#         learn_steps = []
-#         epoch_steps = []
-#         for problem in self.train_set:
-#             cost_record[problem.__str__()] = []
-#             normalizer_record[problem.__str__()] = []
-#         while not exceed_max_ls:
-#             learn_step = 0
-#             self.train_set.shuffle()
-#             with tqdm(range(self.train_set.N), desc=f'Training {self.agent.__class__.__name__} Epoch {epoch}') as pbar:
-#                 for problem_id, problem in enumerate(self.train_set):
-                    
-#                     env=PBO_Env(problem,self.optimizer)
-#                     exceed_max_ls= self.agent.train_episode(env)  # pbar_info -> dict
-                    
-#                     pbar.update(1)
-#                     name = problem.__str__()
-                    
-#                     learn_steps.append(learn_step)
-#                     if exceed_max_ls:
-#                         break
-#             epoch_steps.append(learn_step)
-            
-                    
-#             epoch += 1
             
         

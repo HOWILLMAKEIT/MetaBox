@@ -19,21 +19,21 @@ from rl import Basic_Agent
 from environment.problem.basic_problem import Basic_Problem
 
 from environment.optimizer import (
-    DE_DDQN_Optimizer,
+    DEDDQN_Optimizer,
     DEDQN_Optimizer,
-    RL_HPSDE_Optimizer,
+    RLHPSDE_Optimizer,
     LDE_Optimizer,
     QLPSO_Optimizer,
     RLEPSO_Optimizer,
-    RL_PSO_Optimizer,
+    RLPSO_Optimizer,
     L2L_Optimizer,
     GLEET_Optimizer,
     RLDAS_Optimizer,
     LES_Optimizer,
     NRLPSO_Optimizer,
     SYMBOL_Optimizer,
-    RLDE_AFL_Optimizer,
-    Surr_RLDE_Optimizer,
+    RLDEAFL_Optimizer,
+    SurrRLDE_Optimizer,
     RLEMMO_Optimizer,
 )
 
@@ -42,31 +42,27 @@ from baseline.bbo import (
     JDE21,
     MadDE,
     NL_SHADE_LBC,
-
     DEAP_PSO,
     GL_PSO,
     sDMS_PSO,
     SAHLPSO,
-
     DEAP_CMAES,
     Random_search,
 )
 
 from baseline.metabbo import (
-    GLEET_Agent,
-    DE_DDQN_Agent,
-    DEDQN_Agent,
-    QLPSO_Agent,
-    NRLPSO_Agent,
-    RL_HPSDE_Agent,
-    RLDE_AFL_Agent,
-    SYMBOL_Agent,
-    RLDAS_Agent,
-    Surr_RLDE_Agent,
-    RLEMMO_Agent
+    GLEET,
+    DEDDQN,
+    DEDQN,
+    QLPSO,
+    NRLPSO,
+    RLHPSDE,
+    RLDEAFL,
+    SYMBOL,
+    RLDAS,
+    SurrRLDE,
+    RLEMMOt
 )
-
-from environment.VectorEnv.great_para_env import ParallelEnv
 
 def cal_t0(dim, fes):
     T0 = 0
@@ -287,10 +283,10 @@ class Tester(object):
                     pickle.dump(data_results, f, -1)
             
 
-    def test(self, parallel_batch: Literal['Full', 'Baseline_Problem', 'Problem_Testrun', 'Batch']):
+    def test(self, ):
         # todo 第三种 并行是 agent * bs 个问题 * run
         print(f'start testing: {self.config.run_time}')
-
+        parallel_batch = self.config.parallel_batch  # 'Full', 'Baseline_Problem', 'Problem_Testrun', 'Batch'
         test_run = self.config.test_run
         seed_list = list(range(1, test_run + 1)) # test_run
         
@@ -357,7 +353,7 @@ class Tester(object):
                         meta_test_data = MetaBBO_test.customized_method('run_batch_episode')
                         self.record_test_data(meta_test_data)
                         pbar.update()
-                    self.store_meta_data()
+                self.store_meta_data()
             for optimizer in self.t_optimizer_for_cp:
                 for problem in self.test_set:
                     for i, seed in enumerate(seed_list):
@@ -367,7 +363,7 @@ class Tester(object):
                         meta_test_data = MetaBBO_test.customized_method('run_batch_episode')
                         self.record_test_data(meta_test_data)
                         pbar.update()
-                    self.store_meta_data()
+                self.store_meta_data()
             pbar.close()
                         
         else:
@@ -388,11 +384,6 @@ def rollout_batch(config):
         config.is_train = False
     config.train_batch_size = 1
     train_set,_=construct_problem_set(config)
-    # if 'L2L_Agent' in config.agent_for_rollout:
-    #     pre_problem=config.problem
-    #     config.problem=pre_problem+'-torch'
-    #     torch_train_set,_ = construct_problem_set(config)
-    #     config.problem=pre_problem
 
     agent_load_dir=config.agent_load_dir
     n_checkpoint=config.n_checkpoint

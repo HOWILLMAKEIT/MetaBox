@@ -40,6 +40,7 @@ def get_config(args=None):
                         help='learnable optimizer to compare')
     parser.add_argument('--n_checkpoint', type=int, default=20, help='number of training checkpoints')
     parser.add_argument('--resume_dir', type=str, help='directory to load previous checkpoint model')
+    parser.add_argument('--train_parallel_mode', type=str, default='dummy', choices=['dummy', 'subproc', 'ray'], help='the parellel processing method for batch env step in training')
 
     # Testing parameters
     parser.add_argument('--agent', type = str, nargs = '+', default = [], help = 'Key written in key.json')
@@ -56,6 +57,8 @@ def get_config(args=None):
     # parser.add_argument('--t_optimizer_for_cp', type=str, nargs='+', default=[],
     #                     help='traditional optimizer to compare')
     parser.add_argument('--test_batch_size', type=int, default=1, help='batch size of test set')
+    parser.add_argument('--parallel_batch', type=str, default='Batch', choices=['Full', 'Baseline_Problem', 'Problem_Testrun', 'Batch'], help='the parellel processing mode for testing')
+    
 
     # Rollout parameters
     parser.add_argument('--agent_for_rollout', type=str, nargs='+', help='learnable agent for rollout')
