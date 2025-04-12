@@ -10,7 +10,7 @@ import torch
 from torch.distributions import Normal
 import torch.nn.functional as F
 from rl.utils import *
-from environment.VectorEnv.great_para_env import ParallelEnv
+from environment.parallelenv.parallelenv import ParallelEnv
 
 class Actor(nn.Module):
     def __init__(self, n_state, n_action, hidden_dim=64):

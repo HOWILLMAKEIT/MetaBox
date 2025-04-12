@@ -3,7 +3,7 @@ from typing import Any, Callable, List, Optional, Tuple, Union
 import gym, copy, warnings, torch
 import numpy as np
 
-from VectorEnv.worker import EnvWorker
+from parallelenv.worker import EnvWorker
 from dill import dumps, loads
 try:
     import ray

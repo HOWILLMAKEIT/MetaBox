@@ -2,7 +2,7 @@ import torch.nn as nn
 from torch.distributions import Normal
 
 from baseline.metabbo.networks import MLP, MultiHeadEncoder, EmbeddingNet, PositionalEncoding
-from rl.PPO_Agent import *
+from rl.ppo import *
 
 class mySequential(nn.Sequential):
     def forward(self, *input):

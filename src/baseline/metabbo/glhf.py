@@ -3,7 +3,7 @@ import copy
 import torch
 from torch import nn
 from rl.basic_agent import Basic_Agent
-from environment.VectorEnv.great_para_env import ParallelEnv
+from environment.parallelenv.parallelenv import ParallelEnv
 from typing import Optional, Union, Literal, List
 import numpy as np
 from rl.utils import clip_grad_norms, save_class

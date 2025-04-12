@@ -4,7 +4,7 @@ from typing import Optional, Union, Literal
 
 import torch.nn.functional as F
 from typing import Optional, Union, Literal, List
-from environment.VectorEnv.great_para_env import ParallelEnv
+from environment.parallelenv.parallelenv import ParallelEnv
 from rl.basic_agent import Basic_Agent
 from rl.utils import *
 import torch

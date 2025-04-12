@@ -1,13 +1,13 @@
 """Env package."""
 
-from VectorEnv.venvs import (
+from .vectorenvs import (
     BaseVectorEnv,
     DummyVectorEnv,
     RayVectorEnv,
     SubprocVectorEnv,
     RaySubprocVectorEnv,
 )
-from VectorEnv.great_para_env import ParallelEnv
+from .parallelenv import ParallelEnv
 
 __all__ = [
     "BaseVectorEnv",

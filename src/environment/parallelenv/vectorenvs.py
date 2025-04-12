@@ -3,13 +3,13 @@ from typing import Any, Callable, List, Optional, Tuple, Union
 import gym, platform, os
 import numpy as np
 
-from environment.VectorEnv.worker import (
+from environment.parallelenv.worker import (
     DummyEnvWorker,
     EnvWorker,
     RayEnvWorker,
     SubprocEnvWorker,
 )
-from environment.VectorEnv.raysubproc import RaySubprocEnvWorker
+from .worker.raysubproc import RaySubprocEnvWorker
 import torch
 
 class BaseVectorEnv(gym.Env):

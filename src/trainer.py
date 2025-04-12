@@ -6,7 +6,7 @@ import pickle
 import torch
 from tqdm import tqdm
 from environment.basic_environment import PBO_Env
-from environment.VectorEnv import *
+from environment.parallelenv import *
 from logger import Logger
 import copy
 from environment.problem.utils import *

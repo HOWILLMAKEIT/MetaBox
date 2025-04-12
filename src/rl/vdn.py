@@ -1,5 +1,5 @@
 from typing import Tuple
-# from src.agent.basic_agent import Basic_Agent
+# from agent.basic_agent import Basic_Agent
 import torch
 import math, copy
 from typing import Any, Callable, List, Optional, Tuple, Union, Literal
@@ -8,7 +8,7 @@ from torch import nn
 import torch
 from torch.distributions import Normal
 import torch.nn.functional as F
-from environment.VectorEnv.great_para_env import ParallelEnv
+from environment.parallelenv.parallelenv import ParallelEnv
 from .basic_agent import Basic_Agent
 from .utils import *
 import torch

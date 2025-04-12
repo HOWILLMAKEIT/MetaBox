@@ -1,10 +1,10 @@
 from scipy.special import softmax
 from typing import Optional, Union, Literal, List
-from rl.TabularQ_Agent import *
+from rl.qlearning import *
 from rl.utils import save_class
 
 
-class QLPSO(TabularQ_Agent):
+class QLPSO(QLearning_Agent):
     def __init__(self, config):
         self.config = config
         # define hyperparameters that agent needs

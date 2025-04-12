@@ -1,6 +1,6 @@
 from torch import nn
 
-from rl.REINFORCE_Agent import *
+from rl.reinforce import *
 from rl.utils import *
 from typing import Optional, Union, Literal, List
 

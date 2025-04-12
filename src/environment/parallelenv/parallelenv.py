@@ -1,7 +1,7 @@
 import numpy as np
 import gym, os, copy
 from typing import Any, Callable, List, Optional, Tuple, Union, Literal
-from VectorEnv.venvs import *
+from .vectorenvs import *
 import warnings
 import psutil, GPUtil, torch
 

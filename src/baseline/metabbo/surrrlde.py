@@ -1,5 +1,5 @@
 from .networks import MLP
-from rl.DDQN_Agent import *
+from rl.ddqn import *
 
 
 class SurrRLDE(DDQN_Agent):

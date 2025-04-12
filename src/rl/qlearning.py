@@ -1,7 +1,7 @@
 import math
 from typing import Optional, Union, Literal, List
 
-from environment.VectorEnv.great_para_env import ParallelEnv
+from environment.parallelenv.parallelenv import ParallelEnv
 from .basic_agent import Basic_Agent
 from .utils import *
 import torch
@@ -28,7 +28,7 @@ def clip_grad_norms(param_groups, max_norm=math.inf):
     return grad_norms, grad_norms_clipped
 
 
-class TabularQ_Agent(Basic_Agent):
+class QLearning_Agent(Basic_Agent):
     def __init__(self, config):
         super().__init__(config)
         self.config = config

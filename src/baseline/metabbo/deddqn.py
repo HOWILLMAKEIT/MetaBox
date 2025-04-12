@@ -1,4 +1,4 @@
-from rl.DDQN_Agent import *
+from rl.ddqn import *
 from baseline.metabbo.networks import MLP
 
 class DEDDQN(DDQN_Agent):

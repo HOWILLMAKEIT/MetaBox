@@ -2,7 +2,7 @@ from torch import nn
 from torch.distributions import Normal
 
 from baseline.metabbo.networks import MLP
-from rl.PPO_Agent import *
+from rl.ppo import *
 
 class Actor(nn.Module):
     def __init__(self,

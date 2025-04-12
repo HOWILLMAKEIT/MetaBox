@@ -1,7 +1,7 @@
 from torch.distributions import Categorical
 
 from .networks import *
-from rl.PPO_Agent import *
+from rl.ppo import *
 from rl.utils import *
 
 

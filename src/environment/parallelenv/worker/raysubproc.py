@@ -3,22 +3,13 @@ from typing import Any, Callable, List, Optional, Tuple, Union
 import gym, os, platform
 import numpy as np
 
-from VectorEnv.worker import EnvWorker
+from parallelenv.worker import EnvWorker
 import ray, copy, warnings
 from dill import dumps, loads
 
 
-class _SetAttrWrapper(gym.Wrapper):
-
-    def set_env_attr(self, key: str, value: Any) -> None:
-        setattr(self.env, key, value)
-
-    def get_env_attr(self, key: str) -> Any:
-        return getattr(self.env, key)
-
-
 class RaySubprocEnvWorker(EnvWorker):
-    """Ray worker used in RayVectorEnv."""
+    """Nested use Subprocessing parallel under ray parallel"""
     num_cpu_per_worker = 1
     num_gpu_per_worker = 0
 

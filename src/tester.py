@@ -9,7 +9,7 @@ from tqdm import tqdm
 import os, psutil
 from environment.basic_environment import PBO_Env
 from logger import Logger
-from environment.VectorEnv.great_para_env import ParallelEnv
+from environment.parallelenv.parallelenv import ParallelEnv
 import json
 import torch
 import gym
