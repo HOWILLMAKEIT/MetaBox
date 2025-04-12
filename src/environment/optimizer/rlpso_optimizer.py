@@ -2,7 +2,7 @@ import numpy as np
 from environment.optimizer.learnable_optimizer import Learnable_Optimizer
 from typing import Union, Iterable
 
-class RL_PSO_Optimizer(Learnable_Optimizer):
+class RLPSO_Optimizer(Learnable_Optimizer):
     def __init__(self, config):
         super().__init__(config)
         
@@ -26,6 +26,9 @@ class RL_PSO_Optimizer(Learnable_Optimizer):
         self.cost = None
         self.log_index = None
         self.log_interval = config.log_interval
+
+    def __str__(self):
+        return "RLPSO_Optimizer"
 
     # initialize PSO environment
     def init_population(self, problem):

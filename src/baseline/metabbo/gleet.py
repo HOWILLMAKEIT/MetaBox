@@ -419,8 +419,8 @@ class GLEET(PPO_Agent):
                     env_cost = env.get_env_attr('cost')
                     return_info['normalizer'] = env_cost[0]
                     return_info['gbest'] = env_cost[-1]
-                    for key in required_info:
-                        return_info[key] = env.get_env_attr(key)
+                    for key in required_info.keys():
+                        return_info[key] = env.get_env_attr(required_info[key])
                     env.close()
                     return self.learning_time >= self.config.max_learning_step, return_info
 
@@ -432,8 +432,8 @@ class GLEET(PPO_Agent):
         env_cost = env.get_env_attr('cost')
         return_info['normalizer'] = env_cost[0]
         return_info['gbest'] = env_cost[-1]
-        for key in required_info:
-            return_info[key] = env.get_env_attr(key)
+        for key in required_info.keys():
+            return_info[key] = env.get_env_attr(required_info[key])
         env.close()
         return is_train_ended, return_info
 
@@ -490,8 +490,7 @@ class GLEET(PPO_Agent):
                         seed = None,
                         required_info = {}):
         with torch.no_grad():
-            if seed is not None:
-                env.seed(seed)
+            env.seed(seed)
             is_done = False
             state = env.reset()
             R = 0

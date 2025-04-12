@@ -12,3 +12,7 @@ from .rldas import RLDAS
 from .surrrlde import SurrRLDE
 from .rlepso import RLEPSO
 from .rlemmo_agent import RLEMMO_Agent
+
+
+from .glhf import GLHF
+from .b2opt import B2OPT

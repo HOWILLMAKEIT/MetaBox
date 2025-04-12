@@ -4,7 +4,7 @@ from collections import deque
 from environment.optimizer.learnable_optimizer import Learnable_Optimizer
 
 
-class Surr_RLDE_Optimizer(Learnable_Optimizer):
+class SurrRLDE_Optimizer(Learnable_Optimizer):
 	def __init__(self, config):
 		super().__init__(config)
 
@@ -36,6 +36,9 @@ class Surr_RLDE_Optimizer(Learnable_Optimizer):
 		self.cost = None
 		self.cur_logpoint = None  # record the current logpoint
 		self.log_interval = config.log_interval
+
+	def __str__(self):
+		return "SurrRLDE_Optimizer"
 
 	def get_state(self, problem):
 		state = torch.zeros(9)

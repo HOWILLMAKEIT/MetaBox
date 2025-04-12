@@ -100,7 +100,7 @@ class Population:
             self.gbest_solution = self.group[np.argmin(self.cost)]
 
 
-class RL_HPSDE_Optimizer(Learnable_Optimizer):
+class RLHPSDE_Optimizer(Learnable_Optimizer):
     def __init__(self, config):
         super().__init__(config)
         config.F = 0.5
@@ -121,6 +121,9 @@ class RL_HPSDE_Optimizer(Learnable_Optimizer):
         self.cost = None
         self.log_index = None
         self.log_interval = config.log_interval
+
+    def __str__(self):
+        return "RLHPSDE"
 
     def init_population(self, problem):
         self.__population = Population(self.__config, self.rng)
