@@ -43,29 +43,6 @@ class AttnWithFit(nn.Module):
         fitattn = torch.squeeze(fitattn.softmax(dim = -1), dim = 1)
         return self.F.softmax(-1)[0] * self.attn.softmax(dim = -1) + self.F.softmax(-1)[1] * fitattn
 
-class SM(nn.Module):
-    def __init__(self):
-        super().__init__()
-
-    def forward(self, batchpop1, batchpop2, fatherfit, childfit, minimize = True):
-        '''
-        实现选择操作,默认是最小化函数，若minimize=False,则为最大化目标值问题
-        '''
-        fit1 = fatherfit
-        fit2 = childfit
-        batchMask = fit1 - fit2  # b,n,1
-        if minimize:
-            batchMask[batchMask >= 0] = 0
-            batchMask[batchMask < 0] = 1
-        else:
-            batchMask[batchMask <= 0] = 0
-            batchMask[batchMask > 0] = 1
-        batchMask = torch.unsqueeze(batchMask, 2)
-        batchMask1 = torch.ones_like(batchMask).to(DEVICE) - batchMask
-        nextPop = batchpop1 * batchMask + batchpop2 * batchMask1
-        return nextPop
-
-
 class BaseModel(nn.Module):
     def __init__(self):
         super().__init__()

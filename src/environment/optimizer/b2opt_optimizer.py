@@ -97,6 +97,8 @@ class B2OPT_Optimizer(Learnable_Optimizer):
         else:
             is_end = self.fes >= self.MaxFEs or self.gbest_val <= 1e-8
 
+        self.__sort()
+
         if self.config.full_meta_data:
             self.meta_X.append(self.population.detach().cpu().numpy())
             self.meta_Cost.append(self.c_cost.detach().cpu().numpy())
