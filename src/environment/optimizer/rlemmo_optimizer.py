@@ -18,10 +18,13 @@ class RLEMMO_Optimizer(Learnable_Optimizer):
         self.min_samples = 3
         self.reward_scale = 1000
 
-
+        self.fes = None
         self.cost = None
-        self.PRs = None
-        self.SRs = None
+        self.log_index = None
+        self.log_interval = None
+
+    def __str__(self):
+        return "RLEMMO_Optimizer"
 
     # calculate costs of solutions
     def get_costs(self,position, problem):
@@ -41,16 +44,16 @@ class RLEMMO_Optimizer(Learnable_Optimizer):
 
     
     def act1(self, pop_choice):
-        population = self.particles['current_position'].copy()
+        population = self.individuals['current_position'].copy()
         stacked_pos = population[pop_choice]
         sigmas = np.float_power(10,-np.random.randint(0, 9, (len(pop_choice), self.dim)))
         v = stacked_pos + np.random.normal(loc=0, scale=sigmas)
         return v
 
     def act2(self, pop_choice):
-        population = self.particles['current_position'].copy()
-        neighbor_matrix = self.particles['neighbor_matrix'].copy()
-        val = self.particles['c_cost'].copy()
+        population = self.individuals['current_position'].copy()
+        neighbor_matrix = self.individuals['neighbor_matrix'].copy()
+        val = self.individuals['c_cost'].copy()
         stacked_pos = population[pop_choice]
         stacked_rs = np.zeros((len(pop_choice), 2), dtype='int')
         stacked_best = np.zeros(len(pop_choice), dtype='int')
@@ -66,8 +69,8 @@ class RLEMMO_Optimizer(Learnable_Optimizer):
         return v
 
     def act3(self, pop_choice):
-        population = self.particles['current_position'].copy()
-        neighbor_matrix = self.particles['neighbor_matrix'].copy()
+        population = self.individuals['current_position'].copy()
+        neighbor_matrix = self.individuals['neighbor_matrix'].copy()
         stacked_pos = population[pop_choice]
         stacked_rs = np.zeros((len(pop_choice), 3), dtype='int')
         for idx in range(len(pop_choice)):
@@ -81,9 +84,9 @@ class RLEMMO_Optimizer(Learnable_Optimizer):
         return v
 
     def act4(self, pop_choice):
-        population = self.particles['current_position'].copy()
-        neighbor_matrix = self.particles['neighbor_matrix'].copy()
-        val = self.particles['c_cost'].copy()
+        population = self.individuals['current_position'].copy()
+        neighbor_matrix = self.individuals['neighbor_matrix'].copy()
+        val = self.individuals['c_cost'].copy()
         stacked_pos = population[pop_choice]
         stacked_rs = np.zeros((len(pop_choice), 2), dtype='int')
         stacked_best = np.zeros(len(pop_choice), dtype='int')
@@ -102,7 +105,7 @@ class RLEMMO_Optimizer(Learnable_Optimizer):
         return v
 
     def act5(self, pop_choice):
-        population = self.particles['current_position'].copy()
+        population = self.individuals['current_position'].copy()
         stacked_pos = population[pop_choice]
         stacked_rs = np.zeros((len(pop_choice), 3), dtype='int')
         for idx in range(len(pop_choice)):
@@ -117,7 +120,7 @@ class RLEMMO_Optimizer(Learnable_Optimizer):
     def cal_pr_sr(self, problem):
         raw_PR = np.zeros(5)
         raw_SR = np.zeros(5)
-        solu = self.particles['current_position'].copy()
+        solu = self.individuals['current_position'].copy()
         accuracy = [1e-1, 1e-2, 1e-3, 1e-4, 1e-5]
         total_pkn = problem.nopt
         for acc_level in range(5):
@@ -128,7 +131,7 @@ class RLEMMO_Optimizer(Learnable_Optimizer):
         return raw_PR, raw_SR
 
     # initialize GPSO environment
-    def initialize_particles(self, problem):
+    def initialize_individuals(self, problem):
         rand_pos = np.random.rand(self.ps, problem.dim) * (problem.ub - problem.lb) + problem.lb
         c_cost = self.get_costs(rand_pos, problem)
         pop_dist = distance.cdist(rand_pos, rand_pos)
@@ -149,8 +152,8 @@ class RLEMMO_Optimizer(Learnable_Optimizer):
 
         # record
         self.max_cost=np.max(c_cost)
-        # store all the information of the particles
-        self.particles={'current_position': rand_pos.copy(), #  ps, dim
+        # store all the information of the individuals
+        self.individuals={'current_position': rand_pos.copy(), #  ps, dim
                         'c_cost': c_cost.copy(), #  ps
                         'pop_dist': pop_dist.copy(),
                         'neighbor_matrix': neighbor_matrix.copy(),
@@ -162,7 +165,7 @@ class RLEMMO_Optimizer(Learnable_Optimizer):
                         'local_no_improve': np.zeros((self.ps,)),
                         'per_no_improve':np.zeros((self.ps,))
                         }
-        self.gbest_val = self.particles['gbest_val']
+        self.gbest_val = self.individuals['gbest_val']
 
     # the interface for environment reseting
     def init_population(self, problem):
@@ -176,33 +179,39 @@ class RLEMMO_Optimizer(Learnable_Optimizer):
         self.log_index = 1
 
         # initialize the population
-        self.initialize_particles(problem)
-        self.cost = [self.particles['gbest_val']]
-        raw_pr, raw_sr = self.cal_pr_sr(problem)
-        self.PRs = [raw_pr]
-        self.SRs = [raw_sr]
+        self.initialize_individuals(problem)
+        self.cost = [self.individuals['gbest_val']]
+        
         # get state
         state=self.observe() # ps, 9
+
+        if self.__config.full_meta_data:
+            self.meta_X = [self.individuals['current_position'].copy()]
+            self.meta_Cost = [self.individuals['c_cost'].copy()]
+            raw_pr, raw_sr = self.cal_pr_sr(problem)
+            self.meta_Pr = [raw_pr.copy()]
+            self.meta_Sr = [raw_sr.copy()]
+
         
         # get and return the total state (population state, exploration state, exploitation state)
         return state  # ps, 9+18
     
     # feature encoding
     def observe(self):
-        pop = self.particles['current_position'].copy()
-        val = self.particles['c_cost'].copy()
-        all_dist = self.particles['pop_dist'].copy()
-        neighbor_matrix = self.particles['neighbor_matrix'].copy()
-        bsf_pos = self.particles['gbest_position'].copy()
-        best_so_far = self.particles['gbest_val'].copy()
-        local_no_improve = self.particles['local_no_improve'].copy()
+        pop = self.individuals['current_position'].copy()
+        val = self.individuals['c_cost'].copy()
+        all_dist = self.individuals['pop_dist'].copy()
+        neighbor_matrix = self.individuals['neighbor_matrix'].copy()
+        bsf_pos = self.individuals['gbest_position'].copy()
+        best_so_far = self.individuals['gbest_val'].copy()
+        local_no_improve = self.individuals['local_no_improve'].copy()
 
         max_step=self.max_fes//self.ps
         states = np.zeros((self.ps, 22))
         states[:, 0] = np.average(np.sum(all_dist, -1) / (self.ps - 1)) / self.max_dist
         states[:, 1] = np.std((val) / (self.max_cost))
         states[:, 2] = (self.max_fes - self.fes) / self.max_fes
-        states[:, 3] = self.particles['no_improve'] / max_step
+        states[:, 3] = self.individuals['no_improve'] / max_step
         states[:, 4] = np.average(val / self.max_cost)
 
         sub_optimal = np.zeros(self.ps)
@@ -235,7 +244,7 @@ class RLEMMO_Optimizer(Learnable_Optimizer):
         states[:, 12] = (val - best_so_far) / (self.max_cost)
         states[:, 13] = (val - np.min(val)) / (self.max_cost)
 
-        states[:, 16] = self.particles['per_no_improve'] / max_step
+        states[:, 16] = self.individuals['per_no_improve'] / max_step
         states[:, 17] = val / self.max_cost
 
         states[:, 21] = np.sum(all_dist, -1) / (self.ps - 1) / self.max_dist
@@ -244,7 +253,7 @@ class RLEMMO_Optimizer(Learnable_Optimizer):
         return states
 
     def mydbscan(self,problem):
-        pop = self.particles['current_position'].copy()
+        pop = self.individuals['current_position'].copy()
         pop = (pop - problem.lb) / (problem.ub -problem.lb)
         clustering = DBSCAN(eps = self.eps, min_samples = self.min_samples).fit(pop)
         return clustering.labels_
@@ -253,7 +262,7 @@ class RLEMMO_Optimizer(Learnable_Optimizer):
     # direct reward function
     def cal_reward(self,problem):
         labels = self.mydbscan(problem)
-        val = self.particles['c_cost'].copy()
+        val = self.individuals['c_cost'].copy()
         rewards = 0
         for ll in range(np.max(labels) + 1):
             now_cluster = np.where(labels == ll)[0]
@@ -266,8 +275,8 @@ class RLEMMO_Optimizer(Learnable_Optimizer):
         is_end=False
         
         # record the gbest_val in the begining
-        pop = self.particles['current_position'].copy()
-        val = self.particles['c_cost'].copy()
+        pop = self.individuals['current_position'].copy()
+        val = self.individuals['c_cost'].copy()
         bprimes = np.zeros((self.ps, self.dim))
         for act in range(self.n_action):
             pop_choice = np.where(action == act)[0]
@@ -300,18 +309,18 @@ class RLEMMO_Optimizer(Learnable_Optimizer):
         
         new_pop_dist = distance.cdist(pop, pop)
         new_neighbor_matrix = self.find_nei(new_pop_dist.copy())
-        gbest_position = self.particles['gbest_position'].copy()
-        gbest_val = self.particles['gbest_val']
-        no_improve = self.particles['no_improve']
+        gbest_position = self.individuals['gbest_position'].copy()
+        gbest_val = self.individuals['gbest_val']
+        no_improve = self.individuals['no_improve']
         if np.min(val)<gbest_val:
             gbest_position = pop[np.argmin(val)].copy()
             gbest_val = np.min(val)
             no_improve=0
         else:
             no_improve+=1
-        lbest_position = self.particles['lbest_position'].copy()
-        lbest_val = self.particles['lbest_val'].copy()
-        local_no_improve = self.particles['local_no_improve'].copy()
+        lbest_position = self.individuals['lbest_position'].copy()
+        lbest_val = self.individuals['lbest_val'].copy()
+        local_no_improve = self.individuals['local_no_improve'].copy()
         
         for idx in range(self.ps):
             neibor = np.argwhere(new_neighbor_matrix[idx] > 0).squeeze(-1)
@@ -325,11 +334,11 @@ class RLEMMO_Optimizer(Learnable_Optimizer):
             else:
                 local_no_improve[idx] += 1
 
-        per_no_improve = self.particles['per_no_improve'].copy()
+        per_no_improve = self.individuals['per_no_improve'].copy()
         per_no_improve[per_filters] = 0
         per_no_improve[~per_filters] += 1
            
-        new_particles = {'current_position': pop.copy(),
+        new_individuals = {'current_position': pop.copy(),
                         'c_cost': val.copy(),
                         'pop_dist': new_pop_dist.copy(),
                         'neighbor_matrix': new_neighbor_matrix.copy(),
@@ -341,8 +350,15 @@ class RLEMMO_Optimizer(Learnable_Optimizer):
                         'local_no_improve': local_no_improve.copy(),
                         'per_no_improve': per_no_improve.copy()
                         }
-        self.particles = new_particles
-        self.gbest_val = self.particles['gbest_val']
+        self.individuals = new_individuals
+        self.gbest_val = self.individuals['gbest_val']
+
+        if self.__config.full_meta_data:
+            self.meta_X.append(self.individuals['current_position'].copy())
+            self.meta_Cost.append(self.individuals['c_cost'].copy())
+            raw_pr, raw_sr = self.cal_pr_sr(problem)
+            self.meta_Pr.append(raw_pr.copy())
+            self.meta_Sr.append(raw_sr.copy())
 
         # see if the end condition is satisfied
         is_end = self.fes >= self.max_fes
@@ -356,22 +372,13 @@ class RLEMMO_Optimizer(Learnable_Optimizer):
         
         if self.fes >= self.log_index * self.log_interval:
             self.log_index += 1
-            self.cost.append(self.particles['gbest_val'])
-            raw_pr, raw_sr = self.cal_pr_sr(problem)
-            self.PRs.append(raw_pr)
-            self.SRs.append(raw_sr)
+            self.cost.append(self.individuals['gbest_val'])
 
         if is_end:
             if len(self.cost) >= self.__config.n_logpoint + 1:
-                self.cost[-1] = self.particles['gbest_val']
-                raw_pr, raw_sr = self.cal_pr_sr(problem)
-                self.PRs[-1] = raw_pr
-                self.SRs[-1] = raw_sr
+                self.cost[-1] = self.individuals['gbest_val']
             else:
-                self.cost.append(self.particles['gbest_val'])
-                raw_pr, raw_sr = self.cal_pr_sr(problem)
-                self.PRs.append(raw_pr)
-                self.SRs.append(raw_sr)
+                self.cost.append(self.individuals['gbest_val'])
         
         info = {}
         return next_state, reward, is_end, info

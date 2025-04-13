@@ -3,7 +3,8 @@ from torch import nn
 from rl.reinforce import *
 from rl.utils import *
 from typing import Optional, Union, Literal, List
-
+import numpy as np
+import torch
 class PolicyNet(nn.Module):
     def __init__(self, config):
         super(PolicyNet, self).__init__()
@@ -78,10 +79,19 @@ class LDE_Agent(REINFORCE_Agent):
                       envs,
                       seeds: Optional[Union[int, List[int], np.ndarray]],
                       para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc']='dummy',
-                      asynchronous: Literal[None, 'idle', 'restart', 'continue']=None,
-                      num_cpus: Optional[Union[int, None]]=1,
-                      num_gpus: int=0,
-                      required_info={}):
+                    #   asynchronous: Literal[None, 'idle', 'restart', 'continue']=None,
+                    #   num_cpus: Optional[Union[int, None]]=1,
+                    #   num_gpus: int=0,
+                      compute_resource = {},
+                      tb_logger = None,
+                      required_info = {}):
+        num_cpus = None
+        num_gpus = 0
+        if 'num_cpus' in compute_resource.keys():
+            num_cpus = compute_resource['num_cpus']
+        if 'num_gpus' in compute_resource.keys():
+            num_gpus = compute_resource['num_gpus']
+        env = ParallelEnv(envs, para_mode, num_cpus=num_cpus, num_gpus=num_gpus)
 
         self.optimizer.zero_grad()
         inputs_batch = []
@@ -89,11 +99,10 @@ class LDE_Agent(REINFORCE_Agent):
         hs_batch = []
         cs_batch = []
         rewards_batch = []
-        if self.device != 'cpu':
-            num_gpus = max(num_gpus, 1)
-        env = ParallelEnv(envs, para_mode, asynchronous, num_cpus, num_gpus)
+
         env.seed(seeds)
         _R = torch.zeros(len(env))
+        _reward = []
         for l in range(self.config.TRAJECTORY_NUM):
             input_net = env.reset()
             try:
@@ -119,6 +128,7 @@ class LDE_Agent(REINFORCE_Agent):
                 cs_batch.append(torch.squeeze(c0, axis=0))
                 rewards_batch.append(reward.reshape(self.__BATCH_SIZE))
                 _R += reward.reshape(-1)
+                _reward.append(reward)
                 h0 = h_
                 c0 = c_
                 input_net = next_input.copy()
@@ -142,6 +152,8 @@ class LDE_Agent(REINFORCE_Agent):
         all_eps_dis_reward = self.__discounted_norm_rewards(np.hstack(rewards))
         loss = - torch.mean(log_prob * torch.FloatTensor(all_eps_dis_reward).to(self.device))
         loss.backward()
+        grad_norms = clip_grad_norms(self.optimizer.param_groups)
+
         self.optimizer.step()
         self.learning_time += 1
 
@@ -149,11 +161,17 @@ class LDE_Agent(REINFORCE_Agent):
             save_class(self.config.agent_save_dir,'checkpoint'+str(self.cur_checkpoint),self)
             self.cur_checkpoint+=1
 
+        if not self.config.no_tb:
+            self.log_to_tb_train(tb_logger, self.learning_time,
+                                 grad_norms,
+                                 loss,
+                                 _R, _reward,
+                                 log_prob)
+
         is_train_ended = self.learning_time >= self.config.max_learning_step
         _Rs = _R.detach().numpy().tolist()
-        return_info = {'return': _Rs, 'loss': loss,'learn_steps': self.learning_time, }
+        return_info = {'return': _Rs,'learn_steps': self.learning_time, }
         env_cost = env.get_env_attr('cost')
-        return_info['normalizer'] = env_cost[0]
         return_info['gbest'] = env_cost[-1]
         for key in required_info.keys():
             return_info[key] = env.get_env_attr(required_info[key])
@@ -166,8 +184,7 @@ class LDE_Agent(REINFORCE_Agent):
                         seed=None,
                         required_info={}):
         with torch.no_grad():
-            if seed is not None:
-                env.seed(seed)
+            env.seed(seed)
             is_done = False
             input_net = env.reset()
             h0 = torch.zeros(self.config.LAYERS_NUM, self.__BATCH_SIZE, self.config.CELL_SIZE).to(self.config.device)
@@ -175,8 +192,8 @@ class LDE_Agent(REINFORCE_Agent):
             R=0
             while not is_done:
                 # [bs, NP+BINS*2]
-                action, h_, c_ = self.model.sampler(torch.FloatTensor(input_net[None, :]).to(self.devicee), h0, c0)  # parameter controller
-                action = action.reshape(1,self.__BATCH_SIZE, -1).cpu().numpy()
+                action, h_, c_ = self.model.sampler(torch.FloatTensor(input_net[None, :]).to(self.device), h0, c0)  # parameter controller
+                action = action.reshape(1,self.__BATCH_SIZE, -1)
                 action = np.squeeze(action.cpu().numpy(), axis=0)
                 next_input, reward, is_done,_ = env.step(action)
                 R+=np.mean(reward)
@@ -186,6 +203,12 @@ class LDE_Agent(REINFORCE_Agent):
             env_cost = env.get_env_attr('cost')
             env_fes = env.get_env_attr('fes')
             results = {'cost': env_cost, 'fes': env_fes, 'return': R}
+            if self.config.full_meta_data:
+                meta_X = env.get_env_attr('meta_X')
+                meta_Cost = env.get_env_attr('meta_Cost')
+                metadata = {'X': meta_X, 'Cost': meta_Cost}
+                results['metadata'] = metadata
+
             for key in required_info.keys():
                 results[key] = getattr(env, required_info[key])
             return results
@@ -195,13 +218,18 @@ class LDE_Agent(REINFORCE_Agent):
                               envs, 
                               seeds=None,
                               para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc']='dummy',
-                              asynchronous: Literal[None, 'idle', 'restart', 'continue']=None,
-                              num_cpus: Optional[Union[int, None]]=1,
-                              num_gpus: int=0,
-                              required_info={}):
-        if self.device != 'cpu':
-            num_gpus = max(num_gpus, 1)
-        env = ParallelEnv(envs, para_mode, asynchronous, num_cpus, num_gpus)
+                            #   asynchronous: Literal[None, 'idle', 'restart', 'continue']=None,
+                            #   num_cpus: Optional[Union[int, None]]=1,
+                            #   num_gpus: int=0,
+                              compute_resource = {},
+                              required_info = {}):
+        num_cpus = None
+        num_gpus = 0
+        if 'num_cpus' in compute_resource.keys():
+            num_cpus = compute_resource['num_cpus']
+        if 'num_gpus' in compute_resource.keys():
+            num_gpus = compute_resource['num_gpus']
+        env = ParallelEnv(envs, para_mode, num_cpus=num_cpus, num_gpus=num_gpus)
 
         env.seed(seeds)
         input_net = env.reset()
@@ -226,6 +254,13 @@ class LDE_Agent(REINFORCE_Agent):
         env_cost = env.get_env_attr('cost')
         env_fes = env.get_env_attr('fes')
         results = {'cost': env_cost, 'fes': env_fes, 'return': _Rs}
+
+        if self.config.full_meta_data:
+            meta_X = env.get_env_attr('meta_X')
+            meta_Cost = env.get_env_attr('meta_Cost')
+            metadata = {'X': meta_X, 'Cost': meta_Cost}
+            results['metadata'] = metadata
+            
         for key in required_info.keys():
             results[key] = env.get_env_attr(required_info[key])
         return results

@@ -221,14 +221,19 @@ class RLEMMO_Agent(PPO_Agent):
                       envs, 
                       seeds: Optional[Union[int, List[int], np.ndarray]],
                       para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc'] = 'dummy',
-                      asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
-                      num_cpus: Optional[Union[int, None]] = 1,
-                      num_gpus: int = 0,
+                    #   asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
+                    #   num_cpus: Optional[Union[int, None]] = 1,
+                    #   num_gpus: int = 0,
+                      compute_resource = {},
                       tb_logger = None,
-                      required_info = []):
-        if self.device != 'cpu':
-            num_gpus = max(num_gpus, 1)
-        env = ParallelEnv(envs, para_mode, asynchronous, num_cpus, num_gpus)
+                      required_info = {}):
+        num_cpus = None
+        num_gpus = 0
+        if 'num_cpus' in compute_resource.keys():
+            num_cpus = compute_resource['num_cpus']
+        if 'num_gpus' in compute_resource.keys():
+            num_gpus = compute_resource['num_gpus']
+        env = ParallelEnv(envs, para_mode, num_cpus=num_cpus, num_gpus=num_gpus)
         env.seed(seeds)
         memory = Memory()
 
@@ -389,7 +394,7 @@ class RLEMMO_Agent(PPO_Agent):
                     save_class(self.config.agent_save_dir, 'checkpoint' + str(self.cur_checkpoint), self)
                     self.cur_checkpoint += 1
 
-                if not self.config.no_tb and self.learning_time % int(self.config.log_step) == 0:
+                if not self.config.no_tb:
                     self.log_to_tb_train(tb_logger, self.learning_time,
                                          grad_norms,
                                          reinforce_loss, baseline_loss,
@@ -399,12 +404,11 @@ class RLEMMO_Agent(PPO_Agent):
                 if self.learning_time >= self.config.max_learning_step:
                     memory.clear_memory()
                     _Rs = _R.detach().numpy().tolist()
-                    return_info = {'return': _Rs, 'loss': np.mean(_loss),'learn_steps': self.learning_time, }
+                    return_info = {'return': _Rs,'learn_steps': self.learning_time, }
                     env_cost = env.get_env_attr('cost')
-                    return_info['normalizer'] = env.get_env_attr('max_cost')
                     return_info['gbest'] = env_cost[-1]
-                    for key in required_info:
-                        return_info[key] = env.get_env_attr(key)
+                    for key in required_info.keys():
+                        return_info[key] = env.get_env_attr(required_info[key])
                     env.close()
                     return self.learning_time >= self.config.max_learning_step, return_info
 
@@ -412,12 +416,11 @@ class RLEMMO_Agent(PPO_Agent):
         
         is_train_ended = self.learning_time >= self.config.max_learning_step
         _Rs = _R.detach().numpy().tolist()
-        return_info = {'return': _Rs, 'loss': np.mean(_loss),'learn_steps': self.learning_time,}
+        return_info = {'return': _Rs,'learn_steps': self.learning_time,}
         env_cost = env.get_env_attr('cost')
-        return_info['normalizer'] = env.get_env_attr('max_cost')
         return_info['gbest'] = env_cost[-1]
-        for key in required_info:
-            return_info[key] = env.get_env_attr(key)
+        for key in required_info.keys():
+            return_info[key] = env.get_env_attr(required_info[key])
         env.close()
         return is_train_ended, return_info
 
@@ -426,13 +429,18 @@ class RLEMMO_Agent(PPO_Agent):
                               envs,
                               seeds = None,
                               para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc'] = 'dummy',
-                              asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
-                              num_cpus: Optional[Union[int, None]] = 1,
-                              num_gpus: int = 0,
+                            #   asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
+                            #   num_cpus: Optional[Union[int, None]] = 1,
+                            #   num_gpus: int = 0,
+                              compute_resource = {},
                               required_info = {}):
-        if self.device != 'cpu':
-            num_gpus = max(num_gpus, 1)
-        env = ParallelEnv(envs, para_mode, asynchronous, num_cpus, num_gpus)
+        num_cpus = None
+        num_gpus = 0
+        if 'num_cpus' in compute_resource.keys():
+            num_cpus = compute_resource['num_cpus']
+        if 'num_gpus' in compute_resource.keys():
+            num_gpus = compute_resource['num_gpus']
+        env = ParallelEnv(envs, para_mode, num_cpus=num_cpus, num_gpus=num_gpus)
         
         env.seed(seeds)
         state = env.reset()
@@ -446,7 +454,7 @@ class RLEMMO_Agent(PPO_Agent):
         while not env.all_done():
 
             with torch.no_grad():
-                action, log_lh, entro_p = self.actor(state, sampling = False)
+                action, _, _ = self.actor(state, sampling = False)
                 
             # state transient
             state, rewards, is_end, info = env.step(action.cpu().numpy().squeeze())
@@ -459,15 +467,55 @@ class RLEMMO_Agent(PPO_Agent):
                 pass
 
         _Rs = R.detach().numpy().tolist()
+
         env_cost = env.get_env_attr('cost')
-        env_PRs = env.get_env_attr('PRs')
-        env_SRs = env.get_env_attr('SRs')
-        env_T1 = env.get_env_attr('T1')
+        env_fes = env.get_env_attr('fes')
+        results = {'cost': env_cost, 'fes': env_fes, 'return': _Rs}
+        if self.config.full_meta_data:
+            meta_X = env.get_env_attr('meta_X')
+            meta_Cost = env.get_env_attr('meta_Cost')
+            meta_Pr = env.get_env_attr('meta_Pr')
+            meta_Sr = env.get_env_attr('meta_Sr')
+            meta_T1 = env.get_env_attr('T1')
+            metadata = {'X': meta_X, 'Cost': meta_Cost, 'Pr': meta_Pr, 'Sr': meta_Sr, 'T1': meta_T1}
+            results['metadata'] = metadata
 
-
-        results = {'return': _Rs, 'cost': env_cost, 'pr': env_PRs, 'sr': env_SRs, 'T1': env_T1}
         for key in required_info.keys():
             results[key] = env.get_env_attr(required_info[key])
         return results
 
+    def rollout_episode(self,
+                        env,
+                        seed = None,
+                        required_info = {}):
+        with torch.no_grad():
+            env.seed(seed)
+            is_done = False
+            state = env.reset()
+            R = 0
+            while not is_done:
+                try:
+                    state = torch.FloatTensor(state).unsqueeze(0).to(self.device)
+                except:
+                    state = [state]
+                action = self.actor(state, sampling = False)[0]
+                action = action.cpu().numpy().squeeze()
+                state, reward, is_done, info = env.step(action)
+                R += reward
+            env_cost = env.get_env_attr('cost')
+            env_fes = env.get_env_attr('fes')
+            results = {'cost': env_cost, 'fes': env_fes, 'return': R}
+
+            if self.config.full_meta_data:
+                meta_X = env.get_env_attr('meta_X')
+                meta_Cost = env.get_env_attr('meta_Cost')
+                meta_Pr = env.get_env_attr('meta_Pr')
+                meta_Sr = env.get_env_attr('meta_Sr')
+                meta_T1 = env.get_env_attr('T1')
+                metadata = {'X': meta_X, 'Cost': meta_Cost, 'Pr': meta_Pr, 'Sr': meta_Sr, 'T1': meta_T1}
+                results['metadata'] = metadata
+    
+            for key in required_info.keys():
+                results[key] = getattr(env, required_info[key])
+            return results
 

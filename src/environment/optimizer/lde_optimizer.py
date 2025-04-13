@@ -129,6 +129,9 @@ class LDE_Optimizer(Learnable_Optimizer):
 
         return mur_pop
 
+    def __str__(self):
+        return "LDE_Optimizer"
+
     def init_population(self, problem):
         self.__pop = self.__mulgenerate_pop(self.__BATCH_SIZE, self.__config.NP, self.__config.dim, problem.lb, problem.ub, True)   # [bs, NP, dim]
         self.__fit = self.__get_cost([problem], self.__pop)

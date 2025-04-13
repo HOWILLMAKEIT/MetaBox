@@ -53,12 +53,15 @@ class LES_Optimizer(Learnable_Optimizer):
         self.NP=16
         self.sigma_ratio=0.2
 
-        self.FEs = None
+        self.fes = None
 
         # for record
         self.cost = None
         self.log_index = None
         self.log_interval = config.log_interval
+    
+    def __str__(self):
+        return "LES_Optimizer"
     
     def init_population(self, problem):
         self.ub = problem.ub
@@ -77,10 +80,15 @@ class LES_Optimizer(Learnable_Optimizer):
                 'Ps':np.zeros((3,problem.dim)),
                 'mu':mu,
                 'sigma':sigma}
-        self.FEs = self.NP
+        self.fes = self.NP
 
         self.cost = [np.min(costs)]
         self.log_index = 1
+
+        if self.__config.full_meta_data:
+            self.meta_X = [self.evolution_info['parents'].copy()]
+            self.meta_Cost = [self.evolution_info['parents_cost'].copy()]
+
         return None
 
     def cal_attn_feature(self):
@@ -145,7 +153,7 @@ class LES_Optimizer(Learnable_Optimizer):
             population = np.clip(self.rng.normal(mu,sigma,(self.NP,self.problem.dim)), self.lb, self.ub)
             # evaluate the childs
             costs = self.problem.eval(population)
-            self.FEs += self.NP
+            self.fes += self.NP
             gbest = np.min([np.min(costs),self.evolution_info['gbest']])
             if step == 0:
                 init_y = gbest
@@ -159,15 +167,20 @@ class LES_Optimizer(Learnable_Optimizer):
                     'Ps':Ps,
                     'mu':mu,
                     'sigma':sigma}
+
+            if self.__config.full_meta_data:
+                self.meta_X.append(self.evolution_info['parents'].copy())
+                self.meta_Cost.append(self.evolution_info['parents_cost'].copy())
+
             if problem.optimum is None:
-                is_end = (self.FEs >= self.max_fes)
+                is_end = (self.fes >= self.max_fes)
             else:
-                is_end = (self.FEs >= self.max_fes or gbest <= 1e-8)
+                is_end = (self.fes >= self.max_fes or gbest <= 1e-8)
             step += 1
             if skip_step is not None:
                 is_end = (step >= skip_step)
 
-            if self.FEs >= self.log_index * self.log_interval:
+            if self.fes >= self.log_index * self.log_interval:
                 self.log_index += 1
                 self.cost.append(gbest)
             
@@ -177,7 +190,8 @@ class LES_Optimizer(Learnable_Optimizer):
                 else:
                     self.cost.append(gbest)
         
-        return self.evolution_info['gbest'],(init_y - gbest) / init_y,is_end,{}
+        info = {}
+        return self.evolution_info['gbest'],(init_y - gbest) / init_y,is_end,info
     
 
 
