@@ -3,9 +3,9 @@ import scipy.stats as stats
 from environment.optimizer.basic_optimizer import Basic_Optimizer
 
 
-class MadDE(Basic_Optimizer):
+class MADDE(Basic_Optimizer):
     def __init__(self, config):
-        super(MadDE, self).__init__(config)
+        super(MADDE, self).__init__(config)
         self.__dim = config.dim
         self.__p = 0.18
         self.__PqBX = 0.01
@@ -24,7 +24,7 @@ class MadDE(Basic_Optimizer):
         self.full_meta_data = config.full_meta_data
         
     def __str__(self):
-        return 'MadDE'
+        return 'MADDE'
 
     def __ctb_w_arc(self, group, best, archive, Fs):
         NP, dim = group.shape
