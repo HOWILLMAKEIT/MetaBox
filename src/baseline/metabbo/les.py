@@ -4,10 +4,10 @@ from rl.basic_agent import Basic_Agent
 from rl.utils import *
 from cmaes import CMA
 import copy
-from environment.VectorEnv.great_para_env import ParallelEnv
+from environment.parallelenv.parallelenv import ParallelEnv
 import numpy as np
 
-class LES_Agent(Basic_Agent):
+class LES(Basic_Agent):
     def __init__(self, config):
         super().__init__(config)
         self.__config = config

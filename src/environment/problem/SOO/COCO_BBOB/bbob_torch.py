@@ -4,7 +4,7 @@ import numpy as np
 import torch
 import time
 
-class BBOB_Problem(Basic_Problem):
+class BBOB_Problem_torch(Basic_Problem):
     def __init__(self, dim, shift, rotate, bias, lb, ub):
         self.dim = dim
         self.shift = shift
@@ -48,7 +48,7 @@ class BBOB_Problem(Basic_Problem):
     def func(self, x):
         raise NotImplementedError
 
-class NoisyProblem:
+class NoisyProblem_torch:
     def noisy(self, ftrue):
         raise NotImplementedError
 
@@ -59,7 +59,7 @@ class NoisyProblem:
     def boundaryHandling(self, x):
         return 100. * pen_func(x, self.ub)
 
-class GaussNoisyProblem(BBOB_Problem):
+class GaussNoisyProblem_torch(BBOB_Problem_torch):
     """
     Attribute 'gause_beta' need to be defined in subclass.
     """
@@ -72,7 +72,7 @@ class GaussNoisyProblem(BBOB_Problem):
         fnoisy_unbiased = ftrue_unbiased * torch.exp(self.gauss_beta * torch.randn(ftrue_unbiased.shape, dtype=torch.float64))
         return torch.where(ftrue_unbiased >= 1e-8, fnoisy_unbiased + bias + 1.01 * 1e-8, ftrue)
 
-class UniformNoisyProblem(BBOB_Problem):
+class UniformNoisyProblem_torch(BBOB_Problem_torch):
     """
     Attributes 'uniform_alpha' and 'uniform_beta' need to be defined in subclass.
     """
@@ -86,7 +86,7 @@ class UniformNoisyProblem(BBOB_Problem):
                           torch.maximum(torch.tensor(1., dtype=torch.float64), (1e9 / (ftrue_unbiased + 1e-99)) ** (self.uniform_alpha * (0.49 + 1. / self.dim) * torch.rand(ftrue_unbiased.shape, dtype=torch.float64)))
         return torch.where(ftrue_unbiased >= 1e-8, fnoisy_unbiased + bias + 1.01 * 1e-8, ftrue)
 
-class CauchyNoisyProblem(NoisyProblem):
+class CauchyNoisyProblem_torch(NoisyProblem_torch):
     """
     Attributes 'cauchy_alpha' and 'cauchy_p' need to be defined in subclass.
     """
@@ -100,7 +100,7 @@ class CauchyNoisyProblem(NoisyProblem):
         return torch.where(ftrue_unbiased >= 1e-8, fnoisy_unbiased + bias + 1.01 * 1e-8, ftrue)
 
 
-class _Sphere(BBOB_Problem):
+class _Sphere_torch(BBOB_Problem_torch):
     """
     Abstract Sphere
     """
@@ -182,7 +182,7 @@ def pen_func(x, ub):
     return torch.sum(torch.maximum(torch.tensor(0., dtype=torch.float64), torch.abs(x) - ub) ** 2, dim=-1)
 
 
-class F1(_Sphere):
+class F1_torch(_Sphere_torch):
     def boundaryHandling(self, x):
         return 0.
 
@@ -190,47 +190,47 @@ class F1(_Sphere):
         return 'Sphere'
 
 
-class F101(GaussNoisyProblem, _Sphere):
+class F101_torch(GaussNoisyProblem_torch, _Sphere_torch):
     gauss_beta = 0.01
     def __str__(self):
         return 'Sphere_moderate_gauss'
 
 
-class F102(UniformNoisyProblem, _Sphere):
+class F102_torch(UniformNoisyProblem_torch, _Sphere_torch):
     uniform_alpha = 0.01
     uniform_beta = 0.01
     def __str__(self):
         return 'Sphere_moderate_uniform'
 
 
-class F103(CauchyNoisyProblem, _Sphere):
+class F103_torch(CauchyNoisyProblem_torch, _Sphere_torch):
     cauchy_alpha = 0.01
     cauchy_p = 0.05
     def __str__(self):
         return 'Sphere_moderate_cauchy'
 
 
-class F107(GaussNoisyProblem, _Sphere):
+class F107_torch(GaussNoisyProblem_torch, _Sphere_torch):
     gauss_beta = 1.
     def __str__(self):
         return 'Sphere_gauss'
 
 
-class F108(UniformNoisyProblem, _Sphere):
+class F108_torch(UniformNoisyProblem_torch, _Sphere_torch):
     uniform_alpha = 1.
     uniform_beta = 1.
     def __str__(self):
         return 'Sphere_uniform'
 
 
-class F109(CauchyNoisyProblem, _Sphere):
+class F109_torch(CauchyNoisyProblem_torch, _Sphere_torch):
     cauchy_alpha = 1.
     cauchy_p = 0.2
     def __str__(self):
         return 'Sphere_cauchy'
 
 
-class F2(BBOB_Problem):
+class F2_torch(BBOB_Problem_torch):
     """
     Ellipsoidal
     """
@@ -250,7 +250,7 @@ class F2(BBOB_Problem):
         return torch.sum(torch.pow(10, 6 * i / (nx - 1)) * (z ** 2), -1) + self.bias
 
 
-class F3(BBOB_Problem):
+class F3_torch(BBOB_Problem_torch):
     """
     Rastrigin
     """
@@ -267,14 +267,14 @@ class F3(BBOB_Problem):
         return 10. * (self.dim - torch.sum(torch.cos(2. * math.pi * z), dim=-1)) + torch.sum(z ** 2, dim=-1) + self.bias
 
 
-class F4(BBOB_Problem):
+class F4_torch(BBOB_Problem_torch):
     """
     Bueche_Rastrigin
     """
     def __init__(self, dim, shift, rotate, bias, lb, ub):
         shift[::2] = torch.abs(shift[::2])
         self.scales = ((10. ** 0.5) ** torch.linspace(0, 1, dim, dtype=torch.float64))
-        BBOB_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        BBOB_Problem_torch.__init__(self, dim, shift, rotate, bias, lb, ub)
 
     def __str__(self):
         return 'Buche_Rastrigin'
@@ -289,7 +289,7 @@ class F4(BBOB_Problem):
         return 10 * (self.dim - torch.sum(torch.cos(2 * math.pi * z), dim=-1)) + torch.sum(z ** 2, dim=-1) + 100 * pen_func(x, self.ub) + self.bias
 
 
-class F5(BBOB_Problem):
+class F5_torch(BBOB_Problem_torch):
     """
     Linear_Slope
     """
@@ -297,7 +297,7 @@ class F5(BBOB_Problem):
         shift = np.sign(shift.numpy())
         shift[shift == 0.] = np.random.choice([-1., 1.], size=(shift == 0.).sum())
         shift = torch.tensor(shift, dtype=torch.float64) * ub
-        BBOB_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        BBOB_Problem_torch.__init__(self, dim, shift, rotate, bias, lb, ub)
 
     def __str__(self):
         return 'Linear_Slope'
@@ -311,14 +311,14 @@ class F5(BBOB_Problem):
         return torch.sum(self.ub * torch.abs(s) - z * s, dim=-1) + self.bias
 
 
-class F6(BBOB_Problem):
+class F6_torch(BBOB_Problem_torch):
     """
     Attractive_Sector
     """
     def __init__(self, dim, shift, rotate, bias, lb, ub):
         scales = (10. ** 0.5) ** torch.linspace(0, 1, dim, dtype=torch.float64)
         rotate = torch.matmul(torch.matmul(rotate_gen(dim), torch.diag(scales)), rotate)
-        BBOB_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        BBOB_Problem_torch.__init__(self, dim, shift, rotate, bias, lb, ub)
 
     def __str__(self):
         return 'Attractive_Sector'
@@ -331,7 +331,7 @@ class F6(BBOB_Problem):
         return osc_transform(torch.sum(z ** 2, -1)) ** 0.9 + self.bias
 
 
-class _Step_Ellipsoidal(BBOB_Problem):
+class _Step_Ellipsoidal_torch(BBOB_Problem_torch):
     """
     Abstract Step_Ellipsoidal
     """
@@ -339,7 +339,7 @@ class _Step_Ellipsoidal(BBOB_Problem):
         scales = (10. ** 0.5) ** torch.linspace(0, 1, dim, dtype=torch.float64)
         rotate = torch.matmul(torch.diag(scales), rotate)
         self.Q_rotate = rotate_gen(dim)
-        BBOB_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        BBOB_Problem_torch.__init__(self, dim, shift, rotate, bias, lb, ub)
 
     def func(self, x):
         self.FES += x.shape[0]
@@ -351,7 +351,7 @@ class _Step_Ellipsoidal(BBOB_Problem):
                self.boundaryHandling(x) + self.bias
 
 
-class F7(_Step_Ellipsoidal):
+class F7_torch(_Step_Ellipsoidal_torch):
     def boundaryHandling(self, x):
         return pen_func(x, self.ub)
 
@@ -359,34 +359,34 @@ class F7(_Step_Ellipsoidal):
         return 'Step_Ellipsoidal'
 
 
-class F113(GaussNoisyProblem, _Step_Ellipsoidal):
+class F113_torch(GaussNoisyProblem_torch, _Step_Ellipsoidal_torch):
     gauss_beta = 1.
     def __str__(self):
         return 'Step_Ellipsoidal_gauss'
 
 
-class F114(UniformNoisyProblem, _Step_Ellipsoidal):
+class F114_torch(UniformNoisyProblem_torch, _Step_Ellipsoidal_torch):
     uniform_alpha = 1.
     uniform_beta = 1.
     def __str__(self):
         return 'Step_Ellipsoidal_uniform'
 
 
-class F115(CauchyNoisyProblem, _Step_Ellipsoidal):
+class F115_torch(CauchyNoisyProblem_torch, _Step_Ellipsoidal_torch):
     cauchy_alpha = 1.
     cauchy_p = 0.2
     def __str__(self):
         return 'Step_Ellipsoidal_cauchy'
 
 
-class _Rosenbrock(BBOB_Problem):
+class _Rosenbrock_torch(BBOB_Problem_torch):
     """
     Abstract Rosenbrock_original
     """
     def __init__(self, dim, shift, rotate, bias, lb, ub):
         shift *= 0.75  # range_of_shift=0.8*0.75*ub=0.6*ub
         rotate = torch.eye(dim, dtype=torch.float64)
-        BBOB_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        BBOB_Problem_torch.__init__(self, dim, shift, rotate, bias, lb, ub)
 
     def func(self, x):
         self.FES += x.shape[0]
@@ -395,7 +395,7 @@ class _Rosenbrock(BBOB_Problem):
                          dim=-1) + self.bias + self.boundaryHandling(x)
 
 
-class F8(_Rosenbrock):
+class F8(_Rosenbrock_torch):
     def boundaryHandling(self, x):
         return 0.
 
@@ -403,47 +403,47 @@ class F8(_Rosenbrock):
         return 'Rosenbrock_original'
 
 
-class F104(GaussNoisyProblem, _Rosenbrock):
+class F104_torch(GaussNoisyProblem_torch, _Rosenbrock_torch):
     gauss_beta = 0.01
     def __str__(self):
         return 'Rosenbrock_moderate_gauss'
 
 
-class F105(UniformNoisyProblem, _Rosenbrock):
+class F105_torch(UniformNoisyProblem_torch, _Rosenbrock_torch):
     uniform_alpha = 0.01
     uniform_beta = 0.01
     def __str__(self):
         return 'Rosenbrock_moderate_uniform'
 
 
-class F106(CauchyNoisyProblem, _Rosenbrock):
+class F106_torch(CauchyNoisyProblem_torch, _Rosenbrock_torch):
     cauchy_alpha = 0.01
     cauchy_p = 0.05
     def __str__(self):
         return 'Rosenbrock_moderate_cauchy'
 
 
-class F110(GaussNoisyProblem, _Rosenbrock):
+class F110_torch(GaussNoisyProblem_torch, _Rosenbrock_torch):
     gauss_beta = 1.
     def __str__(self):
         return 'Rosenbrock_gauss'
 
 
-class F111(UniformNoisyProblem, _Rosenbrock):
+class F111_torch(UniformNoisyProblem_torch, _Rosenbrock_torch):
     uniform_alpha = 1.
     uniform_beta = 1.
     def __str__(self):
         return 'Rosenbrock_uniform'
 
 
-class F112(CauchyNoisyProblem, _Rosenbrock):
+class F112_torch(CauchyNoisyProblem_torch, _Rosenbrock_torch):
     cauchy_alpha = 1.
     cauchy_p = 0.2
     def __str__(self):
         return 'Rosenbrock_cauchy'
 
 
-class F9(BBOB_Problem):
+class F9_torch(BBOB_Problem_torch):
     """
     Rosenbrock_rotated
     """
@@ -451,7 +451,7 @@ class F9(BBOB_Problem):
         scale = max(1., dim ** 0.5 / 8.)
         self.linearTF = scale * rotate
         shift = torch.matmul(0.5 * torch.ones(dim, dtype=torch.float64), self.linearTF) / (scale ** 2)
-        BBOB_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        BBOB_Problem_torch.__init__(self, dim, shift, rotate, bias, lb, ub)
 
     def __str__(self):
         return 'Rosenbrock_rotated'
@@ -462,14 +462,14 @@ class F9(BBOB_Problem):
         return torch.sum(100 * (z[:, :-1] ** 2 - z[:, 1:]) ** 2 + (z[:, :-1] - 1) ** 2, dim=-1) + self.bias
 
 
-class _Ellipsoidal(BBOB_Problem):
+class _Ellipsoidal_torch(BBOB_Problem_torch):
     """
     Abstract Ellipsoidal
     """
     condition = None
 
     def __init__(self, dim, shift, rotate, bias, lb, ub):
-        BBOB_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        BBOB_Problem_torch.__init__(self, dim, shift, rotate, bias, lb, ub)
 
     def func(self, x):
         self.FES += x.shape[0]
@@ -480,7 +480,7 @@ class _Ellipsoidal(BBOB_Problem):
         return torch.sum((self.condition ** (i / (nx - 1))) * (z ** 2), -1, dtype=torch.float64) + self.bias + self.boundaryHandling(x)
 
 
-class F10(_Ellipsoidal):
+class F10_torch(_Ellipsoidal_torch):
     condition = 1e6
     def boundaryHandling(self, x):
         return 0.
@@ -489,14 +489,14 @@ class F10(_Ellipsoidal):
         return 'Ellipsoidal_high_cond'
 
 
-class F116(GaussNoisyProblem, _Ellipsoidal):
+class F116_torch(GaussNoisyProblem_torch, _Ellipsoidal_torch):
     condition = 1e4
     gauss_beta = 1.
     def __str__(self):
         return 'Ellipsoidal_gauss'
 
 
-class F117(UniformNoisyProblem, _Ellipsoidal):
+class F117_torch(UniformNoisyProblem_torch, _Ellipsoidal_torch):
     condition = 1e4
     uniform_alpha = 1.
     uniform_beta = 1.
@@ -504,7 +504,7 @@ class F117(UniformNoisyProblem, _Ellipsoidal):
         return 'Ellipsoidal_uniform'
 
 
-class F118(CauchyNoisyProblem, _Ellipsoidal):
+class F118_torch(CauchyNoisyProblem_torch, _Ellipsoidal_torch):
     condition = 1e4
     cauchy_alpha = 1.
     cauchy_p = 0.2
@@ -512,12 +512,12 @@ class F118(CauchyNoisyProblem, _Ellipsoidal):
         return 'Ellipsoidal_cauchy'
 
 
-class F11(BBOB_Problem):
+class F11_torch(BBOB_Problem_torch):
     """
     Discus
     """
     def __init__(self, dim, shift, rotate, bias, lb, ub):
-        BBOB_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        BBOB_Problem_torch.__init__(self, dim, shift, rotate, bias, lb, ub)
 
     def __str__(self):
         return 'Discus'
@@ -529,14 +529,14 @@ class F11(BBOB_Problem):
         return 1e6 * (z[:, 0] ** 2) + torch.sum(z[:, 1:] ** 2, -1) + self.bias
 
 
-class F12(BBOB_Problem):
+class F12_torch(BBOB_Problem_torch):
     """
     Bent_cigar
     """
     beta = 0.5
 
     def __init__(self, dim, shift, rotate, bias, lb, ub):
-        BBOB_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        BBOB_Problem_torch.__init__(self, dim, shift, rotate, bias, lb, ub)
 
     def __str__(self):
         return 'Bent_Cigar'
@@ -549,14 +549,14 @@ class F12(BBOB_Problem):
         return z[:, 0] ** 2 + torch.sum(1e6 * (z[:, 1:] ** 2), -1, dtype=torch.float64) + self.bias
 
 
-class F13(BBOB_Problem):
+class F13_torch(BBOB_Problem_torch):
     """
     Sharp Ridge
     """
     def __init__(self, dim, shift, rotate, bias, lb, ub):
         scales = (10 ** 0.5) ** torch.linspace(0, 1, dim, dtype=torch.float64)
         rotate = torch.matmul(torch.matmul(rotate_gen(dim), torch.diag(scales)), rotate)
-        BBOB_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        BBOB_Problem_torch.__init__(self, dim, shift, rotate, bias, lb, ub)
 
     def __str__(self):
         return 'Sharp_Ridge'
@@ -567,12 +567,12 @@ class F13(BBOB_Problem):
         return z[:, 0] ** 2. + 100. * torch.sqrt(torch.sum(z[:, 1:] ** 2., dim=-1)) + self.bias
 
 
-class _Dif_powers(BBOB_Problem):
+class _Dif_powers_torch(BBOB_Problem_torch):
     """
     Abstract Different Powers
     """
     def __init__(self, dim, shift, rotate, bias, lb, ub):
-        BBOB_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        BBOB_Problem_torch.__init__(self, dim, shift, rotate, bias, lb, ub)
 
     def func(self, x):
         self.FES += x.shape[0]
@@ -582,7 +582,7 @@ class _Dif_powers(BBOB_Problem):
                          0.5) + self.bias + self.boundaryHandling(x)
 
 
-class F14(_Dif_powers):
+class F14_torch(_Dif_powers_torch):
     def boundaryHandling(self, x):
         return 0.
 
@@ -590,34 +590,34 @@ class F14(_Dif_powers):
         return 'Different_Powers'
 
 
-class F119(GaussNoisyProblem, _Dif_powers):
+class F119_torch(GaussNoisyProblem_torch, _Dif_powers_torch):
     gauss_beta = 1.
     def __str__(self):
         return 'Different_Powers_gauss'
 
 
-class F120(UniformNoisyProblem, _Dif_powers):
+class F120_torch(UniformNoisyProblem_torch, _Dif_powers_torch):
     uniform_alpha = 1.
     uniform_beta = 1.
     def __str__(self):
         return 'Different_Powers_uniform'
 
 
-class F121(CauchyNoisyProblem, _Dif_powers):
+class F121_torch(CauchyNoisyProblem_torch, _Dif_powers_torch):
     cauchy_alpha = 1.
     cauchy_p = 0.2
     def __str__(self):
         return 'Different_Powers_cauchy'
 
 
-class F15(BBOB_Problem):
+class F15_torch(BBOB_Problem_torch):
     """
     Rastrigin_F15
     """
     def __init__(self, dim, shift, rotate, bias, lb, ub):
         scales = (10. ** 0.5) ** torch.linspace(0, 1, dim, dtype=torch.float64)
         self.linearTF = torch.matmul(torch.matmul(rotate, torch.diag(scales)), rotate_gen(dim))
-        BBOB_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        BBOB_Problem_torch.__init__(self, dim, shift, rotate, bias, lb, ub)
 
     def __str__(self):
         return 'Rastrigin_F15'
@@ -630,7 +630,7 @@ class F15(BBOB_Problem):
         return 10. * (self.dim - torch.sum(torch.cos(2. * math.pi * z), dim=-1)) + torch.sum(z ** 2, dim=-1) + self.bias
 
 
-class F16(BBOB_Problem):
+class F16_torch(BBOB_Problem_torch):
     """
     Weierstrass
     """
@@ -640,7 +640,7 @@ class F16(BBOB_Problem):
         self.aK = 0.5 ** torch.arange(12, dtype=torch.float64)
         self.bK = 3.0 ** torch.arange(12, dtype=torch.float64)
         self.f0 = torch.sum(self.aK * torch.cos(math.pi * self.bK))
-        BBOB_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        BBOB_Problem_torch.__init__(self, dim, shift, rotate, bias, lb, ub)
 
     def __str__(self):
         return 'Weierstrass'
@@ -655,7 +655,7 @@ class F16(BBOB_Problem):
                10 / self.dim * pen_func(x, self.ub) + self.bias
 
 
-class _Scaffer(BBOB_Problem):
+class _Scaffer_torch(BBOB_Problem_torch):
     """
     Abstract Scaffers
     """
@@ -664,7 +664,7 @@ class _Scaffer(BBOB_Problem):
     def __init__(self, dim, shift, rotate, bias, lb, ub):
         scales = (self.condition ** 0.5) ** torch.linspace(0, 1, dim, dtype=torch.float64)
         self.linearTF = torch.matmul(torch.diag(scales), rotate_gen(dim))
-        BBOB_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        BBOB_Problem_torch.__init__(self, dim, shift, rotate, bias, lb, ub)
 
     def func(self, x):
         self.FES += x.shape[0]
@@ -676,7 +676,7 @@ class _Scaffer(BBOB_Problem):
                self.boundaryHandling(x) + self.bias
 
 
-class F17(_Scaffer):
+class F17_torch(_Scaffer_torch):
     condition = 10.
 
     def boundaryHandling(self, x):
@@ -686,7 +686,7 @@ class F17(_Scaffer):
         return 'Schaffers'
 
 
-class F18(_Scaffer):
+class F18_torch(_Scaffer_torch):
     condition = 1000.
 
     def boundaryHandling(self, x):
@@ -696,14 +696,14 @@ class F18(_Scaffer):
         return 'Schaffers_high_cond'
 
 
-class F122(GaussNoisyProblem, _Scaffer):
+class F122_torch(GaussNoisyProblem_torch, _Scaffer_torch):
     condition = 10.
     gauss_beta = 1.
     def __str__(self):
         return 'Schaffers_gauss'
 
 
-class F123(UniformNoisyProblem, _Scaffer):
+class F123_torch(UniformNoisyProblem_torch, _Scaffer_torch):
     condition = 10.
     uniform_alpha = 1.
     uniform_beta = 1.
@@ -711,7 +711,7 @@ class F123(UniformNoisyProblem, _Scaffer):
         return 'Schaffers_uniform'
 
 
-class F124(CauchyNoisyProblem, _Scaffer):
+class F124_torch(CauchyNoisyProblem_torch, _Scaffer_torch):
     condition = 10.
     cauchy_alpha = 1.
     cauchy_p = 0.2
@@ -719,7 +719,7 @@ class F124(CauchyNoisyProblem, _Scaffer):
         return 'Schaffers_cauchy'
 
 
-class _Composite_Grie_rosen(BBOB_Problem):
+class _Composite_Grie_rosen_torch(BBOB_Problem_torch):
     """
     Abstract Composite_Grie_rosen
     """
@@ -729,7 +729,7 @@ class _Composite_Grie_rosen(BBOB_Problem):
         scale = max(1., dim ** 0.5 / 8.)
         self.linearTF = scale * rotate
         shift = torch.matmul(0.5 * torch.ones(dim, dtype=torch.float64) / (scale ** 2.), self.linearTF)
-        BBOB_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        BBOB_Problem_torch.__init__(self, dim, shift, rotate, bias, lb, ub)
 
     def func(self, x):
         self.FES += x.shape[0]
@@ -739,7 +739,7 @@ class _Composite_Grie_rosen(BBOB_Problem):
                     self.dim - 1.) + self.bias + self.boundaryHandling(x)
 
 
-class F19(_Composite_Grie_rosen):
+class F19(_Composite_Grie_rosen_torch):
     factor = 10.
 
     def boundaryHandling(self, x):
@@ -749,14 +749,14 @@ class F19(_Composite_Grie_rosen):
         return 'Composite_Grie_rosen'
 
 
-class F125(GaussNoisyProblem, _Composite_Grie_rosen):
+class F125_torch(GaussNoisyProblem_torch, _Composite_Grie_rosen_torch):
     factor = 1.
     gauss_beta = 1.
     def __str__(self):
         return 'Composite_Grie_rosen_gauss'
 
 
-class F126(UniformNoisyProblem, _Composite_Grie_rosen):
+class F126_torch(UniformNoisyProblem_torch, _Composite_Grie_rosen_torch):
     factor = 1.
     uniform_alpha = 1.
     uniform_beta = 1.
@@ -764,7 +764,7 @@ class F126(UniformNoisyProblem, _Composite_Grie_rosen):
         return 'Composite_Grie_rosen_uniform'
 
 
-class F127(CauchyNoisyProblem, _Composite_Grie_rosen):
+class F127_torch(CauchyNoisyProblem_torch, _Composite_Grie_rosen_torch):
     factor = 1.
     cauchy_alpha = 1.
     cauchy_p = 0.2
@@ -772,13 +772,13 @@ class F127(CauchyNoisyProblem, _Composite_Grie_rosen):
         return 'Composite_Grie_rosen_cauchy'
 
 
-class F20(BBOB_Problem):
+class F20_torch(BBOB_Problem_torch):
     """
     Schwefel
     """
     def __init__(self, dim, shift, rotate, bias, lb, ub):
         shift = 0.5 * 4.2096874633 * torch.tensor(np.random.choice([-1., 1.], size=dim), dtype=torch.float64)
-        BBOB_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        BBOB_Problem_torch.__init__(self, dim, shift, rotate, bias, lb, ub)
 
     def __str__(self):
         return 'Schwefel'
@@ -795,7 +795,7 @@ class F20(BBOB_Problem):
                                                                                             self.ub) + self.bias
 
 
-class _Gallagher(BBOB_Problem):
+class _Gallagher_torch(BBOB_Problem_torch):
     """
     Abstract Gallagher
     """
@@ -826,7 +826,7 @@ class _Gallagher(BBOB_Problem):
         # generate the weight w[i]
         self.w = torch.cat([torch.tensor([10.], dtype=torch.float64), torch.linspace(1.1, 9.1, self.n_peaks - 1, dtype=torch.float64)], dim=0)  # [n_peaks]
 
-        BBOB_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        BBOB_Problem_torch.__init__(self, dim, shift, rotate, bias, lb, ub)
 
     def func(self, x):
         self.FES += x.shape[0]
@@ -836,7 +836,7 @@ class _Gallagher(BBOB_Problem):
         return osc_transform(10 - z) ** 2 + self.bias + self.boundaryHandling(x)
 
 
-class F21(_Gallagher):
+class F21_torch(_Gallagher_torch):
     n_peaks = 101
 
     def boundaryHandling(self, x):
@@ -846,7 +846,7 @@ class F21(_Gallagher):
         return 'Gallagher_101Peaks'
 
 
-class F22(_Gallagher):
+class F22_torch(_Gallagher_torch):
     n_peaks = 21
 
     def boundaryHandling(self, x):
@@ -856,14 +856,14 @@ class F22(_Gallagher):
         return 'Gallagher_21Peaks'
 
 
-class F128(GaussNoisyProblem, _Gallagher):
+class F128_torch(GaussNoisyProblem_torch, _Gallagher_torch):
     n_peaks = 101
     gauss_beta = 1.
     def __str__(self):
         return 'Gallagher_101Peaks_gauss'
 
 
-class F129(UniformNoisyProblem, _Gallagher):
+class F129_torch(UniformNoisyProblem_torch, _Gallagher_torch):
     n_peaks = 101
     uniform_alpha = 1.
     uniform_beta = 1.
@@ -871,7 +871,7 @@ class F129(UniformNoisyProblem, _Gallagher):
         return 'Gallagher_101Peaks_uniform'
 
 
-class F130(CauchyNoisyProblem, _Gallagher):
+class F130_torch(CauchyNoisyProblem_torch, _Gallagher_torch):
     n_peaks = 101
     cauchy_alpha = 1.
     cauchy_p = 0.2
@@ -879,14 +879,14 @@ class F130(CauchyNoisyProblem, _Gallagher):
         return 'Gallagher_101Peaks_cauchy'
 
 
-class F23(BBOB_Problem):
+class F23_torch(BBOB_Problem_torch):
     """
     Katsuura
     """
     def __init__(self, dim, shift, rotate, bias, lb, ub):
         scales = (100. ** 0.5) ** torch.linspace(0, 1, dim, dtype=torch.float64)
         rotate = torch.matmul(torch.matmul(rotate_gen(dim), torch.diag(scales)), rotate)
-        BBOB_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        BBOB_Problem_torch.__init__(self, dim, shift, rotate, bias, lb, ub)
 
     def __str__(self):
         return 'Katsuura'
@@ -905,7 +905,7 @@ class F23(BBOB_Problem):
         return res * tmp - tmp + pen_func(x, self.ub) + self.bias
 
 
-class F24(BBOB_Problem):
+class F24_torch(BBOB_Problem_torch):
     """
     Lunacek_bi_Rastrigin
     """

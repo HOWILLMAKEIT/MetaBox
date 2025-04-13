@@ -1,4 +1,4 @@
-from .cec2017mto import Sphere, Ackley, Rosenbrock, Rastrigin, Schwefel, Griewank, Weierstrass
+from .cec2017mto_numpy import Sphere, Ackley, Rosenbrock, Rastrigin, Schwefel, Griewank, Weierstrass
 import numpy as np
 from torch.utils.data import Dataset
 import os

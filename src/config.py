@@ -5,14 +5,20 @@ import time
 def get_config(args=None):
     parser = argparse.ArgumentParser()
     # Common config
-    parser.add_argument('--problem', default = 'bbob', choices = ['bbob', 'bbob-torch', 'bbob-noisy', 'bbob-noisy-torch',
-                                                                                'bbob-surrogate', 'Symbolic_bench','Symbolic_bench-torch',
+    parser.add_argument('--train_problem', default = 'bbob', choices = ['bbob', 'bbob-torch', 'bbob-noisy', 'bbob-noisy-torch',
+                                                                                'bbob-surrogate', 'hpo-b',
                                                                                 'lsgo', 'lsgo-torch', 'protein', 'protein-torch', 'uav', 'uav-torch',
-                                                                                'MMO', 'MMO-torch'],
-                        help='specify the problem suite')
+                                                                                'mmo', 'mmo-torch', 'wcci2020', 'cec2017mto', 'cec2013mmo', 'moo-synthetic'],
+                        help='specify the problem suite for training')
+    parser.add_argument('--test_problem', default = None, choices = [None, 'bbob', 'bbob-torch', 'bbob-noisy', 'bbob-noisy-torch',
+                                                                                'bbob-surrogate', 'hpo-b',
+                                                                                'lsgo', 'lsgo-torch', 'protein', 'protein-torch', 'uav', 'uav-torch',
+                                                                                'mmo', 'mmo-torch', 'wcci2020', 'cec2017mto', 'cec2013mmo', 'moo-synthetic'],
+                        help='specify the problem suite for testing, default to be consistent with training')
+    parser.add_argument('--train_difficulty', default='easy', choices=['all', 'easy', 'difficult', 'user-define'], help='difficulty level for training problems')
+    parser.add_argument('--test_difficulty', default=None, choices=['all', 'easy', 'difficult', 'user-define'], help='difficulty level for testing problems, default to be consistent with training')
     parser.add_argument('--dim', type=int, default=10, help='dimension of search space')
     parser.add_argument('--upperbound', type=float, default=5, help='upperbound of search space')
-    parser.add_argument('--difficulty', default='easy', choices=['easy', 'difficult', 'user-define'], help='difficulty level')
     parser.add_argument('--user_train_list', nargs='+', help = 'user define training list')
     parser.add_argument('--device', default='cpu', help='device to use')
     parser.add_argument('--train', default=None, action='store_true', help='switch to train mode')
@@ -105,13 +111,18 @@ def get_config(args=None):
     # for bo, maxFEs is relatively smaller due to time limit
     config.bo_maxFEs = 10 * config.dim
     config.n_logpoint = 50
+    
+    if config.test_problem is None:
+        config.test_problem = config.train_problem
+    if config.test_difficulty is None:
+        config.test_difficulty = config.train_difficulty
 
     if config.run_experiment and len(config.agent_for_cp) >= 1:
         assert config.agent_load_dir is not None, "Option --agent_load_dir must be given since you specified option --agent_for_cp."
 
     if config.mgd_test or config.mte_test:
-        config.problem = config.problem_to
-        config.difficulty = config.difficulty_to
+        config.train_problem = config.problem_to
+        config.train_difficulty = config.difficulty_to
 
     if config.problem in ['protein', 'protein-torch']:
         config.dim = 12
@@ -119,7 +130,7 @@ def get_config(args=None):
         config.bo_maxFEs = 10
         config.n_logpoint = 5
 
-    config.run_time = f'{time.strftime("%Y%m%dT%H%M%S")}_{config.problem}_{config.difficulty}'
+    config.run_time = f'{time.strftime("%Y%m%dT%H%M%S")}_{config.train_problem}_{config.train_difficulty}'
     config.test_log_dir = config.log_dir + '/test/' + config.run_time + '/'
     config.rollout_log_dir = config.log_dir + '/rollout/' + config.run_time + '/'
     config.mgd_test_log_dir = config.log_dir + '/mgd_test/' + config.run_time + '/'

@@ -1,6 +1,8 @@
 from torch.utils.data import Dataset
 import numpy as np
 import torch
+from cec2013mmo_numpy import *
+from cec2013mmo_torch import *
 import math
 
 class CEC2013MMO_Dataset(Dataset):

@@ -1,4 +1,5 @@
-from .bbob import *
+from .bbob_numpy import *
+from .bbob_torch import *
 from torch.utils.data import Dataset
 
 class BBOB_Dataset(Dataset):
@@ -22,6 +23,7 @@ class BBOB_Dataset(Dataset):
                      train_batch_size=1,
                      test_batch_size=1,
                      difficulty='easy',
+                     version='numpy',
                      instance_seed=3849):
         # get functions ID of indicated suit
         if suit == 'bbob':
@@ -55,7 +57,10 @@ class BBOB_Dataset(Dataset):
                 bias = np.random.randint(1, 26) * 100
             else:
                 bias = 0
-            instance = eval(f'F{id}')(dim=dim, shift=shift, rotate=H, bias=bias, lb=lb, ub=ub)
+            if version == 'numpy':
+                instance = eval(f'F{id}')(dim=dim, shift=shift, rotate=H, bias=bias, lb=lb, ub=ub)
+            else:
+                instance = eval(f'F{id}_torch')(dim=dim, shift=shift, rotate=H, bias=bias, lb=lb, ub=ub)
             if (difficulty == 'easy' and id not in small_set_func_id) or (difficulty == 'difficult' and id in small_set_func_id):
                 train_set.append(instance)
             else:

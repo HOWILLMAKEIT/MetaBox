@@ -37,15 +37,15 @@ from environment.optimizer import (
 )
 
 from baseline.bbo import (
-    DEAP_DE,
+    DE,
     JDE21,
-    MadDE,
-    NL_SHADE_LBC,
-    DEAP_PSO,
-    GL_PSO,
-    sDMS_PSO,
+    MADDE,
+    NLSHADELBC,
+    PSO,
+    GLPSO,
+    SDMSPSO,
     SAHLPSO,
-    DEAP_CMAES,
+    CMAES,
     Random_search,
 )
 
@@ -54,7 +54,7 @@ from baseline.metabbo import (
     DEDDQN,
     DEDQN,
     QLPSO,
-    NRLPSOt,
+    NRLPSO,
     RLHPSDE,
     RLDEAFL,
     SYMBOL,
@@ -77,19 +77,21 @@ class Trainer(object):
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
 
-        if config.resume_dir is None:
-            self.agent = eval(config.train_agent)(config)
+        self.train_set, self.test_set = construct_problem_set(config)
+        self.config.dim = max(self.train_set.maxdim, self.test_set.maxdim)
+        
+        if self.config.problem == 'bbob-surrogate':
+            self.config.is_train = True
+            
+        if self.config.resume_dir is None:
+            self.agent = eval(self.config.train_agent)(self.config)
         else:
-            file_path = config.resume_dir + config.train_agent + '.pkl'
+            file_path = self.config.resume_dir + self.config.train_agent + '.pkl'
             with open(file_path, 'rb') as f:
                 self.agent = pickle.load(f)
-            self.agent.update_setting(config)
-        self.optimizer = eval(config.train_optimizer)(config)
-        self.logger = Logger(config)
-        
-        if config.problem == 'bbob-surrogate':
-            config.is_train = True
-        self.train_set, self.test_set = construct_problem_set(config)
+            self.agent.update_setting(self.config)
+        self.optimizer = eval(self.config.train_optimizer)(self.config)
+        self.logger = Logger(self.config)
 
     def save_log(self, epochs, steps, cost, returns, normalizer):
         log_dir = self.config.log_dir + f'/train/{self.agent.__class__.__name__}/{self.config.run_time}/log/'

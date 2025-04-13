@@ -29,7 +29,7 @@ class PolicyNet(nn.Module):
         return sample_w, ht_, ct_
 
 
-class LDE_Agent(REINFORCE_Agent):
+class LDE(REINFORCE_Agent):
     def __init__(self, config):
         
         self.config = config

@@ -41,15 +41,15 @@ from environment.optimizer import (
 )
 
 from baseline.bbo import (
-    DEAP_DE,
+    DE,
     JDE21,
-    MadDE,
-    NL_SHADE_LBC,
-    DEAP_PSO,
-    GL_PSO,
-    sDMS_PSO,
+    MADDE,
+    NLSHADELBC,
+    PSO,
+    GLPSO,
+    SDMSPSO,
     SAHLPSO,
-    DEAP_CMAES,
+    CMAES,
     Random_search,
 )
 
@@ -64,7 +64,7 @@ from baseline.metabbo import (
     SYMBOL,
     RLDAS,
     SurrRLDE,
-    RLEMMOt,
+    RLEMMO,
     GLHF,
     B2OPT
 )
@@ -232,7 +232,7 @@ class Tester(object):
         for key in self.test_results.keys():
             self.initialize_record(key)
         
-        if config.full_meta_data:
+        if config.metadata:
             for problem in self.test_set.data:
                 self.meta_data_results[problem.__str__()] = {}
                 for agent_name in self.agent_name_list:
@@ -259,7 +259,7 @@ class Tester(object):
     def record_test_data(self, data: dict):
         for item in data:
             for key in item.keys():
-                if key == 'metadata' and self.config.full_meta_data:
+                if key == 'metadata' and self.config.metadata:
                     self.meta_data_results[item['problem_name']][item['agent_name']].append(item[key])
                     continue
                 if key not in ['agent_name', 'problem_name'] and key not in self.test_results.keys():

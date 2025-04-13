@@ -157,7 +157,7 @@ class Critic(nn.Module):
         return baseline_value.squeeze()
 
 
-class RLEMMO_Agent(PPO_Agent):
+class RLEMMO(PPO_Agent):
     def __init__(self, config):
         self.config = config
         
