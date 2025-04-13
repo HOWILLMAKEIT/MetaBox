@@ -1,1 +1,0 @@
-from .bbob_surrogate import *
