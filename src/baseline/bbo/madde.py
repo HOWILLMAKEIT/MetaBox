@@ -1,6 +1,6 @@
 import numpy as np
 import scipy.stats as stats
-from .basic_optimizer import Basic_Optimizer
+from environment.optimizer.basic_optimizer import Basic_Optimizer
 
 
 class MadDE(Basic_Optimizer):
