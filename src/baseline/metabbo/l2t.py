@@ -1,5 +1,5 @@
 from typing import Tuple
-from rl.basic_agent import Basic_Agent
+from rl.ppo import *
 
 import torch
 import math, copy
@@ -20,14 +20,14 @@ class Actor(nn.Module):
         self.mu = nn.Linear(hidden_dim, n_action)
         self.sigma = nn.Linear(hidden_dim, n_action)
         self.tanh = nn.Tanh()
-        self.__max_sigma = 0.05
-        self.__min_sigma = 0.15
+        self.__max_sigma = 0.15
+        self.__min_sigma = 0.05
 
     def forward(self, state, fixed_action = None):
         x = self.tanh(self.linear1(state))
         x = self.tanh(self.linear2(x))
-        mu = torch.tanh(self.mu(x) + 1.) / 2.
-        sigma = torch.tanh(self.sigma(x) + 1.) / 2. * (self.__max_sigma - self.__min_sigma) + self.__min_sigma
+        mu = (torch.tanh(self.mu(x)) + 1.0) / 2.
+        sigma = (torch.tanh(self.sigma(x)) + 1.0) / 2. * (self.__max_sigma - self.__min_sigma) + self.__min_sigma
         distribution = torch.distributions.Normal(mu, sigma)
 
         if fixed_action is None:
@@ -39,8 +39,9 @@ class Actor(nn.Module):
         log_probs = distribution.log_prob(action)
         log_probs = torch.sum(log_probs, dim=-1)
         action = torch.clamp(action, min=0, max=1)
+        entropy = distribution.entropy()  # for logging only
 
-        return action, log_probs
+        return action, log_probs, entropy
 
 class Critic(nn.Module):
     def __init__(self, n_state, hidden_dim=64):
@@ -96,66 +97,55 @@ def clip_grad_norms(param_groups, max_norm=math.inf):
     return grad_norms, grad_norms_clipped
 
 
-class L2O_Agent_Parallel(Basic_Agent):
+class L2T(PPO_Agent):
     def __init__(self, config):
-        super().__init__(config)
         self.config = config
 
+        self.config.optimizer = 'Adam'
+        self.config.lr_actor = 1e-4
+        self.config.lr_critic = 1e-4
+        self.config.lr_scheduler = 'ExponentialLR'
+
         # define parameters
-        self.gamma = 0.99
-        self.n_step = 10
-        self.K_epochs = 3
-        self.eps_clip = 0.2
-        self.max_grad_norm = 0.1
-        self.device = self.config.device
-        self.n_state = self.config.task_cnt * 7 + 1
-        self.n_action = self.config.task_cnt * 3
+        self.config.gamma = 0.99
+        self.config.n_step = 10
+        self.config.K_epochs = 3
+        self.config.eps_clip = 0.2
+        self.config.max_grad_norm = 0.1
+        self.config.device = self.config.device
+        self.config.n_state = self.config.task_cnt * 7 + 1
+        self.config.n_action = self.config.task_cnt * 3
         
         # figure out the actor network
         # self.actor = None
-        self.actor = Actor(self.n_state, self.n_action)
+        actor = Actor(self.config.n_state, self.config.n_action)
         
         # figure out the critic network
         # self.critic = None
-        self.critic = Critic(self.n_state)
-        assert hasattr(self, 'actor') and hasattr(self, 'critic')
+        critic = Critic(self.config.n_state)
 
-        # figure out the optimizer
-        self.optimizer = torch.optim.Adam(
-            [{'params': self.actor.parameters(), 'lr': 1e-5}] +
-            [{'params': self.critic.parameters(), 'lr': 1e-5}])
+        super().__init__(self.config, {'actor': actor, 'critic': critic}, [self.config.lr_actor, self.config.lr_critic])
 
-        # move to device
-        self.actor.to(self.device)
-        self.critic.to(self.device)
-
-        # init learning time
-        self.learning_time = 0
-        self.cur_checkpoint = 0
-
-        # save init agent
-        save_class(self.config.agent_save_dir,'checkpoint'+str(self.cur_checkpoint),self)
-        self.cur_checkpoint += 1
-
-    def update_setting(self, config):
-        self.config.max_learning_step = config.max_learning_step
-        self.config.agent_save_dir = config.agent_save_dir
-        self.learning_time = 0
-        save_class(self.config.agent_save_dir, 'checkpoint0', self)
-        self.config.save_interval = config.save_interval
-        self.cur_checkpoint = 1
+    def __str__(self):
+        return "L2T"
 
     def train_episode(self, 
                       envs,
                       seeds: Optional[Union[int, List[int], np.ndarray]],
                       para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc']='dummy',
-                      asynchronous: Literal[None, 'idle', 'restart', 'continue']=None,
-                      num_cpus: Optional[Union[int, None]]=1,
-                      num_gpus: int=0,
+                      # asynchronous: Literal[None, 'idle', 'restart', 'continue']=None,
+                      # num_cpus: Optional[Union[int, None]]=1,
+                      # num_gpus: int=0,
+                      compute_resource = {},
+                      tb_logger = None,
                       required_info={}):
-        if self.device != 'cpu':
-            num_gpus = max(num_gpus, 1)
-        env = ParallelEnv(envs, para_mode, asynchronous, num_cpus, num_gpus)
+        num_cpus = None
+        num_gpus = 0
+        if 'num_cpus' in compute_resource.keys():
+            num_cpus = compute_resource['num_cpus']
+        if 'num_gpus' in compute_resource.keys():
+            num_gpus = compute_resource['num_gpus']
+        env = ParallelEnv(envs, para_mode, num_cpus=num_cpus, num_gpus=num_gpus)
         env.seed(seeds)
         memory = Memory()
 
@@ -176,10 +166,12 @@ class L2O_Agent_Parallel(Basic_Agent):
         t = 0
         # initial_cost = obj
         _R = torch.zeros(len(env))
+        _loss = []
         # sample trajectory
         while not env.all_done():
             t_s = t
             total_cost = 0
+            entropy = []
             bl_val_detached = []
             bl_val = []
 
@@ -187,9 +179,11 @@ class L2O_Agent_Parallel(Basic_Agent):
             while t - t_s < n_step :  
                 
                 memory.states.append(state.clone())
-                action, log_lh = self.actor(state)
+                action, log_lh, entro_p = self.actor(state)
                 memory.actions.append(action.clone() if isinstance(action, torch.Tensor) else copy.deepcopy(action))
                 memory.logprobs.append(log_lh)
+
+                entropy.append(entro_p.detach().cpu())
 
                 baseline_val, baseline_val_detached = self.critic(state)
                 
@@ -235,15 +229,17 @@ class L2O_Agent_Parallel(Basic_Agent):
                 else:
                     # Evaluating old actions and values :
                     logprobs = []
+                    entropy = []
                     bl_val_detached = []
                     bl_val = []
 
                     for tt in range(t_time):
 
                         # get new action_prob
-                        _, log_p = self.actor(old_states[tt], fixed_action = old_actions[tt])
+                        _, log_p, entro_p = self.actor(old_states[tt], fixed_action = old_actions[tt])
 
                         logprobs.append(log_p)
+                        entropy.append(entro_p.detach().cpu())
 
                         baseline_val, baseline_val_detached = self.critic(old_states[tt])
                         
@@ -251,6 +247,7 @@ class L2O_Agent_Parallel(Basic_Agent):
                         bl_val.append(baseline_val)
 
                 logprobs = torch.stack(logprobs).view(-1)
+                entropy = torch.stack(entropy).view(-1)
                 bl_val_detached = torch.stack(bl_val_detached).view(-1)
                 bl_val = torch.stack(bl_val).view(-1)
 
@@ -260,7 +257,7 @@ class L2O_Agent_Parallel(Basic_Agent):
                 reward_reversed = memory.rewards[::-1]
                 # get next value
                 R = self.critic(state)[0].squeeze(1)
-
+                critic_output = R.clone()
                 for r in range(len(reward_reversed)):
                     R = R * gamma + reward_reversed[r]
                     Reward.append(R)
@@ -299,7 +296,7 @@ class L2O_Agent_Parallel(Basic_Agent):
                 # update gradient step
                 self.optimizer.zero_grad()
                 loss.backward()
-
+                _loss.append(loss.item())
                 # Clip gradient norm and get (clipped) gradient norms for logging
                 # current_step = int(pre_step + t//n_step * K_epochs  + _k)
                 grad_norms = clip_grad_norms(self.optimizer.param_groups, self.max_grad_norm)
@@ -311,12 +308,17 @@ class L2O_Agent_Parallel(Basic_Agent):
                     save_class(self.config.agent_save_dir, 'checkpoint'+str(self.cur_checkpoint), self)
                     self.cur_checkpoint += 1
 
+                if not self.config.no_tb and self.learning_time % int(self.config.log_step) == 0:
+                    self.log_to_tb_train(tb_logger, self.learning_time,
+                                         grad_norms,
+                                         reinforce_loss, baseline_loss,
+                                         _R, Reward, memory.rewards,
+                                         critic_output, logprobs, entropy, approx_kl_divergence)
+
                 if self.learning_time >= self.config.max_learning_step:
                     memory.clear_memory()
-                    return_info = {'return': _R, 'learn_steps': self.learning_time, }
-                    env_cost = env.get_env_attr('cost')
-                    return_info['normalizer'] = env_cost[0]
-                    return_info['gbest'] = env_cost[-1]
+                    return_info = {'return': _R, 'learn_steps': self.learning_time, 'loss':np.mean(_loss)}
+                    return_info['gbest'] = env.get_env_attr('gbest')
                     for key in required_info.keys():
                         return_info[key] = env.get_env_attr(required_info[key])
                     env.close()
@@ -325,14 +327,11 @@ class L2O_Agent_Parallel(Basic_Agent):
             memory.clear_memory()
         
         is_train_ended = self.learning_time >= self.config.max_learning_step
-        return_info = {'return': _R, 'learn_steps': self.learning_time, }
-        env_cost = env.get_env_attr('cost')
-        return_info['normalizer'] = env_cost[0]
-        return_info['gbest'] = env_cost[-1]
+        return_info = {'return': _R, 'learn_steps': self.learning_time, 'loss':np.mean(_loss)}
+        return_info['gbest'] = env.get_env_attr('gbest')
         for key in required_info.keys():
             return_info[key] = env.get_env_attr(required_info[key])
         env.close()
-        
         return is_train_ended, return_info
     
     def rollout_episode(self, 
@@ -352,11 +351,18 @@ class L2O_Agent_Parallel(Basic_Agent):
                     state = [state]
                 action = self.actor(state)[0]
                 action = action.cpu().numpy()
-                state, reward, is_done = env.step(action)
+                state, reward, is_done, info = env.step(action)
                 R += reward
-            env_cost = env.get_env_attr('cost')
+            env_cost = env.get_env_attr('gbest')
             env_fes = env.get_env_attr('fes')
             results = {'cost': env_cost, 'fes': env_fes, 'return': R}
+
+            if self.config.full_meta_data:
+                meta_X = env.get_env_attr('meta_X')
+                meta_Cost = env.get_env_attr('meta_Cost')
+                metadata = {'X': meta_X, 'Cost': meta_Cost}
+                results['metadata'] = metadata
+                
             for key in required_info.keys():
                 results[key] = getattr(env, required_info[key])
             return results
@@ -365,13 +371,18 @@ class L2O_Agent_Parallel(Basic_Agent):
                               envs, 
                               seeds=None,
                               para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc']='dummy',
-                              asynchronous: Literal[None, 'idle', 'restart', 'continue']=None,
-                              num_cpus: Optional[Union[int, None]]=1,
-                              num_gpus: int=0,
+                              # asynchronous: Literal[None, 'idle', 'restart', 'continue']=None,
+                              # num_cpus: Optional[Union[int, None]]=1,
+                              # num_gpus: int=0,
+                              compute_resource = {},
                               required_info={}):
-        if self.device != 'cpu':
-            num_gpus = max(num_gpus, 1)
-        env = ParallelEnv(envs, para_mode, asynchronous, num_cpus, num_gpus)
+        num_cpus = None
+        num_gpus = 0
+        if 'num_cpus' in compute_resource.keys():
+            num_cpus = compute_resource['num_cpus']
+        if 'num_gpus' in compute_resource.keys():
+            num_gpus = compute_resource['num_gpus']
+        env = ParallelEnv(envs, para_mode, num_cpus=num_cpus, num_gpus=num_gpus)
 
         env.seed(seeds)
         state = env.reset()
@@ -380,25 +391,25 @@ class L2O_Agent_Parallel(Basic_Agent):
         except:
             pass
         
-        R = torch.zeros(len(env))
+        _R = torch.zeros(len(env))
         # sample trajectory
         while not env.all_done():
             with torch.no_grad():
                 action = self.actor(state)[0]
             
             # state transient
-            state, rewards, is_end = env.step(action)
+            state, rewards, is_end, info = env.step(action)
             # print('step:{},max_reward:{}'.format(t,torch.max(rewards)))
-            R += torch.FloatTensor(rewards)
+            _R += torch.FloatTensor(rewards)
             # store info
             try:
                 state = torch.FloatTensor(state).to(self.device)
             except:
                 pass
-        _Rs = R.detach().numpy().tolist()
-        env_cost = env.get_env_attr('cost')
+
+        env_cost = env.get_env_attr('gbest')
         env_fes = env.get_env_attr('fes')
-        results = {'cost': env_cost, 'fes': env_fes, 'return': _Rs}
+        results = {'cost': env_cost, 'fes': env_fes, 'return': _R}
         for key in required_info.keys():
             results[key] = env.get_env_attr(required_info[key])
         return results

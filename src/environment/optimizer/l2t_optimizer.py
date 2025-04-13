@@ -1,9 +1,131 @@
 import numpy as np
 import torch
 import copy
-from .operators import DE_rand_1, mixed_DE
-from optimizer.MTO.learnable_optimizer import Learnable_Optimizer
-class L2O_Optimizer(Learnable_Optimizer):
+from typing import Any, Tuple
+import time
+
+def DE_mutation(populations):
+    # input: pupulations [population_cnt, dim]
+    # output: mutants [population_cnt, dim]
+    F = 0.5
+    pop_cnt, dim = populations.shape
+    mutants = copy.deepcopy(populations)
+    for j in range(pop_cnt):
+        r1 = np.random.randint(low=0, high=pop_cnt)
+        r2 = np.random.randint(low=0, high=pop_cnt)
+        r3 = np.random.randint(low=0, high=pop_cnt)
+        while r1 == j:
+            r1 = np.random.randint(low=0, high=pop_cnt)
+        while r2 == r1 or r2 == j:
+            r2 = np.random.randint(low=0, high=pop_cnt)
+        while r3 == r2 or r3 == r1 or r3 == j:
+            r3 = np.random.randint(low=0, high=pop_cnt)
+
+        x1 = populations[r1]
+        x2 = populations[r2]
+        x3 = populations[r3]
+        mutant = x1 + F * (x2 - x3)
+        mutant = np.clip(mutant, a_min=0, a_max=1)
+        mutants[j] = mutant
+
+    return mutants
+
+def DE_crossover(mutants, populations):
+    CR = 0.7
+    U = copy.deepcopy(mutants)
+    try:
+        population_cnt, dim = mutants.shape
+    except ValueError as e:
+        print("ValueError occurred:", e)
+        print('mutant_shape',mutants.shape)
+
+    #population_cnt, dim = mutants.shape
+    for j in range(population_cnt):
+        rand_pos = np.random.randint(low=0, high=dim)
+        for k in range(dim):
+            mutant = mutants[j]
+            rand = np.random.rand()
+            if rand <= CR or k == rand_pos:
+                U[j][k] = mutant[k]
+
+            if rand > CR and k != rand_pos:
+                U[j][k] = populations[j][k]
+    return U
+
+def DE_rand_1(populations):
+    mutants = DE_mutation(populations)
+    DE_offsprings = DE_crossover(mutants, populations)
+    return DE_offsprings
+
+
+def mixed_DE(populations, source_pupulations, KT_index, action_2, action_3):
+    population_target = populations[KT_index]
+    pop_cnt, dim = source_pupulations.shape
+    mutants = []
+    F = 0.5
+    for i in range(population_target.shape[0]):
+        r1, r2, r3, r4, r5, r6 = np.random.choice(np.arange(pop_cnt),size=6, replace=False)
+        X_r1 = populations[r1]
+        X_r2 = source_pupulations[r2]
+        X_r3 = populations[r3]
+        X_r4 = populations[r4]
+        X_r5 = source_pupulations[r5]
+        X_r6 = source_pupulations[r6]
+
+        mutant = (1 - action_2) * X_r1 + action_2 * X_r2 + F * (1 - action_3) * (X_r3 - X_r4) + F * action_3 * (
+                    X_r5 - X_r6)
+
+        mutants.append(mutant)
+
+    mutants = np.array(mutants)
+    U = DE_crossover(mutants, population_target)
+
+    return U
+
+
+
+"""
+This is a basic class for learnable backbone optimizer.
+Your own backbone optimizer should inherit from this class and have the following methods:
+    1. __init__(self, config) : to initialize the backbone optimizer.
+    2. init_population(self, problem) : to initialize the population, calculate costs using problem.eval()
+       and record some information such as pbest and gbest if needed. It's expected to return a state for
+       agent to make decisions.
+    3. update(self, action, problem) : to update the population or one individual in population as you wish
+       using the action given by agent, calculate new costs using problem.eval() and update some records
+       if needed. It's expected to return a tuple of [next_state, reward, is_done] for agent to learn.
+"""
+class Learnable_Optimizer:
+    """
+    Abstract super class for learnable backbone optimizers.
+    """
+    def __init__(self, config):
+        self.__config = config
+
+    def init_population(self,
+                        tasks:Any) -> Any:
+        raise NotImplementedError
+
+    def update(self,
+               action: Any,
+               tasks:Any) -> Tuple[Any]:
+        raise NotImplementedError
+
+    def seed(self, seed = None):
+        rng_seed = int(time.time()) if seed is None else seed
+
+        self.rng = np.random.default_rng(rng_seed)
+
+        self.rng_cpu = torch.Generator().manual_seed(rng_seed)
+
+        self.rng_gpu = None
+        if self.__config.device.type == 'cuda':
+            self.rng_gpu = torch.Generator(device = self.__config.device).manual_seed(rng_seed)
+        # GPU: torch.rand(4, generator = rng_gpu, device = 'self.__config.device')
+        # CPU: torch.rand(4, generator = rng_cpu)
+
+
+class L2T_Optimizer(Learnable_Optimizer):
     def __init__(self, config):
         super().__init__(config)
         self.__config = config
@@ -30,6 +152,8 @@ class L2O_Optimizer(Learnable_Optimizer):
         self.parent_population = None
         self.reward = [0 for _ in range(self.task_cnt)]
         self.total_reward = 0
+
+        self.fes = None
 
     def get_state(self):
         state_o = self.generation / self.total_generation
@@ -64,15 +188,25 @@ class L2O_Optimizer(Learnable_Optimizer):
         return states
 
     def init_population(self, tasks):
+        self.fes = 0
         self.task = tasks
         self.parent_population = np.array([[np.random.rand(self.dim) for i in range(self.pop_cnt)] for _ in range(self.task_cnt)])
-
+        
+        parent_fitnesses_list = []
         for i in range(self.task_cnt):
             fitnesses = self.task[i].eval(self.parent_population[i])
             self.gbest[i] = np.min(fitnesses, axis=-1)
+            parent_fitnesses_list.append(fitnesses)
+        
+        parent_fitnesses_np = np.array(parent_fitnesses_list, dtype=np.float32)
             
         state = self.get_state()
 
+
+        if self.__config.full_meta_data:
+            self.meta_X = [self.parent_population.copy()]
+            self.meta_Cost = [parent_fitnesses_np.copy()]
+            
         return state
 
     def self_update(self):
@@ -108,7 +242,10 @@ class L2O_Optimizer(Learnable_Optimizer):
             self.old_action_3[i] = action_3
 
     def seletion(self):
+        parent_finesses_list = []
         for i in range(self.task_cnt):
+            ps = self.parent_population[i].shape[0]
+            self.fes += ps
             parent_population_fitness = self.task[i].eval(self.parent_population[i])
             offsprings_population_fitness = self.task[i].eval(self.offsprings[i])
 
@@ -132,6 +269,7 @@ class L2O_Optimizer(Learnable_Optimizer):
 
             flag = 0
             fitnesses = self.task[i].eval(next_population[i])
+            parent_finesses_list.append(fitnesses)
             best_fitness = np.min(fitnesses,axis=-1)
             if(best_fitness < self.gbest[i]):
                 self.gbest[i] = best_fitness
@@ -145,6 +283,10 @@ class L2O_Optimizer(Learnable_Optimizer):
 
             self.parent_population[i] = next_population[i]
 
+        parent_finesses_np = np.array(parent_finesses_list, dtype=np.float32)
+        if self.__config.full_meta_data:
+            self.meta_X = [self.parent_population.copy()]
+            self.meta_Cost = [parent_finesses_np.copy()]
         return self.get_state()
 
     def update(self, actions, tasks):

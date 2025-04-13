@@ -2,7 +2,7 @@ import numpy as np
 import torch
 import copy
 from .operators import DE_rand_1, mixed_DE
-from optimizer.MTO.learnable_optimizer import Learnable_Optimizer
+from optimizer.l20_related.learnable_optimizer import Learnable_Optimizer
 class L2O_Optimizer(Learnable_Optimizer):
     def __init__(self, config):
         super().__init__(config)
@@ -30,6 +30,8 @@ class L2O_Optimizer(Learnable_Optimizer):
         self.parent_population = None
         self.reward = [0 for _ in range(self.task_cnt)]
         self.total_reward = 0
+
+        self.fes = None
 
     def get_state(self):
         state_o = self.generation / self.total_generation
@@ -64,15 +66,25 @@ class L2O_Optimizer(Learnable_Optimizer):
         return states
 
     def init_population(self, tasks):
+        self.fes = 0
         self.task = tasks
         self.parent_population = np.array([[np.random.rand(self.dim) for i in range(self.pop_cnt)] for _ in range(self.task_cnt)])
-
+        
+        parent_fitnesses_list = []
         for i in range(self.task_cnt):
             fitnesses = self.task[i].eval(self.parent_population[i])
             self.gbest[i] = np.min(fitnesses, axis=-1)
+            parent_fitnesses_list.append(fitnesses)
+        
+        parent_fitnesses_np = np.array(parent_fitnesses_list, dtype=np.float32)
             
         state = self.get_state()
 
+
+        if self.__config.full_meta_data:
+            self.meta_X = [self.parent_population.copy()]
+            self.meta_Cost = [parent_fitnesses_np.copy()]
+            
         return state
 
     def self_update(self):
@@ -108,7 +120,10 @@ class L2O_Optimizer(Learnable_Optimizer):
             self.old_action_3[i] = action_3
 
     def seletion(self):
+        parent_finesses_list = []
         for i in range(self.task_cnt):
+            ps = self.parent_population[i].shape[0]
+            self.fes += ps
             parent_population_fitness = self.task[i].eval(self.parent_population[i])
             offsprings_population_fitness = self.task[i].eval(self.offsprings[i])
 
@@ -132,6 +147,7 @@ class L2O_Optimizer(Learnable_Optimizer):
 
             flag = 0
             fitnesses = self.task[i].eval(next_population[i])
+            parent_finesses_list.append(fitnesses)
             best_fitness = np.min(fitnesses,axis=-1)
             if(best_fitness < self.gbest[i]):
                 self.gbest[i] = best_fitness
@@ -145,6 +161,10 @@ class L2O_Optimizer(Learnable_Optimizer):
 
             self.parent_population[i] = next_population[i]
 
+        parent_finesses_np = np.array(parent_finesses_list, dtype=np.float32)
+        if self.__config.full_meta_data:
+            self.meta_X = [self.parent_population.copy()]
+            self.meta_Cost = [parent_finesses_np.copy()]
         return self.get_state()
 
     def update(self, actions, tasks):
