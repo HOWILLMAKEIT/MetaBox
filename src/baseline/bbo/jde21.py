@@ -1,6 +1,6 @@
 import numpy as np
 import copy
-from .basic_optimizer import Basic_Optimizer
+from environment.optimizer.basic_optimizer import Basic_Optimizer
 
 
 class JDE21(Basic_Optimizer):
