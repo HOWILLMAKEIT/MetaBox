@@ -1,16 +1,16 @@
 import numpy as np
 import copy
 import scipy.stats as stats
-from .basic_optimizer import Basic_Optimizer
+from environment.optimizer.basic_optimizer import Basic_Optimizer
 
 
 def test(x):
     return np.sum(np.isnan(x))
 
 
-class NL_SHADE_LBC(Basic_Optimizer):
+class NLSHADELBC(Basic_Optimizer):
     def __init__(self, config):
-        super(NL_SHADE_LBC, self).__init__(config)
+        super(NLSHADELBC, self).__init__(config)
         self.__pb = 0.4  # rate of best individuals in mutation
         self.__pa = 0.5  # rate of selecting individual from archive
         self.__dim = config.dim  # dimension of problem
