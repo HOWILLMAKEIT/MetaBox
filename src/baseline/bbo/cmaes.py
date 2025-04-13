@@ -7,7 +7,7 @@ from deap import cma
 from .basic_optimizer import Basic_Optimizer
 
 
-class DEAP_CMAES(Basic_Optimizer):
+class CMAES(Basic_Optimizer):
     def __init__(self, config):
         super().__init__(config)
         config.NP = 50
