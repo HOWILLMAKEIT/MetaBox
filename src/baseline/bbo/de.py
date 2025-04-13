@@ -5,7 +5,7 @@ from deap import tools
 from .basic_optimizer import Basic_Optimizer
 
 
-class DEAP_DE(Basic_Optimizer):
+class DE(Basic_Optimizer):
     def __init__(self, config):
         super().__init__(config)
         config.NP = 50
