@@ -1,10 +1,10 @@
 import torch
 import numpy as np
 from scipy.optimize import minimize
-from .basic_optimizer import Basic_Optimizer
+from environment.optimizer.basic_optimizer import Basic_Optimizer
 
 
-class sDMS_PSO(Basic_Optimizer):
+class SDMSPSO(Basic_Optimizer):
     def __init__(self,config):
         super().__init__(config)
         self.__w,self.__c1,self.__c2=0.729,1.49445,1.49445
@@ -35,7 +35,7 @@ class sDMS_PSO(Basic_Optimizer):
         self.full_meta_data = config.full_meta_data
         
     def __str__(self):
-        return 'sDMSPSO'
+        return 'SDMSPSO'
     
     def __get_costs(self,problem,position):
         ps=position.shape[0]
