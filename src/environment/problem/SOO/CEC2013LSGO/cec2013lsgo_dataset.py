@@ -19,9 +19,11 @@ class CEC2013LSGO_Dataset(Dataset):
                      difficulty=None,
                      user_train_list=None,
                      user_test_list=None):
-        if difficulty != 'easy' and difficulty != 'difficult':
+        if difficulty == None and user_test_list == None and user_train_list == None:
+            raise ValueError('Please set difficulty or user_train_list and user_test_list.')
+        if difficulty not in ['easy', 'difficult', 'all', None]:
             raise ValueError(f'{difficulty} difficulty is invalid.')
-        func_id = [i for i in range(1, 6)]
+        func_id = [i for i in range(1, 16)]
         train_set = []
         test_set = []
         if difficulty == 'easy':
@@ -46,6 +48,14 @@ class CEC2013LSGO_Dataset(Dataset):
                     train_set.append(instance)
                 else:
                     test_set.append(instance)
+        elif difficulty == 'all':
+            for id in func_id:
+                if version == 'numpy':
+                    instance = eval(f'F{id}')()
+                else:
+                    instance = eval(f'F{id}_Torch')()
+                train_set.append(instance)
+                test_set.append(instance)
         elif difficulty is None:
             train_id = user_train_list
             test_id = user_test_list
