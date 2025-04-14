@@ -12,10 +12,9 @@ guide/QuickStart/index
 ```
 
 ```{toctree}
-:caption: API Reference
+:caption: 'API Reference'
 :maxdepth: 1
 :hidden:
-
 apidocs/index
 ```
 
