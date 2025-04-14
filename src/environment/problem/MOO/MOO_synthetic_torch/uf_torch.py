@@ -2,10 +2,10 @@ import geatpy as ea
 # import numpy as th
 import torch as th
 import math
-from problem.MOO.moo_basic import MOO_Basic_Problem
+from problem.MOO.moo_basic_problem import Moo_Basic_Problem
 
 
-class UF1(MOO_Basic_Problem):
+class UF1(Moo_Basic_Problem):
     def __init__(self):
         self.n_obj = 2
         self.n_var = 30
@@ -37,7 +37,7 @@ class UF1(MOO_Basic_Problem):
 
 
 
-class UF2(Basic_Problem):
+class UF2(Moo_Basic_Problem):
     def __init__(self):
         self.n_obj = 2  # 初始化（目标维数）
         self.n_var = 30 #初始化（决策变量维数）
@@ -70,7 +70,7 @@ class UF2(Basic_Problem):
         return referenceObjV
 
 
-class UF3(Basic_Problem):  # 继承Problem的父类
+class UF3(Moo_Basic_Problem):  # 继承Problem的父类
     def __init__(self):
         self.n_obj = 2  # 目标维数
         self.n_var = 30  # 决策变量维数
@@ -104,7 +104,7 @@ class UF3(Basic_Problem):  # 继承Problem的父类
         return referenceObjV
 
 
-class UF4(Basic_Problem):
+class UF4(Moo_Basic_Problem):
     def __init__(self):
         self.n_obj = 2  # 初始化（目标维数）
         self.n_var = 30  # 初始化Dim（决策变量维数）
@@ -138,7 +138,7 @@ class UF4(Basic_Problem):
         return referenceObjV
 
 
-class UF5(Basic_Problem):
+class UF5(Moo_Basic_Problem):
     def __init__(self):
         self.n_obj = 2  # 初始化M（目标维数）
         self.n_var = 30  # 初始化Dim（决策变量维数）
@@ -172,7 +172,7 @@ class UF5(Basic_Problem):
         return referenceObjV
 
 
-class UF6(Basic_Problem):  # 继承Problem父类
+class UF6(Moo_Basic_Problem):  # 继承Problem父类
     def __init__(self):
 
         self.n_obj = 2  # 初始化M（目标维数）
@@ -215,7 +215,7 @@ class UF6(Basic_Problem):  # 继承Problem父类
         return referenceObjV
 
 
-class UF7(Basic_Problem):  # 继承Problem父类
+class UF7(Moo_Basic_Problem):  # 继承Problem父类
     def __init__(self):
 
         self.n_obj = 2  # 初始化M（目标维数）
@@ -248,7 +248,7 @@ class UF7(Basic_Problem):  # 继承Problem父类
         return referenceObjV
 
 
-class UF8(Basic_Problem):  # 继承Problem父类
+class UF8(Moo_Basic_Problem):  # 继承Problem父类
     def __init__(self):
         self.n_obj = 3  # 初始化M（目标维数）
         self.n_var = 30  # 初始化Dim（决策变量维数）
@@ -284,7 +284,7 @@ class UF8(Basic_Problem):  # 继承Problem父类
         return referenceObjV
 
 
-class UF9(Basic_Problem):  # 继承Problem父类
+class UF9(Moo_Basic_Problem):  # 继承Problem父类
     def __init__(self):
         self.n_obj = 3  # 初始化M（目标维数）
         self.n_var = 30  # 初始化Dim（决策变量维数）
@@ -320,7 +320,7 @@ class UF9(Basic_Problem):  # 继承Problem父类
         referenceObjV = ObjV[~idx]
         return referenceObjV
 
-class UF10(Basic_Problem):  # 继承Problem父类
+class UF10(Moo_Basic_Problem):  # 继承Problem父类
     def __init__(self):
         self.n_obj = 3  # 初始化M（目标维数）
         self.n_var = 30  # 初始化Dim（决策变量维数）

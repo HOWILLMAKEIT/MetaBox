@@ -1,11 +1,11 @@
 
-from problem.MOO.moo_basic import MOO_Basic_Problem
+from problem.MOO.moo_basic_problem import Moo_Basic_Problem
 import torch as th
 # import numpy as th
 import geatpy as ea
 import math
 
-class DTLZ(MOO_Basic_Problem):
+class DTLZ(Moo_Basic_Problem):
     def __init__(self, n_var, n_obj, k=None, **kwargs):
 
         if n_var:

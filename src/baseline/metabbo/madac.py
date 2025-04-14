@@ -5,7 +5,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 import os
 
-from rl.vdn import VDN_Agent
+from rl.VDN import VDN_Agent
 
 
 class MultiAgentQNet(nn.Module):
@@ -14,7 +14,6 @@ class MultiAgentQNet(nn.Module):
         Args:
             input_shape (int): 输入特征维度
             agent_configs (list of dict): 每个 agent 的配置字典，包括 'name', 'n_actions', 'n_valid_actions'
-            learn_steps (int): 学习步数
         """
         super(MultiAgentQNet, self).__init__()
         self.agents = nn.ModuleList()
@@ -37,7 +36,7 @@ class MultiAgentQNet(nn.Module):
         q_values = []
         for i, agent in enumerate(self.agents):
             x = agent(obs[:, i, :])
-            # 无效动作置为极小值
+            # 无效动作置为-999
             x[:, agent.n_valid_actions:] = -999
             q_values.append(x.unsqueeze(1))
         return th.cat(q_values, dim=1)
@@ -52,8 +51,31 @@ class MADAC_Agent(VDN_Agent):
             {'name': 'pc_agent', 'n_actions': 4, 'n_valid_actions': 4},
             {'name': 'weight_agent', 'n_actions': 4, 'n_valid_actions': 2}
         ]
-        self.model = MultiAgentQNet(input_shape=22, agent_configs=agent_configs)
-        super().__init__(config, n_agent=4, available_action=[4, 4, 4, 2])
+        model = MultiAgentQNet(input_shape=22, agent_configs=agent_configs)
+        self.set_network({'model': model},0.001)
+        config.gamma = 0.01
+        config.n_act = 4
+        config.epsilon = 0.1
+        config.max_grad_norm = 5
+        config.memory_size = 5000
+        config.batch_size = 64
+        config.warm_up_size = 500
+        config.chunk_size = 1
+        config.update_iter = 10
+        config.device = 'cuda' if th.cuda.is_available() else 'cpu'
+        config.n_agent = 4
+        config.available_action = [4, 4, 4, 2]
+        config.optimizer = 'Adam'       
+        # config.lr_model = 1e-3           
+        # config.lr_scheduler = 'StepLR'
+        # config.lr_decay = 0.99
+        config.criterion = 'MSELoss'  
+        config.agent_save_dir = 'model'  
+        config.max_learning_step = 10000  
+        config.target_update_interval = 10  
+        config.save_interval = 1000 
+
+        super().__init__(config)
         
 
 class Config:

@@ -1,20 +1,298 @@
+import copy
 import functools
+import numpy as np
+import math
+import sys
 import tianshou
 
-from scipy.spatial.distance import cdist
 from operator import itemgetter
-from optimizer.moo_related.moo_operators import *
-from optimizer.moo_related.moo_indicators import *
-from problem.moo.dtlz_numpy import *
-
-#
-from optimizer.learnable_optimizer import Learnable_Optimizer
-
+from scipy.spatial.distance import cdist
+from environment.optimizer.learnable_optimizer import Learnable_Optimizer
 EPSILON = sys.float_info.epsilon
+
+
+POSITIVE_INFINITY = float("inf")
+EPSILON = sys.float_info.epsilon
+
+
+class PlatypusError(Exception):
+    pass
+
+
+class Indicator(object):
+    __metaclass = ABCMeta
+
+    def __init__(self):
+        super(Indicator, self).__init__()
+
+    def __call__(self, set):
+        return self.calculate(set)
+
+    def calculate(self, set):
+        raise NotImplementedError("method not implemented")
+
+
+class Hypervolume(Indicator):
+    # 只适用于最小化问题
+
+    def __init__(self, reference_set=None, minimum=None, maximum=None):
+        super(Hypervolume, self).__init__()
+        if reference_set is not None:
+            if minimum is not None or maximum is not None:
+                raise ValueError("minimum and maximum must not be specified if reference_set is defined")
+            self.minimum, self.maximum = normalize(reference_set)
+        else:
+            if minimum is None or maximum is None:
+                raise ValueError("minimum and maximum must be specified when no reference_set is defined")
+            self.minimum, self.maximum = minimum, maximum
+
+    def invert(self, solution_normalized_obj: np.ndarray):
+        for i in range(solution_normalized_obj.shape[1]):
+            solution_normalized_obj[:, i] = 1.0 - np.clip(solution_normalized_obj[:, i], 0.0, 1.0)
+        return solution_normalized_obj
+
+    def dominates(self, solution1_obj, solution2_obj, nobjs):
+        better = False
+        worse = False
+
+        for i in range(nobjs):
+            if solution1_obj[i] > solution2_obj[i]:
+                better = True
+            else:
+                worse = True
+                break
+        return not worse and better
+
+    def swap(self, solutions_obj, i, j):
+        solutions_obj[[i, j]] = solutions_obj[[j, i]]
+        return solutions_obj
+
+    def filter_nondominated(self, solutions_obj, nsols, nobjs):
+        i = 0
+        n = nsols
+        while i < n:
+            j = i + 1
+            while j < n:
+                if self.dominates(solutions_obj[i], solutions_obj[j], nobjs):
+                    n -= 1
+                    solutions_obj = self.swap(solutions_obj, j, n)
+                elif self.dominates(solutions_obj[j], solutions_obj[i], nobjs):
+                    n -= 1
+                    solutions_obj = self.swap(solutions_obj, i, n)
+                    i -= 1
+                    break
+                else:
+                    j += 1
+            i += 1
+        return n
+
+    def surface_unchanged_to(self, solutions_normalized_obj, nsols, obj):
+        return np.min(solutions_normalized_obj[:nsols, obj])
+
+    def reduce_set(self, solutions, nsols, obj, threshold):
+        i = 0
+        n = nsols
+        while i < n:
+            if solutions[i, obj] <= threshold:
+                n -= 1
+                solutions = self.swap(solutions, i, n)
+            else:
+                i += 1
+        return n
+
+    def calc_internal(self, solutions_obj: np.ndarray, nsols, nobjs):
+        volume = 0.0
+        distance = 0.0
+        n = nsols
+
+        while n > 0:
+            nnondom = self.filter_nondominated(solutions_obj, n, nobjs - 1)
+
+            if nobjs < 3:
+                temp_volume = solutions_obj[0][0]
+            else:
+                temp_volume = self.calc_internal(solutions_obj, nnondom, nobjs - 1)
+
+            temp_distance = self.surface_unchanged_to(solutions_obj, n, nobjs - 1)
+            volume += temp_volume * (temp_distance - distance)
+            distance = temp_distance
+            n = self.reduce_set(solutions_obj, n, nobjs - 1, distance)
+
+        return volume
+
+    def calculate(self, solutions_obj: np.ndarray):
+
+        # 对可行解进行归一化
+        solutions_normalized_obj = normalize(solutions_obj, self.minimum, self.maximum)
+
+        # 筛选出所有目标值都小于等于 1.0 的解
+        valid_mask = np.all(solutions_normalized_obj <= 1.0, axis=1)
+        valid_feasible = solutions_normalized_obj[valid_mask]
+
+        if valid_feasible.size == 0:
+            return 0.0
+
+        # 对可行解进行反转操作
+        inverted_feasible = self.invert(valid_feasible)
+
+        # 计算超体积
+        nobjs = inverted_feasible.shape[1]
+        return self.calc_internal(inverted_feasible, len(inverted_feasible), nobjs)
+
+
+class InvertedGenerationalDistance(Indicator):
+    def __init__(self, reference_set, d=1.0):
+        super(InvertedGenerationalDistance, self).__init__()
+        self.reference_set = reference_set
+        self.d = d
+
+    def calculate(self, set):
+        return math.pow(sum([math.pow(distance_to_nearest(s, set), self.d) for s in self.reference_set]),
+                        1.0 / self.d) / len(self.reference_set)
+
+
+def distance_to_nearest(solution_obj, set):
+    if len(set) == 0:
+        return POSITIVE_INFINITY
+
+    return min([euclidean_dist(solution_obj, s) for s in set])
+
+
+def euclidean_dist(x, y):
+    return math.sqrt(sum([math.pow(x[i] - y[i], 2.0) for i in range(len(x))]))
+
+
+
+def normalize(solutions_obj: np.ndarray, minimum: np.ndarray = None, maximum: np.ndarray = None) -> np.ndarray:
+    """Normalizes the solution objectives.
+
+    Normalizes the objectives of each solution within the minimum and maximum
+    bounds.  If the minimum and maximum bounds are not provided, then the
+    bounds are computed based on the bounds of the solutions.
+
+    Parameters
+    ----------
+    solutions_obj : numpy.ndarray
+        The solutions to be normalized. It should be a 2D numpy array.
+    minimum : numpy.ndarray
+        The minimum values used to normalize the objectives.
+    maximum : numpy.ndarray
+        The maximum values used to normalize the objectives.
+
+    Returns
+    -------
+    numpy.ndarray
+        The normalized solutions.
+    """
+    # 如果输入数组为空，直接返回空数组
+    if len(solutions_obj) == 0:
+        return solutions_obj
+
+    # 获取目标的数量
+    n_obj = solutions_obj.shape[1]
+
+    # 如果 minimum 或 maximum 未提供，则计算它们
+    if minimum is None or maximum is None:
+        if minimum is None:
+            minimum = np.min(solutions_obj, axis=0)
+        if maximum is None:
+            maximum = np.max(solutions_obj, axis=0)
+
+    # 检查是否有目标的范围为空
+    if np.any(maximum - minimum < EPSILON):
+        raise ValueError("objective with empty range")
+
+    # 进行归一化操作
+    solutions_normalized_obj = (solutions_obj - minimum) / (maximum - minimum)
+
+    return solutions_normalized_obj
+    
+
+
+class Operators:
+    def __init__(self, rng):
+        self.rng = rng
+
+    def DE1(self, problem, parents, step_size=0.5, crossover_rate=1.0):
+        """arity = 3"""
+        result = copy.deepcopy(parents[0])
+        jrand = self.rng.integers(problem.n_var)
+
+        for j in range(problem.n_var):
+            if self.rng.uniform() <= crossover_rate or j == jrand:
+                y = parents[0][j] + step_size * (parents[1][j] - parents[2][j])
+                y = np.clip(y, problem.lb[j], problem.ub[j])
+                result[j] = y
+        return np.array([result])
+    DE1.arity = 3
+
+    def DE2(self, problem, parents, step_size=0.5, crossover_rate=1.0):
+        """arity = 5"""
+        result = copy.deepcopy(parents[0])
+        jrand = self.rng.integers(problem.n_var)
+
+        for j in range(problem.n_var):
+            if self.rng.uniform() <= crossover_rate or j == jrand:
+                y = parents[0][j] + step_size * (parents[1][j] - parents[2][j]) + step_size * (parents[3][j] - parents[4][j])
+                y = np.clip(y, problem.lb[j], problem.ub[j])
+                result[j] = y
+        return np.array([result])
+    DE2.arity = 5
+
+    def DE3(self, problem, parents, step_size=0.5, crossover_rate=1.0):
+        """arity = 6"""
+        result = copy.deepcopy(parents[0])
+        jrand = self.rng.integers(problem.n_var)
+
+        for j in range(problem.n_var):
+            if self.rng.uniform() <= crossover_rate or j == jrand:
+                y = parents[0][j] + step_size * (parents[0][j] - parents[1][j]) \
+                    + step_size * (parents[2][j] - parents[3][j]) \
+                    + step_size * (parents[4][j] - parents[5][j])
+                y = np.clip(y, problem.lb[j], problem.ub[j])
+                result[j] = y
+        return np.array([result])
+    DE3.arity = 6
+
+    def DE4(self, problem, parents, step_size=0.5, crossover_rate=1.0):
+        """arity = 4"""
+        result = copy.deepcopy(parents[0])
+        jrand = self.rng.integers(problem.n_var)
+
+        for j in range(problem.n_var):
+            if self.rng.uniform() <= crossover_rate or j == jrand:
+                y = parents[0][j] + step_size * (parents[0][j] - parents[1][j]) + step_size * (parents[2][j] - parents[3][j])
+                y = np.clip(y, problem.lb[j], problem.ub[j])
+                result[j] = y
+        return np.array([result])
+    DE4.arity = 4
+    
+
+
+def chebyshev(solution_obj, ideal_point, weights, min_weight=0.0001):
+    """Chebyshev (Tchebycheff) fitness of a solution with multiple objectives.
+
+    This function is designed to only work with minimized objectives.
+
+    Parameters
+    ----------
+    solution : Solution
+        The solution.
+    ideal_point : list of float
+        The ideal point.
+    weights : list of float
+        The weights.
+    min_weight : float
+        The minimum weight allowed.
+    """
+    objs = solution_obj
+    n_obj = objs.shape[-1]
+    return max([max(weights[i], min_weight) * (objs[i] - ideal_point[i]) for i in range(n_obj)])
 
 
 class MADAC_Optimizer(Learnable_Optimizer):
     def __init__(self, config):
+        super.__init__()
         self.__config = config
         # Problem Related
         self.n_ref_points = 1000
@@ -28,6 +306,8 @@ class MADAC_Optimizer(Learnable_Optimizer):
         self.moead_delta = 0.8
         self.moead_eta = 2
         self.adaptive_open = True
+        self.max_fes=config.maxFEs
+        self.operators = Operators(self.rng)
 
     def init_population(self, problem):
         self.problem = problem
@@ -36,8 +316,9 @@ class MADAC_Optimizer(Learnable_Optimizer):
         self.weights = self.get_weights(self.n_obj)
         self.neighborhoods = self.get_neighborhoods()
         self.population_size = len(self.weights)
-        self.population = np.random.uniform(low=problem.lb, high=problem.ub, size=(self.population_size, problem.n_var))
+        self.population = self.rng.uniform(low=problem.lb, high=problem.ub, size=(self.population_size, problem.n_var))
         self.population_obj = problem.eval(self.population)
+        self.fes = len(self.population)
         self.archive_maximum = np.max(self.population_obj, axis=0)
         self.archive_minimum = np.min(self.population_obj, axis=0)
         self.ideal_point = copy.deepcopy(self.archive_minimum)
@@ -178,7 +459,7 @@ class MADAC_Optimizer(Learnable_Optimizer):
 
         if self.adaptive_open is False:
             action[3] = 0
-        self.variator = eval(f"{self.os}")(self.pc)
+        self.variator = self.operators.eval(f"{self.os}")(step_size = self.pc)
         subproblems = self.moead_get_subproblems()
         self.offspring_list = []
         self.offspring_obj_list = []
@@ -190,15 +471,16 @@ class MADAC_Optimizer(Learnable_Optimizer):
 
             parents = [self.population[index]] + \
                       [self.population[i] for i in
-                       np.random.choice(mating_indices, self.variator.arity - 1, replace=False)]
+                       self.rng.choice(mating_indices, self.variator.arity - 1, replace=False)]
             offspring = self.variator.evolve(problem, parents)
             offspring_obj = problem.eval(offspring)
+            self.fes += len(offspring)
             self.offspring_list.extend(offspring)
             self.offspring_obj_list.extend(offspring_obj)
             for child, child_obj in zip(offspring, offspring_obj):
                 self.moead_update_ideal(child_obj)
                 self.moead_update_solution(child, child_obj, mating_indices)  # selection
-
+        
         if self.adaptive_open:
             self.update_ep()
         if action[3] > 1:
@@ -213,17 +495,25 @@ class MADAC_Optimizer(Learnable_Optimizer):
         self.update_igd(value)
         self.obs = self.get_state()
         # if stop, then return the information
-        if np.sum(self.moead_generation) >= self.episode_limit or \
-                (self.stag_count > self.stag_count_max) and self.early_stop:
+        if self.fex >= self.max_fes:
             self.done = True
             print("best_igd:{}".format(self.best_value))
         else:
             self.done = False
+        
         info = {"best_igd": self.best_value, "last_igd": self.last_value}
         print(
             "generation:{},reward:{},best_igd{},last_igd{}".format(self.moead_generation, reward, self.best_value, self.last_value))
         return self.obs, [reward] * self.n_agents, self.done, info
 
+    def update_information(self):
+        index =  self.find_non_dominated_indices(self.population_obj)
+        self.cost = [self.population_obj[i] for i in index] # parato front
+        self.metadata = {
+            "cost": self.population,
+            "cost_obj": self.population_obj,
+        }
+        
     def find_non_dominated_indices(self, population_list):
         """
         此函数用于找出种群中的支配解
@@ -345,7 +635,7 @@ class MADAC_Optimizer(Learnable_Optimizer):
         """
 
         c = 0
-        random.shuffle(mating_indices)
+        self.rng.shuffle(mating_indices)
 
         for i in mating_indices:
             candidate = self.population[i]
@@ -393,7 +683,7 @@ class MADAC_Optimizer(Learnable_Optimizer):
         Otherwise, it follows the original moea/D specification.
         """
         indices = list(range(self.population_size))
-        random.shuffle(indices)
+        self.rng.shuffle(indices)
         return indices
 
     def moead_get_mating_indices(self, index):
@@ -403,7 +693,7 @@ class MADAC_Optimizer(Learnable_Optimizer):
         probability :code:`delta`, the neighborhood is returned.  Otherwise,
         the entire population is returned.
         """
-        if random.uniform(0.0, 1.0) <= self.moead_delta:
+        if self.rng.uniform(0.0, 1.0) <= self.moead_delta:
             return self.neighborhoods[index][:self.moead_neighborhood_size]
         else:
             return list(range(self.population_size))
@@ -442,7 +732,7 @@ class MADAC_Optimizer(Learnable_Optimizer):
             n_samples_hv = int(n_samples)
             samples = np.zeros([n_samples_hv, self.n_obj])
             for i in range(self.n_obj):
-                samples[:, i] = np.random.uniform(
+                samples[:, i] = self.rng.uniform(
                     hv_minimum[i], hv_maximum[i], n_samples_hv)
             for i in range(popobj.shape[0]):
                 domi = np.ones([samples.shape[0]], dtype=bool)

@@ -3,10 +3,10 @@ import geatpy as ea
 import torch as th
 import math
 
-from problem.MOO.moo_basic import MOO_Basic_Problem
+from problem.MOO.moo_basic_problem import Moo_Basic_Problem
 
 
-class WFG(MOO_Basic_Problem):
+class WFG(Moo_Basic_Problem):
 
     def __init__(self, n_var, n_obj, k=None, l=None, **kwargs):
         super().__init__(n_var=n_var,

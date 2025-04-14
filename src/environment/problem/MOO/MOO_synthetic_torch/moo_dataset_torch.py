@@ -2,13 +2,13 @@ import random
 
 from torch.utils.data import Dataset
 import numpy as np
-from problem.moo.uf_numpy import *
-from problem.moo.zdt_numpy import *
-from problem.moo.dtlz_numpy import *
-from problem.moo.wfg_numpy import *
+from problem.MOO.MOO_synthetic_torch.zdt_torch import *
+from problem.MOO.MOO_synthetic_torch.uf_torch import *
+from problem.MOO.MOO_synthetic_torch.dtlz_torch import *
+from problem.MOO.MOO_synthetic_torch.wfg_torch import *
 
 
-class Moo_Dataset(Dataset):
+class Moo_Dataset_torch(Dataset):
     def __init__(self,
                  data,
                  batch_size=1):
@@ -82,7 +82,7 @@ class Moo_Dataset(Dataset):
             }
             for n_obj, n_var_list in dtlz1_settings.items():
                 for n_var in n_var_list:
-                    instance_set.append(DTLZ1(n_obj=n_obj, n_var=n_var))
+                    instance_set.append(eval("DTLZ1")(n_obj=n_obj, n_var=n_var))
 
             # DTLZ2-6
             for dtlz_id in range(2, 7):
@@ -109,7 +109,7 @@ class Moo_Dataset(Dataset):
             }
             for n_obj, n_var_list in dtlz7_settings.items():
                 for n_var in n_var_list:
-                    instance_set.append(DTLZ7(n_obj=n_obj, n_var=n_var))
+                    instance_set.append(eval("DTLZ7")(n_obj=n_obj, n_var=n_var))
 
             # WFG1-9
             for wfg_id in range(1, 10):
@@ -139,7 +139,7 @@ class Moo_Dataset(Dataset):
         elif difficulty == 'difficult':
             train_set = instance_set[:int(0.2*len(instance_set))]
             test_set = instance_set[int(0.2*len(instance_set)):]
-        return Moo_Dataset(train_set, train_batch_size), Moo_Dataset(test_set, test_batch_size)
+        return Moo_Dataset_torch(train_set, train_batch_size), Moo_Dataset_torch(test_set, test_batch_size)
 
     def __getitem__(self, item):
         if self.batch_size < 2:
@@ -154,12 +154,12 @@ class Moo_Dataset(Dataset):
     def __len__(self):
         return self.N
 
-    def __add__(self, other: 'Moo_Dataset'):
-        return Moo_Dataset(self.data + other.data, self.batch_size)
+    def __add__(self, other: 'Moo_Dataset_torch'):
+        return Moo_Dataset_torch(self.data + other.data, self.batch_size)
 
     def shuffle(self):
         self.index = np.random.permutation(self.N)
 
 if __name__ == '__main__':
-    train_set,test_set = Moo_Dataset.get_datasets()
+    train_set,test_set = Moo_Dataset_torch.get_datasets()
     print(train_set,test_set)

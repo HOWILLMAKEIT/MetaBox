@@ -1,5 +1,5 @@
 from typing import Tuple
-# from agent.basic_agent import Basic_Agent
+# from src.agent.basic_agent import Basic_Agent
 import torch
 import math, copy
 from typing import Any, Callable, List, Optional, Tuple, Union, Literal
@@ -8,11 +8,11 @@ from torch import nn
 import torch
 from torch.distributions import Normal
 import torch.nn.functional as F
-from environment.parallelenv.parallelenv import ParallelEnv
-from .basic_agent import Basic_Agent
-from .utils import *
-import torch
-import numpy as np
+from rl.utils import *
+from rl.basic_agent import Basic_Agent
+
+
+from environment.VectorEnv.great_para_env import ParallelEnv
 
 
 def clip_grad_norms(param_groups, max_norm=math.inf):
@@ -36,45 +36,48 @@ def clip_grad_norms(param_groups, max_norm=math.inf):
 
 
 class VDN_Agent(Basic_Agent):
-    def __init__(self, config, n_agent, available_action: list):
+    def __init__(self, config,network: dict, learning_rates: float):
         super().__init__(config)
         self.config = config
 
         # define parameters
-        self.gamma = self.config.gamma
+        self.n_agent = self.config.n_agent
         self.n_act = self.config.n_act
+        self.available_action = self.config.available_action
+        self.memory_size = self.config.memory_size
+        self.warm_up_size = self.config.warm_up_size
+        self.gamma = self.config.gamma
         self.epsilon = self.config.epsilon
         self.max_grad_norm = self.config.max_grad_norm
-        self.memory_size = self.config.memory_size
         self.batch_size = self.config.batch_size
-        self.warm_up_size = self.config.warm_up_size
         self.chunk_size = self.config.chunk_size
         self.update_iter = self.config.update_iter
         self.device = self.config.device
-        self.n_agent = n_agent
-        self.available_action = available_action
+        
+        self.replay_buffer = MultiAgent_ReplayBuffer(self.memory_size)
+        self.set_network(network, learning_rates)
 
         # figure out the actor network
         # self.model = None
-        assert hasattr(self, 'model')
+        # assert hasattr(self, 'model')
 
-        # figure out the optimizer
-        assert hasattr(torch.optim, self.config.optimizer)
-        self.optimizer = eval('torch.optim.' + self.config.optimizer)(
-            [{'params': self.model.parameters(), 'lr': self.config.lr_model}])
-        # figure out the lr schedule
-        assert hasattr(torch.optim.lr_scheduler, self.config.lr_scheduler)
-        self.lr_scheduler = eval('torch.optim.lr_scheduler.' + self.config.lr_scheduler)(self.optimizer,
-                                                                                         self.config.lr_decay,
-                                                                                         last_epoch=-1, )
+        # # figure out the optimizer
+        # assert hasattr(torch.optim, self.config.optimizer)
+        # self.optimizer = eval('torch.optim.' + self.config.optimizer)(
+        #     [{'params': self.model.parameters(), 'lr': self.config.lr_model}])
+        # # figure out the lr schedule
+        # assert hasattr(torch.optim.lr_scheduler, self.config.lr_scheduler)
+        # self.lr_scheduler = eval('torch.optim.lr_scheduler.' + self.config.lr_scheduler)(self.optimizer,
+        #                                                                                  self.config.lr_decay,
+        #                                                                                  last_epoch=-1, )
 
-        assert hasattr(torch.nn, self.config.criterion)
-        self.criterion = eval('torch.nn.' + self.config.criterion)()
+        # assert hasattr(torch.nn, self.config.criterion)
+        # self.criterion = eval('torch.nn.' + self.config.criterion)()
 
-        self.replay_buffer = MultiAgent_ReplayBuffer(self.memory_size)
+        # self.replay_buffer = MultiAgent_ReplayBuffer(self.memory_size)
 
-        # move to device
-        self.model.to(self.device)
+        # # move to device
+        # self.model.to(self.device)
 
         # init learning time
         self.learning_time = 0
@@ -83,6 +86,35 @@ class VDN_Agent(Basic_Agent):
         # save init agent
         save_class(self.config.agent_save_dir, 'checkpoint' + str(self.cur_checkpoint), self)
         self.cur_checkpoint += 1
+    
+    def set_network(self, networks: dict, learning_rates: float):
+        Network_name = []
+        if networks:
+            for name, network in networks.items():
+                Network_name.append(name)
+                setattr(self, name, network)  # Assign each network in the dictionary to the class instance
+        self.network = Network_name
+
+        assert hasattr(self, 'model')  # Ensure that 'model' is set as an attribute of the class
+        self.target_model = copy.deepcopy(self.model)
+        if isinstance(learning_rates, (int, float)):
+            learning_rates = [learning_rates] * len(networks)
+        elif len(learning_rates) != len(networks):
+            raise ValueError("The length of the learning rates list must match the number of networks!")
+
+        all_params = []
+        for id, network_name in enumerate(networks):
+            network = getattr(self, network_name)
+            all_params.append({'params': network.parameters(), 'lr': learning_rates[id]})
+
+        assert hasattr(torch.optim, self.config.optimizer)
+        self.optimizer = eval('torch.optim.' + self.config.optimizer)(all_params)
+
+        assert hasattr(torch.nn, self.config.criterion)
+        self.criterion = eval('torch.nn.' + self.config.criterion)()
+
+        for network_name in networks:
+            getattr(self, network_name).to(self.device)
 
     def update_setting(self, config):
         self.config.max_learning_step = config.max_learning_step
@@ -101,31 +133,23 @@ class VDN_Agent(Basic_Agent):
             for i in range(self.n_agent):
                 action[:, i] = np.random.randint(low=0, high=self.available_action[i], size=len(state))
         else:
-            action = torch.argmax(Q_list, -1).detach().cpu().numpy().astype(int)
-        return action,Q_list
+            for i in range(self.n_agent):
+                action[:, i] = torch.argmax(Q_list[:, i, :self.available_action[i]], -1).detach().cpu().numpy().astype(int)
+        return action
 
     def train_episode(self,
                       envs,
+                      seeds: Optional[Union[int, List[int], np.ndarray]],
                       para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc'] = 'dummy',
-                      # todo: asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
-                      # num_cpus: Optional[Union[int, None]] = 1,
-                      # num_gpus: int = 0,
-                      compute_resource = {},
-                      tb_logger = None,
-                      required_info = {}):
-        num_cpus = None
-        num_gpus = 0
-        if 'num_cpus' in compute_resource.keys():
-            num_cpus = compute_resource['num_cpus']
-        if 'num_gpus' in compute_resource.keys():
-            num_gpus = compute_resource['num_gpus']
-        if required_info is None:
-            required_info = {'best_igd': 'best_value',
-                             }
+                      asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
+                      num_cpus: Optional[Union[int, None]] = 1,
+                      num_gpus: int = 0,
+                      tb_logger=None,
+                      required_info={}):
         if self.device != 'cpu':
             num_gpus = max(num_gpus, 1)
-        env = ParallelEnv(envs, para_mode, num_cpus, num_gpus)
-
+        env = ParallelEnv(envs, para_mode, asynchronous, num_cpus, num_gpus)
+        env.seed(seeds)
         # params for training
         gamma = self.gamma
 
@@ -136,17 +160,18 @@ class VDN_Agent(Basic_Agent):
             pass
 
         _R = torch.zeros(len(env))
-        _Q = []
         _loss = []
+        _reward = []
         # sample trajectory
         while not env.all_done():
-            action,Q_list = self.get_action(state=state, epsilon_greedy=True)
-            _Q.append(Q_list)
+            action = self.get_action(state=state, epsilon_greedy=True)
 
             # state transient
             next_state, reward, is_end, info = env.step(action)
             _R += reward[:, 0]
+            _reward.append(torch.FloatTensor(reward[:, 0]))
             # store info
+            # convert next_state into tensor
             for s, a, r, ns, d in zip(state.numpy(), action, reward, next_state, is_end):
                 self.replay_buffer.append((s, a, r, ns, d))
             try:
@@ -154,7 +179,6 @@ class VDN_Agent(Basic_Agent):
             except:
                 state = copy.deepcopy(next_state)
             # begin update
-            self.target_model = copy.deepcopy(self.model)
             if len(self.replay_buffer) >= self.warm_up_size:
                 for _ in range(self.update_iter):
                     batch_obs, batch_action, batch_reward, batch_next_obs, batch_done \
@@ -170,40 +194,50 @@ class VDN_Agent(Basic_Agent):
                         target_q += self.gamma * max_q_prime.sum(dim=1, keepdims=True) * (1 - batch_done[:, step_i])
 
                         loss += self.criterion(sum_q, target_q.detach())
-                    loss = loss / (self.batch_size * self.chunk_size)
+                    loss = loss / self.chunk_size
                     _loss.append(loss.item())
                     self.optimizer.zero_grad()
                     loss.backward()
                     grad_norms = clip_grad_norms(self.optimizer.param_groups, self.config.max_grad_norm)
                     self.optimizer.step()
                     self.learning_time += 1
+                    
                     if self.config.target_update_interval is not None and self.learning_time % self.config.target_update_interval == 0:
                         self.target_model.load_state_dict(self.model.state_dict())
-
-
-                if self.learning_time >= (self.config.save_interval * self.cur_checkpoint):
-                    save_class(self.config.agent_save_dir, 'checkpoint' + str(self.cur_checkpoint), self)
-                    self.cur_checkpoint += 1
-
-                if self.learning_time >= self.config.max_learning_step:
-                    return_info = {'return': _R, 'learn_steps': self.learning_time, 'Q_values':torch.tensor(Q_list), 'loss':_loss}
-                    for key in required_info.keys():
-                        return_info[key] = env.get_env_attr(required_info[key])
-                    env.close()
-                    return self.learning_time >= self.config.max_learning_step, return_info
+                    
+                    if not self.config.no_tb:
+                        self.log_to_tb_train(tb_logger, self.learning_time,
+                                            grad_norms,
+                                            loss,
+                                            _R, _reward,
+                                            q_out, max_q_prime)
+                    if self.learning_time >= (self.config.save_interval * self.cur_checkpoint):
+                        save_class(self.config.agent_save_dir, 'checkpoint' + str(self.cur_checkpoint), self)
+                        self.cur_checkpoint += 1
+                    
+                    if self.learning_time >= self.config.max_learning_step:
+                        return_info = {'return': _R, 'learn_steps': self.learning_time, }
+                        env_cost = env.get_env_attr('cost')
+                        return_info['gbest'] = env_cost[-1]
+                        for key in required_info.keys():
+                            return_info[key] = env.get_env_attr(required_info[key])
+                        env.close()
+                        return self.learning_time >= self.config.max_learning_step, return_info
 
         is_train_ended = self.learning_time >= self.config.max_learning_step
-        return_info = {'return': _R, 'learn_steps': self.learning_time, 'q_values':torch.tensor(Q_list), 'loss':_loss}
-        # for key in required_info.keys():
-        #     return_info[key] = env.get_env_attr(required_info[key])
+        return_info = {'return': _R, 'learn_steps': self.learning_time, }
+        env_cost = env.get_env_attr('cost')
+        return_info['gbest'] = env_cost[-1]
+        for key in required_info.keys():
+            return_info[key] = env.get_env_attr(required_info[key])
         env.close()
 
         return is_train_ended, return_info
 
     def rollout_episode(self,
                         env,
-                        seed=None,
-                        required_info={}):
+                        seed = None,
+                        required_info = {}):
         with torch.no_grad():
             if seed is not None:
                 env.seed(seed)
@@ -212,14 +246,17 @@ class VDN_Agent(Basic_Agent):
             R = 0
             while not is_done:
                 try:
-                    state = torch.FloatTensor(state).to(self.device)
+                    state = torch.FloatTensor(state).unsqueeze(0).to(self.device)
                 except:
-                    pass
-                action = self.get_action([state])[0]
+                    state = [state]
+                action = self.actor(state)[0]
                 action = action.cpu().numpy().squeeze()
                 state, reward, is_done = env.step(action)
-                R += reward[0]
-            results = {'return': R}
+                R += reward
+            env_cost = env.get_env_attr('cost')
+            env_fes = env.get_env_attr('fes')
+            env_metadata = env.get_env_attr('metadata') 
+            results = {'cost': env_cost, 'fes': env_fes, 'return': R, 'metadata': env_metadata}
             for key in required_info.keys():
                 results[key] = getattr(env, required_info[key])
             return results
@@ -228,18 +265,13 @@ class VDN_Agent(Basic_Agent):
                               envs,
                               seeds=None,
                               para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc'] = 'dummy',
-                              # todo: asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
-                              # num_cpus: Optional[Union[int, None]] = 1,
-                              # num_gpus: int = 0,
-                              compute_resource = {},
-                              required_info = {}):
-        num_cpus = None
-        num_gpus = 0
-        if 'num_cpus' in compute_resource.keys():
-            num_cpus = compute_resource['num_cpus']
-        if 'num_gpus' in compute_resource.keys():
-            num_gpus = compute_resource['num_gpus']
-        env = ParallelEnv(envs, para_mode, num_cpus=num_cpus, num_gpus=num_gpus)
+                              asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
+                              num_cpus: Optional[Union[int, None]] = 1,
+                              num_gpus: int = 0,
+                              required_info={}):
+        if self.device != 'cpu':
+            num_gpus = max(num_gpus, 1)
+        env = ParallelEnv(envs, para_mode, asynchronous, num_cpus, num_gpus)
         if seeds is not None:
             env.seed(seeds)
         state = env.reset()
@@ -263,7 +295,70 @@ class VDN_Agent(Basic_Agent):
                 state = torch.FloatTensor(state).to(self.device)
             except:
                 pass
-        results = {'return': R}
+        env_cost = env.get_env_attr('cost')
+        env_fes = env.get_env_attr('fes')
+        env_metadata = env.get_env_attr('metadata') 
+        results = {'cost': env_cost, 'fes': env_fes, 'return': R, 'metadata': env_metadata}
+        '''
+        cost: 每log_interval(config中设置)的最优评估值 : config.log_interval = config.maxFEs // config.n_logpoint(记录次数)
+        fes: 评估次数
+        return: 奖励
+        metadata: 
+            meta_X: 所有评估值
+            meta_Cost: 所有评估点
+
+        针对非并行环境,若并行环境则为np.array(len(envs)): 如'fes': np.array(['fes' for env in envs])
+        results = {'cost': env_cost -> list, 'fes': env_fes ->float, 'return': R -> float, 'metadata': env_metadata -> dict}
+        env_metadata: {'X': meta_X -> list, 'Cost': meta_Cost -> list(list)}
+        '''
         for key in required_info.keys():
             results[key] = env.get_env_attr(required_info[key])
         return results
+    
+    def log_to_tb_train(self, tb_logger, mini_step,
+                        grad_norms,
+                        loss,
+                        Return, Reward,
+                        predict_Q, target_Q,
+                        extra_info = {}):
+        # Iterate over the extra_info dictionary and log data to tb_logger
+        # extra_info: Dict[str, Dict[str, Union[List[str], List[Union[int, float]]]]] = {
+        #     "loss": {"name": [], "data": [0.5]},  # No "name", logs under "loss"
+        #     "accuracy": {"name": ["top1", "top5"], "data": [85.2, 92.5]},  # Logs as "accuracy/top1" and "accuracy/top5"
+        #     "learning_rate": {"name": ["adam", "sgd"], "data": [0.001, 0.01]}  # Logs as "learning_rate/adam" and "learning_rate/sgd"
+        # }
+        #
+        # learning rate
+        for id, network_name in enumerate(self.network):
+            tb_logger.add_scalar(f'learnrate/{network_name}', self.optimizer.param_groups[id]['lr'], mini_step)
+        #
+        # # grad and clipped grad
+        grad_norms, grad_norms_clipped = grad_norms
+        for id, network_name in enumerate(self.network):
+            tb_logger.add_scalar(f'grad/{network_name}', grad_norms[id], mini_step)
+            tb_logger.add_scalar(f'grad_clipped/{network_name}', grad_norms_clipped[id], mini_step)
+
+        # loss
+        tb_logger.add_scalar('loss', loss.item(), mini_step)
+
+        # Q
+        for i in range(self.n_agent):
+            tb_logger.add_scalar(f"Q/action_{i}", predict_Q[:, i].mean().item(), mini_step)
+            tb_logger.add_scalar(f"Q/action_{i}_target", target_Q[:, i].mean().item(), mini_step)
+
+        # train metric
+        avg_reward = torch.stack(Reward).mean().item()
+        max_reward = torch.stack(Reward).max().item()
+        tb_logger.add_scalar('train/episode_avg_return', Return.mean().item(), mini_step)
+        tb_logger.add_scalar('train/avg_reward', avg_reward, mini_step)
+        tb_logger.add_scalar('train/max_reward', max_reward, mini_step)
+
+        # extra info
+        for key, value in extra_info.items():
+            if not value['name']:
+                tb_logger.add_scalar(f'{key}', value['data'][0], mini_step)
+            else:
+                name_list = value['name']
+                data_list = value['data']
+                for name, data in zip(name_list, data_list):
+                    tb_logger.add_scalar(f'{key}/{name}', data, mini_step)
