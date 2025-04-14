@@ -29,13 +29,12 @@ Version:
 
 =========================================================
 """
-from problem.basic_problem import Basic_Problem
+from environment.problem.basic_problem import Basic_Problem
 import numpy as np
-from torch.utils.data import Dataset
 from scipy.interpolate import RegularGridInterpolator
 import pickle
 
-class UAV_Problem(Basic_Problem):
+class UAV_Numpy_Problem(Basic_Problem):
     def __init__(self):
         self.terrain_model = None
         self.FES = 0
@@ -161,10 +160,7 @@ class UAV_Problem(Basic_Problem):
 
         return dist
 
-    def func(self, x):
-        raise NotImplementedError
-
-class Terrain(UAV_Problem):
+class Terrain(UAV_Numpy_Problem):
     def __init__(self, terrain_model, problem_id):
         super(Terrain, self).__init__()
         self.terrain_model = terrain_model

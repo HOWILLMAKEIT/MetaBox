@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.interpolate import LinearNDInterpolator
 
-def createmodel(map_size = 900, r = 100, rr = 10, num_threats = 5):
+def createmodel(map_size = 900, r = 100, rr = 10, num_threats = 5, rng = None):
     """
         Generates a simulation model for a drone navigation task in a terrain with threats.
 
@@ -57,7 +57,7 @@ def createmodel(map_size = 900, r = 100, rr = 10, num_threats = 5):
         ```
         ```
         """
-    H = generate_terrain(8, map_size, 130, r, rr)
+    H = generate_terrain(8, map_size, 130, r, rr, rng)
     MAPSIZE_X = H.shape[1]
     MAPSIZE_Y = H.shape[0]
     X, Y = np.meshgrid(np.arange(1, MAPSIZE_X + 1), np.arange(1, MAPSIZE_Y + 1))
@@ -69,7 +69,7 @@ def createmodel(map_size = 900, r = 100, rr = 10, num_threats = 5):
              }
 
     # Threats as cylinders
-    threats = np.random.rand(num_threats, 4)
+    threats = rng.rand(num_threats, 4)
     threats[:, 3] = (np.round(MAPSIZE_X / 15 + threats[:, 3] * MAPSIZE_X / 30))  # R IN [60, 90]
     threats[:, 0] = (np.round(np.minimum(threats[:, 3], 0.1 * MAPSIZE_X) + threats[:, 0] * 0.7 * MAPSIZE_X))  # With 15% offset from right left-hand
     threats[:, 1] = (np.round(np.minimum(threats[:, 3], 0.1 * MAPSIZE_Y) + threats[:, 1] * 0.9 * MAPSIZE_Y))
@@ -90,11 +90,11 @@ def createmodel(map_size = 900, r = 100, rr = 10, num_threats = 5):
     coll_check = np.zeros(num_threats)
     Mission_impossible = 0
     while not np.all(coll_check):
-        xs = np.round((0.02 + np.random.rand() * 0.17) * MAPSIZE_X)
-        xe = np.round((1 - 0.02 - np.random.rand() * 0.17) * MAPSIZE_X)
+        xs = np.round((0.02 + rng.rand() * 0.17) * MAPSIZE_X)
+        xe = np.round((1 - 0.02 - rng.rand() * 0.17) * MAPSIZE_X)
 
-        ys = np.round((0.02 + np.random.rand() * 0.17) * MAPSIZE_Y)
-        ye = np.round((1 - 0.02 - np.random.rand() * 0.17) * MAPSIZE_Y)
+        ys = np.round((0.02 + rng.rand() * 0.17) * MAPSIZE_Y)
+        ye = np.round((1 - 0.02 - rng.rand() * 0.17) * MAPSIZE_Y)
 
         model['start'] = np.array([xs, ys, 150])[:, None]
         model['end'] = np.array([xe, ye, 150])[:, None]
@@ -119,7 +119,7 @@ def createmodel(map_size = 900, r = 100, rr = 10, num_threats = 5):
 
     return model
 
-def generate_terrain(n = 8, map_size = 900, h0 = 130, r0 = None, rr = None):
+def generate_terrain(n = 8, map_size = 900, h0 = 130, r0 = None, rr = None, rng = None):
     """
         Generates a series of points that approximate terrain using a simple algorithm
         with minimal parameters.
@@ -143,15 +143,15 @@ def generate_terrain(n = 8, map_size = 900, h0 = 130, r0 = None, rr = None):
         hm : ndarray
             2D mesh grids useful for surface plotting.
         """
-    n0 = np.random.randint(low = 1, high = 5)
+    n0 = rng.randint(low = 1, high = 5)
     m = 3
     nf = n0 * (m + 1) ** n
 
     # Create initial x, y, and height coordinates and roughness map
-    x = np.concatenate((np.random.randn(n0), np.zeros(nf - n0)))
-    y = np.concatenate((np.random.randn(n0), np.zeros(nf - n0)))
-    h = np.concatenate((r0 * np.random.randn(n0) + h0, np.zeros(nf - n0)))
-    r = np.concatenate((rr * np.random.randn(n0) + r0, np.zeros(nf - n0)))
+    x = np.concatenate((rng.randn(n0), np.zeros(nf - n0)))
+    y = np.concatenate((rng.randn(n0), np.zeros(nf - n0)))
+    h = np.concatenate((r0 * rng.randn(n0) + h0, np.zeros(nf - n0)))
+    r = np.concatenate((rr * rng.randn(n0) + r0, np.zeros(nf - n0)))
 
     # Create new points from old points n times
     for k in range(1, n + 1):
@@ -170,14 +170,14 @@ def generate_terrain(n = 8, map_size = 900, h0 = 130, r0 = None, rr = None):
         old = np.arange(n0)
 
         # Generate new x y values.
-        theta = 2 * np.pi * np.random.rand(n_new)
-        radius = dxy * (np.random.rand(n_new) + 1)
+        theta = 2 * np.pi * rng.rand(n_new)
+        radius = dxy * (rng.rand(n_new) + 1)
         x[new] = x[parents] + radius * np.cos(theta)
         y[new] = y[parents] + radius * np.sin(theta)
         # todo index
         # Interpolate to find nominal new r and h values and add noise to roughness and height maps.
-        r[new] = interpolate(x[old], y[old], r[old], x[new], y[new]) + (dh * rr) * np.random.randn(n_new)
-        h[new] = interpolate(x[old], y[old], h[old], x[new], y[new]) + (dh / dxy) * radius * r[new] * np.random.randn(n_new)
+        r[new] = interpolate(x[old], y[old], r[old], x[new], y[new]) + (dh * rr) * rng.randn(n_new)
+        h[new] = interpolate(x[old], y[old], h[old], x[new], y[new]) + (dh / dxy) * radius * r[new] * rng.randn(n_new)
 
         n0 = n_new + n0
 

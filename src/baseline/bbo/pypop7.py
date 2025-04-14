@@ -108,7 +108,7 @@ if __name__ == '__main__':
 
     configs = config()
 
-    Pypop7_SHADE = Pypop7_Optimizer(configs)
+    Pypop7_SHADE = PYPOP7(configs)
     Pypop7_SHADE.seed(7)
     problem.reset()
     Pypop7_SHADE.run_episode(problem)

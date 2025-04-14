@@ -32,7 +32,7 @@ Version:
 
 =========================================================
 """
-from problem.basic_problem import Basic_Problem
+from environment.problem.basic_problem import Basic_Problem_Torch
 import numpy as np
 import torch
 from torch.utils.data import Dataset
@@ -40,7 +40,7 @@ import pickle
 import time
 from scipy.interpolate import RegularGridInterpolator
 
-class UAV_Basic_Problem(Basic_Problem):
+class UAV_Torch_Problem(Basic_Problem_Torch):
     def __init__(self):
         self.terrain_model = None
         self.FES = 0
@@ -179,35 +179,7 @@ class UAV_Basic_Problem(Basic_Problem):
 
         return dist
 
-    def eval(self, x):
-        """
-                A general version of func() with adaptation to evaluate both individual and population.
-                """
-        start = time.perf_counter()
-        if not isinstance(x, torch.Tensor):
-            x = torch.tensor(x)
-        if x.dtype != torch.float64:
-            x = x.type(torch.float64)
-        if x.ndim == 1:  # x is a single individual
-            y = self.func(x.reshape(1, -1))[0]
-            end = time.perf_counter()
-            self.T1 += (end - start) * 1000
-            return y
-        elif x.ndim == 2:  # x is a whole population
-            y = self.func(x)
-            end = time.perf_counter()
-            self.T1 += (end - start) * 1000
-            return y
-        else:
-            y = self.func(x.reshape(-1, x.shape[-1]))
-            end = time.perf_counter()
-            self.T1 += (end - start) * 1000
-            return y
-
-    def func(self, x):
-        raise NotImplementedError
-
-class Terrain(UAV_Basic_Problem):
+class Terrain(UAV_Torch_Problem):
     def __init__(self, terrain_model, problem_id):
         super(Terrain, self).__init__()
         self.terrain_model = terrain_model

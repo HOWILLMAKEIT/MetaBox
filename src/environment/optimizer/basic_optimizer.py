@@ -18,7 +18,7 @@ class Basic_Optimizer:
 
         self.rng_seed = rng_seed
 
-        self.rng = np.random.default_rng(rng_seed)
+        self.rng = np.random.RandomState(rng_seed)
 
         self.rng_cpu = torch.Generator().manual_seed(rng_seed)
 
