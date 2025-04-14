@@ -36,7 +36,16 @@ def data_wrapper_prsr_test(data, ):
     return np.array(data)[:,-1, 3]
 
 
-class basic_logger:
+def to_label(agent_name: str) -> str:
+    label = agent_name
+    if label == 'L2L_Agent':
+        return 'RNN-OI'
+    if len(label) > 6 and (label[-6:] == '_Agent' or label[-6:] == '_agent'):
+        label = label[:-6]
+    return label
+
+
+class Basic_Logger:
     def __init__(self, config: argparse.Namespace) -> None:
         self.config = config
         self.color_arrangement = {}
@@ -380,13 +389,58 @@ class basic_logger:
             score[key] = score1[i] + score2[i]
         return score
 
-    def draw_ECDF(self, ):
-        pass
-    
-    def draw_covergence_curve(self, agent: str, problem: str, metadata_dir: str):
-        pass
+    def draw_ECDF(self, data: dict, output_dir: str, Name: Optional[Union[str, list]]=None, pdf_fig: bool = True):
+        data = data['cost']
+        for problem in list(data.keys()):
+            if Name is not None and (isinstance(Name, str) and problem != Name) or (isinstance(Name, list) and problem not in Name):
+                continue
+            else:
+                name = problem
+            plt.figure()
+            for agent in list(data[name].keys()):
+                if agent not in self.color_arrangement.keys():
+                    self.color_arrangement[agent] = colors[self.arrange_index]
+                    self.arrange_index += 1
+                values = np.array(data[name][agent])
+                plt.ecdf(values, label=to_label(agent), marker='*', markevery=8, markersize=13, c=self.color_arrangement[agent])
+            plt.grid()
+            plt.xlabel('costs')
+            plt.legend()
+            fig_type = 'pdf' if pdf_fig else 'png'
+            plt.savefig(output_dir + f'ECDF_{problem}.{fig_type}', bbox_inches='tight')
 
-    def draw_test_cost(self, data: dict, output_dir: str, Name: Optional[Union[str, list]]=None, logged: bool=False, categorized: bool=False) -> None:
+    def draw_covergence_curve(self, agent: str, problem: str, metadata_dir: str, output_dir: str, pdf_fig: bool = True):
+        def cal_max_distance(X):
+            X = np.array(X)
+            return np.max(np.sqrt(np.sum((X[:, None, :] - X[None, :, :]) ** 2, -1)))
+        with open(metadata_dir + f'/{problem}.pkl', 'rb') as f:
+            metadata = pickle.load(f)[agent]
+        plt.figure()
+        Xs = []
+        n_generations = int(1e9)
+        for item in metadata:
+            Xs.append(item['X'])
+            n_generations = min(n_generations, len(item['X']))
+        diameter = np.zeros(n_generations)
+        std = np.zeros(n_generations)
+        x_axis = np.arange(n_generations)
+        for i in range(n_generations):  # episode length
+            d = []
+            for j in range(len(Xs)):  # test_run
+                d.append(cal_max_distance(Xs[j][i]))
+            diameter[i] = np.mean(d)
+            std[i] = np.std(d)
+        plt.plot(x_axis, diameter, marker='*', markersize=12, markevery=2, c=self.color_arrangement[agent])
+        plt.fill_between(x_axis, (diameter - std), (diameter + std), alpha=0.2, facecolor=self.color_arrangement[agent])
+        plt.grid()
+        plt.xlabel('Optimization Generations')    
+        plt.ylabel('Population Diameter')
+        fig_type = 'pdf' if pdf_fig else 'png'
+        plt.savefig(output_dir + f'convergence_curve_{agent}_{problem}.{fig_type}', bbox_inches='tight')
+        plt.close()
+
+    def draw_test_cost(self, data: dict, output_dir: str, Name: Optional[Union[str, list]]=None, logged: bool=False, categorized: bool=False, pdf_fig: bool = True) -> None:
+        fig_type = 'pdf' if pdf_fig else 'png'
         for problem in list(data.keys()):
             if Name is not None and (isinstance(Name, str) and problem != Name) or (isinstance(Name, list) and problem not in Name):
                 continue
@@ -417,10 +471,10 @@ class basic_logger:
                 plt.legend()
                 if logged:
                     plt.ylabel('log Costs')
-                    plt.savefig(output_dir + f'{name}_log_cost_curve.png', bbox_inches='tight')
+                    plt.savefig(output_dir + f'{name}_log_cost_curve.{fig_type}', bbox_inches='tight')
                 else:
                     plt.ylabel('Costs')
-                    plt.savefig(output_dir + f'{name}_cost_curve.png', bbox_inches='tight')
+                    plt.savefig(output_dir + f'{name}_cost_curve.{fig_type}', bbox_inches='tight')
                 plt.close()
             else:
                 plt.figure()
@@ -445,10 +499,10 @@ class basic_logger:
                 plt.legend()
                 if logged:
                     plt.ylabel('log Costs')
-                    plt.savefig(output_dir + f'learnable_{name}_log_cost_curve.png', bbox_inches='tight')
+                    plt.savefig(output_dir + f'learnable_{name}_log_cost_curve.{fig_type}', bbox_inches='tight')
                 else:
                     plt.ylabel('Costs')
-                    plt.savefig(output_dir + f'learnable_{name}_cost_curve.png', bbox_inches='tight')
+                    plt.savefig(output_dir + f'learnable_{name}_cost_curve.{fig_type}', bbox_inches='tight')
                 plt.close()
 
                 plt.figure()
@@ -474,13 +528,14 @@ class basic_logger:
                 plt.legend()
                 if logged:
                     plt.ylabel('log Costs')
-                    plt.savefig(output_dir + f'classic_{name}_log_cost_curve.png', bbox_inches='tight')
+                    plt.savefig(output_dir + f'classic_{name}_log_cost_curve.{fig_type}', bbox_inches='tight')
                 else:
                     plt.ylabel('Costs')
-                    plt.savefig(output_dir + f'classic_{name}_cost_curve.png', bbox_inches='tight')
+                    plt.savefig(output_dir + f'classic_{name}_cost_curve.{fig_type}', bbox_inches='tight')
                 plt.close()
     
-    def draw_named_average_test_costs(self, data: dict, output_dir: str, named_agents: dict, logged: bool=False) -> None:
+    def draw_named_average_test_costs(self, data: dict, output_dir: str, named_agents: dict, logged: bool=False, pdf_fig: bool = True) -> None:
+        fig_type = 'pdf' if pdf_fig else 'png'
         fig = plt.figure(figsize=(50, 10))
         # plt.title('all problem cost curve')
         plots = len(named_agents.keys())
@@ -528,10 +583,11 @@ class basic_logger:
         # fig.legend(lines, labels, bbox_to_anchor=(plots/(plots+1)-0.02, 0.5), borderaxespad=0., loc=6, facecolor='whitesmoke')
         
         plt.subplots_adjust(left=0.05, right=0.95, wspace=0.1)
-        plt.savefig(output_dir + f'all_problem_cost_curve_logX.png', bbox_inches='tight')
+        plt.savefig(output_dir + f'all_problem_cost_curve_logX.{fig_type}', bbox_inches='tight')
         plt.close()
 
-    def draw_concrete_performance_hist(self, data: dict, output_dir: str, Name: Optional[Union[str, list]]=None) -> None:
+    def draw_concrete_performance_hist(self, data: dict, output_dir: str, Name: Optional[Union[str, list]]=None, pdf_fig: bool = True) -> None:
+        fig_type = 'pdf' if pdf_fig else 'png'
         D = {}
         X = []
         for problem in list(data.keys()):
@@ -557,37 +613,10 @@ class basic_logger:
             plt.xticks(rotation=30, fontsize=13)
             plt.xlabel('Problems')
             plt.ylabel('Normalized Costs')
-            plt.savefig(output_dir + f'{agent}_concrete_performance_hist.png', bbox_inches='tight')
+            plt.savefig(output_dir + f'{agent}_concrete_performance_hist.{fig_type}', bbox_inches='tight')
 
-    def draw_train_avg_cost(self, data: dict, output_dir: str, norm: bool=False) -> None:
-        costs, stds = self.get_average_data(data['cost'], norm=norm, data_wrapper=data_wrapper_cost)
-        plt.figure()
-        for agent in costs.keys():
-            x = np.arange(len(costs[agent]), dtype=np.float64)
-            x = (self.config.max_learning_step / x[-1]) * x
-            y = costs[agent]
-            s = np.zeros(y.shape[0])
-            a = s[0] = y[0]
-            norm = self.config.plot_smooth + 1
-            for i in range(1, y.shape[0]):
-                a = a * self.config.plot_smooth + y[i]
-                s[i] = a / norm if norm > 0 else a
-                norm *= self.config.plot_smooth
-                norm += 1
-            if agent not in self.color_arrangement.keys():
-                self.color_arrangement[agent] = colors[self.arrange_index]
-                self.arrange_index += 1
-            plt.plot(x, s, label=to_label(agent), marker='*', markersize=12, markevery=2, c=self.color_arrangement[agent])
-            plt.fill_between(x, (s - stds[agent]), (s + stds[agent]), alpha=0.2, facecolor=self.color_arrangement[agent])
-            # plt.plot(x, returns[agent], label=to_label(agent))
-        plt.legend()
-        plt.xlabel('Learning Steps')
-        plt.ylabel('Avg Cost')
-        plt.grid()
-        plt.savefig(output_dir + f'avg_cost_curve.png', bbox_inches='tight')
-        plt.close()
-
-    def draw_boxplot(self, data: dict, output_dir: str, Name: Optional[Union[str, list]]=None, ignore: Optional[list]=None) -> None:
+    def draw_boxplot(self, data: dict, output_dir: str, Name: Optional[Union[str, list]]=None, ignore: Optional[list]=None, pdf_fig: bool = True) -> None:
+        fig_type = 'pdf' if pdf_fig else 'png'
         for problem in list(data.keys()):
             if Name is not None and (isinstance(Name, str) and problem != Name) or (isinstance(Name, list) and problem not in Name):
                 continue
@@ -613,10 +642,11 @@ class basic_logger:
             plt.xticks(rotation=30, fontsize=18)
             plt.xlabel('Agents')
             plt.ylabel(f'{name} Cost Boxplots')
-            plt.savefig(output_dir + f'{name}_boxplot.png', bbox_inches='tight')
+            plt.savefig(output_dir + f'{name}_boxplot.{fig_type}', bbox_inches='tight')
             plt.close()
 
-    def draw_overall_boxplot(self, data: dict, output_dir: str, ignore: Optional[list]=None) -> None:
+    def draw_overall_boxplot(self, data: dict, output_dir: str, ignore: Optional[list]=None, pdf_fig: bool = True) -> None:
+        fig_type = 'pdf' if pdf_fig else 'png'
         problems=[]
         agents=[]
         for problem in data.keys():
@@ -644,10 +674,11 @@ class basic_logger:
         plt.xticks(rotation=30, fontsize=18)
         plt.xlabel('Agents')
         plt.ylabel('Cost Boxplots')
-        plt.savefig(output_dir + f'overall_boxplot.png', bbox_inches='tight')
+        plt.savefig(output_dir + f'overall_boxplot.{fig_type}', bbox_inches='tight')
         plt.close()
 
-    def draw_rank_hist(self, data: dict, random: dict, output_dir: str, ignore: Optional[list]=None) -> None:
+    def draw_rank_hist(self, data: dict, random: dict, output_dir: str, ignore: Optional[list]=None, pdf_fig: bool = True) -> None:
+        fig_type = 'pdf' if pdf_fig else 'png'
         metric, metric_std = self.aei_metric(data, random, maxFEs=self.config.maxFEs, ignore=ignore)
         X, Y = list(metric.keys()), list(metric.values())
         _, S = list(metric_std.keys()), list(metric_std.values())
@@ -665,7 +696,7 @@ class basic_logger:
         plt.ylim(0, np.max(np.array(Y) + np.array(S)) * 1.1)
         plt.title(f'The AEI for {self.config.dim}D {self.config.problem}-{self.config.difficulty}', fontsize=70)
         plt.ylabel('AEI', fontsize=60)
-        plt.savefig(output_dir + f'rank_hist.png', bbox_inches='tight')
+        plt.savefig(output_dir + f'rank_hist.{fig_type}', bbox_inches='tight')
         
     def draw_train_logger(self, data_type: str, data: dict, output_dir: str, ylabel: str = None, norm: bool = False, pdf_fig: bool = True, data_wrapper: Callable = None) -> None:
         means, stds = self.get_average_data(data_type, data, norm=norm, data_wrapper=data_wrapper)
@@ -698,7 +729,7 @@ class basic_logger:
         plt.savefig(output_dir + f'avg_{data_type}_curve.{fig_type}', bbox_inches='tight')
         plt.close()
         
-    def post_processing_test_statics(self, log_dir: str, include_random_baseline: bool = True) -> None:
+    def post_processing_test_statics(self, log_dir: str, include_random_baseline: bool = True, pdf_fig: bool = True) -> None:
         with open(log_dir + 'test.pkl', 'rb') as f:
             results = pickle.load(f)
             
@@ -721,21 +752,19 @@ class basic_logger:
 
         # 如果需要，可以为不同的算法绘制图形（例如 cost 图）
         if 'cost' in results:
-            self.draw_test_cost(results['cost'], log_dir + 'pics/', logged=True, categorized=True)
+            self.draw_test_cost(results['cost'], log_dir + 'pics/', logged=True, categorized=True, pdf_fig=pdf_fig)
             self.draw_named_average_test_costs(results['cost'], log_dir + 'pics/',
                                                 {'MetaBBO-RL': metabbo,
                                                 'Classic Optimizer': bbo},
-                                                logged=False)
+                                                logged=False, pdf_fig=pdf_fig)
 
-    def post_processing_rollout_statics(self, log_dir: str) -> None:
+    def post_processing_rollout_statics(self, log_dir: str, pdf_fig: bool = True) -> None:
         with open(log_dir+'rollout.pkl', 'rb') as f:
             results = pickle.load(f)
         if not os.path.exists(log_dir + 'pics/'):
             os.makedirs(log_dir + 'pics/')
-        self.draw_train_return(results, log_dir + 'pics/', )
-        self.draw_train_avg_cost(results, log_dir + 'pics/', )
-        self.draw_train_logger('return', results['return'], log_dir + 'pics/', )
-        self.draw_train_logger('cost', results['cost'], log_dir + 'pics/', )
+        self.draw_train_logger('return', results['return'], log_dir + 'pics/', pdf_fig=pdf_fig)
+        self.draw_train_logger('cost', results['cost'], log_dir + 'pics/', pdf_fig=pdf_fig)
 
 
 # mmo
@@ -1091,16 +1120,6 @@ def is_pareto_efficient(points):
             pareto_mask[pareto_mask] = np.any(points[pareto_mask] < p, axis=1)
             pareto_mask[i] = True
     return points[pareto_mask]
-
-def to_label(agent_name: str) -> str:
-    label = agent_name
-    if label == 'BayesianOptimizer':
-        return 'BO'
-    if label == 'L2L_Agent':
-        return 'RNN-OI'
-    if len(label) > 6 and (label[-6:] == '_Agent' or label[-6:] == '_agent'):
-        label = label[:-6]
-    return label
 
 class Logger:
     def __init__(self, config: argparse.Namespace):
