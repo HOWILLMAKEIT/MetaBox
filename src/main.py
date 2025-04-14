@@ -2,7 +2,7 @@ import torch
 from trainer import Trainer
 from tester import *
 from config import get_config
-from mmo_logger import *
+from logger import *
 import shutil
 import warnings
 warnings.filterwarnings("ignore")

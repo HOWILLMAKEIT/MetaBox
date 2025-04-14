@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import pickle
 import os
-from typing import Optional, Union
+from typing import Optional, Union, Callable
 import argparse
 params = {
     'axes.labelsize': '25',
@@ -19,6 +19,724 @@ markers = ['o', '^', '*', 'O', 'v', 'x', 'X', 'd', 'D', '.', '1', '2', '3', '4',
 colors = ['b', 'g', 'orange', 'r', 'purple', 'brown', 'grey', 'limegreen', 'turquoise', 'olivedrab', 'royalblue', 'darkviolet', 
           'chocolate', 'crimson', 'teal','seagreen', 'navy', 'deeppink', 'maroon', 'goldnrod', 
           ]
+
+
+def data_wrapper_prsr(data, ):
+    res = []
+    for key in data.keys():
+        res.append(np.array(data[key][:, -1, 3]))
+    return np.array(res)
+
+
+def data_wrapper_cost(data, ):
+    return np.array(data)[:, :, -1]
+
+
+def data_wrapper_prsr_test(data, ):
+    return np.array(data)[:,-1, 3]
+
+
+class basic_logger:
+    def __init__(self, config: argparse.Namespace) -> None:
+        self.config = config
+        self.color_arrangement = {}
+        self.arrange_index = 0
+
+    def get_average_data(self, results: dict, norm: bool=False, data_wrapper: Callable = None):
+        """
+        Get the average and standard deviation of each agent from the results
+        :param results  dict: The data to be process
+        :param norm     bool: Whether to min-max normalize data
+        :param data_wrapper callable: A data pre-processing function wrapper applied to each data item of each agent under each problem
+        """
+        problems=[]
+        agents=[]
+
+        for problem in results.keys():
+            problems.append(problem)
+        for agent in results[problems[0]].keys():
+            agents.append(agent)
+        avg_data={}
+        std_data={}
+        for agent in agents:
+            avg_data[agent]=[]
+            std_data[agent]=[]
+            for problem in problems:
+                values = results[problem][agent]
+                if data_wrapper is not None:
+                    values = data_wrapper(values)
+                if norm:
+                    values = (values - np.min((values))) / (np.max(values) - np.min(values))
+                std_data[agent].append(np.std(values, -1))
+                avg_data[agent].append(np.mean(values, -1))
+            avg_data[agent] = np.mean(avg_data[agent], 0)
+            std_data[agent] = np.mean(std_data[agent], 0)
+        return avg_data, std_data
+
+    def cal_scores1(self, D: dict, maxf: float):
+        """
+        Tool function for CEC metric
+        """
+        SNE = []
+        for agent in D.keys():
+            values = D[agent]
+            sne = 0.5 * np.sum(np.min(values, -1) / maxf)
+            SNE.append(sne)
+        SNE = np.array(SNE)
+        score1 = (1 - (SNE - np.min(SNE)) / SNE) * 50
+        return score1
+
+    def get_random_baseline(self, random: dict, fes: Optional[Union[int, float]]):
+        """
+        Get the results of Random Search for further usage, i.e., for normalization
+        """
+        baseline = {}
+        if isinstance(random['T1'], dict):
+            baseline['complexity_avg'] = np.log10(1/ (random['T2']['Random_search'] - random['T1']['Random_search']) / random['T0'])
+        else:
+            baseline['complexity_avg'] = np.log10(1/ (random['T2']['Random_search'] - random['T1']) / random['T0'])
+        baseline['complexity_std'] = 0.005
+        problems = random['cost'].keys()
+        avg = []
+        std = []
+        for problem in problems:
+            g = np.log10(fes/np.array(random['fes'][problem]['Random_search']))
+            avg.append(g.mean())
+            std.append(g.std())
+        baseline['fes_avg'] = np.mean(avg)
+        baseline['fes_std'] = np.mean(std)
+        avg = []
+        std = []
+        for problem in problems:
+            g = np.log10(1/(np.array(random['cost'][problem]['Random_search'])[:, -1]+1))
+            avg.append(g.mean())
+            std.append(g.std()) 
+        baseline['cost_avg'] = np.mean(avg)
+        baseline['cost_std'] = np.mean(std)
+        return baseline
+
+    def gen_algorithm_complexity_table(self, results: dict, out_dir: str) -> None:
+        """
+        Store algorithm complexity data as excel table 
+        """
+        save_list=[]
+        t0=results['T0']
+        t1=results['T1']
+        is_dict=False
+        if type(t1) is dict:
+            is_dict=True
+        t2s=results['T2']
+        ratios=[]
+        t2_list=[]
+        indexs=[]
+        columns=['T0','T1','T2','(T2-T1)/T0']
+        for key,value in t2s.items():
+            indexs.append(key)
+            t2_list.append(value)
+            if is_dict:
+                ratios.append((value-t1[key])/t0)
+            else:
+                ratios.append((value-t1)/t0)
+        n=len(t2_list)
+        data=np.zeros((n,4))
+        data[:,0]=t0
+        if is_dict:
+            for i,(key,value) in enumerate(t1.items()):
+                data[i,1]=value
+        else:
+            data[:,1]=t1
+        data[:,2]=t2_list
+        data[:,3]=ratios
+        table=pd.DataFrame(data=np.round(data,2),index=indexs,columns=columns)
+        table.to_excel(os.path.join(out_dir,'algorithm_complexity.xlsx'))
+
+    def gen_agent_performance_table(self, results: dict, out_dir: str) -> None:
+        """
+        Store the `Worst`, `Best`, `Median`, `Mean` and `Std` of cost results of each agent as excel
+        """
+        total_cost=results['cost']
+        table_data={}
+        indexs=[]
+        columns=['Worst','Best','Median','Mean','Std']
+        for problem,value in total_cost.items():
+            indexs.append(problem)
+            problem_cost=value
+            for alg,alg_cost in problem_cost.items():
+                n_cost=[]
+                for run in alg_cost:
+                    n_cost.append(run[-1])
+                # if alg == 'MadDE' and problem == 'F5':
+                #     for run in alg_cost:
+                #         print(len(run))
+                #     print(len(n_cost))
+                best=np.min(n_cost)
+                best=np.format_float_scientific(best,precision=3,exp_digits=3)
+                worst=np.max(n_cost)
+                worst=np.format_float_scientific(worst,precision=3,exp_digits=3)
+                median=np.median(n_cost)
+                median=np.format_float_scientific(median,precision=3,exp_digits=3)
+                mean=np.mean(n_cost)
+                mean=np.format_float_scientific(mean,precision=3,exp_digits=3)
+                std=np.std(n_cost)
+                std=np.format_float_scientific(std,precision=3,exp_digits=3)
+
+                if not alg in table_data:
+                    table_data[alg]=[]
+                table_data[alg].append([worst,best,median,mean,std])
+        for alg,data in table_data.items():
+            dataframe=pd.DataFrame(data=data,index=indexs,columns=columns)
+            #print(dataframe)
+            dataframe.to_excel(os.path.join(out_dir,f'{alg}_concrete_performance_table.xlsx'))
+
+    def gen_overall_tab(results: dict, out_dir: str) -> None:
+        """
+        Store the overall results inculding `objective values` (costs), `gap` with CMAES and the consumed `FEs` as excel
+        """
+        # get multi-indexes first
+        problems = []
+        statics = ['Obj','Gap','FEs']
+        optimizers = []
+        for problem in results['cost'].keys():
+            problems.append(problem)
+        for optimizer in results['T2'].keys():
+            optimizers.append(optimizer)
+        multi_columns = pd.MultiIndex.from_product(
+            [problems,statics], names=('Problem', 'metric')
+        )
+        df_results = pd.DataFrame(np.ones(shape=(len(optimizers),len(problems)*len(statics))),
+                                index=optimizers,
+                                columns=multi_columns)
+
+        # calculate baseline1 cmaes
+        cmaes_obj = {}
+        for problem in problems:
+            blobj_problem = results['cost'][problem]['DEAP_CMAES']  # 51 * record_length
+            objs = []
+            for run in range(51):
+                objs.append(blobj_problem[run][-1])
+            cmaes_obj[problem] = sum(objs) / 51
+
+        # calculate baseline2 random_search
+        rs_obj = {}
+        for problem in problems:
+            blobj_problem = results['cost'][problem]['Random_search']  # 51 * record_length
+            objs = []
+            for run in range(51):
+                objs.append(blobj_problem[run][-1])
+            rs_obj[problem] = sum(objs) / 51
+
+        # calculate each Obj
+        for problem in problems:
+            for optimizer in optimizers:
+                obj_problem_optimizer = results['cost'][problem][optimizer]
+                objs_ = []
+                for run in range(51):
+                    objs_.append(obj_problem_optimizer[run][-1])
+                avg_obj = sum(objs_)/51
+                std_obj = np.std(objs_)
+                df_results.loc[optimizer, (problem, 'Obj')] = np.format_float_scientific(avg_obj, precision=3, exp_digits=1) + "(" + np.format_float_scientific(std_obj, precision=3, exp_digits=1) + ")"
+                # calculate each Gap
+                df_results.loc[optimizer, (problem, 'Gap')] = "%.3f" % (1-(rs_obj[problem]-avg_obj) / (rs_obj[problem]-cmaes_obj[problem]+1e-10))
+                fes_problem_optimizer = np.array(results['fes'][problem][optimizer])
+                avg_fes = np.mean(fes_problem_optimizer)
+                std_fes = np.std(fes_problem_optimizer)
+                df_results.loc[optimizer, (problem, 'FEs')] = np.format_float_scientific(avg_fes, precision=3, exp_digits=1) + "(" + np.format_float_scientific(std_fes, precision=3, exp_digits=1) + ")"
+        df_results.to_excel(out_dir+'overall_table.xlsx')
+
+    def aei_cost(self, cost_data: dict, baseline: dict, ignore: Optional[list]=None):
+        avg = baseline['cost_avg']
+        problems = cost_data.keys()
+        agents = cost_data[list(problems)[0]].keys()
+        results_cost = {}
+        for agent in agents:
+            if ignore is not None and agent in ignore:
+                continue
+            costs_problem = []
+            for problem in problems:
+                cost_ = np.log10(1/(np.array(cost_data[problem][agent])[:, -1]+1))
+                costs_problem.append(cost_.mean())
+            results_cost[agent] = np.exp((costs_problem - avg) * 1)
+        aei_mean, aei_std = self.cal_aei(results_cost, agents, ignore)
+        return results_cost, aei_mean, aei_std
+    
+    def aei_fes(self, fes_data: dict, baseline: dict, maxFEs: Optional[Union[int, float]]=20000, ignore: Optional[list]=None):
+        avg = baseline['fes_avg']
+        problems = fes_data.keys()
+        agents = fes_data[list(problems)[0]].keys()
+        results_fes = {}
+        for agent in agents:
+            if ignore is not None and agent in ignore:
+                continue
+            fes_problem = []
+            for problem in problems:
+                if agent == 'L2L':
+                    fes_ = np.log10(100/np.array(fes_data[problem][agent]))
+                else:
+                    fes_ = np.log10(maxFEs/np.array(fes_data[problem][agent]))
+                fes_problem.append(fes_.mean())
+            results_fes[agent] = np.exp((fes_problem - avg) * 1)
+        aei_mean, aei_std = self.cal_aei(results_fes, agents, ignore)
+        return results_fes, aei_mean, aei_std
+    
+    def aei_complexity(self, complexity_data: dict, baseline: dict, ignore: Optional[list]=None):
+        avg = baseline['complexity_avg']
+        std = baseline['complexity_std']
+        problems = complexity_data.keys()
+        agents = complexity_data[list(problems)[0]].keys()
+        results_complex = {}
+        for key in agents:
+            if (ignore is not None) and (key in ignore):
+                continue
+            if key not in complexity_data['complexity'].keys():
+                t0 = complexity_data['T0']
+                if isinstance(complexity_data['T1'], dict):
+                    t1 = complexity_data['T1'][key]
+                else:
+                    t1 = complexity_data['T1']
+                t2 = complexity_data['T2'][key]
+                complexity_data['complexity'][key] = ((t2 - t1) / t0)
+            results_complex[key] = np.exp((np.log10(1/complexity_data['complexity'][key]) - avg)/std/1000 * 1)
+        aei_mean, aei_std = self.cal_aei(results_complex, agents, ignore)
+        return results_complex, aei_mean, aei_std
+
+    def cal_aei(self, results: dict, agents: dict, ignore: Optional[list]=None):
+        mean = {}
+        std = {}
+        for agent in agents:
+            if ignore is not None and agent in ignore:
+                continue
+            if agent == 'Random_search':
+                continue
+            aei_k = results[agent]
+            mean[agent] = np.mean(aei_k)
+            if self.config.test_problem in ['protein', 'protein-torch']:
+                std[agent] = np.std(aei_k) * 5.
+            else:
+                std[agent] = np.std(aei_k) / 5.
+        return mean, std
+
+    def aei_metric(self, data: dict, random: dict, maxFEs: Optional[Union[int, float]]=20000, ignore: Optional[list]=None):
+        """
+        Calculate the AEI metric
+        """
+        baseline = get_random_baseline(random, maxFEs)
+        problems = data['cost'].keys()
+        agents = data['cost'][list(problems)[0]].keys()
+        
+        results_cost, aei_cost_mean, aei_cost_std = self.aei_cost(data['cost'], baseline, ignore)
+        results_fes, aei_fes_mean, aei_fes_std = self.aei_fes(data['fes'], baseline, maxFEs, ignore)
+        results_complex, aei_clx_mean, aei_clx_std = self.aei_fes(data['complexity'], baseline, ignore)
+        
+        mean = {}
+        std = {}
+        for agent in agents:
+            if ignore is not None and agent in ignore:
+                continue
+            if agent == 'Random_search':
+                continue
+            aei_k = results_complex[agent] * results_cost[agent] * results_fes[agent]
+            mean[agent] = np.mean(aei_k)
+            if self.config.test_problem in ['protein', 'protein-torch']:
+                std[agent] = np.std(aei_k) * 5.
+            else:
+                std[agent] = np.std(aei_k) / 5.
+        return mean, std
+
+    def cec_metric(self, data: dict, ignore: Optional[list]=None):
+        """
+        Calculate the metric adopted in CEC
+        """
+        score = {}
+        M = []
+        X = []
+        Y = []
+        R = []
+        data, fes = data['cost'], data['fes']
+        for problem in list(data.keys()):
+            maxf = 0
+            avg_cost = []
+            avg_fes = []
+            for agent in list(data[problem].keys()):
+                if ignore is not None and agent in ignore:
+                    continue
+                key = to_label(agent)
+                if key not in score.keys():
+                    score[key] = []
+                values = np.array(data[problem][agent])[:, -1]
+                score[key].append(values)
+                maxf = max(maxf, np.max(values))
+                avg_cost.append(np.mean(values))
+                avg_fes.append(np.mean(fes[problem][agent]))
+
+            M.append(maxf)
+            order = np.lexsort((avg_fes, avg_cost))
+            rank = np.zeros(len(avg_cost))
+            rank[order] = np.arange(len(avg_cost)) + 1
+            R.append(rank)
+        sr = 0.5 * np.sum(R, 0)
+        score2 = (1 - (sr - np.min(sr)) / sr) * 50
+        score1 = cal_scores1(score, M)
+        for i, key in enumerate(score.keys()):
+            score[key] = score1[i] + score2[i]
+        return score
+
+    def draw_ECDF(self, ):
+        pass
+    
+    def draw_covergence_curve(self, agent: str, problem: str, metadata_dir: str):
+        pass
+
+    def draw_test_cost(self, data: dict, output_dir: str, Name: Optional[Union[str, list]]=None, logged: bool=False, categorized: bool=False) -> None:
+        for problem in list(data.keys()):
+            if Name is not None and (isinstance(Name, str) and problem != Name) or (isinstance(Name, list) and problem not in Name):
+                continue
+            else:
+                name = problem
+            # if logged:
+            #     plt.title('log cost curve ' + name)
+            # else:
+            #     plt.title('cost curve ' + name)
+            if not categorized:
+                plt.figure()
+                for agent in list(data[name].keys()):
+                    if agent not in self.color_arrangement.keys():
+                        self.color_arrangement[agent] = colors[self.arrange_index]
+                        self.arrange_index += 1
+                    values = np.array(data[name][agent])
+                    x = np.arange(values.shape[-1])
+                    x = np.array(x, dtype=np.float64)
+                    x *= (self.config.maxFEs / x[-1])
+                    if logged:
+                        values = np.log(np.maximum(values, 1e-8))
+                    std = np.std(values, 0)
+                    mean = np.mean(values, 0)
+                    plt.plot(x, mean, label=to_label(agent), marker='*', markevery=8, markersize=13, c=self.color_arrangement[agent])
+                    plt.fill_between(x, mean - std, mean + std, alpha=0.2, facecolor=self.color_arrangement[agent])
+                plt.grid()
+                plt.xlabel('FEs')
+                plt.legend()
+                if logged:
+                    plt.ylabel('log Costs')
+                    plt.savefig(output_dir + f'{name}_log_cost_curve.png', bbox_inches='tight')
+                else:
+                    plt.ylabel('Costs')
+                    plt.savefig(output_dir + f'{name}_cost_curve.png', bbox_inches='tight')
+                plt.close()
+            else:
+                plt.figure()
+                for agent in list(data[name].keys()):
+                    if agent not in self.config.agent_for_cp:
+                        continue
+                    if agent not in self.color_arrangement.keys():
+                        self.color_arrangement[agent] = colors[self.arrange_index]
+                        self.arrange_index += 1
+                    values = np.array(data[name][agent])
+                    x = np.arange(values.shape[-1])
+                    x = np.array(x, dtype=np.float64)
+                    x *= (self.config.maxFEs / x[-1])
+                    if logged:
+                        values = np.log(np.maximum(values, 1e-8))
+                    std = np.std(values, 0)
+                    mean = np.mean(values, 0)
+                    plt.plot(x, mean, label=to_label(agent), marker='*', markevery=8, markersize=13, c=self.color_arrangement[agent])
+                    plt.fill_between(x, mean - std, mean + std, alpha=0.2, facecolor=self.color_arrangement[agent])
+                plt.grid()
+                plt.xlabel('FEs')
+                plt.legend()
+                if logged:
+                    plt.ylabel('log Costs')
+                    plt.savefig(output_dir + f'learnable_{name}_log_cost_curve.png', bbox_inches='tight')
+                else:
+                    plt.ylabel('Costs')
+                    plt.savefig(output_dir + f'learnable_{name}_cost_curve.png', bbox_inches='tight')
+                plt.close()
+
+                plt.figure()
+                for agent in list(data[name].keys()):
+                    if agent not in self.config.t_optimizer_for_cp:
+                        continue
+                    if agent not in self.color_arrangement.keys():
+                        self.color_arrangement[agent] = colors[self.arrange_index]
+                        self.arrange_index += 1
+                    values = np.array(data[name][agent])
+                    x = np.arange(values.shape[-1])
+                    x = np.array(x, dtype=np.float64)
+                    x *= (self.config.maxFEs / x[-1])
+                    if logged:
+                        values = np.log(np.maximum(values, 1e-8))
+                    std = np.std(values, 0)
+                    mean = np.mean(values, 0)
+                    plt.plot(x, mean, label=to_label(agent), marker='*', markevery=8, markersize=13, c=self.color_arrangement[agent])
+                    plt.fill_between(x, mean - std, mean + std, alpha=0.2, facecolor=self.color_arrangement[agent])
+                plt.grid()
+                plt.xlabel('FEs')
+                
+                plt.legend()
+                if logged:
+                    plt.ylabel('log Costs')
+                    plt.savefig(output_dir + f'classic_{name}_log_cost_curve.png', bbox_inches='tight')
+                else:
+                    plt.ylabel('Costs')
+                    plt.savefig(output_dir + f'classic_{name}_cost_curve.png', bbox_inches='tight')
+                plt.close()
+    
+    def draw_named_average_test_costs(self, data: dict, output_dir: str, named_agents: dict, logged: bool=False) -> None:
+        fig = plt.figure(figsize=(50, 10))
+        # plt.title('all problem cost curve')
+        plots = len(named_agents.keys())
+        for id, title in enumerate(named_agents.keys()):
+            ax = plt.subplot(1, plots+1, id+1)
+            ax.set_title(title, fontsize=25)
+            
+            Y = {}
+            for problem in list(data.keys()):
+                for agent in list(data[problem].keys()):
+                    if agent not in named_agents[title]:
+                        continue
+                    if agent not in self.color_arrangement.keys():
+                        self.color_arrangement[agent] = colors[self.arrange_index]
+                        self.arrange_index += 1
+                    if agent not in Y.keys():
+                        Y[agent] = {'mean': [], 'std': []}
+                    values = np.array(data[problem][agent])
+                    values /= values[:, 0].repeat(values.shape[-1]).reshape(values.shape)
+                    if logged:
+                        values = np.log(np.maximum(values, 1e-8))
+                    std = np.std(values, 0)
+                    mean = np.mean(values, 0)
+                    Y[agent]['mean'].append(mean)
+                    Y[agent]['std'].append(std)
+
+            for id, agent in enumerate(list(Y.keys())):
+                mean = np.mean(Y[agent]['mean'], 0)
+                std = np.mean(Y[agent]['std'], 0)
+
+                X = np.arange(mean.shape[-1])
+                X = np.array(X, dtype=np.float64)
+                X *= (self.config.maxFEs / X[-1])
+                # X = np.log10(X)
+                # X[0] = 0
+
+                ax.plot(X, mean, label=to_label(agent), marker='*', markevery=8, markersize=13, c=self.color_arrangement[agent])
+                ax.fill_between(X, (mean - std), (mean + std), alpha=0.2, facecolor=self.color_arrangement[agent])
+            plt.grid()
+            # plt.xlabel('log10 FEs')
+            plt.xlabel('FEs')
+            plt.ylabel('Normalized Costs')
+            plt.legend()
+        # lines, labels = fig.axes[-1].get_legend_handles_labels()
+        # fig.legend(lines, labels, bbox_to_anchor=(plots/(plots+1)-0.02, 0.5), borderaxespad=0., loc=6, facecolor='whitesmoke')
+        
+        plt.subplots_adjust(left=0.05, right=0.95, wspace=0.1)
+        plt.savefig(output_dir + f'all_problem_cost_curve_logX.png', bbox_inches='tight')
+        plt.close()
+
+    def draw_concrete_performance_hist(self, data: dict, output_dir: str, Name: Optional[Union[str, list]]=None) -> None:
+        D = {}
+        X = []
+        for problem in list(data.keys()):
+            if Name is not None and (isinstance(Name, str) and problem != Name) or (isinstance(Name, list) and problem not in Name):
+                continue
+            else:
+                name = problem
+            X.append(name)
+            for agent in list(data[name].keys()):
+                if agent not in D.keys():
+                    D[agent] = []
+                values = np.array(data[name][agent])
+                D[agent].append(values[:, -1] / values[:, 0])
+
+        for agent in D.keys():
+            plt.figure()
+            # plt.title(f'{agent} performance histgram')
+            X = list(data.keys())
+            D[agent] = np.mean(np.array(D[agent]), -1)
+            plt.bar(X, D[agent])
+            for a,b in zip(X, D[agent]):
+                plt.text(a, b, '%.2f' % b, ha='center', fontsize=15)
+            plt.xticks(rotation=30, fontsize=13)
+            plt.xlabel('Problems')
+            plt.ylabel('Normalized Costs')
+            plt.savefig(output_dir + f'{agent}_concrete_performance_hist.png', bbox_inches='tight')
+
+    def draw_train_avg_cost(self, data: dict, output_dir: str, norm: bool=False) -> None:
+        costs, stds = self.get_average_data(data['cost'], norm=norm, data_wrapper=data_wrapper_cost)
+        plt.figure()
+        for agent in costs.keys():
+            x = np.arange(len(costs[agent]), dtype=np.float64)
+            x = (self.config.max_learning_step / x[-1]) * x
+            y = costs[agent]
+            s = np.zeros(y.shape[0])
+            a = s[0] = y[0]
+            norm = self.config.plot_smooth + 1
+            for i in range(1, y.shape[0]):
+                a = a * self.config.plot_smooth + y[i]
+                s[i] = a / norm if norm > 0 else a
+                norm *= self.config.plot_smooth
+                norm += 1
+            if agent not in self.color_arrangement.keys():
+                self.color_arrangement[agent] = colors[self.arrange_index]
+                self.arrange_index += 1
+            plt.plot(x, s, label=to_label(agent), marker='*', markersize=12, markevery=2, c=self.color_arrangement[agent])
+            plt.fill_between(x, (s - stds[agent]), (s + stds[agent]), alpha=0.2, facecolor=self.color_arrangement[agent])
+            # plt.plot(x, returns[agent], label=to_label(agent))
+        plt.legend()
+        plt.xlabel('Learning Steps')
+        plt.ylabel('Avg Cost')
+        plt.grid()
+        plt.savefig(output_dir + f'avg_cost_curve.png', bbox_inches='tight')
+        plt.close()
+
+    def draw_boxplot(self, data: dict, output_dir: str, Name: Optional[Union[str, list]]=None, ignore: Optional[list]=None) -> None:
+        for problem in list(data.keys()):
+            if Name is not None and (isinstance(Name, str) and problem != Name) or (isinstance(Name, list) and problem not in Name):
+                continue
+            else:
+                name = problem
+            Y = []
+            X = []
+            plt.figure(figsize=(30, 15))
+            for agent in list(data[name].keys()):
+                if ignore is not None and agent in ignore:
+                    continue
+                X.append(agent)
+                values = np.array(data[name][agent])
+                Y.append(values[:, -1])
+            Y = np.transpose(Y)
+            plt.boxplot(Y, labels=X, showmeans=True, patch_artist=True, showfliers=False,
+                        medianprops={'color': 'green', 'linewidth': 3}, 
+                        meanprops={'markeredgecolor': 'red', 'markerfacecolor': 'red', 'markersize': 10, 'marker': 'D'}, 
+                        boxprops={'color': 'black', 'facecolor': 'lightskyblue'},
+                        capprops={'linewidth': 2},
+                        whiskerprops={'linewidth': 2},
+                        )
+            plt.xticks(rotation=30, fontsize=18)
+            plt.xlabel('Agents')
+            plt.ylabel(f'{name} Cost Boxplots')
+            plt.savefig(output_dir + f'{name}_boxplot.png', bbox_inches='tight')
+            plt.close()
+
+    def draw_overall_boxplot(self, data: dict, output_dir: str, ignore: Optional[list]=None) -> None:
+        problems=[]
+        agents=[]
+        for problem in data.keys():
+            problems.append(problem)
+        for agent in data[problems[0]].keys():
+            if ignore is not None and agent in ignore:
+                continue
+            agents.append(agent)
+        run = len(data[problems[0]][agents[0]])
+        values = np.zeros((len(agents), len(problems), run))
+        plt.figure(figsize=(30, 15))
+        for ip, problem in enumerate(problems):
+            for ia, agent in enumerate(agents):
+                values[ia][ip] = np.array(data[problem][agent])[:, -1]
+            values[:, ip, :] = (values[:, ip, :] - np.min(values[:, ip, :])) / (np.max(values[:, ip, :]) - np.min(values[:, ip, :]))
+        values = values.reshape(len(agents), -1).transpose()
+        
+        plt.boxplot(values, labels=agents, showmeans=True, patch_artist=True, showfliers=False,
+                    medianprops={'color': 'green', 'linewidth': 3}, 
+                    meanprops={'markeredgecolor': 'red', 'markerfacecolor': 'red', 'markersize': 10, 'marker': 'D'}, 
+                    boxprops={'color': 'black', 'facecolor': 'lightskyblue'},
+                    capprops={'linewidth': 2},
+                    whiskerprops={'linewidth': 2},
+                    )
+        plt.xticks(rotation=30, fontsize=18)
+        plt.xlabel('Agents')
+        plt.ylabel('Cost Boxplots')
+        plt.savefig(output_dir + f'overall_boxplot.png', bbox_inches='tight')
+        plt.close()
+
+    def draw_rank_hist(self, data: dict, random: dict, output_dir: str, ignore: Optional[list]=None) -> None:
+        metric, metric_std = self.aei_metric(data, random, maxFEs=self.config.maxFEs, ignore=ignore)
+        X, Y = list(metric.keys()), list(metric.values())
+        _, S = list(metric_std.keys()), list(metric_std.values())
+        n_agents = len(X)
+        for i in range(n_agents):
+            X[i] = to_label(X[i])
+
+        plt.figure(figsize=(4*n_agents,15))
+        plt.bar(X, Y)
+        plt.errorbar(X, Y, S, fmt='s', ecolor='dimgray', ms=1, color='dimgray', elinewidth=5, capsize=30, capthick=5)
+        for a,b in zip(X, Y):
+            plt.text(a, b+0.05, '%.2f' % b, ha='center', fontsize=55)
+        plt.xticks(rotation=45, fontsize=60)
+        plt.yticks(fontsize=60)
+        plt.ylim(0, np.max(np.array(Y) + np.array(S)) * 1.1)
+        plt.title(f'The AEI for {self.config.dim}D {self.config.problem}-{self.config.difficulty}', fontsize=70)
+        plt.ylabel('AEI', fontsize=60)
+        plt.savefig(output_dir + f'rank_hist.png', bbox_inches='tight')
+        
+    def draw_train_logger(self, data_type: str, data: dict, output_dir: str, ylabel: str = None, norm: bool = False, pdf_fig: bool = True, data_wrapper: Callable = None) -> None:
+        means, stds = self.get_average_data(data_type, data, norm=norm, data_wrapper=data_wrapper)
+        plt.figure()
+        for agent in means.keys():
+            x = np.arange(len(means[agent]), dtype=np.float64)
+            x = (self.config.max_learning_step / x[-1]) * x
+            y = means[agent]
+            s = np.zeros(y.shape[0])
+            a = s[0] = y[0]
+            norm = self.config.plot_smooth + 1
+            for i in range(1, y.shape[0]):
+                a = a * self.config.plot_smooth + y[i]
+                s[i] = a / norm if norm > 0 else a
+                norm *= self.config.plot_smooth
+                norm += 1
+            if agent not in self.color_arrangement.keys():
+                self.color_arrangement[agent] = colors[self.arrange_index]
+                self.arrange_index += 1
+            plt.plot(x, s, label=to_label(agent), marker='*', markersize=12, markevery=2, c=self.color_arrangement[agent])
+            plt.fill_between(x, (s - stds[agent]), (s + stds[agent]), alpha=0.2, facecolor=self.color_arrangement[agent])
+            # plt.plot(x, returns[agent], label=to_label(agent))
+        plt.legend()
+        plt.grid()
+        plt.xlabel('Learning Steps')    
+        if ylabel is None:
+            ylabel = data_type
+        plt.ylabel(ylabel)
+        fig_type = 'pdf' if pdf_fig else 'png'
+        plt.savefig(output_dir + f'avg_{data_type}_curve.{fig_type}', bbox_inches='tight')
+        plt.close()
+        
+    def post_processing_test_statics(self, log_dir: str, include_random_baseline: bool = True) -> None:
+        with open(log_dir + 'test.pkl', 'rb') as f:
+            results = pickle.load(f)
+            
+        metabbo = self.config.agent
+        bbo = self.config.t_optimizer
+        
+        # 可选地读取 random_search_baseline.pkl
+        if include_random_baseline:
+            with open(log_dir + 'random_search_baseline.pkl', 'rb') as f:
+                random = pickle.load(f)
+
+        if not os.path.exists(log_dir + 'tables/'):
+            os.makedirs(log_dir + 'tables/')
+
+        gen_overall_tab(results, log_dir + 'tables/')
+        gen_algorithm_complexity_table(results, log_dir + 'tables/')
+
+        if not os.path.exists(log_dir + 'pics/'):
+            os.makedirs(log_dir + 'pics/')
+
+        # 如果需要，可以为不同的算法绘制图形（例如 cost 图）
+        if 'cost' in results:
+            self.draw_test_cost(results['cost'], log_dir + 'pics/', logged=True, categorized=True)
+            self.draw_named_average_test_costs(results['cost'], log_dir + 'pics/',
+                                                {'MetaBBO-RL': metabbo,
+                                                'Classic Optimizer': bbo},
+                                                logged=False)
+
+    def post_processing_rollout_statics(self, log_dir: str) -> None:
+        with open(log_dir+'rollout.pkl', 'rb') as f:
+            results = pickle.load(f)
+        if not os.path.exists(log_dir + 'pics/'):
+            os.makedirs(log_dir + 'pics/')
+        self.draw_train_return(results, log_dir + 'pics/', )
+        self.draw_train_avg_cost(results, log_dir + 'pics/', )
+        self.draw_train_logger('return', results['return'], log_dir + 'pics/', )
+        self.draw_train_logger('cost', results['cost'], log_dir + 'pics/', )
+
 
 # mmo
 def get_average_data(data_type: str, results: dict, norm: bool=False): # for rollout
@@ -36,11 +754,11 @@ def get_average_data(data_type: str, results: dict, norm: bool=False): # for rol
         std_data[agent]=[]
         for problem in problems:
             if data_type == 'pr' or data_type == 'sr':
-                values = np.array(results[problem][agent])[:,:,-1, 3] # accuracy of 1e-4
+                values = np.array(results[problem][agent])[:,:,-1, 3] # accuracy of 1e-4  data_wrapper_prsr
             elif data_type == 'return':
                 values = results[problem][agent]
             elif data_type == 'cost':
-                values = np.array(results[problem][agent])[:, :, -1]
+                values = np.array(results[problem][agent])[:, :, -1]  # data_wrapper_cost
             else:
                 raise ValueError('Invalid data type')
             if norm:
@@ -49,7 +767,7 @@ def get_average_data(data_type: str, results: dict, norm: bool=False): # for rol
             avg_data[agent].append(np.mean(values, -1))
         avg_data[agent] = np.mean(avg_data[agent], 0)
         std_data[agent] = np.mean(std_data[agent], 0)
-    return avg_data, std_data  # {'agent':[] len = n_checkpoints}
+    return avg_data, std_data
 
 # mmo
 def get_test_average_data(data_type: str, results: dict, norm: bool=False): # for test
@@ -67,7 +785,7 @@ def get_test_average_data(data_type: str, results: dict, norm: bool=False): # fo
         std_data[agent]=[]
         for problem in problems:
             if data_type == 'pr' or data_type == 'sr':
-                values = np.array(results[problem][agent])[:,-1, 3] # accuracy of 1e-4
+                values = np.array(results[problem][agent])[:,-1, 3] # accuracy of 1e-4  data_wrapper_prsr_test
             else:
                 raise ValueError('Invalid data type')
             if norm:
@@ -1308,114 +2026,6 @@ class Logger:
         plt.title(f'The AEI for {self.config.dim}D {self.config.problem}-{self.config.difficulty}', fontsize=70)
         plt.ylabel('AEI', fontsize=60)
         plt.savefig(output_dir + f'rank_hist.png', bbox_inches='tight')
-
-    def aei_metric(self, data: dict, random: dict, maxFEs: Optional[Union[int, float]]=20000, ignore: Optional[list]=None):
-        baseline = get_random_baseline(random, maxFEs)
-        problems = data['fes'].keys()
-        if 'complexity' not in data.keys():
-            data['complexity'] = {}
-            agents = data['fes'][list(problems)[0]].keys()
-        else:
-            agents = data['complexity'].keys()
-        avg = baseline['complexity_avg']
-        std = baseline['complexity_std']
-        results_complex = {}
-
-        for key in agents:
-            if (ignore is not None) and (key in ignore):
-                continue
-            if key not in data['complexity'].keys():
-                t0 = data['T0']
-                if isinstance(data['T1'], dict):
-                    t1 = data['T1'][key]
-                else:
-                    t1 = data['T1']
-                t2 = data['T2'][key]
-                data['complexity'][key] = ((t2 - t1) / t0)
-            results_complex[key] = np.exp((np.log10(1/data['complexity'][key]) - avg)/std/1000 * 1)
-
-        fes_data = data['fes']
-
-        avg = baseline['fes_avg']
-        std = baseline['fes_std']
-        results_fes = {}
-        for agent in agents:
-            if ignore is not None and key in ignore:
-                continue
-            fes_problem = []
-            for problem in problems:
-                if agent == 'L2L_Agent':
-                    fes_ = np.log10(100/np.array(fes_data[problem][agent]))
-                elif agent == 'BayesianOptimizer':
-                    fes_ = np.log10(self.config.bo_maxFEs/np.array(fes_data[problem][agent]))
-                else:
-                    fes_ = np.log10(maxFEs/np.array(fes_data[problem][agent]))
-                fes_problem.append(fes_.mean())
-            results_fes[agent] = np.exp((fes_problem - avg) * 1)
-
-        cost_data = data['cost']
-        avg = baseline['cost_avg']
-        std = baseline['cost_std']
-        results_cost = {}
-        for agent in agents:
-            if ignore is not None and key in ignore:
-                continue
-            costs_problem = []
-            for problem in problems:
-                cost_ = np.log10(1/(np.array(cost_data[problem][agent])[:, -1]+1))
-                costs_problem.append(cost_.mean())
-            results_cost[agent] = np.exp((costs_problem - avg) * 1)
-
-        mean = {}
-        std = {}
-        for agent in agents:
-            key = agent
-            if ignore is not None and key in ignore:
-                continue
-            if agent == 'Random_search':
-                continue
-            aei_k = results_complex[agent] * results_cost[agent] * results_fes[agent]
-            mean[key] = np.mean(aei_k)
-            if self.config.problem in ['protein', 'protein-torch']:
-                std[key] = np.std(aei_k) * 5.
-            else:
-                std[key] = np.std(aei_k) / 5.
-        return mean, std
-
-    def cec_metric(self, data: dict, ignore: Optional[list]=None):
-        score = {}
-        M = []
-        X = []
-        Y = []
-        R = []
-        data, fes = data['cost'], data['fes']
-        for problem in list(data.keys()):
-            maxf = 0
-            avg_cost = []
-            avg_fes = []
-            for agent in list(data[problem].keys()):
-                if ignore is not None and agent in ignore:
-                    continue
-                key = to_label(agent)
-                if key not in score.keys():
-                    score[key] = []
-                values = np.array(data[problem][agent])[:, -1]
-                score[key].append(values)
-                maxf = max(maxf, np.max(values))
-                avg_cost.append(np.mean(values))
-                avg_fes.append(np.mean(fes[problem][agent]))
-
-            M.append(maxf)
-            order = np.lexsort((avg_fes, avg_cost))
-            rank = np.zeros(len(avg_cost))
-            rank[order] = np.arange(len(avg_cost)) + 1
-            R.append(rank)
-        sr = 0.5 * np.sum(R, 0)
-        score2 = (1 - (sr - np.min(sr)) / sr) * 50
-        score1 = cal_scores1(score, M)
-        for i, key in enumerate(score.keys()):
-            score[key] = score1[i] + score2[i]
-        return score
 
 '''
 统一mmo
