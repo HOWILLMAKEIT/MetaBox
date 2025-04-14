@@ -21,6 +21,34 @@ from problem import bbob, bbob_torch, protein_docking, mmo_dataset
 
 
 def construct_problem_set(config):
+    """
+    Constructs and returns a dataset based on the specified problem type in the configuration.
+
+    Args:
+        config (object): A configuration object containing the following attributes:
+            - problem (str): The type of problem to construct the dataset for. 
+              Supported values include:
+                - 'bbob', 'bbob-noisy'
+                - 'bbob-torch', 'bbob-noisy-torch'
+                - 'protein', 'protein-torch'
+                - 'bbob-surrogate'
+                - 'Symbolic_bench', 'Symbolic_bench-torch'
+                - 'lsgo', 'lsgo-torch'
+                - 'uav', 'uav-torch'
+                - 'mmo', 'mmo-torch'
+            - dim (int, optional): Dimensionality of the problem (used for certain problem types).
+            - upperbound (float, optional): Upper bound for the dataset values (used for certain problem types).
+            - train_batch_size (int): Batch size for training data.
+            - test_batch_size (int): Batch size for testing data.
+            - difficulty (str, optional): Difficulty level of the problem (used for certain problem types).
+            - user_train_list (list, optional): User-defined training list (used for 'mmo' and 'mmo-torch').
+
+    Returns:
+        object: A dataset object corresponding to the specified problem type.
+
+    Raises:
+        ValueError: If the specified problem type is not supported.
+    """
     problem = config.problem
     if problem in ['bbob', 'bbob-noisy']:
         return bbob_numpy.bbob_dataset.BBOB_Dataset.get_datasets(suit=config.problem,
@@ -98,6 +126,29 @@ def construct_problem_set(config):
     
 class Ma_Moo_Trainer:
     def __init__(self, config):
+        """
+        Initializes the class with the given configuration.
+
+        Args:
+            config (object): Configuration object containing the following attributes:
+                - resume_dir (str or None): Directory path to resume from a saved agent. 
+                  If None, a new agent is created.
+                - train_agent (str): Name of the training agent class to be instantiated or loaded.
+                - train_optimizer (str): Name of the optimizer class to be instantiated.
+                - indicators (list): List of indicators for training or evaluation.
+
+        Attributes:
+            config (object): Stores the provided configuration object.
+            agent (object): The training agent, either newly created or loaded from a file.
+            optimizer (object): The optimizer instance created based on the configuration.
+            train_set (object): The training dataset constructed from the configuration.
+            test_set (object): The testing dataset constructed from the configuration.
+            indicators (list): List of indicators for training or evaluation.
+
+        Raises:
+            FileNotFoundError: If the specified resume file does not exist.
+            Exception: If there is an error during agent loading or initialization.
+        """
         self.config = config
         if config.resume_dir is None:
             self.agent = eval(config.train_agent)(config)
@@ -111,6 +162,29 @@ class Ma_Moo_Trainer:
         self.indicators = config.indicators
 
     def save_log(self, epochs, steps, indicators_record, returns):
+        """
+        Saves training logs, including returns and performance indicators, to disk.
+
+        Args:
+            epochs (list or np.ndarray): A list or array of epoch numbers.
+            steps (list or np.ndarray): A list or array of step counts corresponding to the epochs.
+            indicators_record (dict): A dictionary containing performance indicators for each problem.
+                The keys are problem names, and the values are dictionaries where:
+                    - Keys are indicator names (e.g., "accuracy", "loss").
+                    - Values are lists of indicator values recorded during training.
+            returns (list or np.ndarray): A list or array of return values corresponding to the steps.
+
+        Behavior:
+            - Creates a directory structure for saving logs based on the agent's class name and runtime configuration.
+            - Saves the return values as a NumPy array in the log directory.
+            - Iterates through the training set problems and saves performance indicators for each problem.
+            - Ensures that the length of indicator records matches the number of epochs by appending the last value if necessary.
+            - Saves the indicators as NumPy arrays in the log directory.
+
+        Notes:
+            - The log directory is constructed using the `log_dir` attribute from the configuration object.
+            - The problem names and indicator names are used to generate unique filenames for the saved logs.
+        """
         log_dir = self.config.log_dir + f'/train/{self.agent.__class__.__name__}/{self.config.run_time}/log/'
         if not os.path.exists(log_dir):
             os.makedirs(log_dir)
@@ -127,6 +201,30 @@ class Ma_Moo_Trainer:
                 np.save(log_dir+name+'_'+indicator,indictors_record_save)
             
     def draw_indicators(self, Name=None, normalize=False):
+        """
+        Draws and saves indicator plots for the training problems in the dataset.
+
+        Parameters:
+            Name (str or list, optional): Specifies the name(s) of the problem(s) to process. 
+                If None, all problems in the training set are processed. If a string, only the 
+                problem with the matching name is processed. If a list, only the problems with 
+                names in the list are processed.
+            normalize (bool, optional): If True, normalizes the y-values of the indicators 
+                by dividing them by the corresponding `n` value. Defaults to False.
+
+        Behavior:
+            - Creates a directory structure for saving plots if it does not already exist.
+            - Iterates through the training problems in `self.train_set` and processes each 
+              problem based on the `Name` parameter.
+            - For each problem and indicator, loads the corresponding data from a `.npy` file, 
+              optionally normalizes the y-values, and generates a plot.
+            - Saves the generated plot as a `.png` file in the appropriate directory.
+
+        Notes:
+            - The method assumes that the indicator data is stored in `.npy` files within a 
+              `log` subdirectory of the `log_dir` path.
+            - The generated plots are saved in a `pic` subdirectory of the `log_dir` path.
+        """
         log_dir = self.config.log_dir + f'/train/{self.agent.__class__.__name__}/{self.config.run_time}/'
         if not os.path.exists(log_dir + 'pic/'):
             os.makedirs(log_dir + 'pic/')
@@ -150,6 +248,37 @@ class Ma_Moo_Trainer:
                 plt.close()
     
     def draw_average_indictors(self, normalize=True):
+        """
+        Draws and saves plots of the average values of specified indicators for all problems 
+        in the training set across epochs.
+
+        Args:
+            normalize (bool, optional): A flag indicating whether to normalize the data. 
+                                        Currently unused in the function. Defaults to True.
+
+        Description:
+            - This function iterates over a list of indicators and computes the average 
+              values of these indicators for all problems in the training set.
+            - For each indicator, it loads the corresponding data from `.npy` files, 
+              calculates the mean across all problems, and generates a plot.
+            - The plots are saved as PNG files in a directory structure based on the 
+              configuration and runtime information.
+
+        Notes:
+            - The function assumes the existence of a `config` attribute with `log_dir` 
+              and `run_time` properties, and an `agent` attribute with a class name.
+            - The function also assumes the existence of a `train_set` attribute containing 
+              problem instances, and an `indicators` attribute listing the indicators to process.
+
+        File Output:
+            - Saves the generated plots in the directory: 
+              `<log_dir>/train/<agent_class_name>/<run_time>/pic/`.
+
+        Raises:
+            - FileNotFoundError: If the required `.npy` files for the indicators are not found.
+            - OSError: If there are issues creating the output directories.
+
+        """
         # 这个函数用于画每一个epoch所有问题指标的平均值
         log_dir = self.config.log_dir + f'/train/{self.agent.__class__.__name__}/{self.config.run_time}/'
         if not os.path.exists(log_dir + 'pic/'):
@@ -172,6 +301,27 @@ class Ma_Moo_Trainer:
             plt.close()
 
     def draw_return(self):
+        """
+        Generates and saves a plot of return values for the agent's training process.
+
+        This method loads return values from a NumPy file, creates a plot of the values,
+        and saves the plot as a PNG image in a specified directory. If the required
+        directories do not exist, they are created.
+
+        The plot is saved in the 'pic/' subdirectory under the log directory, which is
+        constructed based on the agent's class name and runtime configuration.
+
+        Raises:
+            FileNotFoundError: If the required NumPy file ('return.npy') does not exist.
+            OSError: If there is an issue creating the required directories.
+
+        Notes:
+            - The method assumes that the return values are stored in a NumPy file
+              with two arrays: one for the x-axis (e.g., episodes) and one for the
+              y-axis (e.g., return values).
+            - The plot is titled 'return' and saved as 'return.png'.
+
+        """
         log_dir = self.config.log_dir + f'/train/{self.agent.__class__.__name__}/{self.config.run_time}/'
         if not os.path.exists(log_dir + 'pic/'):
             os.makedirs(log_dir + 'pic/')
@@ -183,6 +333,26 @@ class Ma_Moo_Trainer:
         plt.close()
 
     def train(self):
+        """
+        Trains the agent using the specified training configuration and dataset.
+
+        This method initializes training parameters, iterates through the training
+        dataset, and performs training episodes for the agent. It supports both
+        single and multi-problem training modes, and tracks various metrics such as
+        loss, learning steps, and performance indicators.
+
+        Key Features:
+        - Configures batch size and training mode (single or multi).
+        - Shuffles the training dataset and processes each problem in the dataset.
+        - Constructs environments for training episodes based on the training mode.
+        - Tracks and records metrics such as loss, learning steps, returns, and
+          performance indicators (e.g., IGD, HV).
+        - Supports saving agent checkpoints at specified intervals.
+        - Generates visualizations for performance indicators and returns.
+
+        Returns:
+            None
+        """
         print(f'start training: {self.config.run_time}')
         if self.indictors is None:
             self.indicators = ['best_igd','best_hv']

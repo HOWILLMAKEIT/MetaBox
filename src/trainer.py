@@ -86,6 +86,32 @@ matplotlib.use('Agg')
 
 class Trainer(object):
     def __init__(self, config):
+        """
+        Initializes the trainer with the given configuration.
+
+        Args:
+            config (object): Configuration object containing the following attributes:
+                - seed (int): Random seed for reproducibility.
+                - resume_dir (str or None): Directory to resume training from a saved agent. 
+                  If None, a new agent is created.
+                - train_agent (str): Name of the training agent class to instantiate or load.
+                - train_optimizer (str): Name of the optimizer class to instantiate.
+                - problem (str): Problem type, e.g., 'bbob-surrogate'.
+                - is_train (bool): Flag indicating whether the mode is training or not.
+
+        Attributes:
+            config (object): Stores the provided configuration.
+            agent (object): The training agent, either newly created or loaded from a file.
+            optimizer (object): The optimizer for training the agent.
+            train_set (object): The training dataset constructed based on the problem type.
+            test_set (object): The testing dataset constructed based on the problem type.
+
+        Notes:
+            - Sets random seeds for reproducibility across PyTorch, CUDA, and NumPy.
+            - Configures PyTorch's cuDNN backend for deterministic behavior.
+            - If `resume_dir` is provided, loads the agent from a pickle file and updates its settings.
+            - Constructs the training and testing datasets based on the problem type.
+        """
         self.config = config
 
         torch.manual_seed(self.config.seed)
@@ -108,6 +134,26 @@ class Trainer(object):
         self.train_set, self.test_set = construct_problem_set(config)
 
     def save_log(self, epochs, steps, cost, returns, normalizer):
+        """
+        Saves training logs including steps, returns, costs, and normalizers for each problem in the training set.
+
+        Args:
+            epochs (list or np.ndarray): The list of epoch numbers.
+            steps (list or np.ndarray): The list of steps taken during training.
+            cost (dict): A dictionary where keys are problem names and values are lists of costs for each epoch.
+            returns (list or np.ndarray): The list of returns achieved during training.
+            normalizer (dict): A dictionary where keys are problem names and values are lists of normalizer values for each epoch.
+
+        Behavior:
+            - Creates a directory for saving logs if it does not already exist.
+            - Saves the steps and returns as a NumPy array in the log directory.
+            - For each problem in the training set:
+                - Ensures the cost and normalizer lists are the same length as the epochs by appending the last value.
+                - Saves the epochs, costs, and normalizer values as a NumPy array in the log directory.
+
+        Note:
+            The log directory path is constructed using the configuration settings and the agent's class name.
+        """
         log_dir = self.config.log_dir + f'/train/{self.agent.__class__.__name__}/{self.config.run_time}/log/'
         if not os.path.exists(log_dir):
             os.makedirs(log_dir)
@@ -124,6 +170,25 @@ class Trainer(object):
             np.save(log_dir+name+'_cost', cost_save)
             
     def draw_cost(self, Name=None, normalize=False):
+        """
+        Plots and saves the cost graph for training problems.
+
+        Args:
+            Name (str or list, optional): The name(s) of the problem(s) to plot. If None, plots for all problems in the training set.
+                                           If a string, plots for the specific problem matching the name.
+                                           If a list, plots for all problems whose names are in the list.
+            normalize (bool, optional): If True, normalizes the cost values by dividing by the number of samples (n). Defaults to False.
+
+        Behavior:
+            - Loads cost data from a .npy file located in the log directory.
+            - Plots the cost data for the specified problem(s).
+            - Saves the plot as a .png file in the 'pic/' subdirectory of the log directory.
+
+        Notes:
+            - The log directory is determined by the configuration (`self.config.log_dir`) and includes subdirectories for the agent's class name and runtime.
+            - If the 'pic/' subdirectory does not exist, it is created automatically.
+            - The cost data file is expected to be named in the format '<problem_name>_cost.npy' and located in the 'log/' subdirectory of the log directory.
+        """
         log_dir = self.config.log_dir + f'/train/{self.agent.__class__.__name__}/{self.config.run_time}/'
         if not os.path.exists(log_dir + 'pic/'):
             os.makedirs(log_dir + 'pic/')
@@ -145,6 +210,28 @@ class Trainer(object):
             plt.close()
     
     def draw_average_cost(self, normalize=True):
+        """
+        Draws and saves a plot of the average cost across all problems in the training set.
+
+        Args:
+            normalize (bool, optional): If True, normalizes the cost values by dividing 
+                by the number of occurrences (n). Defaults to True.
+
+        Behavior:
+            - Loads cost data for each problem in the training set from pre-saved `.npy` files.
+            - Computes the average cost values across all problems.
+            - Plots the average cost over time and saves the plot as an image file.
+
+        File Structure:
+            - Expects cost data files to be located in `log_dir/log/` with filenames 
+              formatted as `<problem_name>_cost.npy`.
+            - Saves the resulting plot in `log_dir/pic/` with the filename 
+              `all_problem_cost.png`.
+
+        Note:
+            - The `log_dir` is constructed using the configuration and agent class name.
+            - Creates the `pic/` directory if it does not already exist.
+        """
         log_dir = self.config.log_dir + f'/train/{self.agent.__class__.__name__}/{self.config.run_time}/'
         if not os.path.exists(log_dir + 'pic/'):
             os.makedirs(log_dir + 'pic/')
@@ -167,6 +254,32 @@ class Trainer(object):
         plt.close()
 
     def draw_return(self):
+        """
+        Draws and saves a plot of return values over time.
+
+        This method loads return values from a NumPy file located in the log directory,
+        generates a plot with the loaded data, and saves the plot as a PNG image in the
+        appropriate directory.
+
+        The log directory is constructed using the configuration's log directory, the
+        agent's class name, and the runtime configuration.
+
+        Steps:
+        1. Constructs the log directory path.
+        2. Creates the necessary subdirectories if they do not exist.
+        3. Loads return values from a NumPy file located in the log directory.
+        4. Plots the return values.
+        5. Saves the plot as a PNG image in the 'pic' subdirectory of the log directory.
+
+        Raises:
+            FileNotFoundError: If the required NumPy file ('return.npy') does not exist.
+            ValueError: If the loaded data is not in the expected format.
+
+        Note:
+            Ensure that the `self.config.log_dir` and `self.config.run_time` are properly
+            configured, and the `return.npy` file exists in the expected location.
+
+        """
         log_dir = self.config.log_dir + f'/train/{self.agent.__class__.__name__}/{self.config.run_time}/'
         if not os.path.exists(log_dir + 'pic/'):
             os.makedirs(log_dir + 'pic/')
@@ -178,6 +291,38 @@ class Trainer(object):
         plt.close()
 
     def train_old(self):
+        """
+        Trains the agent using the provided training set.
+
+        This method iterates through the training set, shuffling it at each epoch,
+        and trains the agent on each problem in the set. It tracks various metrics
+        such as cost, normalizer values, and returns for each problem. The training
+        process continues until a stopping condition is met, such as exceeding the
+        maximum learning steps.
+
+        Attributes:
+            config (object): Configuration object containing runtime settings.
+            train_set (object): The dataset used for training.
+            agent (object): The agent being trained.
+            optimizer (object): The optimizer used in the environment.
+
+        Returns:
+            None
+
+        Notes:
+            - The training process uses a progress bar to display the current
+              training status, including loss, learning steps, and returns.
+            - Metrics such as cost, normalizer values, and returns are recorded
+              for each problem in the training set.
+            - The method includes commented-out code for saving the agent and
+              generating visualizations, which can be enabled as needed.
+            - A fixed seed is used for reproducibility in the optimizer.
+
+        Todo:
+            - Add seed configuration to make the seed value adjustable.
+            - Implement logging functionality for saving training metrics.
+            - Enable visualization of cost and return metrics at specified intervals.
+        """
         print(f'start training: {self.config.run_time}')
         # agent_save_dir = self.config.agent_save_dir + self.agent.__class__.__name__ + '/' + self.config.run_time + '/'
         exceed_max_ls = False
@@ -244,6 +389,31 @@ class Trainer(object):
         # self.draw_return()
 
     def train(self):
+        """
+        Trains the agent using the specified training configuration and dataset.
+
+        This method orchestrates the training process, including setting up the training environment,
+        managing epochs, logging progress, and saving checkpoints. It supports different training modes
+        ("single" and "multi") and integrates with TensorBoard for logging.
+
+        Attributes:
+            self.config (object): Configuration object containing training parameters such as batch size,
+                training mode, seed values, and logging options.
+            self.train_set (object): Dataset object containing the training problems.
+            self.agent (object): The agent to be trained.
+            self.optimizer (object): Optimizer used for training.
+
+        Workflow:
+            1. Initializes TensorBoard logger if enabled.
+            2. Configures batch size and training mode based on the configuration.
+            3. Iteratively trains the agent for each epoch until the stopping condition is met.
+            4. Logs training progress using tqdm and TensorBoard.
+            5. Saves checkpoints at specified intervals.
+            6. Handles random seed management for reproducibility.
+
+        Returns:
+            None
+        """
         print(f'start training: {self.config.run_time}')
         is_end = False
         # todo tensorboard
@@ -354,6 +524,40 @@ class Trainer(object):
                 is_end = True
 
     def rollout(self, checkpoint, rollout_run = 10):
+        def rollout(self, checkpoint, rollout_run=10):
+            """
+            Perform a rollout operation using a specified checkpoint and number of runs.
+
+            This method loads a pre-trained agent from a checkpoint file, initializes the 
+            environment for testing, and performs a batch rollout to evaluate the agent's 
+            performance on the test set.
+
+            Args:
+                checkpoint (int): The checkpoint index to load the agent from.
+                rollout_run (int, optional): The number of rollout runs to perform for each 
+                    problem in the test set. Defaults to 10.
+
+            Behavior:
+                - Seeds are set for reproducibility using the configuration's seed value.
+                - The agent is loaded from a serialized file located in the `agent_save_dir`.
+                - A deep copy of the test set is created for the rollout process.
+                - The rollout is performed in batches, iterating through the test set.
+                - For each problem in the test set, multiple environments are created, and 
+                  the agent performs a batch rollout using these environments.
+                - Progress is displayed using a progress bar, which updates with the agent's 
+                  status.
+
+            Notes:
+                - The method uses PyTorch for deterministic behavior by setting seeds and 
+                  disabling certain optimizations.
+                - The `rollout_batch_episode` method of the agent is called to perform the 
+                  rollout in parallel.
+
+            Raises:
+                FileNotFoundError: If the checkpoint file does not exist.
+                pickle.UnpicklingError: If there is an error while loading the agent.
+
+            """
         # 读取 agent
         torch.manual_seed(self.config.seed)
         torch.cuda.manual_seed(self.config.seed)

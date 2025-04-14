@@ -123,6 +123,35 @@ def cal_t1(problem, dim, fes):
 
 class Tester(object):
     def __init__(self, config):
+        """
+        Initializes the tester class with the given configuration.
+        Args:
+            config (object): Configuration object containing the following attributes:
+                - agent (list): List of agent keys to be used.
+                - test_log_dir (str): Directory path for storing test logs.
+                - problem (str): Problem type to be solved.
+                - is_train (bool): Flag indicating whether training is enabled.
+                - t_optimizer (list): List of traditional optimizer names.
+                - seed (int): Random seed for reproducibility.
+        Attributes:
+            key_list (list): List of agent keys from the configuration.
+            log_dir (str): Directory for storing test logs.
+            config (object): Configuration object.
+            test_set (object): Constructed problem set for testing.
+            seed (range): Range of seeds for testing.
+            test_results (dict): Dictionary for logging test results.
+            agent_for_cp (list): List of learnable agents.
+            agent_name_list (list): List of agent names.
+            l_optimizer_for_cp (list): List of learnable optimizers.
+            t_optimizer_for_cp (list): List of traditional optimizers.
+        Raises:
+            KeyError: If a key in `key_list` is missing in the `model.json` file.
+        Notes:
+            - Initializes directories and problem sets based on the configuration.
+            - Loads agents and optimizers from the `model.json` file.
+            - Logs the number and types of agents and optimizers.
+            - Seeds random number generators for reproducibility.
+        """
         self.key_list = config.agent
         self.log_dir = config.test_log_dir
         if not os.path.exists(self.log_dir):
@@ -221,6 +250,43 @@ class Tester(object):
         torch.backends.cudnn.benchmark = False
 
     def test(self):
+        """
+        Executes the testing process for the configured optimization problems and agents.
+
+        This method evaluates the performance of learnable and traditional optimizers
+        on a set of test problems. It calculates metrics such as T0, T1, and T2, and 
+        logs the results for further analysis. A progress bar is displayed to track 
+        the testing progress.
+
+        Steps:
+        1. Calculate T0 based on problem dimensions and maximum function evaluations.
+        2. Iterate through the test set of problems.
+        3. For each problem:
+           - Evaluate learnable optimizers using agents.
+           - Optionally evaluate traditional optimizers (commented out in the code).
+        4. Log results including cost, function evaluations (FEs), and timing metrics.
+
+        Attributes:
+            self.config.run_time (int): The runtime configuration for testing.
+            self.config.dim (int): The dimensionality of the optimization problems.
+            self.config.maxFEs (int): The maximum number of function evaluations allowed.
+            self.test_set (list): A list of test problems to evaluate.
+            self.agent_for_cp (list): A list of agents for learnable optimizers.
+            self.l_optimizer_for_cp (list): A list of learnable optimizers.
+            self.t_optimizer_for_cp (list): A list of traditional optimizers (currently commented out).
+            self.seed (list): A list of random seeds for reproducibility.
+            self.test_results (dict): A dictionary to store testing results.
+            self.log_dir (str): Directory to save test results.
+
+        Notes:
+            - The method uses the `tqdm` library to display a progress bar.
+            - Some parts of the code are commented out, indicating potential future extensions.
+            - Results are saved in pickle files for further analysis.
+
+        Raises:
+            Any exceptions raised during the testing process are not explicitly handled
+            in this method and will propagate to the caller.
+        """
         # todo 测试并行方式有多种 得考虑下
 
         print(f'start testing: {self.config.run_time}')
@@ -321,6 +387,45 @@ class Tester(object):
         # with open(self.log_dir + 'random_search_baseline.pkl', 'wb') as f:
         #     pickle.dump(random_search_results, f, -1)
     def test_1(self):
+        """
+        Executes a testing procedure for evaluating agents and traditional optimizers
+        on a set of problems. The method performs parallelized testing for both 
+        meta-heuristic agents and traditional optimizers, and tracks progress using 
+        a progress bar.
+
+        The testing process involves:
+        1. Running each agent on a batch of environments created for each problem.
+        2. Running traditional optimizers on the same problems for comparison.
+
+        Attributes:
+            self.config.run_time (int): The runtime configuration for the test.
+            self.config.test_run (int): Number of test runs for each agent/optimizer.
+            self.agent_for_cp (list): List of agents to be tested.
+            self.t_optimizer_for_cp (list): List of traditional optimizers to be tested.
+            self.test_set.data (list): List of problems to test against.
+            self.test_set.N (int): Number of problems in the test set.
+
+        Workflow:
+            - For each problem in the test set:
+                - For each agent:
+                    - Create a batch of environments for the problem.
+                    - Perform a batch rollout using the agent.
+                    - Update the progress bar with agent and problem information.
+                - For each traditional optimizer:
+                    - Create a batch of environments for the optimizer.
+                    - Run a batch episode using the optimizer.
+                    - Update the progress bar with optimizer and problem information.
+
+        Progress Bar:
+            - Displays the current testing progress.
+            - Shows information about the current agent/optimizer and problem.
+
+        Notes:
+            - The method uses `tqdm` for progress tracking.
+            - Environments and problems are deep-copied to ensure isolation between tests.
+            - Parallelization is achieved using the `ParallelEnv` class.
+
+        """
         # todo 第一种 并行是 agent for 循环
         # todo 每个 agent 做一个问题 x test_run 的列表环境
         print(f'start testing: {self.config.run_time}')
@@ -367,6 +472,46 @@ class Tester(object):
                     pbar.update(1)
 
     def test_2(self):
+        """
+        Perform testing using both MetaBBO agents and traditional optimizers.
+
+        This method evaluates the performance of MetaBBO agents and traditional 
+        optimizers on a test set of problems. It uses parallel environments to 
+        execute batch episodes for each agent and optimizer, and tracks progress 
+        using a progress bar.
+
+        Steps:
+        1. For each problem in the test set:
+           - For each MetaBBO agent:
+             - Create a list of environments for the agent to interact with.
+             - Perform batch rollouts using the agent and collect test data.
+             - Update the progress bar with MetaBBO-specific information.
+           - For each traditional optimizer:
+             - Create a list of environments and problem configurations.
+             - Perform batch rollouts using the optimizer and collect test data.
+             - Update the progress bar with optimizer-specific information.
+
+        Attributes:
+            self.config.run_time (int): The runtime configuration for testing.
+            self.config.test_run (int): Number of test runs per problem.
+            self.config.test_batch_size (int): Batch size for testing.
+            self.agent_for_cp (list): List of MetaBBO agents to test.
+            self.l_optimizer_for_cp (list): List of optimizers associated with MetaBBO agents.
+            self.t_optimizer_for_cp (list): List of traditional optimizers to test.
+            self.test_set (iterable): The set of problems to test on.
+
+        Progress Bar:
+            - Displays the current testing progress.
+            - Updates with information about the current MetaBBO agent or optimizer.
+
+        Notes:
+            - The environments and problems are deep-copied to ensure isolation.
+            - The method uses a parallel environment for traditional optimizers.
+
+        Raises:
+            Any exceptions raised during the testing process will propagate.
+
+        """
         # todo 第二种 并行是 agent for 循环
         # todo 每个 agent 做 bs 个问题 x test_run 的列表环境
         print(f'start testing: {self.config.run_time}')
@@ -416,6 +561,46 @@ class Tester(object):
 
 
     def test_3(self):
+        """
+        Perform testing using both MetaBBO and traditional BBO approaches in parallel.
+
+        This method evaluates the performance of agents and optimizers on a test set of problems
+        using parallel environments. It involves running multiple test cases in batches and 
+        collecting results for analysis.
+
+        Key Steps:
+        - Initialize agents and environments for MetaBBO testing.
+        - Run MetaBBO testing in parallel using the `ParallelEnv` class.
+        - Initialize optimizers and problems for traditional BBO testing.
+        - Run traditional BBO testing in parallel using the `ParallelEnv` class.
+        - Update progress bar with testing status for both MetaBBO and BBO.
+
+        Example Workflow:
+        - For a batch size (bs) of 3, test runs (test_run) of 2, and agents A1 and A2:
+          - MetaBBO testing involves agents interacting with environments in parallel.
+          - Traditional BBO testing involves optimizers solving problems in parallel.
+
+        Attributes:
+        - self.config.run_time: The runtime configuration for testing.
+        - self.config.test_run: Number of test runs to perform.
+        - self.config.test_batch_size: Batch size for testing.
+        - self.test_set: The set of problems to test.
+        - self.agent_for_cp: List of agents for MetaBBO testing.
+        - self.l_optimizer_for_cp: List of optimizers for MetaBBO testing.
+        - self.t_optimizer_for_cp: List of optimizers for traditional BBO testing.
+
+        Progress Bar:
+        - Displays the progress of testing with descriptions for MetaBBO and BBO phases.
+
+        Notes:
+        - The method uses deep copies of agents, optimizers, and problems to ensure 
+          independence between parallel executions.
+        - Parallel execution is managed using the `ParallelEnv` class with `ray` as the backend.
+
+        Raises:
+        - Any exceptions raised during the execution of `run_batch_episode` in `ParallelEnv`.
+
+        """
         # todo 第三种 并行是 agent * bs 个问题 * run
         print(f'start testing: {self.config.run_time}')
 
@@ -552,6 +737,47 @@ class Tester(object):
 
 
 def rollout_batch(config):
+    """
+    Executes a batch rollout process for a given configuration.
+    This function performs rollouts for a set of problems using specified agents 
+    and optimizers. It evaluates the performance of agents across multiple 
+    checkpoints and logs the results.
+    Args:
+        config (object): Configuration object containing the following attributes:
+            - run_time (str): Runtime information for logging.
+            - problem (str): Name of the problem to solve. If it ends with '-torch', 
+              it is adjusted accordingly.
+            - is_train (bool): Indicates whether the problem is for training.
+            - train_batch_size (int): Batch size for training.
+            - agent_for_rollout (list): List of agent names to use for rollouts.
+            - agent_load_dir (str): Directory path to load agent checkpoints.
+            - n_checkpoint (int): Number of checkpoints to evaluate.
+            - optimizer_for_rollout (list): List of optimizer names to use for rollouts.
+            - rollout_log_dir (str): Directory path to save rollout results.
+    Returns:
+        None: The function saves the rollout results to a file in the specified 
+        `rollout_log_dir`.
+    Notes:
+        - The function constructs problem sets and loads agent checkpoints.
+        - It evaluates agents on problems using specified optimizers and logs 
+          metrics such as cost, pr, sr, and return.
+        - Results are saved in a dictionary structure and serialized to a file.
+        - A progress bar is displayed during the rollout process.
+    Raises:
+        FileNotFoundError: If a checkpoint file is not found in the specified directory.
+        Exception: For any other issues during the rollout process.
+    Example:
+        config = {
+            'run_time': '2023-01-01',
+            'problem': 'bbob-surrogate',
+            'agent_for_rollout': ['Agent1', 'Agent2'],
+            'agent_load_dir': '/path/to/agents/',
+            'n_checkpoint': 5,
+            'optimizer_for_rollout': ['Optimizer1', 'Optimizer2'],
+            'rollout_log_dir': '/path/to/logs/'
+        }
+        rollout_batch(config)
+    """
     print(f'start rollout: {config.run_time}')
 
     if config.problem[-6:]=='-torch':
@@ -646,6 +872,32 @@ def rollout_batch(config):
 
 
 def test_for_random_search(config):
+    """
+    Tests the performance of a random search optimizer on a given problem set.
+
+    Args:
+        config (object): Configuration object containing the following attributes:
+            - problem (str): The type of problem to solve (e.g., 'bbob-surrogate').
+            - is_train (bool): Flag indicating whether the problem is for training.
+            - dim (int): Dimensionality of the problem.
+            - maxFEs (int): Maximum number of function evaluations.
+
+    Returns:
+        dict: A dictionary containing the test results with the following structure:
+            - 'cost': A nested dictionary where keys are problem names and values are 
+              dictionaries mapping optimizer names to lists of costs (51 numpy arrays).
+            - 'fes': A nested dictionary where keys are problem names and values are 
+              dictionaries mapping optimizer names to lists of function evaluations (51 scalars).
+            - 'T0': A float representing the calculated T0 value based on problem dimensions and maxFEs.
+            - 'T1': A dictionary mapping optimizer names to average T1 values (time taken by the problem).
+            - 'T2': A dictionary mapping optimizer names to average T2 values (execution time in milliseconds).
+
+    Notes:
+        - The function constructs the problem set, initializes the optimizer, and logs results.
+        - It calculates T0 based on the problem's dimensionality and maximum function evaluations.
+        - The testing process involves running the optimizer on each problem in the set for 51 runs.
+        - Progress is displayed using a tqdm progress bar with detailed information about the current run.
+    """
     # get entire problem set
     if config.problem == 'bbob-surrogate':
         config.is_train = False
@@ -704,6 +956,21 @@ def test_for_random_search(config):
 
 
 def name_translate(problem):
+    """
+    Translates a given problem identifier into a descriptive category name.
+
+    Args:
+        problem (str): The identifier of the problem. Expected values are:
+            - 'bbob' or 'bbob-torch': Translates to 'Synthetic'.
+            - 'bbob-noisy' or 'bbob-noisy-torch': Translates to 'Noisy-Synthetic'.
+            - 'protein' or 'protein-torch': Translates to 'Protein-Docking'.
+
+    Returns:
+        str: The descriptive category name corresponding to the problem identifier.
+
+    Raises:
+        ValueError: If the provided problem identifier is not recognized.
+    """
     if problem in ['bbob', 'bbob-torch']:
         return 'Synthetic'
     elif problem in ['bbob-noisy', 'bbob-noisy-torch']:
@@ -715,6 +982,52 @@ def name_translate(problem):
 
 
 def mgd_test(config):
+    """
+    Perform the MGD (Model Generalization and Deployment) test for a given configuration.
+
+    This function evaluates the performance of two agents (`model_from` and `model_to`) 
+    on a test set of problems using a specified optimizer. It logs the results, calculates 
+    metrics, and saves the outcomes for further analysis.
+
+    Args:
+        config (object): Configuration object containing the following attributes:
+            - run_time (str): Identifier for the runtime of the test.
+            - problem (str): The type of problem to test (e.g., 'bbob-surrogate').
+            - is_train (bool): Flag indicating whether the model is in training mode.
+            - model_from (str): Path to the serialized `model_from` agent.
+            - model_to (str): Path to the serialized `model_to` agent.
+            - optimizer (str): Name of the optimizer to use.
+            - agent (str): Name of the agent being tested.
+            - dim (int): Dimensionality of the problem.
+            - maxFEs (int): Maximum number of function evaluations.
+            - mgd_test_log_dir (str): Directory to save the test logs.
+            - problem_from (str): Source problem for MGD.
+            - difficulty_from (str): Difficulty level of the source problem.
+            - problem_to (str): Target problem for MGD.
+            - difficulty_to (str): Difficulty level of the target problem.
+
+    Workflow:
+        1. Load the test set of problems and the agents (`model_from` and `model_to`).
+        2. Initialize the optimizer and logging structures.
+        3. Calculate the baseline time metric (T0).
+        4. For each problem in the test set:
+            - Evaluate both agents over 51 runs.
+            - Log the cost and function evaluations (FEs) for each run.
+            - Calculate time metrics (T1 and T2) for the first problem.
+        5. Save the test results and random search baseline results to disk.
+        6. Compute and log the AEI (Average Efficiency Improvement) metric.
+
+    Outputs:
+        - Saves test results to `test.pkl` in the specified log directory.
+        - Saves random search baseline results to `random_search_baseline.pkl` in the log directory.
+        - Prints AEI and AEI standard deviation metrics.
+        - Prints the MGD performance improvement percentage.
+
+    Notes:
+        - The function uses `pickle` for loading and saving serialized objects.
+        - Progress is displayed using a tqdm progress bar.
+        - The AEI metric is computed using a custom `Logger` class.
+    """
     print(f'start MGD_test: {config.run_time}')
     # get test set
 
@@ -798,6 +1111,54 @@ def mgd_test(config):
 
 
 def mte_test(config):
+    """
+    Perform the MTE (Model Transfer Efficiency) test for a given configuration.
+
+    This function evaluates the performance of an agent by comparing its 
+    pre-trained and scratch-trained results on a specific problem. It calculates 
+    the MTE metric, generates plots for visualization, and saves the results.
+
+    Args:
+        config (object): A configuration object containing the following attributes:
+            - run_time (str): The runtime identifier for the test.
+            - pre_train_rollout (str): Path to the pre-trained rollout data file.
+            - scratch_rollout (str): Path to the scratch-trained rollout data file.
+            - agent (str): The name of the agent being tested.
+            - problem_from (str): The source problem for transfer learning.
+            - difficulty_from (str): The difficulty level of the source problem.
+            - problem_to (str): The target problem for transfer learning.
+            - difficulty_to (str): The difficulty level of the target problem.
+            - mte_test_log_dir (str): Directory to save the MTE test results.
+
+    Returns:
+        None
+
+    Side Effects:
+        - Generates and saves a plot comparing pre-trained and scratch-trained results.
+        - Prints the calculated MTE metric to the console.
+
+    Notes:
+        - The function preprocesses the input data, calculates average returns, 
+          applies smoothing, and computes the MTE metric.
+        - The MTE metric is calculated based on the relative performance of the 
+          pre-trained and scratch-trained agents over learning steps.
+        - The function uses Savitzky-Golay filtering for smoothing the average returns.
+        - The generated plot is saved in the directory specified by `config.mte_test_log_dir`.
+
+    Example:
+        config = Config(
+            run_time="2023-01-01",
+            pre_train_rollout="path/to/pre_train.pkl",
+            scratch_rollout="path/to/scratch.pkl",
+            agent="AgentName",
+            problem_from="ProblemA",
+            difficulty_from="Easy",
+            problem_to="ProblemB",
+            difficulty_to="Hard",
+            mte_test_log_dir="path/to/log_dir"
+        )
+        mte_test(config)
+    """
     print(f'start MTE_test: {config.run_time}')
     pre_train_file = config.pre_train_rollout
     scratch_file = config.scratch_rollout

@@ -10,6 +10,7 @@ readdocs 用 sphinx 主要构成，Sphinx 是 Python 社区编写和使用的文
 
 - [Sphinx 网站](http://sphinx-doc.org/)
 - [Sphinx 使用手册](https://zh-sphinx-doc.readthedocs.io/en/latest/index.html)
+- [非常好的教程](https://sphinx-practise.readthedocs.io/zh-cn/latest/index.html)
 
 Sphinx 使用 reST 作为标记语言，其与 markdown 非常相似。
 
@@ -127,3 +128,47 @@ sphinx-autobuild source build/html
 
 > 请不要把生成的 build 文件夹上传)))
 > P.S.可能有段时间我们或许会遇到路径问题(在 api reference autodocs 时)，不过慢慢来吧。
+
+## 本地化相关/多语言相关
+
+evox 使用的是运用大语言模型进行翻译，我们直接把 translate 的脚本扒过来即插即用是可以的。（已试验）
+只不过我手上是没有 openai 的 apikey 的，没办法直接用，试用了智谱清言但是好像不太聪明。
+如果用 llm 来翻译总时长可能在 1h 以上，我没跑完））
+
+还是先记录一下怎么进行多语言
+
+### 生成多语言版本的文件
+
+参考：[Sphinx+Read the Docs 的多语言版本文档实现](https://zhuanlan.zhihu.com/p/427843476)
+不用看 Transifex 了，那玩意应该是线上人工协作的。
+
+安装环境
+
+```shell
+pip install sphinx-intl
+```
+
+```shell
+sphinx-build -b gettext ./source build/gettext
+```
+
+此时，docs/build/gettext 中会生成原来文档 rst 文件对应的.pot 文件。
+
+我们要为对应的语言的文档生成对应的 pot 文件：
+
+```shell
+sphinx-intl update -p ./build/gettext -l zh_CN
+```
+
+我们使用在 docs/locales 的目录下的那坨文件就行
+
+翻译完后，用一下指令构建：
+
+```shell
+sphinx-build -b html -D language=zh_CN ./source/ build/html/zh_CN
+```
+
+sphinx-build 将把 po 文件构建为 mo 文件，并且你可以在 build 里看见构建好的 web 文件
+但是似乎不能用 autobuild 自动映射了（因为他会重新根据默认语言构建一遍，然后你就看不到了），不过应该是小问题，最终效果还是有的。
+
+![中文版](docs/docs_for_docs/image/legendary_docs/image.png)
