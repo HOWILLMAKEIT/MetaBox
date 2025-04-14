@@ -1,16 +1,16 @@
 import geatpy as ea
 import numpy as np
-from problem.MOO.moo_basic_problem import Moo_Basic_Problem
+from problem.basic_problem import Basic_Problem
 
 
-class UF1(Moo_Basic_Problem):
+class UF1(Basic_Problem):
     def __init__(self):
         self.n_obj = 2
         self.n_var = 30
         self.lb = np.array([-1] * self.n_var)
         self.lb[0] = 0
         self.ub = np.array([1] * self.n_var)
-        super().__init__(n_var = self.n_var,n_obj = self.n_obj,lb= self.lb,ub = self.ub,vtype=float)
+        self.vtype = float
 
     def eval(self, x):  # 目标函数
         Vars = x  # 得到决策变量矩阵
@@ -35,14 +35,15 @@ class UF1(Moo_Basic_Problem):
 
 
 
-class UF2(Moo_Basic_Problem):
+class UF2(Basic_Problem):
     def __init__(self):
         self.n_obj = 2  # 初始化（目标维数）
         self.n_var = 30 #初始化（决策变量维数）
         self.lb = np.array([-1] * self.n_var)
         self.lb[0] = 0
         self.ub = np.array([1] * self.n_var)
-        super().__init__(n_var = self.n_var,n_obj = self.n_obj,lb= self.lb,ub = self.ub,vtype=float)
+        self.vtype = float
+        
 
     def eval(self, x):  # 目标函数
         Vars = x  # 得到决策变量矩阵
@@ -68,13 +69,13 @@ class UF2(Moo_Basic_Problem):
         return referenceObjV
 
 
-class UF3(Moo_Basic_Problem):  # 继承Problem的父类
+class UF3(Basic_Problem):  # 继承Problem的父类
     def __init__(self):
         self.n_obj = 2  # 目标维数
         self.n_var = 30  # 决策变量维数
         self.lb = np.array([0]*self.n_var)
         self.ub = np.array([1]*self.n_var)
-        super().__init__(n_var = self.n_var,n_obj = self.n_obj,lb= self.lb,ub = self.ub,vtype=float)
+        self.vtype = float
 
     def eval(self, x):  # 目标函数
         Vars = x  # 决策变量矩阵
@@ -102,7 +103,7 @@ class UF3(Moo_Basic_Problem):  # 继承Problem的父类
         return referenceObjV
 
 
-class UF4(Moo_Basic_Problem):
+class UF4(Basic_Problem):
     def __init__(self):
         self.n_obj = 2  # 初始化（目标维数）
         self.n_var = 30  # 初始化Dim（决策变量维数）
@@ -110,7 +111,7 @@ class UF4(Moo_Basic_Problem):
         self.lb[0] = 0
         self.ub = np.array([2]*self.n_var)
         self.ub[0] = 1
-        super().__init__(n_var = self.n_var,n_obj = self.n_obj,lb= self.lb,ub = self.ub,vtype=float)
+        self.vtype = float
 
     def eval(self, x):  # 目标函数
         Vars = x  # 决策变量矩阵
@@ -136,14 +137,14 @@ class UF4(Moo_Basic_Problem):
         return referenceObjV
 
 
-class UF5(Moo_Basic_Problem):
+class UF5(Basic_Problem):
     def __init__(self):
         self.n_obj = 2  # 初始化M（目标维数）
         self.n_var = 30  # 初始化Dim（决策变量维数）
         self.lb = np.array([-1]*self.n_var)
         self.lb[0] = 0
         self.ub = np.array([1]*self.n_var)
-        super().__init__(n_var=self.n_var, n_obj=self.n_obj, lb=self.lb, ub=self.ub, vtype=float)
+        self.vtype = float
 
     def eval(self, x):  # 目标函数
         Vars = x  # 决策变量矩阵
@@ -170,7 +171,7 @@ class UF5(Moo_Basic_Problem):
         return referenceObjV
 
 
-class UF6(Moo_Basic_Problem):  # 继承Problem父类
+class UF6(Basic_Problem):  # 继承Problem父类
     def __init__(self):
 
         self.n_obj = 2  # 初始化M（目标维数）
@@ -178,7 +179,7 @@ class UF6(Moo_Basic_Problem):  # 继承Problem父类
         self.lb = np.array([-1]*self.n_var)
         self.lb[0] = 0
         self.ub = np.array([1]*self.n_var)
-        super().__init__(n_var=self.n_var, n_obj=self.n_obj, lb=self.lb, ub=self.ub, vtype=float)
+        self.vtype = float
 
     def eval(self, x):  # 目标函数
         Vars = x # 决策变量矩阵
@@ -213,7 +214,7 @@ class UF6(Moo_Basic_Problem):  # 继承Problem父类
         return referenceObjV
 
 
-class UF7(Moo_Basic_Problem):  # 继承Problem父类
+class UF7(Basic_Problem):  # 继承Problem父类
     def __init__(self):
 
         self.n_obj = 2  # 初始化M（目标维数）
@@ -221,7 +222,7 @@ class UF7(Moo_Basic_Problem):  # 继承Problem父类
         self.lb = np.array([-1]*self.n_var)
         self.lb[0] = 0
         self.ub = np.array([1]*self.n_var)
-        super().__init__(n_var=self.n_var, n_obj=self.n_obj, lb=self.lb, ub=self.ub, vtype=float)
+        self.vtype = float
 
     def eval(self, x):  # 目标函数
         Vars = x  # 决策变量矩阵
@@ -246,13 +247,13 @@ class UF7(Moo_Basic_Problem):  # 继承Problem父类
         return referenceObjV
 
 
-class UF8(Moo_Basic_Problem):  # 继承Problem父类
+class UF8(Basic_Problem):  # 继承Problem父类
     def __init__(self):
         self.n_obj = 3  # 初始化M（目标维数）
         self.n_var = 30  # 初始化Dim（决策变量维数）
         self.lb = np.array([0]*2+[-2]*(self.n_var-2))
         self.ub = np.array([1]*2+[2]*(self.n_var-2))
-        super().__init__(n_var=self.n_var, n_obj=self.n_obj, lb=self.lb, ub=self.ub, vtype=float)
+        self.vtype = float
 
     def eval(self, x):  # 目标函数
         Vars = x  # 决策变量矩阵
@@ -281,14 +282,14 @@ class UF8(Moo_Basic_Problem):  # 继承Problem父类
         return referenceObjV
 
 
-class UF9(Moo_Basic_Problem):  # 继承Problem父类
+class UF9(Basic_Problem):  # 继承Problem父类
     def __init__(self):
         self.n_obj = 3  # 初始化M（目标维数）
         self.n_var = 30  # 初始化Dim（决策变量维数）
         self.lb = np.array([0]*2+[-2]*(self.n_var-2))
         self.ub = np.array([1]*2+[2]*(self.n_var-2))
         # 调用父类构造方法完成实例化
-        super().__init__(n_var=self.n_var, n_obj=self.n_obj, lb=self.lb, ub=self.ub, vtype=float)
+        self.vtype = float
 
     def eval(self, x):  # 目标函数
         Vars = x  # 决策变量矩阵
@@ -316,13 +317,14 @@ class UF9(Moo_Basic_Problem):  # 继承Problem父类
         referenceObjV = ObjV[~idx]
         return referenceObjV
 
-class UF10(Moo_Basic_Problem):  # 继承Problem父类
+class UF10(Basic_Problem):  # 继承Problem父类
     def __init__(self):
         self.n_obj = 3  # 初始化M（目标维数）
         self.n_var = 30  # 初始化Dim（决策变量维数）
         self.lb = np.array([0]*2+[-2]*(self.n_var-2))
         self.ub = np.array([1] * 2 + [2] * (self.n_var - 2))
         super().__init__(n_var=self.n_var, n_obj=self.n_obj, lb=self.lb, ub=self.ub, vtype=float)
+        self.vtype = float
 
     def eval(self, x):  # 目标函数
         Vars = x  # 决策变量矩阵

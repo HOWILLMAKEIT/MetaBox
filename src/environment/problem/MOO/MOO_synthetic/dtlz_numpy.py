@@ -1,11 +1,12 @@
 
-from problem.MOO.moo_basic_problem import Moo_Basic_Problem
-import torch as th
-# import numpy as th
+from problem.basic_problem import Basic_Problem
+import numpy as np
 import geatpy as ea
-import math
+# from pymoo.core.problem import Problem
+# from pymoo.util.reference_direction import UniformReferenceDirectionFactory
+# from pymoo.util.remote import Remote
 
-class DTLZ(Moo_Basic_Problem):
+class DTLZ(Basic_Problem):
     def __init__(self, n_var, n_obj, k=None, **kwargs):
 
         if n_var:
@@ -15,27 +16,30 @@ class DTLZ(Moo_Basic_Problem):
             n_var = k + n_obj - 1
         else:
             raise Exception("Either provide number of variables or k!")
-
-        super().__init__(n_var=n_var, n_obj=n_obj, lb=0, ub=1, vtype=float, **kwargs)
+        self.n_var = n_var
+        self.n_obj = n_obj
+        self.vtype = float
+        self.lb = np.zeros(n_var)
+        self.ub = np.ones(n_var)
 
     def g1(self, X_M):
-        return 100 * (self.k + th.sum(th.square(X_M - 0.5) - th.cos(20 * math.pi * (X_M - 0.5)), axis=1))
+        return 100 * (self.k + np.sum(np.square(X_M - 0.5) - np.cos(20 * np.pi * (X_M - 0.5)), axis=1))
 
     def g2(self, X_M):
-        return th.sum(th.square(X_M - 0.5), axis=1)
+        return np.sum(np.square(X_M - 0.5), axis=1)
 
     def obj_func(self, X_, g, alpha=1):
         f = []
 
         for i in range(0, self.n_obj):
             _f = (1 + g)
-            _f *= th.prod(th.cos(th.pow(X_[:, :X_.shape[1] - i], alpha) * math.pi / 2.0), axis=1)
+            _f *= np.prod(np.cos(np.power(X_[:, :X_.shape[1] - i], alpha) * np.pi / 2.0), axis=1)
             if i > 0:
-                _f *= th.sin(th.pow(X_[:, X_.shape[1] - i], alpha) * math.pi / 2.0)
+                _f *= np.sin(np.power(X_[:, X_.shape[1] - i], alpha) * np.pi / 2.0)
 
             f.append(_f)
 
-        f = th.column_stack(f)
+        f = np.column_stack(f)
         return f
 
 
@@ -49,12 +53,12 @@ class DTLZ1(DTLZ):
 
         for i in range(0, self.n_obj):
             _f = 0.5 * (1 + g)
-            _f *= th.prod(X_[:, :X_.shape[1] - i], axis=1)
+            _f *= np.prod(X_[:, :X_.shape[1] - i], axis=1)
             if i > 0:
                 _f *= 1 - X_[:, X_.shape[1] - i]
             f.append(_f)
 
-        return th.column_stack(f)
+        return np.column_stack(f)
 
     def eval(self, x, *args, **kwargs):
         X_, X_M = x[:, :self.n_obj - 1], x[:, self.n_obj - 1:]
@@ -81,8 +85,7 @@ class DTLZ2(DTLZ):
 
     def get_ref_set(self,n_ref_points=1000): # 设定目标数参考值（本问题目标函数参考值设定为理论最优值，即“真实帕累托前沿点”）
         uniformPoint, ans = ea.crtup(self.n_obj, n_ref_points)
-        uniformPoint = th.tensor(uniformPoint, dtype=th.float32)
-        referenceObjV = uniformPoint / th.tile(th.sqrt(th.sum(uniformPoint ** 2, 1, keepdims=True)), (1, self.n_obj))
+        referenceObjV = uniformPoint / np.tile(np.sqrt(np.sum(uniformPoint ** 2, 1, keepdims=True)), (1, self.n_obj))
         return referenceObjV
 
 
@@ -98,8 +101,7 @@ class DTLZ3(DTLZ):
 
     def get_ref_set(self,n_ref_points=1000): # 设定目标数参考值（本问题目标函数参考值设定为理论最优值，即“真实帕累托前沿点”）
         uniformPoint, ans = ea.crtup(self.n_obj, n_ref_points)
-        uniformPoint = th.tensor(uniformPoint, dtype=th.float32)
-        referenceObjV = uniformPoint / th.tile(th.sqrt(th.sum(uniformPoint ** 2, 1, keepdims=True)), (1, self.n_obj))
+        referenceObjV = uniformPoint / np.tile(np.sqrt(np.sum(uniformPoint ** 2, 1, keepdims=True)), (1, self.n_obj))
         return referenceObjV
 
 
@@ -118,8 +120,7 @@ class DTLZ4(DTLZ):
 
     def get_ref_set(self,n_ref_points=1000): # 设定目标数参考值（本问题目标函数参考值设定为理论最优值，即“真实帕累托前沿点”）
         uniformPoint, ans = ea.crtup(self.n_obj, n_ref_points)
-        uniformPoint = th.tensor(uniformPoint, dtype=th.float32)
-        referenceObjV = uniformPoint / th.tile(th.sqrt(th.sum(uniformPoint ** 2, 1, keepdims=True)), (1, self.n_obj))
+        referenceObjV = uniformPoint / np.tile(np.sqrt(np.sum(uniformPoint ** 2, 1, keepdims=True)), (1, self.n_obj))
         return referenceObjV
 
 
@@ -133,17 +134,17 @@ class DTLZ5(DTLZ):
         g = self.g2(X_M)
 
         theta = 1 / (2 * (1 + g[:, None])) * (1 + 2 * g[:, None] * X_)
-        theta = th.column_stack([x[:, 0], theta[:, 1:]])
+        theta = np.column_stack([x[:, 0], theta[:, 1:]])
 
         out = self.obj_func(theta, g)
         return out
     def get_ref_set(self,n_ref_points=1000):
         # 设定目标数参考值（本问题目标函数参考值设定为理论最优值，即“真实帕累托前沿点”）
         N = n_ref_points
-        P = th.vstack([th.linspace(0, 1, N), th.linspace(1, 0, N)]).T
-        P = P / th.tile(th.sqrt(th.sum(P ** 2, 1, keepdims=True)), (1, P.shape[1]))
-        P = th.hstack([P[:, th.zeros(self.n_obj - 2, dtype=th.long)], P])
-        referenceObjV = P / th.sqrt(th.tensor(2, dtype=th.float32)) ** th.tile(th.hstack([th.tensor(self.n_obj - 2), th.linspace(self.n_obj - 2, 0, self.n_obj - 1)]),
+        P = np.vstack([np.linspace(0, 1, N), np.linspace(1, 0, N)]).T
+        P = P / np.tile(np.sqrt(np.sum(P ** 2, 1, keepdims=True)), (1, P.shape[1]))
+        P = np.hstack([P[:, np.zeros(self.n_obj - 2, dtype=np.int)], P])
+        referenceObjV = P / np.sqrt(2) ** np.tile(np.hstack([self.n_obj - 2, np.linspace(self.n_obj - 2, 0, self.n_obj - 1)]),
                                                   (P.shape[0], 1))
         return referenceObjV
 
@@ -154,20 +155,20 @@ class DTLZ6(DTLZ):
 
     def eval(self, x, *args, **kwargs):
         X_, X_M = x[:, :self.n_obj - 1], x[:, self.n_obj - 1:]
-        g = th.sum(th.pow(X_M, 0.1), axis=1)
+        g = np.sum(np.power(X_M, 0.1), axis=1)
 
         theta = 1 / (2 * (1 + g[:, None])) * (1 + 2 * g[:, None] * X_)
-        theta = th.column_stack([x[:, 0], theta[:, 1:]])
+        theta = np.column_stack([x[:, 0], theta[:, 1:]])
 
         out = self.obj_func(theta, g)
         return out
 
     def get_ref_set(self,n_ref_points = 1000):
         N = n_ref_points  #
-        P = th.vstack([th.linspace(0, 1, N), th.linspace(1, 0, N)]).T
-        P = P / th.tile(th.sqrt(th.sum(P ** 2, 1, keepdims=True)), (1, P.shape[1]))
-        P = th.hstack([P[:, th.zeros(self.n_obj - 2, dtype=th.long)], P])
-        referenceObjV = P / th.sqrt(th.tensor(2,dtype=th.float32)) ** th.tile(th.hstack([th.tensor(self.n_obj - 2), th.linspace(self.n_obj - 2, 0, self.n_obj - 1)]),
+        P = np.vstack([np.linspace(0, 1, N), np.linspace(1, 0, N)]).T
+        P = P / np.tile(np.sqrt(np.sum(P ** 2, 1, keepdims=True)), (1, P.shape[1]))
+        P = np.hstack([P[:, np.zeros(self.n_obj - 2, dtype=np.int)], P])
+        referenceObjV = P / np.sqrt(2) ** np.tile(np.hstack([self.n_obj - 2, np.linspace(self.n_obj - 2, 0, self.n_obj - 1)]),
                                                   (P.shape[0], 1))
         return referenceObjV
 
@@ -181,12 +182,12 @@ class DTLZ7(DTLZ):
         f = []
         for i in range(0, self.n_obj - 1):
             f.append(x[:, i])
-        f = th.column_stack(f)
+        f = np.column_stack(f)
 
-        g = 1 + 9 / self.k * th.sum(x[:, -self.k:], axis=1)
-        h = self.n_obj - th.sum(f / (1 + g[:, None]) * (1 + th.sin(3 * math.pi * f)), axis=1)
+        g = 1 + 9 / self.k * np.sum(x[:, -self.k:], axis=1)
+        h = self.n_obj - np.sum(f / (1 + g[:, None]) * (1 + np.sin(3 * np.pi * f)), axis=1)
 
-        out = th.column_stack([f, (1 + g) * h])
+        out = np.column_stack([f, (1 + g) * h])
         return out
     def get_ref_set(self,n_ref_points = 1000):
         # 设定目标数参考值（本问题目标函数参考值设定为理论最优值，即“真实帕累托前沿点”）
@@ -196,20 +197,19 @@ class DTLZ7(DTLZ):
         b = 0.6316265307000614
         c = 0.8594008566447239
         Vars, Sizes = ea.crtgp(self.n_obj - 1, N)  # 生成单位超空间内均匀的网格点集
-        Vars = th.tensor(Vars)
         middle = 0.5
         left = Vars <= middle
         right = Vars > middle
-        maxs_Left = th.max(Vars[left])
+        maxs_Left = np.max(Vars[left])
         if maxs_Left > 0:
             Vars[left] = Vars[left] / maxs_Left * a
-        Vars[right] = (Vars[right] - middle) / (th.max(Vars[right]) - middle) * (c - b) + b
-        P = th.hstack([Vars, (2 * self.n_obj - th.sum(Vars * (1 + th.sin(3 * math.pi * Vars)), 1, keepdims=True))])
+        Vars[right] = (Vars[right] - middle) / (np.max(Vars[right]) - middle) * (c - b) + b
+        P = np.hstack([Vars, (2 * self.n_obj - np.sum(Vars * (1 + np.sin(3 * np.pi * Vars)), 1, keepdims=True))])
         referenceObjV = P
         return referenceObjV
 
 if __name__ == '__main__':
-    x = th.ones((3,10))
+    x = np.ones((3,10))
     dtlz1 = DTLZ1(n_var=10, n_obj=5)
     dtlz2 = DTLZ2(n_var=10, n_obj=5)
     dtlz3 = DTLZ3(n_var=10, n_obj=5)

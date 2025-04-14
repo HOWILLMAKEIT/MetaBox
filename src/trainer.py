@@ -34,6 +34,7 @@ from environment.optimizer import (
     RLDEAFL_Optimizer,
     SurrRLDE_Optimizer,
     RLEMMO_Optimizer,
+    madac_optimizer
 )
 
 from baseline.bbo import (
@@ -60,7 +61,8 @@ from baseline.metabbo import (
     SYMBOL,
     RLDAS,
     SurrRLDE,
-    RLEMMO
+    RLEMMO,
+    madac
 )
 
 
