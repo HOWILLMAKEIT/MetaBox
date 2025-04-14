@@ -65,7 +65,9 @@ def get_problem_set(config, problem, difficulty):
         return CEC2013LSGO_Dataset.get_datasets(train_batch_size = config.train_batch_size,
                                                  test_batch_size = config.test_batch_size,
                                                  difficulty = difficulty,
-                                                 version='torch' if 'torch' in problem else 'numpy')
+                                                 version='torch' if 'torch' in problem else 'numpy',
+                                                 user_train_list = config.user_train_list,
+                                                 user_test_list = config.user_test_list)
     elif problem in ['uav', 'uav-torch']:
         return UAV_Dataset.get_datasets(train_batch_size = config.train_batch_size,
                                         test_batch_size = config.test_batch_size,
