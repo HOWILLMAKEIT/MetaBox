@@ -1,8 +1,8 @@
-from parallelenv.worker.base import EnvWorker
-from parallelenv.worker.dummy import DummyEnvWorker
-from parallelenv.worker.ray import RayEnvWorker
-from parallelenv.worker.subproc import SubprocEnvWorker
-from parallelenv.worker.raysubproc import RaySubprocEnvWorker
+from environment.parallelenv.worker.base import EnvWorker
+from environment.parallelenv.worker.dummy import DummyEnvWorker
+from environment.parallelenv.worker.ray import RayEnvWorker
+from environment.parallelenv.worker.subproc import SubprocEnvWorker
+from environment.parallelenv.worker.raysubproc import RaySubprocEnvWorker
 
 __all__ = [
     "EnvWorker",

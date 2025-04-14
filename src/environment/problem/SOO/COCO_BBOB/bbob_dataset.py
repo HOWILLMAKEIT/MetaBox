@@ -1,5 +1,5 @@
 from .bbob_numpy import *
-from .bbob_torch import *
+# from .bbob_torch import *
 from torch.utils.data import Dataset
 
 class BBOB_Dataset(Dataset):

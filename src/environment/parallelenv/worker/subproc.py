@@ -8,8 +8,8 @@ from typing import Any, Callable, List, Optional, Tuple, Union
 import gym, warnings
 import numpy as np
 from dill import loads, dumps
-from parallelenv.utils import CloudpickleWrapper
-from parallelenv.worker import EnvWorker
+from environment.parallelenv.utils import CloudpickleWrapper
+from environment.parallelenv.worker import EnvWorker
 
 _NP_TO_CT = {
     np.bool_: ctypes.c_bool,

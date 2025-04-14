@@ -3,7 +3,7 @@ from typing import Any, Callable, List, Optional
 import gym, warnings
 import numpy as np
 
-from parallelenv.worker import EnvWorker
+from environment.parallelenv.worker import EnvWorker
 
 
 class DummyEnvWorker(EnvWorker):

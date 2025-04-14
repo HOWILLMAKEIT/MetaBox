@@ -1,7 +1,6 @@
 from typing import Any, Callable, List, Optional, Tuple, Union, Literal
-from problem.basic_problem import Basic_Problem
-from optimizer.learnable_optimizer import Learnable_Optimizer
-from optimizer.basic_optimizer import Basic_Optimizer
+from environment.problem.basic_problem import Basic_Problem
+from environment.optimizer.learnable_optimizer import Learnable_Optimizer
 from rl import Basic_Agent
 import gym
 import numpy as np
