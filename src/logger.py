@@ -439,7 +439,7 @@ class Basic_Logger:
         plt.savefig(output_dir + f'convergence_curve_{agent}_{problem}.{fig_type}', bbox_inches='tight')
         plt.close()
 
-    def draw_test_cost(self, data: dict, output_dir: str, Name: Optional[Union[str, list]]=None, logged: bool=False, categorized: bool=False, pdf_fig: bool = True) -> None:
+    def draw_test_data(self, data: dict, data_type: str, output_dir: str, Name: Optional[Union[str, list]]=None, logged: bool=False, categorized: bool=False, pdf_fig: bool = True, data_wrapper: Callable = None) -> None:
         fig_type = 'pdf' if pdf_fig else 'png'
         for problem in list(data.keys()):
             if Name is not None and (isinstance(Name, str) and problem != Name) or (isinstance(Name, list) and problem not in Name):
@@ -456,7 +456,9 @@ class Basic_Logger:
                     if agent not in self.color_arrangement.keys():
                         self.color_arrangement[agent] = colors[self.arrange_index]
                         self.arrange_index += 1
-                    values = np.array(data[name][agent])
+                    values = data[name][agent]
+                    if data_wrapper is not None:
+                        values = data_wrapper(values)
                     x = np.arange(values.shape[-1])
                     x = np.array(x, dtype=np.float64)
                     x *= (self.config.maxFEs / x[-1])
@@ -470,11 +472,11 @@ class Basic_Logger:
                 plt.xlabel('FEs')
                 plt.legend()
                 if logged:
-                    plt.ylabel('log Costs')
-                    plt.savefig(output_dir + f'{name}_log_cost_curve.{fig_type}', bbox_inches='tight')
+                    plt.ylabel(f'log {data_type}')
+                    plt.savefig(output_dir + f'{name}_log_{data_type}_curve.{fig_type}', bbox_inches='tight')
                 else:
-                    plt.ylabel('Costs')
-                    plt.savefig(output_dir + f'{name}_cost_curve.{fig_type}', bbox_inches='tight')
+                    plt.ylabel(data_type)
+                    plt.savefig(output_dir + f'{name}_{data_type}_curve.{fig_type}', bbox_inches='tight')
                 plt.close()
             else:
                 plt.figure()
@@ -484,7 +486,9 @@ class Basic_Logger:
                     if agent not in self.color_arrangement.keys():
                         self.color_arrangement[agent] = colors[self.arrange_index]
                         self.arrange_index += 1
-                    values = np.array(data[name][agent])
+                    values = data[name][agent]
+                    if data_wrapper is not None:
+                        values = data_wrapper(values)
                     x = np.arange(values.shape[-1])
                     x = np.array(x, dtype=np.float64)
                     x *= (self.config.maxFEs / x[-1])
@@ -498,11 +502,11 @@ class Basic_Logger:
                 plt.xlabel('FEs')
                 plt.legend()
                 if logged:
-                    plt.ylabel('log Costs')
-                    plt.savefig(output_dir + f'learnable_{name}_log_cost_curve.{fig_type}', bbox_inches='tight')
+                    plt.ylabel(f'log {data_type}')
+                    plt.savefig(output_dir + f'learnable_{name}_log_{data_type}_curve.{fig_type}', bbox_inches='tight')
                 else:
-                    plt.ylabel('Costs')
-                    plt.savefig(output_dir + f'learnable_{name}_cost_curve.{fig_type}', bbox_inches='tight')
+                    plt.ylabel(data_type)
+                    plt.savefig(output_dir + f'learnable_{name}_{data_type}_curve.{fig_type}', bbox_inches='tight')
                 plt.close()
 
                 plt.figure()
@@ -512,7 +516,9 @@ class Basic_Logger:
                     if agent not in self.color_arrangement.keys():
                         self.color_arrangement[agent] = colors[self.arrange_index]
                         self.arrange_index += 1
-                    values = np.array(data[name][agent])
+                    values = data[name][agent]
+                    if data_wrapper is not None:
+                        values = data_wrapper(values)
                     x = np.arange(values.shape[-1])
                     x = np.array(x, dtype=np.float64)
                     x *= (self.config.maxFEs / x[-1])
@@ -527,11 +533,11 @@ class Basic_Logger:
                 
                 plt.legend()
                 if logged:
-                    plt.ylabel('log Costs')
-                    plt.savefig(output_dir + f'classic_{name}_log_cost_curve.{fig_type}', bbox_inches='tight')
+                    plt.ylabel(f'log {data_type}')
+                    plt.savefig(output_dir + f'classic_{name}_log_{data_type}_curve.{fig_type}', bbox_inches='tight')
                 else:
-                    plt.ylabel('Costs')
-                    plt.savefig(output_dir + f'classic_{name}_cost_curve.{fig_type}', bbox_inches='tight')
+                    plt.ylabel(data_type)
+                    plt.savefig(output_dir + f'classic_{name}_{data_type}_curve.{fig_type}', bbox_inches='tight')
                 plt.close()
     
     def draw_named_average_test_costs(self, data: dict, output_dir: str, named_agents: dict, logged: bool=False, pdf_fig: bool = True) -> None:
@@ -699,7 +705,7 @@ class Basic_Logger:
         plt.savefig(output_dir + f'rank_hist.{fig_type}', bbox_inches='tight')
         
     def draw_train_logger(self, data_type: str, data: dict, output_dir: str, ylabel: str = None, norm: bool = False, pdf_fig: bool = True, data_wrapper: Callable = None) -> None:
-        means, stds = self.get_average_data(data_type, data, norm=norm, data_wrapper=data_wrapper)
+        means, stds = self.get_average_data(data, norm=norm, data_wrapper=data_wrapper)
         plt.figure()
         for agent in means.keys():
             x = np.arange(len(means[agent]), dtype=np.float64)
@@ -752,7 +758,7 @@ class Basic_Logger:
 
         # 如果需要，可以为不同的算法绘制图形（例如 cost 图）
         if 'cost' in results:
-            self.draw_test_cost(results['cost'], log_dir + 'pics/', logged=True, categorized=True, pdf_fig=pdf_fig)
+            self.draw_test_data(results['cost'], 'cost', log_dir + 'pics/', logged=True, categorized=True, pdf_fig=pdf_fig, data_wrapper=np.array)
             self.draw_named_average_test_costs(results['cost'], log_dir + 'pics/',
                                                 {'MetaBBO-RL': metabbo,
                                                 'Classic Optimizer': bbo},
