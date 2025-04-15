@@ -11,8 +11,8 @@
   },
   "RLDE_AFL": {
     "Agent": "RLDEAF",
-    "Optimizer": "RLDE_AFL_Optimizer",
-    "dir": "agent_model/train/RLDE_AFL_Agent/20250321T132206_bbob_easy_10D/checkpoint0.pkl"
+    "Optimizer": "RLDEAFL_Optimizer",
+    "dir": "agent_model/train/RLDEAFL_Agent/20250321T132206_bbob_easy_10D/checkpoint0.pkl"
   },
   "Key you want to identify test metabbo": {
     "Agent": "Your method",
