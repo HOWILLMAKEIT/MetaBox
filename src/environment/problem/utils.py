@@ -126,13 +126,6 @@ def get_problem_set(config, problem, difficulty, train_list, test_list):
                                             user_train_list=train_list,
                                             user_test_list=test_list,
                                             version='torch' if 'torch' in problem else 'numpy')
-    elif problem in ['cec2013mmo']:
-        return CEC2013MMO_Dataset.get_datasets(train_batch_size=config.train_batch_size,
-                                            test_batch_size=config.test_batch_size,
-                                            difficulty=difficulty,
-                                            user_train_list=train_list,
-                                            user_test_list=test_list,
-                                            version='torch' if 'torch' in problem else 'numpy')
     elif problem in ['moo-synthetic']:
         return MOO_Synthetic_Dataset.get_datasets(train_batch_size=config.train_batch_size,
                                         test_batch_size=config.test_batch_size,
