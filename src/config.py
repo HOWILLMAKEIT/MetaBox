@@ -5,19 +5,19 @@ import time
 def get_config(args=None):
     parser = argparse.ArgumentParser()
     # Common config
-    parser.add_argument('--train_problem', default = 'bbob', choices = ['bbob', 'bbob-torch', 'bbob-noisy', 'bbob-noisy-torch',
-                                                                                'bbob-surrogate', 'hpo-b',
+    parser.add_argument('--train_problem', default = 'bbob', choices = ['bbob-10D', 'bbob-30D', 'bbob-torch-10D', 'bbob-torch-30D', 'bbob-noisy-10D', 
+                                                                        'bbob-noisy-30D', 'bbob-noisy-torch-10D', 'bbob-noisy-torch-30D', 'bbob-surrogate', 'hpo-b',
                                                                                 'lsgo', 'lsgo-torch', 'protein', 'protein-torch', 'uav', 'uav-torch',
                                                                                 'mmo', 'mmo-torch', 'wcci2020', 'cec2017mto', 'cec2013mmo', 'moo-synthetic'],
                         help='specify the problem suite for training')
-    parser.add_argument('--test_problem', default = None, choices = [None, 'bbob', 'bbob-torch', 'bbob-noisy', 'bbob-noisy-torch',
-                                                                                'bbob-surrogate', 'hpo-b',
-                                                                                'lsgo', 'lsgo-torch', 'protein', 'protein-torch', 'uav', 'uav-torch',
+    parser.add_argument('--test_problem', default = None, choices = [None, 'bbob-10D', 'bbob-30D', 'bbob-torch-10D', 'bbob-torch-30D', 'bbob-noisy-10D', 
+                                                                        'bbob-noisy-30D', 'bbob-noisy-torch-10D', 'bbob-noisy-torch-30D', 'bbob-surrogate', 'hpo-b',
+                                                                                'lsgo', 'lsgo-torch', 'protein', 'protein-torch', 'uav', 'uav-torch', 'ne', 
                                                                                 'mmo', 'mmo-torch', 'wcci2020', 'cec2017mto', 'cec2013mmo', 'moo-synthetic'],
                         help='specify the problem suite for testing, default to be consistent with training')
     parser.add_argument('--train_difficulty', default='easy', choices=['all', 'easy', 'difficult', 'user-define'], help='difficulty level for training problems')
     parser.add_argument('--test_difficulty', default=None, choices=['all', 'easy', 'difficult', 'user-define'], help='difficulty level for testing problems, default to be consistent with training')
-    parser.add_argument('--dim', type=int, default=10, help='dimension of search space')
+    # parser.add_argument('--dim', type=int, default=10, help='dimension of search space')
     parser.add_argument('--upperbound', type=float, default=5, help='upperbound of search space')
     parser.add_argument('--user_train_problem_list', nargs='+', default=None, help = 'user define training problem list')
     parser.add_argument('--user_test_problem_list', nargs='+', default=None, help = 'user define testing problem list')

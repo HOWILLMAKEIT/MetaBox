@@ -12,7 +12,7 @@ from problem.SOO.CEC2013LSGO.cec2013lsgo_dataset import CEC2013LSGO_Dataset
 from problem.SOO.UAV.uav_dataset import UAV_Dataset
 from problem.SOO.PROTEIN_DOCKING.protein_docking_dataset import Protein_Docking_Dataset
 from problem.SOO.HPO_B.hpob_dataset import HPOB_Dataset
-
+from problem.SOO.NE.evox_ne import NE_Dataset
 
 def save_class(dir, file_name, saving_class):
     if not os.path.exists(dir):
@@ -90,6 +90,13 @@ def get_problem_set(config, problem, difficulty, train_list, test_list):
                                         version='torch' if 'torch' in problem else 'numpy')
     elif problem in ['hpo-b']:
         return HPOB_Dataset.get_datasets(train_batch_size = config.train_batch_size,
+                                        test_batch_size = config.test_batch_size,
+                                        difficulty = difficulty,
+                                        user_train_list=train_list,
+                                        user_test_list=test_list,
+                                        )
+    elif problem in ['ne']:
+        return NE_Dataset.get_datasets(train_batch_size = config.train_batch_size,
                                         test_batch_size = config.test_batch_size,
                                         difficulty = difficulty,
                                         user_train_list=train_list,

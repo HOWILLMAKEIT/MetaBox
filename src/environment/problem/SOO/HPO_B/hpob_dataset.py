@@ -96,11 +96,13 @@ class HPOB_Dataset(Dataset):
                                 train_set.append(p)
                             else:
                                 test_set.append(p)
-                        else:  # user_test_list is not None
+                        elif user_test_list is not None:
                             if search_space_id+'-'+dataset_id in user_test_list:
                                 test_set.append(p)
                             else:
                                 train_set.append(p)
+                        else:
+                            raise NotImplementedError
                         pbar.update()
                 pbar.close()
                 

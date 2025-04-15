@@ -481,7 +481,7 @@ class Basic_Logger:
             else:
                 plt.figure()
                 for agent in list(data[name].keys()):
-                    if agent not in self.config.agent_for_cp:
+                    if agent not in self.config.agent:
                         continue
                     if agent not in self.color_arrangement.keys():
                         self.color_arrangement[agent] = colors[self.arrange_index]
@@ -511,7 +511,7 @@ class Basic_Logger:
 
                 plt.figure()
                 for agent in list(data[name].keys()):
-                    if agent not in self.config.t_optimizer_for_cp:
+                    if agent not in self.config.t_optimizer:
                         continue
                     if agent not in self.color_arrangement.keys():
                         self.color_arrangement[agent] = colors[self.arrange_index]
@@ -895,7 +895,7 @@ class MOO_Logger(Basic_Logger):
             else:
                 plt.figure()
                 for agent in list(data[name].keys()):
-                    if agent not in self.config.agent_for_cp:
+                    if agent not in self.config.agent:
                         continue
                     if agent not in self.color_arrangement.keys():
                         self.color_arrangement[agent] = colors[self.arrange_index]
@@ -916,7 +916,7 @@ class MOO_Logger(Basic_Logger):
                 plt.close()
                 plt.figure()
                 for agent in list(data[name].keys()):
-                    if agent not in self.config.t_optimizer_for_cp:
+                    if agent not in self.config.t_optimizer:
                         continue
                     if agent not in self.color_arrangement.keys():
                         self.color_arrangement[agent] = colors[self.arrange_index]
@@ -1555,7 +1555,7 @@ class Logger:
             else:
                 plt.figure()
                 for agent in list(data[name].keys()):
-                    if agent not in self.config.agent_for_cp:
+                    if agent not in self.config.agent:
                         continue
                     if agent not in self.color_arrangement.keys():
                         self.color_arrangement[agent] = colors[self.arrange_index]
@@ -1590,7 +1590,7 @@ class Logger:
 
                 # plt.figure()
                 # for agent in list(data[name].keys()):
-                #     if agent not in self.config.t_optimizer_for_cp:
+                #     if agent not in self.config.t_optimizer:
                 #         continue
                 #     if agent not in self.color_arrangement.keys():
                 #         self.color_arrangement[agent] = colors[self.arrange_index]
@@ -1803,7 +1803,7 @@ class Logger:
             else:
                 plt.figure()
                 for agent in list(data[name].keys()):
-                    if agent not in self.config.agent_for_cp:
+                    if agent not in self.config.agent:
                         continue
                     if agent not in self.color_arrangement.keys():
                         self.color_arrangement[agent] = colors[self.arrange_index]
@@ -1824,7 +1824,7 @@ class Logger:
                 plt.close()
                 plt.figure()
                 for agent in list(data[name].keys()):
-                    if agent not in self.config.t_optimizer_for_cp:
+                    if agent not in self.config.t_optimizer:
                         continue
                     if agent not in self.color_arrangement.keys():
                         self.color_arrangement[agent] = colors[self.arrange_index]
@@ -1938,7 +1938,7 @@ class Logger:
             else:
                 plt.figure()
                 for agent in list(data[name].keys()):
-                    if agent not in self.config.agent_for_cp:
+                    if agent not in self.config.agent:
                         continue
                     if agent not in self.color_arrangement.keys():
                         self.color_arrangement[agent] = colors[self.arrange_index]
@@ -1966,7 +1966,7 @@ class Logger:
 
                 plt.figure()
                 for agent in list(data[name].keys()):
-                    if agent not in self.config.t_optimizer_for_cp:
+                    if agent not in self.config.t_optimizer:
                         continue
                     if agent not in self.color_arrangement.keys():
                         self.color_arrangement[agent] = colors[self.arrange_index]
