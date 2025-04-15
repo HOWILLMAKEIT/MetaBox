@@ -1,9 +1,9 @@
-from problem.basic_problem import Basic_Problem
+from problem.basic_problem import Basic_Problem_Torch
 import numpy as np
 import time 
 import torch
 
-class CEC2017_Basic_Problem(Basic_Problem):
+class CEC2017_Torch_Problem(Basic_Problem_Torch):
     def __init__(self, dim, shift, rotate, bias):
         self.T1 = 0
         self.dim = dim
@@ -67,7 +67,7 @@ class CEC2017_Basic_Problem(Basic_Problem):
             self.T1+=(end-start)*1000
             return y
 
-class Sphere(CEC2017_Basic_Problem):
+class Sphere_Torch(CEC2017_Torch_Problem):
     def __init__(self, dim, shift=None, rotate=None, bias=0):
         super().__init__(dim, shift, rotate, bias)
         self.lb = -100
@@ -77,7 +77,7 @@ class Sphere(CEC2017_Basic_Problem):
         z = self.sr_func(x, self.shift, self.rotate)
         return torch.sum(z ** 2, -1)
 
-class Ackley(CEC2017_Basic_Problem):
+class Ackley_Torch(CEC2017_Torch_Problem):
     def __init__(self, dim, shift=None, rotate=None, bias=0):
         super().__init__(dim, shift, rotate, bias)
         self.lb = -50
@@ -90,7 +90,7 @@ class Ackley(CEC2017_Basic_Problem):
         return torch.round(torch.e + 20 - 20 * torch.exp(sum1) - torch.exp(sum2), decimals = 15) + self.bias
     
 
-class Griewank(CEC2017_Basic_Problem):
+class Griewank_Torch(CEC2017_Torch_Problem):
     def __init__(self, dim, shift=None, rotate=None, bias=0):
         super().__init__(dim, shift, rotate, bias)
         self.lb = -100
@@ -104,7 +104,7 @@ class Griewank(CEC2017_Basic_Problem):
             p *= torch.cos(z[:, i] / torch.sqrt(torch.tensor(1 + i)))
         return 1 + s / 4000 - p + self.bias
 
-class Rastrigin(CEC2017_Basic_Problem):
+class Rastrigin_Torch(CEC2017_Torch_Problem):
     def __init__(self, dim, shift=None, rotate=None, bias=0):
         super().__init__(dim, shift, rotate, bias)
         self.lb = -50
@@ -114,7 +114,7 @@ class Rastrigin(CEC2017_Basic_Problem):
         z = self.sr_func(x, self.shift, self.rotate)
         return torch.sum(z ** 2 - 10 * torch.cos(2 * torch.pi * z) + 10, -1) + self.bias
     
-class Rosenbrock(CEC2017_Basic_Problem):
+class Rosenbrock_Torch(CEC2017_Torch_Problem):
     def __init__(self, dim, shift=None, rotate=None, bias=0):
         super().__init__(dim, shift, rotate, bias)
         self.lb = -50
@@ -129,7 +129,7 @@ class Rosenbrock(CEC2017_Basic_Problem):
         return torch.sum(100 * tmp1 * tmp1 + (z - 1) ** 2, -1) + self.bias
 
 
-class Weierstrass(CEC2017_Basic_Problem):
+class Weierstrass_Torch(CEC2017_Torch_Problem):
     def __init__(self, dim, shift=None, rotate=None, bias=0):
         super().__init__(dim, shift, rotate, bias)
         self.lb = -0.5
@@ -144,7 +144,7 @@ class Weierstrass(CEC2017_Basic_Problem):
             sum2 += torch.pow(a, k) * torch.cos(2 * torch.pi * torch.pow(b, k) * 0.5)
         return sum1 - self.dim * sum2 + self.bias
     
-class Schwefel(CEC2017_Basic_Problem):
+class Schwefel_Torch(CEC2017_Torch_Problem):
     def __init__(self, dim, shift=None, rotate=None, bias=0):
         super().__init__(dim, shift, rotate, bias)
         self.lb = -500

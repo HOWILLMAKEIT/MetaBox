@@ -154,6 +154,9 @@ class L2T_Optimizer(Learnable_Optimizer):
         self.total_reward = 0
 
         self.fes = None
+        self.cost = None
+        self.log_index = None
+        self.log_interval = config.log_interval
 
     def get_state(self):
         state_o = self.generation / self.total_generation
@@ -191,7 +194,9 @@ class L2T_Optimizer(Learnable_Optimizer):
         self.fes = 0
         self.task = tasks
         self.parent_population = np.array([[np.random.rand(self.dim) for i in range(self.pop_cnt)] for _ in range(self.task_cnt)])
+        self.log_index = 1
         
+
         parent_fitnesses_list = []
         for i in range(self.task_cnt):
             fitnesses = self.task[i].eval(self.parent_population[i])
@@ -199,7 +204,9 @@ class L2T_Optimizer(Learnable_Optimizer):
             parent_fitnesses_list.append(fitnesses)
         
         parent_fitnesses_np = np.array(parent_fitnesses_list, dtype=np.float32)
-            
+        
+        self.cost = [self.gbest]
+
         state = self.get_state()
 
 
@@ -285,8 +292,8 @@ class L2T_Optimizer(Learnable_Optimizer):
 
         parent_finesses_np = np.array(parent_finesses_list, dtype=np.float32)
         if self.__config.full_meta_data:
-            self.meta_X = [self.parent_population.copy()]
-            self.meta_Cost = [parent_finesses_np.copy()]
+            self.meta_X.append(self.parent_population.copy())
+            self.meta_Cost.append(parent_finesses_np.copy())
         return self.get_state()
 
     def update(self, actions, tasks):
@@ -301,6 +308,15 @@ class L2T_Optimizer(Learnable_Optimizer):
         if self.generation > self.total_generation:
             is_end = True
         
+        if self.fes >= self.log_index * self.log_interval:
+            self.log_index += 1
+            self.cost.append(self.gbest)
+
+        if is_end:
+            if len(self.cost) >= self.__config.n_logpoint + 1:
+                self.cost[-1] = self.gbest
+            else:
+                self.cost.append(self.gbest)
 
         info = {}
         return next_state, self.total_reward, is_end, info

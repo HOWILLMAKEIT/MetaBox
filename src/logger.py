@@ -1746,8 +1746,6 @@ class Logger:
         cost_data = np.array(data,dtype=np.float32) #[epochs, env_cnt, task_cnt]
         x = np.arange(cost_data.shape[0])
         y = np.mean(np.mean(cost_data, axis=-1), axis=-1)
-        print(x)
-        print(y)
         plt.plot(x, y, 
          color='blue',       
          marker='o',         
@@ -2096,5 +2094,40 @@ def post_processing_rollout_statics(log_dir: str, logger: Logger) -> None:
 
 #logger
 # class basic_Logger:
+class MTO_Logger(basic_logger):
+    def __init__(self, config):
+        super().__init__(config)
 
+    def draw_avg_train_return(self, data: list, output_dir: str) -> None: 
+        plt.figure()
+        return_data = np.array(data,dtype=np.float32) #[epochs, env_cnt]
+        x = np.arange(return_data.shape[0])
+        y = np.mean(return_data, axis=-1)
+        plt.plot(x, y, 
+         color='blue',       
+         marker='o',         
+         linestyle='-',     
+         linewidth=2,        
+         markersize=8)       
+        plt.xlabel('Learning Steps')
+        plt.ylabel('Avg Return')
+        plt.grid()
+        plt.savefig(output_dir + f'avg_mto_return.png', bbox_inches='tight')
+        plt.close()
 
+    def draw_avg_train_cost(self, data:list, output_dir: str) -> None:
+        plt.figure()
+        cost_data = np.array(data,dtype=np.float32) #[epochs, env_cnt, task_cnt]
+        x = np.arange(cost_data.shape[0])
+        y = np.mean(np.mean(cost_data, axis=-1), axis=-1)
+        plt.plot(x, y, 
+         color='blue',       
+         marker='o',         
+         linestyle='-',     
+         linewidth=2,        
+         markersize=8)       
+        plt.xlabel('Learning Steps')
+        plt.ylabel('Avg Cost')
+        plt.grid()
+        plt.savefig(output_dir + f'avg_mto_cost.png', bbox_inches='tight')
+        plt.close()

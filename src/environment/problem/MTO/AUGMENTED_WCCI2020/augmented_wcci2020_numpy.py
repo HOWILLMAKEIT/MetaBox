@@ -2,7 +2,7 @@ from problem.basic_problem import Basic_Problem
 import numpy as np
 import time 
 
-class CEC2017MTO_Numpy_Problem(Basic_Problem):
+class AUGMENTED_WCCI2020_Numpy_Problem(Basic_Problem):
     def __init__(self, dim, shift, rotate, bias):
         self.T1 = 0
         self.dim = dim
@@ -12,8 +12,8 @@ class CEC2017MTO_Numpy_Problem(Basic_Problem):
         self.lb = -50
         self.ub = 50
         self.FES = 0
-
-        self.opt = self.shift if self.shift is not None else np.zeros(shape=(self.dim,))
+        self.opt = self.shift
+        # self.optimum = self.eval(self.get_optimal())
         self.optimum = self.func(self.get_optimal().reshape(1, -1))[0]
 
     def get_optimal(self):
@@ -26,16 +26,8 @@ class CEC2017MTO_Numpy_Problem(Basic_Problem):
         return x * (self.ub - self.lb) + self.lb
 
     def sr_func(self, x, shift, rotate):
-        if shift is not None: 
-            y = x - shift
-        else:
-            y = x
-        
-        if rotate is not None:
-            z = np.matmul(rotate, y.transpose()).transpose()
-        else:
-            z = y 
-        return z
+        y = x - shift
+        return np.matmul(rotate, y.transpose()).transpose()
     
     def eval(self, x):
         """
@@ -64,8 +56,10 @@ class CEC2017MTO_Numpy_Problem(Basic_Problem):
             self.T1+=(end-start)*1000
             return y
 
-class Sphere(CEC2017MTO_Numpy_Problem):
-    def __init__(self, dim, shift=None, rotate=None, bias=0):
+class Sphere(AUGMENTED_WCCI2020_Numpy_Problem):
+    LB = -100
+    UB = 100
+    def __init__(self, dim, shift, rotate, bias=0):
         super().__init__(dim, shift, rotate, bias)
         self.lb = -100
         self.ub = 100
@@ -74,8 +68,10 @@ class Sphere(CEC2017MTO_Numpy_Problem):
         z = self.sr_func(x, self.shift, self.rotate)
         return np.sum(z ** 2, -1)
 
-class Ackley(CEC2017MTO_Numpy_Problem):
-    def __init__(self, dim, shift=None, rotate=None, bias=0):
+class Ackley(AUGMENTED_WCCI2020_Numpy_Problem):
+    LB = -50
+    UB = 50
+    def __init__(self, dim, shift, rotate, bias=0):
         super().__init__(dim, shift, rotate, bias)
         self.lb = -50
         self.ub = 50
@@ -86,7 +82,9 @@ class Ackley(CEC2017MTO_Numpy_Problem):
         sum2 = np.sum(np.cos(2 * np.pi * z), -1) / self.dim
         return np.round(np.e + 20 - 20 * np.exp(sum1) - np.exp(sum2), 15) + self.bias
     
-class Griewank(CEC2017MTO_Numpy_Problem):
+class Griewank(AUGMENTED_WCCI2020_Numpy_Problem):
+    LB = -100
+    UB = 100
     def __init__(self, dim, shift=None, rotate=None, bias=0):
         super().__init__(dim, shift, rotate, bias)
         self.lb = -100
@@ -100,7 +98,9 @@ class Griewank(CEC2017MTO_Numpy_Problem):
             p *= np.cos(z[:, i] / np.sqrt(1 + i))
         return 1 + s / 4000 - p + self.bias
 
-class Rastrigin(CEC2017MTO_Numpy_Problem):
+class Rastrigin(AUGMENTED_WCCI2020_Numpy_Problem):
+    LB = -50
+    UB = 50
     def __init__(self, dim, shift=None, rotate=None, bias=0):
         super().__init__(dim, shift, rotate, bias)
         self.lb = -50
@@ -110,7 +110,9 @@ class Rastrigin(CEC2017MTO_Numpy_Problem):
         z = self.sr_func(x, self.shift, self.rotate)
         return np.sum(z ** 2 - 10 * np.cos(2 * np.pi * z) + 10, -1) + self.bias
     
-class Rosenbrock(CEC2017MTO_Numpy_Problem):
+class Rosenbrock(AUGMENTED_WCCI2020_Numpy_Problem):
+    LB = -50
+    UB = 50
     def __init__(self, dim, shift=None, rotate=None, bias=0):
         super().__init__(dim, shift, rotate, bias)
         self.lb = -50
@@ -124,8 +126,10 @@ class Rosenbrock(CEC2017MTO_Numpy_Problem):
         tmp1 = z ** 2 - z_
         return np.sum(100 * tmp1 * tmp1 + (z - 1) ** 2, -1) + self.bias
 
-class Weierstrass(CEC2017MTO_Numpy_Problem):
-    def __init__(self, dim, shift=None, rotate=None, bias=0):
+class Weierstrass(AUGMENTED_WCCI2020_Numpy_Problem):
+    LB = -0.5
+    UB = 0.5
+    def __init__(self, dim, shift, rotate, bias=0):
         super().__init__(dim, shift, rotate, bias)
         self.lb = -0.5
         self.ub = 0.5
@@ -139,7 +143,9 @@ class Weierstrass(CEC2017MTO_Numpy_Problem):
             sum2 += np.power(a, k) * np.cos(2 * np.pi * np.power(b, k) * 0.5)
         return sum1 - self.dim * sum2 + self.bias
     
-class Schwefel(CEC2017MTO_Numpy_Problem):
+class Schwefel(AUGMENTED_WCCI2020_Numpy_Problem):
+    LB = -500
+    UB = 500
     def __init__(self, dim, shift=None, rotate=None, bias=0):
         super().__init__(dim, shift, rotate, bias)
         self.lb = -500

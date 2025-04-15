@@ -1,19 +1,20 @@
-from problem.basic_problem import Basic_Problem
+from problem.basic_problem import Basic_Problem_Torch
 import numpy as np
+import torch
 import time 
 
-class CEC2017MTO_Numpy_Problem(Basic_Problem):
+class AUGMENTED_WCCI2020_Torch_Problem(Basic_Problem_Torch):
     def __init__(self, dim, shift, rotate, bias):
         self.T1 = 0
         self.dim = dim
-        self.shift = shift
-        self.rotate = rotate
+        self.shift = shift if not isinstance(shift, torch.Tensor) else torch.tensor(shift, dtype=torch.float64)
+        self.rotate = rotate if not isinstance(shift, torch.Tensor) else torch.tensor(shift, dtype=torch.float64)
         self.bias = bias
         self.lb = -50
         self.ub = 50
         self.FES = 0
-
-        self.opt = self.shift if self.shift is not None else np.zeros(shape=(self.dim,))
+        self.opt = self.shift
+        # self.optimum = self.eval(self.get_optimal())
         self.optimum = self.func(self.get_optimal().reshape(1, -1))[0]
 
     def get_optimal(self):
@@ -26,16 +27,8 @@ class CEC2017MTO_Numpy_Problem(Basic_Problem):
         return x * (self.ub - self.lb) + self.lb
 
     def sr_func(self, x, shift, rotate):
-        if shift is not None: 
-            y = x - shift
-        else:
-            y = x
-        
-        if rotate is not None:
-            z = np.matmul(rotate, y.transpose()).transpose()
-        else:
-            z = y 
-        return z
+        y = x - shift
+        return torch.matmul(rotate, y.transpose(0,1)).transpose(0,1)
     
     def eval(self, x):
         """
@@ -43,8 +36,10 @@ class CEC2017MTO_Numpy_Problem(Basic_Problem):
         """
         start=time.perf_counter()
         x = self.decode(x)  # the solution in MTO is constrained in a unified space [0,1]
-        if not isinstance(x, np.ndarray):
-            x = np.array(x)
+        if not isinstance(x, torch.Tensor):
+            x = torch.tensor(x)
+        if x.dtype != torch.float64:
+            x = x.type(torch.float64)
         if x.ndim == 1:  # x is a single individual
             x = x[:self.dim]
             y=self.func(x.reshape(1, -1))[0]
@@ -64,29 +59,35 @@ class CEC2017MTO_Numpy_Problem(Basic_Problem):
             self.T1+=(end-start)*1000
             return y
 
-class Sphere(CEC2017MTO_Numpy_Problem):
-    def __init__(self, dim, shift=None, rotate=None, bias=0):
+class Sphere_Torch(AUGMENTED_WCCI2020_Torch_Problem):
+    LB = -100
+    UB = 100
+    def __init__(self, dim, shift, rotate, bias=0):
         super().__init__(dim, shift, rotate, bias)
         self.lb = -100
         self.ub = 100
 
     def func(self, x):
         z = self.sr_func(x, self.shift, self.rotate)
-        return np.sum(z ** 2, -1)
+        return torch.sum(z ** 2, -1)
 
-class Ackley(CEC2017MTO_Numpy_Problem):
-    def __init__(self, dim, shift=None, rotate=None, bias=0):
+class Ackley_Torch(AUGMENTED_WCCI2020_Torch_Problem):
+    LB = -50
+    UB = 50
+    def __init__(self, dim, shift, rotate, bias=0):
         super().__init__(dim, shift, rotate, bias)
         self.lb = -50
         self.ub = 50
 
     def func(self, x):
         z = self.sr_func(x, self.shift, self.rotate)
-        sum1 = -0.2 * np.sqrt(np.sum(z ** 2, -1) / self.dim)
-        sum2 = np.sum(np.cos(2 * np.pi * z), -1) / self.dim
-        return np.round(np.e + 20 - 20 * np.exp(sum1) - np.exp(sum2), 15) + self.bias
+        sum1 = -0.2 * torch.sqrt(torch.sum(z ** 2, -1) / self.dim)
+        sum2 = torch.sum(torch.cos(2 * torch.pi * z), -1) / self.dim
+        return torch.round(torch.e + 20 - 20 * torch.exp(sum1) - torch.exp(sum2), decimals = 15) + self.bias
     
-class Griewank(CEC2017MTO_Numpy_Problem):
+class Griewank_Torch(AUGMENTED_WCCI2020_Torch_Problem):
+    LB = -100
+    UB = 100
     def __init__(self, dim, shift=None, rotate=None, bias=0):
         super().__init__(dim, shift, rotate, bias)
         self.lb = -100
@@ -94,13 +95,15 @@ class Griewank(CEC2017MTO_Numpy_Problem):
 
     def func(self, x):
         z = self.sr_func(x, self.shift, self.rotate)
-        s = np.sum(z ** 2, -1)
-        p = np.ones(x.shape[0])
+        s = torch.sum(z ** 2, -1)
+        p = torch.ones(x.shape[0])
         for i in range(self.dim):
-            p *= np.cos(z[:, i] / np.sqrt(1 + i))
+            p *= torch.cos(z[:, i] / torch.sqrt(torch.tensor(1 + i)))
         return 1 + s / 4000 - p + self.bias
 
-class Rastrigin(CEC2017MTO_Numpy_Problem):
+class Rastrigin_Torch(AUGMENTED_WCCI2020_Torch_Problem):
+    LB = -50
+    UB = 50
     def __init__(self, dim, shift=None, rotate=None, bias=0):
         super().__init__(dim, shift, rotate, bias)
         self.lb = -50
@@ -108,9 +111,11 @@ class Rastrigin(CEC2017MTO_Numpy_Problem):
 
     def func(self, x):
         z = self.sr_func(x, self.shift, self.rotate)
-        return np.sum(z ** 2 - 10 * np.cos(2 * np.pi * z) + 10, -1) + self.bias
+        return torch.sum(z ** 2 - 10 * torch.cos(2 * torch.pi * z) + 10, -1) + self.bias
     
-class Rosenbrock(CEC2017MTO_Numpy_Problem):
+class Rosenbrock_Torch(AUGMENTED_WCCI2020_Torch_Problem):
+    LB = -50
+    UB = 50
     def __init__(self, dim, shift=None, rotate=None, bias=0):
         super().__init__(dim, shift, rotate, bias)
         self.lb = -50
@@ -122,24 +127,28 @@ class Rosenbrock(CEC2017MTO_Numpy_Problem):
         z_ = z[:, 1:]
         z = z[:, :-1]
         tmp1 = z ** 2 - z_
-        return np.sum(100 * tmp1 * tmp1 + (z - 1) ** 2, -1) + self.bias
+        return torch.sum(100 * tmp1 * tmp1 + (z - 1) ** 2, -1) + self.bias
 
-class Weierstrass(CEC2017MTO_Numpy_Problem):
-    def __init__(self, dim, shift=None, rotate=None, bias=0):
+class Weierstrass_Torch(AUGMENTED_WCCI2020_Torch_Problem):
+    LB = -0.5
+    UB = 0.5
+    def __init__(self, dim, shift, rotate, bias=0):
         super().__init__(dim, shift, rotate, bias)
         self.lb = -0.5
         self.ub = 0.5
 
     def func(self, x):
         z = self.sr_func(x, self.shift, self.rotate)
-        a, b, k_max = 0.5, 3.0, 20
+        a, b, k_max = torch.tensor(0.5), torch.tensor(3.0), torch.tensor(20)
         sum1, sum2 = 0, 0
         for k in range(k_max + 1):
-            sum1 += np.sum(np.power(a, k) * np.cos(2 * np.pi * np.power(b, k) * (z + 0.5)), -1)
-            sum2 += np.power(a, k) * np.cos(2 * np.pi * np.power(b, k) * 0.5)
+            sum1 += torch.sum(torch.pow(a, k) * torch.cos(2 * torch.pi * torch.pow(b, k) * (z + 0.5)), -1)
+            sum2 += torch.pow(a, k) * torch.cos(2 * torch.pi * torch.pow(b, k) * 0.5)
         return sum1 - self.dim * sum2 + self.bias
-    
-class Schwefel(CEC2017MTO_Numpy_Problem):
+     
+class Schwefel_Torch(AUGMENTED_WCCI2020_Torch_Problem):
+    LB = -500
+    UB = 500
     def __init__(self, dim, shift=None, rotate=None, bias=0):
         super().__init__(dim, shift, rotate, bias)
         self.lb = -500
@@ -150,5 +159,5 @@ class Schwefel(CEC2017MTO_Numpy_Problem):
         a = 4.209687462275036e+002
         b = 4.189828872724338e+002
         z += a
-        g = z * np.sin(np.sqrt(np.abs(z)))
-        return b * self.dim - np.sum(g,-1)
+        g = z * torch.sin(torch.sqrt(torch.abs(z)))
+        return b * self.dim - torch.sum(g,-1)

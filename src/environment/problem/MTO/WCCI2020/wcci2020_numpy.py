@@ -2,7 +2,7 @@ from problem.basic_problem import Basic_Problem
 import numpy as np
 import time 
 
-class WCCI2020_Problem(Basic_Problem):
+class WCCI2020_Numpy_Problem(Basic_Problem):
     def __init__(self, dim, shift, rotate, bias):
         self.T1 = 0
         self.dim = dim
@@ -56,7 +56,7 @@ class WCCI2020_Problem(Basic_Problem):
             self.T1+=(end-start)*1000
             return y
 
-class Sphere(WCCI2020_Problem):
+class Sphere(WCCI2020_Numpy_Problem):
     def __init__(self, dim, shift, rotate, bias=0):
         super().__init__(dim, shift, rotate, bias)
         self.lb = -100
@@ -66,7 +66,7 @@ class Sphere(WCCI2020_Problem):
         z = self.sr_func(x, self.shift, self.rotate)
         return np.sum(z ** 2, -1)
 
-class Ackley(WCCI2020_Problem):
+class Ackley(WCCI2020_Numpy_Problem):
     def __init__(self, dim, shift, rotate, bias=0):
         super().__init__(dim, shift, rotate, bias)
         self.lb = -50
@@ -78,7 +78,7 @@ class Ackley(WCCI2020_Problem):
         sum2 = np.sum(np.cos(2 * np.pi * z), -1) / self.dim
         return np.round(np.e + 20 - 20 * np.exp(sum1) - np.exp(sum2), 15) + self.bias
     
-class Griewank(WCCI2020_Problem):
+class Griewank(WCCI2020_Numpy_Problem):
     def __init__(self, dim, shift=None, rotate=None, bias=0):
         super().__init__(dim, shift, rotate, bias)
         self.lb = -100
@@ -92,7 +92,7 @@ class Griewank(WCCI2020_Problem):
             p *= np.cos(z[:, i] / np.sqrt(1 + i))
         return 1 + s / 4000 - p + self.bias
 
-class Rastrigin(WCCI2020_Problem):
+class Rastrigin(WCCI2020_Numpy_Problem):
     def __init__(self, dim, shift=None, rotate=None, bias=0):
         super().__init__(dim, shift, rotate, bias)
         self.lb = -50
@@ -102,7 +102,7 @@ class Rastrigin(WCCI2020_Problem):
         z = self.sr_func(x, self.shift, self.rotate)
         return np.sum(z ** 2 - 10 * np.cos(2 * np.pi * z) + 10, -1) + self.bias
     
-class Rosenbrock(WCCI2020_Problem):
+class Rosenbrock(WCCI2020_Numpy_Problem):
     def __init__(self, dim, shift=None, rotate=None, bias=0):
         super().__init__(dim, shift, rotate, bias)
         self.lb = -50
@@ -116,7 +116,7 @@ class Rosenbrock(WCCI2020_Problem):
         tmp1 = z ** 2 - z_
         return np.sum(100 * tmp1 * tmp1 + (z - 1) ** 2, -1) + self.bias
 
-class Weierstrass(WCCI2020_Problem):
+class Weierstrass(WCCI2020_Numpy_Problem):
     def __init__(self, dim, shift, rotate, bias=0):
         super().__init__(dim, shift, rotate, bias)
         self.lb = -0.5
@@ -131,7 +131,7 @@ class Weierstrass(WCCI2020_Problem):
             sum2 += np.power(a, k) * np.cos(2 * np.pi * np.power(b, k) * 0.5)
         return sum1 - self.dim * sum2 + self.bias
     
-class Schwefel(WCCI2020_Problem):
+class Schwefel(WCCI2020_Numpy_Problem):
     def __init__(self, dim, shift=None, rotate=None, bias=0):
         super().__init__(dim, shift, rotate, bias)
         self.lb = -500

@@ -353,7 +353,7 @@ class L2T(PPO_Agent):
                 action = action.cpu().numpy()
                 state, reward, is_done, info = env.step(action)
                 R += reward
-            env_cost = env.get_env_attr('gbest')
+            env_cost = env.get_env_attr('cost')
             env_fes = env.get_env_attr('fes')
             results = {'cost': env_cost, 'fes': env_fes, 'return': R}
 
@@ -407,7 +407,7 @@ class L2T(PPO_Agent):
             except:
                 pass
 
-        env_cost = env.get_env_attr('gbest')
+        env_cost = env.get_env_attr('cost')
         env_fes = env.get_env_attr('fes')
         results = {'cost': env_cost, 'fes': env_fes, 'return': _R}
         for key in required_info.keys():
