@@ -33,7 +33,7 @@ if __name__ == '__main__':
     if config.test:
         torch.set_grad_enabled(False)
         tester = Tester(config)
-        tester.test_1()
+        tester.test()
         post_processing_test_statics(config.test_log_dir, MMO_Logger(config))
 
     # run_experiment

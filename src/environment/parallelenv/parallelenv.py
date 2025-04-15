@@ -21,25 +21,19 @@ class ParallelEnv():
                  no_warning=True,
                  ) -> None:
         """An integrated parallel Environment.
-        
-        :param list envs:           The list of the GYM style Envs to be processed in parallel.
-        
-        :param str  para_mode:      The mode for parallel, can be:
-        
+        :param envs:           The list of the GYM style Envs to be processed in parallel.
+        :param para_mode:      The mode for parallel, can be:
             * ``dummy`` (sequential processing)
             * ``subproc`` (multi-processing parallel)
             * ``ray`` (parallel with Ray)
             * ``ray-subproc`` (hybrid parallel which uses subproc envs under each ray worker)
-                                        
-        :param str  asynchronous:   Whether to use asynchronous processing for sub envs with different life length.
+        :param asynchronous:   Whether to use asynchronous processing for sub envs with different life length.
             * ``None`` means terminating all sub envs when any one of them is done, after that any actions will get None state, None reward, True done and empty info;
             * ``idle`` means the living envs will return step results normally while the results of the done sub envs will be replaced with None results above;
             * ``restart`` means when an env is done, it will be reset immediately, its returned state will be the first state after reset and the last state before reset can be found in info['ended_state'] and the flag info['reset'] is True;
             * ``continue`` means all envs will reveive actions and return results normally even they are done, the processing logits are determined by users.
-                                        
-        :param int  num_cpus:       The number of cpu cores assigned for this parallel environment, default to be all cores.
-        
-        :param bool no_warning:     Whether to show warnings from the envs, default to True (not show warnings).
+        :param num_cpus:       The number of cpu cores assigned for this parallel environment, default to be all cores.
+        :param no_warning:     Whether to show warnings from the envs, default to True (not show warnings).
         """
         self.envs = envs
         self.para_mode = para_mode
@@ -113,9 +107,7 @@ class ParallelEnv():
     
     def customized_method(self, env_method: str, data, id: Optional[Union[int, List[int], np.ndarray]] = None):
         """if user declares a method in the env named [env_method] and requiring arguments in a dictionary [data], this method can call the function in parallel.
-        
         ```python
-        # ================================================================================= #
         # For instance, to run a ``func`` method on 8 of a batch of 16 envs which requires
         # an argument named ``x``, then construct a list of 8 argument dictionaries:
         data = [{'x': ...}, {...}, ...]
@@ -123,7 +115,6 @@ class ParallelEnv():
         id = [0, 1, 2, ...]
         # call the customized_method
         results = VectorEnv.customized_method("func", data, id)
-        # ================================================================================= #
         ```
         """
         return self.workers.customized_method(env_method, data, id)
@@ -149,12 +140,9 @@ class ParallelEnv():
              align: Literal['batch', 'item'] = 'item'
              ):
         """take a step in envs.
-        
-        :param any  ``action``: the actions to be take.
-        
-        :param list ``id``:     the index of the envs to take the action, corresponding one-to-one with action, default to take steps in all envs.
-        
-        :param str  ``align``:  the alignment mode of the output, ``batch`` means output as a batch of 4-item tuples [<state, reward, done, info>, <...>, ...], ``item`` means output as 4 batched data <states, rewards, dones, infos>
+        :param action: the actions to be take.
+        :param id:     the index of the envs to take the action, corresponding one-to-one with action, default to take steps in all envs.
+        :param align:  the alignment mode of the output, ``batch`` means output as a batch of 4-item tuples [<state, reward, done, info>, <...>, ...], ``item`` means output as 4 batched data <states, rewards, dones, infos>
         
         """
         if id is not None:
@@ -230,17 +218,11 @@ class ParallelEnv():
     
     def rollout(self, data, call_method='rollout', repeat=1, seed=None):
         """rollout/valiadtion/testing/expensive evaluation using Ray or Ray-Subproc parellel
-        
-        :param tuple data:          any data need for rollout, each data item should be organized as batched data for all envs.
-        
-        :param str   call_method:   the method name to be called for rollout or evaluation, default to call a interface named ''rollout'', you can change it to your own interface name.
-        
-        :param int   repeat:        the repeat times for the rollout, default to be 1. It is recommended to run all baselines and all runs in parallel instead of running multiple runs on one env.
-        
-        :param list  seed:          the seed for all envs, can be list or array which assigns different seeds to each envs, or an integer which assign the same seed for all envs, or None for no seed. You can assign seeds for each run (i.e., repeat > 1) using a two-dimensional seed list or array.
-        
+        :param data:          any data need for rollout, each data item should be organized as batched data for all envs.
+        :param call_method:   the method name to be called for rollout or evaluation, default to call a interface named ''rollout'', you can change it to your own interface name.
+        :param repeat:        the repeat times for the rollout, default to be 1. It is recommended to run all baselines and all runs in parallel instead of running multiple runs on one env.
+        :param seed:          the seed for all envs, can be list or array which assigns different seeds to each envs, or an integer which assign the same seed for all envs, or None for no seed. You can assign seeds for each run (i.e., repeat > 1) using a two-dimensional seed list or array.
         ```python
-        # ================================================================================= #
         # For instance, to run a ``rollout`` method in a batch of 16 envs which requires 
         # arguments ``a`` and ``b`` for each env, we should organize the argument values for all
         # envs into 16-element list of dictionaries.
@@ -251,7 +233,6 @@ class ParallelEnv():
         # i.e., repeatly run each env for 5 runs with random seeds
         seeds = np.random.randint(low=1, high=100, size=(5, 16))
         results = VectorEnv.rollout(data, call_method='rollout', repeat=5, seed=seeds)
-        # ================================================================================= #
         ```
         """
         # assert self.para_mode == 'ray' or self.para_mode == 'ray-subproc' or self.para_mode == 'dummy'

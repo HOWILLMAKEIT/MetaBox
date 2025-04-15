@@ -1,4 +1,4 @@
-from problem.basic_problem import Basic_Problem
+from problem.basic_problem import Basic_Problem_Torch
 import numpy as np
 import math
 import torch
@@ -6,7 +6,7 @@ import time
 from os import path
 MINMAX = -1
 
-class CEC2013MMO_Problem(Basic_Problem):
+class CEC2013MMO_Torch_Problem(Basic_Problem_Torch):
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
         self.dim = dim
         self.lb = lb
@@ -89,7 +89,7 @@ class CEC2013MMO_Problem(Basic_Problem):
 
         return seeds_idx
 
-class CFunction(CEC2013MMO_Problem):
+class CFunction_Torch_Problem(CEC2013MMO_Torch_Problem):
     # Abstract composition function
     __nofunc_ = -1
     __C_ = 2000.0
@@ -107,7 +107,7 @@ class CFunction(CEC2013MMO_Problem):
     __function_ = None
 
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes, nofunc):
-        super(CFunction, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes)
+        super(CFunction_Torch_Problem, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes)
         self.__nofunc_ = nofunc
 
     def func(self, x):
@@ -236,9 +236,9 @@ def FEF8F2(x):
     f = f + F8F2(x[:, [D - 1, 0]] + 1)
     return f
 
-class F1_torch(CEC2013MMO_Problem): # five_uneven_peak_trap
+class F1_Torch(CEC2013MMO_Torch_Problem): # five_uneven_peak_trap
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
-        super(F1_torch, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes)
+        super(F1_Torch, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes)
 
     def __str__(self):
         return 'five_uneven_peak_trap'+'_D'+str(self.dim)
@@ -273,9 +273,9 @@ class F1_torch(CEC2013MMO_Problem): # five_uneven_peak_trap
         
         return -result
 
-class F2_torch(CEC2013MMO_Problem): # equal_maxima
+class F2_Torch(CEC2013MMO_Torch_Problem): # equal_maxima
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
-        super(F2_torch, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes)
+        super(F2_Torch, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes)
 
     def __str__(self):
         return 'equal_maxima'+'_D'+str(self.dim)
@@ -288,9 +288,9 @@ class F2_torch(CEC2013MMO_Problem): # equal_maxima
         self.FES += x.shape[0]
         return -torch.sin(5.0 * np.pi * x[:, 0]) ** 6
 
-class F3_torch(CEC2013MMO_Problem): # uneven_decreasing_maxima
+class F3_Torch(CEC2013MMO_Torch_Problem): # uneven_decreasing_maxima
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
-        super(F3_torch, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes)
+        super(F3_Torch, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes)
 
     def __str__(self):
         return 'uneven_decreasing_maxima'+'_D'+str(self.dim)
@@ -306,9 +306,9 @@ class F3_torch(CEC2013MMO_Problem): # uneven_decreasing_maxima
             * (torch.sin(torch.tensor(5 * np.pi, device = x.device) * (x[:, 0] ** 0.75 - 0.05))) ** 6
         )
         
-class F4_torch(CEC2013MMO_Problem): # himmelblau
+class F4_Torch(CEC2013MMO_Torch_Problem): # himmelblau
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
-        super(F4_torch, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes)
+        super(F4_Torch, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes)
 
     def __str__(self):
         return 'himmelblau'+'_D'+str(self.dim)
@@ -322,9 +322,9 @@ class F4_torch(CEC2013MMO_Problem): # himmelblau
         result = 200 - (x[:, 0] ** 2 + x[:, 1] - 11) ** 2 - (x[:, 0] + x[:, 1] ** 2 - 7) ** 2
         return -result
 
-class F5_torch(CEC2013MMO_Problem): # six_hump_camel_back
+class F5_Torch(CEC2013MMO_Torch_Problem): # six_hump_camel_back
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
-        super(F5_torch, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes)
+        super(F5_Torch, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes)
 
     def __str__(self):
         return 'six_hump_camel_back'+'_D'+str(self.dim)
@@ -343,9 +343,9 @@ class F5_torch(CEC2013MMO_Problem): # six_hump_camel_back
         expr3 = (4.0 * y2 - 4.0) * y2
         return -(-1.0 * (expr1 + expr2 + expr3))
 
-class F6_torch(CEC2013MMO_Problem): # shubert
+class F6_Torch(CEC2013MMO_Torch_Problem): # shubert
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
-        super(F6_torch, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes)
+        super(F6_Torch, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes)
 
     def __str__(self):
         return 'shubert'+'_D'+str(self.dim)
@@ -366,9 +366,9 @@ class F6_torch(CEC2013MMO_Problem): # shubert
 
         return -(-result)
 
-class F7_torch(CEC2013MMO_Problem): # vincent
+class F7_Torch(CEC2013MMO_Torch_Problem): # vincent
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
-        super(F7_torch, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes)
+        super(F7_Torch, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes)
 
     def __str__(self):
         return 'vincent'+'_D'+str(self.dim)
@@ -384,9 +384,9 @@ class F7_torch(CEC2013MMO_Problem): # vincent
         result = torch.sum((torch.sin(10 * torch.log(x))) / D, dim = 1)
         return -result
 
-class F8_torch(CEC2013MMO_Problem): # modified_rastrigin_all
+class F8_Torch(CEC2013MMO_Torch_Problem): # modified_rastrigin_all
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
-        super(F8_torch, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes)
+        super(F8_Torch, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes)
 
     def __str__(self):
         return 'modified_rastrigin_all'+'_D'+str(self.dim)
@@ -409,9 +409,9 @@ class F8_torch(CEC2013MMO_Problem): # modified_rastrigin_all
         result = torch.sum(10 + 9 * torch.cos(torch.tensor(2 * np.pi * np.array(k), device = x.device)[None, :] * x), dim=1)
         return -(-result)
 
-class F9_torch(CFunction): # CF1
+class F9_Torch(CFunction_Torch_Problem): # CF1
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
-        super(F9_torch, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes, 6)
+        super(F9_Torch, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes, 6)
 
         # Initialize data for composition
         self._CFunction__sigma_ = np.ones(self._CFunction__nofunc_)
@@ -420,7 +420,7 @@ class F9_torch(CFunction): # CF1
         self._CFunction__lambda_ = np.array([1.0, 1.0, 8.0, 8.0, 1.0 / 5.0, 1.0 / 5.0])
 
         # Load optima
-        o = np.loadtxt(path.join(path.dirname(__file__), 'MMO') + "/optima.dat")
+        o = np.loadtxt(path.join(path.dirname(__file__), 'datafile') + "/optima.dat")
         if o.shape[1] >= dim:
             self._CFunction__O_ = o[: self._CFunction__nofunc_, :dim]
         else:  # randomly initialize
@@ -453,9 +453,9 @@ class F9_torch(CFunction): # CF1
         self.FES += x.shape[0]
         return -self._CFunction__evaluate_inner_(x)
 
-class F10_torch(CFunction): # CF2
+class F10_Torch(CFunction_Torch_Problem): # CF2
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
-        super(F10_torch, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes, 8)
+        super(F10_Torch, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes, 8)
 
         # Initialize data for composition
         self._CFunction__sigma_ = np.ones(self._CFunction__nofunc_)
@@ -466,7 +466,7 @@ class F10_torch(CFunction): # CF2
         )
 
         # Load optima
-        o = np.loadtxt(path.join(path.dirname(__file__), 'MMO') + "/optima.dat")
+        o = np.loadtxt(path.join(path.dirname(__file__), 'datafile') + "/optima.dat")
         if o.shape[1] >= dim:
             self._CFunction__O_ = o[: self._CFunction__nofunc_, :dim]
         else:  # randomly initialize
@@ -500,9 +500,9 @@ class F10_torch(CFunction): # CF2
         self.FES += x.shape[0]
         return -self._CFunction__evaluate_inner_(x)
 
-class F11_torch(CFunction): # CF3
+class F11_Torch(CFunction_Torch_Problem): # CF3
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
-        super(F11_torch, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes, 6)
+        super(F11_Torch, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes, 6)
 
         # Initialize data for composition
         self._CFunction__sigma_ = np.array([1.0, 1.0, 2.0, 2.0, 2.0, 2.0])
@@ -511,7 +511,7 @@ class F11_torch(CFunction): # CF3
         self._CFunction__lambda_ = np.array([1.0 / 4.0, 1.0 / 10.0, 2.0, 1.0, 2.0, 5.0])
 
         # Load optima
-        o = np.loadtxt(path.join(path.dirname(__file__), 'MMO') + "/optima.dat")
+        o = np.loadtxt(path.join(path.dirname(__file__), 'datafile') + "/optima.dat")
         if o.shape[1] >= dim:
             self._CFunction__O_ = o[: self._CFunction__nofunc_, :dim]
         else:  # randomly initialize
@@ -521,7 +521,7 @@ class F11_torch(CFunction): # CF3
 
         # Load M_: Rotation matrices
         if dim == 2 or dim == 3 or dim == 5 or dim == 10 or dim == 20:
-            fname = path.join(path.dirname(__file__), 'MMO') + "/CF3_M_D" + str(dim) + ".dat"
+            fname = path.join(path.dirname(__file__), 'datafile') + "/CF3_M_D" + str(dim) + ".dat"
             self._CFunction__load_rotmat(fname)
         else:
             # M_ Identity matrices
@@ -549,9 +549,9 @@ class F11_torch(CFunction): # CF3
         self.FES += x.shape[0]
         return -self._CFunction__evaluate_inner_(x)
 
-class F12_torch(CFunction): # CF4
+class F12_Torch(CFunction_Torch_Problem): # CF4
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
-        super(F12_torch, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes, 8)
+        super(F12_Torch, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes, 8)
 
         # Initialize data for composition
         self._CFunction__sigma_ = np.array([1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0])
@@ -562,7 +562,7 @@ class F12_torch(CFunction): # CF4
         )
 
         # Load optima
-        o = np.loadtxt(path.join(path.dirname(__file__), 'MMO') + "/optima.dat")
+        o = np.loadtxt(path.join(path.dirname(__file__), 'datafile') + "/optima.dat")
         if o.shape[1] >= dim:
             self._CFunction__O_ = o[: self._CFunction__nofunc_, :dim]
         else:  # randomly initialize
@@ -572,7 +572,7 @@ class F12_torch(CFunction): # CF4
 
         # Load M_: Rotation matrices
         if dim == 2 or dim == 3 or dim == 5 or dim == 10 or dim == 20:
-            fname = path.join(path.dirname(__file__), 'MMO') + "/CF4_M_D" + str(dim) + ".dat"
+            fname = path.join(path.dirname(__file__), 'datafile') + "/CF4_M_D" + str(dim) + ".dat"
             self._CFunction__load_rotmat(fname)
         else:
             # M_ Identity matrices 

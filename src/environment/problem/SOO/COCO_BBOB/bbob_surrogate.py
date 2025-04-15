@@ -1,7 +1,7 @@
 from .kan import *
 from .mlp import MLP
-from problem.basic_problem import Basic_Problem
-from problem.SOO.bbob_numpy.bbob import *
+from environment.problem.basic_problem import Basic_Problem
+from environment.problem.SOO.COCO_BBOB.bbob_numpy import *
 from os import path
 from torch.utils.data import Dataset
 

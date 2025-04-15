@@ -27,6 +27,7 @@ class HPOB_Dataset(Dataset):
                      test_batch_size=1,
                      difficulty = None,
                      user_train_list=None,
+                     user_test_list=None,
                      cost_normalize=False,):
         # get functions ID of indicated suit
         if datapath is None:
@@ -54,7 +55,7 @@ class HPOB_Dataset(Dataset):
             
         meta_train_data,meta_vali_data,meta_test_data,bo_initializations,surrogates_stats=get_data(root_dir=root_dir, mode="v3", surrogates_dir=surrogates_dir)
         
-        if user_train_list is None:
+        if user_train_list is None and user_test_list is None:
             
             def process_data(data, name, n):
                 problems = []
@@ -85,10 +86,21 @@ class HPOB_Dataset(Dataset):
                         X = np.array(data[search_space_id][dataset_id]["X"])
                         dim = X.shape[1]
                         p=HPOB_Problem(bst_surrogate=bst_model,dim=dim,y_min=y_min,y_max=y_max,normalized=cost_normalize)
-                        if search_space_id+'-'+dataset_id in user_train_list:
-                            train_set.append(p)
-                        else:
-                            test_set.append(p)
+                        if user_train_list is not None and user_test_list is not None:
+                            if search_space_id+'-'+dataset_id in user_train_list:
+                                train_set.append(p)
+                            if search_space_id+'-'+dataset_id in user_test_list:
+                                test_set.append(p)
+                        elif user_train_list is not None:
+                            if search_space_id+'-'+dataset_id in user_train_list:
+                                train_set.append(p)
+                            else:
+                                test_set.append(p)
+                        else:  # user_test_list is not None
+                            if search_space_id+'-'+dataset_id in user_test_list:
+                                test_set.append(p)
+                            else:
+                                train_set.append(p)
                         pbar.update()
                 pbar.close()
                 

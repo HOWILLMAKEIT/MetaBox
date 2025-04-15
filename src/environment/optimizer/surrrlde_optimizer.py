@@ -99,10 +99,14 @@ class SurrRLDE_Optimizer(Learnable_Optimizer):
 						   * (problem.ub - problem.lb) + problem.lb)
 		#(-5,5)
 		self.population = self.population.to(self.device)
-		if problem.optimum is None:
-			self.fitness = problem.eval(self.population.clone().cpu().numpy())
+
+		if self.config.train_problem == 'bbob-surrogate' or self.config.test_problem == 'bbob-surrogate':
+			self.fitness = problem.eval(self.population.clone().to(self.device))
 		else:
-			self.fitness = problem.eval(self.population.clone().cpu().numpy()) - problem.optimum
+			if problem.optimum is None:
+				self.fitness = problem.eval(self.population.clone().cpu().numpy())
+			else:
+				self.fitness = problem.eval(self.population.clone().cpu().numpy()) - problem.optimum
 
 		if isinstance(self.fitness, np.ndarray):
 			self.fitness = torch.from_numpy(self.fitness).to(self.device)
@@ -184,10 +188,13 @@ class SurrRLDE_Optimizer(Learnable_Optimizer):
 		mut_population = self.mutation(mut_way)
 		crossover_population = self.crossover(mut_population)
 
-		if problem.optimum is None:
-			temp_fit = problem.eval(crossover_population.clone().cpu().numpy())
+		if self.config.train_problem == 'bbob-surrogate' or self.config.test_problem == 'bbob-surrogate':
+			temp_fit = problem.eval(crossover_population.clone().to(self.device))
 		else:
-			temp_fit = problem.eval(crossover_population.clone().cpu().numpy()) - problem.optimum
+			if problem.optimum is None:
+				temp_fit = problem.eval(crossover_population.clone().cpu().numpy())
+			else:
+				temp_fit = problem.eval(crossover_population.clone().cpu().numpy()) - problem.optimum
 
 		if isinstance(temp_fit, np.ndarray):
 			temp_fit = torch.from_numpy(temp_fit).to(self.device)

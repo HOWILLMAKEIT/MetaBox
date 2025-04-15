@@ -379,7 +379,7 @@ class Tester(object):
 
 
 
-def rollout_batch(config):
+def rollout_batch(config, reuire_info = {}):
     print(f'start rollout: {config.run_time}')
 
     if config.problem[-6:]=='-torch':
