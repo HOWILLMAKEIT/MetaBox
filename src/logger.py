@@ -766,8 +766,389 @@ class Basic_Logger:
         self.draw_train_logger('return', results['return'], log_dir + 'pics/', pdf_fig=pdf_fig)
         self.draw_train_logger('cost', results['cost'], log_dir + 'pics/', pdf_fig=pdf_fig)
 
+    
+class MOO_Logger(Basic_Logger):
+    def __init__(self, config: argparse.Namespace) -> None:
+        self.config = config
+        self.color_arrangement = {}
+        self.arrange_index = 0
+        self.indicators = config.indicators
+    
+    def is_pareto_efficient(self,points):
+        """计算帕累托前沿"""
+        points = np.array(points)
+        pareto_mask = np.ones(points.shape[0], dtype=bool)
+        for i, p in enumerate(points):
+            if pareto_mask[i]:
+                pareto_mask[pareto_mask] = np.any(points[pareto_mask] < p, axis=1)
+                pareto_mask[i] = True
+        return points[pareto_mask]
+    
+    def draw_pareto_fronts(self,data: dict, output_dir: str, Name: Optional[Union[str, list]] = None):
+        # 输入的数据格式为：dict[problem][algo][run][generation][objective]
+        
+        for problem in list(data.keys()):
+            if Name is not None and ((isinstance(Name, str) and problem != Name) or (isinstance(Name, list) and problem not in Name)):
+                continue
+            else:
+                name = problem
 
-# mmo
+            fig = plt.figure(figsize=(8, 6))  # 更小的画布尺寸
+            is_3d = False
+            algo_obj_dict = {}
+
+            # 收集每个算法所有回合的最后一代目标值
+            for algo, runs in data[problem].items():
+                all_obj_values = []
+                for generations in runs:
+                    last_gen = np.array(generations[-1])
+                    obj_values = last_gen.reshape(-1, last_gen.shape[-1])
+                    if obj_values.shape[1] == 3:
+                        is_3d = True
+                    all_obj_values.append(obj_values)
+                algo_obj_dict[algo] = np.vstack(all_obj_values)
+
+            # 初始化画布
+            if is_3d:
+                ax = fig.add_subplot(111, projection='3d')
+                ax.view_init(elev=40, azim=135)  # 更改视角
+                ax.set_proj_type('persp')
+            else:
+                ax = fig.add_subplot(111)
+
+            colors = ['r', 'g', 'b', 'c', 'm', 'y']
+
+            for algo_idx, (algo, obj_values) in enumerate(algo_obj_dict.items()):
+                pareto_front = self.is_pareto_efficient(obj_values)
+                color = colors[algo_idx % len(colors)]
+                label = f"{algo}"
+
+                if obj_values.shape[1] == 2:
+                    ax.scatter(pareto_front[:, 0], pareto_front[:, 1],
+                                label=label, color=color, edgecolors='k')
+                elif obj_values.shape[1] == 3:
+                    ax.scatter(pareto_front[:, 0], pareto_front[:, 1], pareto_front[:, 2],
+                                label=label, color=color, edgecolors='k')
+
+            if is_3d:
+                # 更改坐标轴标签为简写，并减小Z轴标签字体
+                ax.set_xlabel('X', fontsize=12, labelpad=10)
+                ax.set_ylabel('Y', fontsize=12, labelpad=10)
+                ax.set_zlabel('Z', fontsize=12, labelpad=-0.5,color='black')  # 减小labelpad
+                
+
+                # 微调Z轴标签的位置，使其靠近坐标轴
+                ax.zaxis.set_label_coords(1.05, 0.5)  # 调整位置使标签更靠近右侧
+
+                # 设置3D比例并调整图形位置
+                ax.set_box_aspect([1.2, 1.1, 0.9])  # 将Z轴比例稍微缩小，增加Z轴的空间
+
+            else:
+                ax.set_xlabel('X', fontsize=14, labelpad=20)
+                ax.set_ylabel('Y', fontsize=14, labelpad=20)
+
+            # 调整图形与边缘的距离，特别是右边的边距
+            plt.subplots_adjust(right=0.85)
+
+            plt.legend()
+            plt.grid(True)
+            plt.title(f'Pareto Fronts of Algorithms on {problem}', fontsize=14)
+
+            # 增加边距来确保Z轴标签能显示
+            plt.savefig(output_dir + f'{name}_pareto_fronts.png', dpi=300, bbox_inches='tight', pad_inches=0.1)
+            plt.show()
+    
+    def draw_test_indicator(self, data: dict, output_dir: str, indicator:str,Name: Optional[Union[str, list]]=None, categorized: bool=False, pdf_fig: bool = True) -> None:
+        fig_type = 'pdf' if pdf_fig else 'png'
+        for problem in list(data.keys()):
+            if Name is not None and (isinstance(Name, str) and problem != Name) or (isinstance(Name, list) and problem not in Name):
+                continue
+            else:
+                name = problem
+            if not categorized:
+                plt.figure()
+                for agent in list(data[name].keys()):
+                    if agent not in self.color_arrangement.keys():
+                        self.color_arrangement[agent] = colors[self.arrange_index]
+                        self.arrange_index += 1
+                    values = np.array(data[name][agent])
+                    x = np.arange(values.shape[-1])
+                    x = np.array(x, dtype=np.float64)
+                    x *= (self.config.maxFEs / x[-1])
+
+                    std = np.std(values, 0)
+                    mean = np.mean(values, 0)
+                    plt.plot(x, mean, label=to_label(agent), marker='*', markevery=8, markersize=13, c=self.color_arrangement[agent])
+                    plt.fill_between(x, mean - std, mean + std, alpha=0.2, facecolor=self.color_arrangement[agent])
+                plt.grid()
+                plt.xlabel('FEs')
+                plt.legend()
+                plt.ylabel(str(indicator))
+                plt.savefig(output_dir + f'{name}_{indicator}_curve.png', bbox_inches='tight')
+                plt.close()
+            else:
+                plt.figure()
+                for agent in list(data[name].keys()):
+                    if agent not in self.config.agent_for_cp:
+                        continue
+                    if agent not in self.color_arrangement.keys():
+                        self.color_arrangement[agent] = colors[self.arrange_index]
+                        self.arrange_index += 1
+                    values = np.array(data[name][agent])
+                    x = np.arange(values.shape[-1])
+                    x = np.array(x, dtype=np.float64)
+                    x *= (self.config.maxFEs / x[-1])
+                    std = np.std(values, 0)
+                    mean = np.mean(values, 0)
+                    plt.plot(x, mean, label=to_label(agent), marker='*', markevery=8, markersize=13, c=self.color_arrangement[agent])
+                    plt.fill_between(x, mean - std, mean + std, alpha=0.2, facecolor=self.color_arrangement[agent])
+                plt.grid()
+                plt.xlabel('FEs')
+                plt.legend()
+                plt.ylabel(str(indicator))
+                plt.savefig(output_dir + f'learnable_{name}_{indicator}_curve.png', bbox_inches='tight')
+                plt.close()
+                plt.figure()
+                for agent in list(data[name].keys()):
+                    if agent not in self.config.t_optimizer_for_cp:
+                        continue
+                    if agent not in self.color_arrangement.keys():
+                        self.color_arrangement[agent] = colors[self.arrange_index]
+                        self.arrange_index += 1
+                    values = np.array(data[name][agent])
+                    x = np.arange(values.shape[-1])
+                    x = np.array(x, dtype=np.float64)
+                    x *= (self.config.maxFEs / x[-1])
+                    std = np.std(values, 0)
+                    mean = np.mean(values, 0)
+                    plt.plot(x, mean, label=to_label(agent), marker='*', markevery=8, markersize=13, c=self.color_arrangement[agent])
+                    plt.fill_between(x, mean - std, mean + std, alpha=0.2, facecolor=self.color_arrangement[agent])
+                plt.grid()
+                plt.xlabel('FEs')
+                plt.legend()
+                plt.ylabel(str(indicator))
+                plt.savefig(output_dir + f'classic_{name}_{indicator}_curve.{fig_type}', bbox_inches='tight')
+                plt.close()
+    
+    def draw_named_average_test_indicator(self, data: dict, output_dir: str, named_agents: dict, indicator:str,pdf_fig: bool = True) -> None:
+        fig_type = 'pdf' if pdf_fig else 'png'
+        fig = plt.figure(figsize=(50, 10))
+        # plt.title('all problem cost curve')
+        plots = len(named_agents.keys())
+        for id, title in enumerate(named_agents.keys()):
+            ax = plt.subplot(1, plots+1, id+1)
+            ax.set_title(title, fontsize=25)
+            Y = {}
+            for problem in list(data.keys()):
+                # 计算全局最大值和最小值
+                all_values = []
+                for agent in data[problem].keys():
+                    all_values.append(np.array(data[problem][agent]))
+                all_values = np.concatenate(all_values, axis=0)  # 拼接所有数据
+                global_min = np.min(all_values)  # 计算全局最小值
+                global_max = np.max(all_values)  # 计算全局最大值
+                
+                for agent in list(data[problem].keys()):
+                    if agent not in named_agents[title]:
+                        continue
+                    if agent not in self.color_arrangement.keys():
+                        self.color_arrangement[agent] = colors[self.arrange_index]
+                        self.arrange_index += 1
+                    if agent not in Y.keys():
+                        Y[agent] = {'mean': [], 'std': []}
+                    values = np.array(data[problem][agent][indicator])
+                    values = (values - global_min) / (global_max - global_min + 1e-8)  # 避免除零
+                
+                    std = np.std(values, 0)
+                    mean = np.mean(values, 0)
+                    Y[agent]['mean'].append(mean)
+                    Y[agent]['std'].append(std)
+
+            for id, agent in enumerate(list(Y.keys())):
+                mean = np.mean(Y[agent]['mean'], 0)
+                std = np.mean(Y[agent]['std'], 0)
+
+                X = np.arange(mean.shape[-1])
+                X = np.array(X, dtype=np.float64)
+                X *= (self.config.maxFEs / X[-1])
+
+                ax.plot(X, mean, label=to_label(agent), marker='*', markevery=8, markersize=13, c=self.color_arrangement[agent])
+                ax.fill_between(X, (mean - std), (mean + std), alpha=0.2, facecolor=self.color_arrangement[agent])
+            plt.grid()
+            plt.xlabel('FEs')
+            plt.ylabel('Normalized {indicator}')
+            plt.legend()
+        # lines, labels = fig.axes[-1].get_legend_handles_labels()
+        # fig.legend(lines, labels, bbox_to_anchor=(plots/(plots+1)-0.02, 0.5), borderaxespad=0., loc=6, facecolor='whitesmoke')
+        
+        plt.subplots_adjust(left=0.05, right=0.95, wspace=0.1)
+        plt.savefig(output_dir + f'all_problem_{indicator}_curve.{fig_type}', bbox_inches='tight')
+        plt.close()
+
+    def draw_concrete_performance_hist(self, data: dict, output_dir: str, indicator: Optional[str] = None, Name: Optional[Union[str, list]] = None, pdf_fig: bool = True) -> None:
+        fig_type = 'pdf' if pdf_fig else 'png'
+        D = {}
+        X = []
+        
+        # 遍历所有问题
+        for problem in list(data.keys()):
+            if Name is not None and (isinstance(Name, str) and problem != Name) or (isinstance(Name, list) and problem not in Name):
+                continue
+            else:
+                name = problem
+            X.append(name)
+            for agent in list(data[name].keys()):
+                if agent not in D:
+                    D[agent] = []
+                values = np.array(data[name][agent])
+                D[agent].append(values[:, -1])
+
+        # 绘制图表
+        for agent in D.keys():
+            plt.figure()
+            D[agent] = np.mean(np.array(D[agent]), -1)
+            plt.bar(X, D[agent])
+
+            for a, b in zip(X, D[agent]):
+                plt.text(a, b, '%.2f' % b, ha='center', fontsize=15)
+
+            plt.xticks(rotation=30, fontsize=13)
+            plt.xlabel('Problems')
+            
+            ylabel = indicator
+            plt.ylabel(ylabel)
+
+            plt.savefig(output_dir + f'{agent}_concrete_{indicator}_performance_hist.{fig_type}', bbox_inches='tight')
+    
+    def draw_boxplot(self, data: dict, output_dir: str, indicator:str,Name: Optional[Union[str, list]]=None, ignore: Optional[list]=None, pdf_fig: bool = True) -> None:
+        fig_type = 'pdf' if pdf_fig else 'png'
+        for problem in list(data.keys()):
+            if Name is not None and (isinstance(Name, str) and problem != Name) or (isinstance(Name, list) and problem not in Name):
+                continue
+            else:
+                name = problem
+            Y = []
+            X = []
+            plt.figure(figsize=(30, 15))
+            for agent in list(data[name].keys()):
+                if ignore is not None and agent in ignore:
+                    continue
+                X.append(agent)
+                values = np.array(data[name][agent])
+                Y.append(values[:, -1])
+            Y = np.transpose(Y)
+            plt.boxplot(Y, labels=X, showmeans=True, patch_artist=True, showfliers=False,
+                        medianprops={'color': 'green', 'linewidth': 3}, 
+                        meanprops={'markeredgecolor': 'red', 'markerfacecolor': 'red', 'markersize': 10, 'marker': 'D'}, 
+                        boxprops={'color': 'black', 'facecolor': 'lightskyblue'},
+                        capprops={'linewidth': 2},
+                        whiskerprops={'linewidth': 2},
+                        )
+            plt.xticks(rotation=30, fontsize=18)
+            plt.xlabel('Agents')
+            plt.ylabel(f'{name} {indicator} Boxplots')
+            plt.savefig(output_dir + f'{name}_{indicator}_boxplot.{fig_type}', bbox_inches='tight')
+            plt.close()
+    
+    def draw_overall_boxplot(self, data: dict, output_dir: str, indicator:str,ignore: Optional[list]=None, pdf_fig: bool = True) -> None:
+        fig_type = 'pdf' if pdf_fig else 'png'
+        problems=[]
+        agents=[]
+        for problem in data.keys():
+            problems.append(problem)
+        for agent in data[problems[0]].keys():
+            if ignore is not None and agent in ignore:
+                continue
+            agents.append(agent)
+        run = len(data[problems[0]][agents[0]])
+        values = np.zeros((len(agents), len(problems), run))
+        plt.figure(figsize=(30, 15))
+        for ip, problem in enumerate(problems):
+            for ia, agent in enumerate(agents):
+                values[ia][ip] = np.array(data[problem][agent])[:, -1]
+            values[:, ip, :] = (values[:, ip, :] - np.min(values[:, ip, :])) / (np.max(values[:, ip, :]) - np.min(values[:, ip, :]))
+        values = values.reshape(len(agents), -1).transpose()
+        
+        plt.boxplot(values, labels=agents, showmeans=True, patch_artist=True, showfliers=False,
+                    medianprops={'color': 'green', 'linewidth': 3}, 
+                    meanprops={'markeredgecolor': 'red', 'markerfacecolor': 'red', 'markersize': 10, 'marker': 'D'}, 
+                    boxprops={'color': 'black', 'facecolor': 'lightskyblue'},
+                    capprops={'linewidth': 2},
+                    whiskerprops={'linewidth': 2},
+                    )
+        plt.xticks(rotation=30, fontsize=18)
+        plt.xlabel('Agents')
+        plt.ylabel(f'{indicator} Boxplots')
+        plt.savefig(output_dir + f'overall_{indicator}_boxplot.{fig_type}', bbox_inches='tight')
+        plt.close()
+
+    def draw_train_logger(self, data_type: str, data: dict, output_dir: str, ylabel: str = None, norm: bool = False, pdf_fig: bool = True, data_wrapper: Callable = None) -> None:
+        means, stds = self.get_average_data(data_type, data, norm=norm, data_wrapper=data_wrapper)
+        plt.figure()
+        for agent in means.keys():
+            x = np.arange(len(means[agent]), dtype=np.float64)
+            x = (self.config.max_learning_step / x[-1]) * x
+            y = means[agent]
+            s = np.zeros(y.shape[0])
+            a = s[0] = y[0]
+            norm = self.config.plot_smooth + 1
+            for i in range(1, y.shape[0]):
+                a = a * self.config.plot_smooth + y[i]
+                s[i] = a / norm if norm > 0 else a
+                norm *= self.config.plot_smooth
+                norm += 1
+            if agent not in self.color_arrangement.keys():
+                self.color_arrangement[agent] = colors[self.arrange_index]
+                self.arrange_index += 1
+            plt.plot(x, s, label=to_label(agent), marker='*', markersize=12, markevery=2, c=self.color_arrangement[agent])
+            plt.fill_between(x, (s - stds[agent]), (s + stds[agent]), alpha=0.2, facecolor=self.color_arrangement[agent])
+            # plt.plot(x, returns[agent], label=to_label(agent))
+        plt.legend()
+        plt.grid()
+        plt.xlabel('Learning Steps')    
+        if ylabel is None:
+            ylabel = data_type
+        plt.ylabel(ylabel)
+        fig_type = 'pdf' if pdf_fig else 'png'
+        plt.savefig(output_dir + f'avg_{data_type}_curve.{fig_type}', bbox_inches='tight')
+        plt.close()
+    
+    def post_processing_test_statics(self, log_dir: str, include_random_baseline: bool = False, pdf_fig: bool = True) -> None:
+        with open(log_dir + 'test.pkl', 'rb') as f:
+            results = pickle.load(f)
+            
+        metabbo = self.config.agent
+        bbo = self.config.t_optimizer
+        
+        # 可选地读取 random_search_baseline.pkl
+        if include_random_baseline:
+            with open(log_dir + 'random_search_baseline.pkl', 'rb') as f:
+                random = pickle.load(f)
+
+        if not os.path.exists(log_dir + 'tables/'):
+            os.makedirs(log_dir + 'tables/')
+
+        gen_algorithm_complexity_table(results, log_dir + 'tables/')
+
+        if not os.path.exists(log_dir + 'pics/'):
+            os.makedirs(log_dir + 'pics/')
+
+        for indicator in self.indicators:
+            self.draw_test_indicator(results[indicator], log_dir + 'pics/', indicator, pdf_fig=pdf_fig)
+            self.draw_named_average_test_indicator(results[indicator], log_dir + 'pics/', \
+                {'MetaBBO-RL': metabbo, 'Classic Optimizer': bbo}, indicator, pdf_fig=pdf_fig)
+    
+    def post_processing_rollout_statics(self, log_dir: str, pdf_fig: bool = True) -> None:
+        with open(log_dir+'rollout.pkl', 'rb') as f:
+            results = pickle.load(f)
+        if not os.path.exists(log_dir + 'pics/'):
+            os.makedirs(log_dir + 'pics/')
+        self.draw_train_logger('return', results['return'], log_dir + 'pics/', pdf_fig=pdf_fig)
+        for indicator in self.indicators:
+            self.draw_train_logger(indicator, results[indicator], log_dir + 'pics/', pdf_fig=pdf_fig)
+
+
+
 def get_average_data(data_type: str, results: dict, norm: bool=False): # for rollout
     problems=[]
     agents=[]
@@ -1110,16 +1491,6 @@ def gen_overall_tab(results: dict, out_dir: str, metrics: Optional[list] = None)
     # 保存结果到 Excel 文件
     df_results.to_excel(out_dir + 'overall_table.xlsx')
 
-# moo
-def is_pareto_efficient(points):
-    """计算帕累托前沿"""
-    points = np.array(points)
-    pareto_mask = np.ones(points.shape[0], dtype=bool)
-    for i, p in enumerate(points):
-        if pareto_mask[i]:
-            pareto_mask[pareto_mask] = np.any(points[pareto_mask] < p, axis=1)
-            pareto_mask[i] = True
-    return points[pareto_mask]
 
 class Logger:
     def __init__(self, config: argparse.Namespace):
