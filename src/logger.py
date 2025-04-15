@@ -2484,7 +2484,7 @@ def post_processing_rollout_statics(log_dir: str, logger: Logger) -> None:
 
 #logger
 # class basic_Logger:
-class MTO_Logger(basic_logger):
+class MTO_Logger(Basic_Logger):
     def __init__(self, config):
         super().__init__(config)
 
