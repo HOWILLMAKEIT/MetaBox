@@ -4,7 +4,7 @@ import math
 from os import path
 MINMAX = -1 
 
-class CEC2013MMO_Problem(Basic_Problem):
+class CEC2013MMO_Numpy_Problem(Basic_Problem):
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
         self.dim = dim
         self.lb = lb
@@ -53,7 +53,7 @@ class CEC2013MMO_Problem(Basic_Problem):
                 seeds_idx.append(i)
         return seeds_idx
 
-class CFunction(CEC2013MMO_Problem):
+class CFunction_Numpy_Problem(CEC2013MMO_Numpy_Problem):
     # Abstract composition function
     __nofunc_ = -1
     __C_ = 2000.0
@@ -71,7 +71,7 @@ class CFunction(CEC2013MMO_Problem):
     __function_ = None
 
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes, nofunc):
-        super(CFunction, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes)
+        super(CFunction_Numpy_Problem, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes)
         self.__nofunc_ = nofunc
 
     def func(self, x):
@@ -198,7 +198,7 @@ def FEF8F2(x):
     f += F8F2(x[:, [D - 1, 0]] + 1)
     return f
 
-class F1(CEC2013MMO_Problem): # five_uneven_peak_trap
+class F1(CEC2013MMO_Numpy_Problem): # five_uneven_peak_trap
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
         super(F1, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes)
 
@@ -237,7 +237,7 @@ class F1(CEC2013MMO_Problem): # five_uneven_peak_trap
         
         return -result
 
-class F2(CEC2013MMO_Problem): # equal_maxima
+class F2(CEC2013MMO_Numpy_Problem): # equal_maxima
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
         super(F2, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes)
 
@@ -252,7 +252,7 @@ class F2(CEC2013MMO_Problem): # equal_maxima
         self.FES += x.shape[0]
         return -np.sin(5.0 * np.pi * x[:, 0]) ** 6
 
-class F3(CEC2013MMO_Problem): # uneven_decreasing_maxima
+class F3(CEC2013MMO_Numpy_Problem): # uneven_decreasing_maxima
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
         super(F3, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes)
 
@@ -270,7 +270,7 @@ class F3(CEC2013MMO_Problem): # uneven_decreasing_maxima
             * (np.sin(5 * np.pi * (x[:, 0] ** 0.75 - 0.05))) ** 6
         )
         
-class F4(CEC2013MMO_Problem): # himmelblau
+class F4(CEC2013MMO_Numpy_Problem): # himmelblau
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
         super(F4, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes)
 
@@ -286,7 +286,7 @@ class F4(CEC2013MMO_Problem): # himmelblau
         result = 200 - (x[:, 0] ** 2 + x[:, 1] - 11) ** 2 - (x[:, 0] + x[:, 1] ** 2 - 7) ** 2
         return -result
 
-class F5(CEC2013MMO_Problem): # six_hump_camel_back
+class F5(CEC2013MMO_Numpy_Problem): # six_hump_camel_back
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
         super(F5, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes)
 
@@ -307,7 +307,7 @@ class F5(CEC2013MMO_Problem): # six_hump_camel_back
         expr3 = (4.0 * y2 - 4.0) * y2
         return -(-1.0 * (expr1 + expr2 + expr3))
 
-class F6(CEC2013MMO_Problem): # shubert
+class F6(CEC2013MMO_Numpy_Problem): # shubert
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
         super(F6, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes)
 
@@ -330,7 +330,7 @@ class F6(CEC2013MMO_Problem): # shubert
 
         return -(-result)
 
-class F7(CEC2013MMO_Problem): # vincent
+class F7(CEC2013MMO_Numpy_Problem): # vincent
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
         super(F7, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes)
 
@@ -349,7 +349,7 @@ class F7(CEC2013MMO_Problem): # vincent
         result = np.sum((np.sin(10 * np.log(x))) / D, axis = 1)
         return -result
 
-class F8(CEC2013MMO_Problem): # modified_rastrigin_all
+class F8(CEC2013MMO_Numpy_Problem): # modified_rastrigin_all
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
         super(F8, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes)
 
@@ -374,7 +374,7 @@ class F8(CEC2013MMO_Problem): # modified_rastrigin_all
         result = np.sum(10 + 9 * np.cos(2 * math.pi * np.array(k)[None, :] * x), axis=1)
         return -(-result)
 
-class F9(CFunction): # CF1
+class F9(CFunction_Numpy_Problem): # CF1
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
         super(F9, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes, 6)
 
@@ -385,7 +385,7 @@ class F9(CFunction): # CF1
         self._CFunction__lambda_ = np.array([1.0, 1.0, 8.0, 8.0, 1.0 / 5.0, 1.0 / 5.0])
 
         # Load optima
-        o = np.loadtxt(path.join(path.dirname(__file__), 'MMO') + "/optima.dat")
+        o = np.loadtxt(path.join(path.dirname(__file__), 'datafile') + "/optima.dat")
         if o.shape[1] >= dim:
             self._CFunction__O_ = o[: self._CFunction__nofunc_, :dim]
         else:  # randomly initialize
@@ -418,7 +418,7 @@ class F9(CFunction): # CF1
         self.FES += x.shape[0]
         return -self._CFunction__evaluate_inner_(x)
 
-class F10(CFunction): # CF2
+class F10(CFunction_Numpy_Problem): # CF2
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
         super(F10, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes, 8)
 
@@ -431,7 +431,7 @@ class F10(CFunction): # CF2
         )
 
         # Load optima
-        o = np.loadtxt(path.join(path.dirname(__file__), 'MMO') + "/optima.dat")
+        o = np.loadtxt(path.join(path.dirname(__file__), 'datafile') + "/optima.dat")
         if o.shape[1] >= dim:
             self._CFunction__O_ = o[: self._CFunction__nofunc_, :dim]
         else:  # randomly initialize
@@ -466,7 +466,7 @@ class F10(CFunction): # CF2
         self.FES += x.shape[0]
         return -self._CFunction__evaluate_inner_(x)
 
-class F11(CFunction): # CF3
+class F11(CFunction_Numpy_Problem): # CF3
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
         super(F11, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes, 6)
 
@@ -477,7 +477,7 @@ class F11(CFunction): # CF3
         self._CFunction__lambda_ = np.array([1.0 / 4.0, 1.0 / 10.0, 2.0, 1.0, 2.0, 5.0])
 
         # Load optima
-        o = np.loadtxt(path.join(path.dirname(__file__), 'MMO') + "/optima.dat")
+        o = np.loadtxt(path.join(path.dirname(__file__), 'datafile') + "/optima.dat")
         if o.shape[1] >= dim:
             self._CFunction__O_ = o[: self._CFunction__nofunc_, :dim]
         else:  # randomly initialize
@@ -487,7 +487,7 @@ class F11(CFunction): # CF3
 
         # Load M_: Rotation matrices
         if dim == 2 or dim == 3 or dim == 5 or dim == 10 or dim == 20:
-            fname = path.join(path.dirname(__file__), 'MMO') + "/CF3_M_D" + str(dim) + ".dat"
+            fname = path.join(path.dirname(__file__), 'datafile') + "/CF3_M_D" + str(dim) + ".dat"
             self._CFunction__load_rotmat(fname)
         else:
             # M_ Identity matrices 
@@ -515,7 +515,7 @@ class F11(CFunction): # CF3
         self.FES += x.shape[0]
         return -self._CFunction__evaluate_inner_(x)
 
-class F12(CFunction): # CF4
+class F12(CFunction_Numpy_Problem): # CF4
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
         super(F12, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes, 8)
 
@@ -528,7 +528,7 @@ class F12(CFunction): # CF4
         )
 
         # Load optima
-        o = np.loadtxt(path.join(path.dirname(__file__), 'MMO') + "/optima.dat")
+        o = np.loadtxt(path.join(path.dirname(__file__), 'datafile') + "/optima.dat")
         if o.shape[1] >= dim:
             self._CFunction__O_ = o[: self._CFunction__nofunc_, :dim]
         else:  # randomly initialize
@@ -538,7 +538,7 @@ class F12(CFunction): # CF4
 
         # Load M_: Rotation matrices
         if dim == 2 or dim == 3 or dim == 5 or dim == 10 or dim == 20:
-            fname = path.join(path.dirname(__file__), 'MMO') + "/CF4_M_D" + str(dim) + ".dat"
+            fname = path.join(path.dirname(__file__), 'datafile') + "/CF4_M_D" + str(dim) + ".dat"
             self._CFunction__load_rotmat(fname)
         else:
             # M_ Identity matrices
