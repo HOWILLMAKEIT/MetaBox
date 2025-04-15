@@ -2521,3 +2521,67 @@ class MTO_Logger(Basic_Logger):
         plt.grid()
         plt.savefig(output_dir + f'avg_mto_cost.png', bbox_inches='tight')
         plt.close()
+
+    def draw_per_task_cost(self, data:list, output_dir: str) -> None:
+        data = np.array(data, dtype=np.float32)
+        if data.ndim == 3:  
+            data = np.mean(data, axis=1)
+
+        epochs, task_cnt = data.shape
+        fig, axes = plt.subplots(task_cnt, 1, figsize=(10, 2 * task_cnt))  
+        if task_cnt == 1:
+            axes = [axes]
+
+        for task_idx in range(task_cnt):
+            ax = axes[task_idx]
+            ax.plot(range(epochs), data[:, task_idx], color='blue', label=f'Task {task_idx+1}')
+            ax.set_title(f'Task {task_idx+1}')
+            ax.set_xlabel('Epochs')
+            ax.set_ylabel('Value')
+            ax.legend()
+            ax.grid(True)
+
+        plt.tight_layout()
+        plt.savefig(output_dir + f'mto_each_task_cost.png', bbox_inches='tight')
+        plt.close()
+
+    def save_mto_cost_to_csv(self, data:list, output_dir: str) -> None:
+        data = np.array(data, dtype=np.float32)
+        if data.ndim == 3:  
+            data = np.mean(data, axis=1)
+
+        epochs, task_cnt = data.shape
+        df = pd.DataFrame(data, columns=[f'Task_{i+1}' for i in range(task_cnt)])
+        df.insert(0, 'Epoch', np.arange(epochs))
+        output_path = output_dir + f'mto_each_task_cost.csv'
+        df.to_csv(output_path, index=False)
+
+    def save_mto_reward_to_csv(self, data:list, output_dir: str) -> None:
+        data = np.array(data, dtype=np.float32)
+        if data.ndim == 2:  
+            data = np.mean(data, axis=-1)
+        epochs = data.shape[0]
+        df = pd.DataFrame({
+            "Epoch": np.arange(epochs),  
+            "Value": data              
+        })
+        output_path = output_dir + f'mto_return.csv'
+        df.to_csv(output_path, index=False)
+
+    def draw_env_task_cost(self, data:list, output_dir:str) -> None:
+        data = np.array(data, dtype=np.float32)
+        if data.ndim < 3:
+            return 
+        epochs, env_cnt, task_cnt = data.shape
+
+        for task in range(task_cnt):
+            plt.figure(figsize=(10, 5))
+            for env in range(env_cnt):
+                plt.plot(data[:, env, task], label=f'Env {env+1}')
+            plt.title(f'Task {task+1} Performance Across Environments')
+            plt.xlabel('Epochs')
+            plt.ylabel('Metric Value')
+            plt.legend()
+            plt.grid()
+        plt.savefig(output_dir + f'mto_env_task_{task+1}_cost.png', bbox_inches='tight')
+        plt.close()
