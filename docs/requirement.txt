@@ -1,0 +1,9 @@
+Sphinx
+
+sphinx-autodoc2
+sphinx-autobuild
+sphinx_rtd_theme
+sphinx-intl
+recommonmark
+sphinx_markdown_tables
+myst-parser
