@@ -91,8 +91,8 @@ if __name__ == '__main__':
     # mgd_test
     if config.mgd_test:
         torch.set_grad_enabled(False)
-        mgd_test(config)
+        tester.mgd_test()
 
     # mte_test
     if config.mte_test:
-        mte_test(config)
+        tester.mte_test()

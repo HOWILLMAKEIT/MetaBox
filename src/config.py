@@ -68,8 +68,8 @@ def get_config(args=None):
     
 
     # Rollout parameters
-    parser.add_argument('--agent_for_rollout', type=str, nargs='+', help='learnable agent for rollout')
-    parser.add_argument('--optimizer_for_rollout', type=str, nargs='+', help='learnabel optimizer for rollout')
+    parser.add_argument('--agent_for_rollout', type=str, help='learnable agent for rollout')
+    parser.add_argument('--checkpoints_for_rollout', type=int, nargs='+', help='the index of checkpoints for rollout')
     parser.add_argument('--plot_smooth', type=float, default=0.8,
                         help='a float between 0 and 1 to control the smoothness of figure curves')
 
