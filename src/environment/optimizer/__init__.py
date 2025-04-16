@@ -21,3 +21,4 @@ from .rlemmo_optimizer import RLEMMO_Optimizer
 
 from .glhf_optimizer import GLHF_Optimizer
 from .b2opt_optimizer import B2OPT_Optimizer
+from .lga_optimizer import LGA_Optimizer
