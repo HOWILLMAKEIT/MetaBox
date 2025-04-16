@@ -88,8 +88,8 @@ def get_config(args=None):
     parser.add_argument('--model_to', type=str, help='the model trained on target problem set')
 
     # mte_test(transfer_learning) parameters
-    parser.add_argument('--pre_train_rollout', type=str, help='path of pre-train models rollout result .pkl file')
-    parser.add_argument('--scratch_rollout', type=str, help='path of scratch models rollout result .pkl file')
+    parser.add_argument('--pre_train_rollout', type=str, help='key of pre-train models rollout in model.json')
+    parser.add_argument('--scratch_rollout', type=str, help='key of scratch models rollout result in model.json')
 
     # todo add new config
 

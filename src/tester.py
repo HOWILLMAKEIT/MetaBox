@@ -545,13 +545,21 @@ class Tester(object):
             pbar.close()
 
         elif parallel_batch == 'Batch':
-            pbar_len = np.ceil(test_set.N / config.test_batch_size) * test_run
+            pbar_len = 2 * np.ceil(test_set.N / config.test_batch_size) * test_run
             pbar = tqdm(total = pbar_len, desc = "Batch Testing")
             for problem in test_set:
                 for i, seed in enumerate(seed_list):
-                    pbar.set_description_str(f"Batch Testing with Problem {problem.__class__.__name__}, Run {i}")
+                    pbar.set_description_str(f"Batch Testing From Agent {agent_from.__str__()} with Problem {problem.__class__.__name__}, Run {i}")
                     testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent_from), PBO_Env(copy.deepcopy(p), copy.deepcopy(l_optimizer)), seed) for p in problem]
-                    testunit_list += [MetaBBO_TestUnit(copy.deepcopy(agent_to), PBO_Env(copy.deepcopy(p), copy.deepcopy(l_optimizer)), seed) for p in problem]
+                    MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray')
+                    meta_test_data = MetaBBO_test.customized_method('run_batch_episode')
+                    self.record_test_data(meta_test_data)
+                    pbar.update()
+            self.store_meta_data()
+            for problem in test_set:
+                for i, seed in enumerate(seed_list):
+                    pbar.set_description_str(f"Batch Testing To Agent {agent_to.__str__()} with Problem {problem.__class__.__name__}, Run {i}")
+                    testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent_to), PBO_Env(copy.deepcopy(p), copy.deepcopy(l_optimizer)), seed) for p in problem]
                     MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray')
                     meta_test_data = MetaBBO_test.customized_method('run_batch_episode')
                     self.record_test_data(meta_test_data)
@@ -613,9 +621,16 @@ class Tester(object):
     def mte_test(self, ):
         config = self.config
         print(f'start MTE_test: {config.run_time}')
-        pre_train_file = config.pre_train_rollout
-        scratch_file = config.scratch_rollout
-        agent = config.agent
+        with open('model.json', 'r', encoding = 'utf-8') as f:
+            json_data = json.load(f)
+        pre_train = json_data[config.pre_train_rollout]
+        scratch_rollout = json_data[config.scratch_rollout]
+
+        pre_train_file = pre_train['dir']
+        scratch_file = scratch_rollout['dir']
+
+        agent = pre_train['Agent']
+
         min_max = False
 
         # preprocess data for agent
@@ -702,7 +717,7 @@ class Tester(object):
             t = 1
         MTE = 1 - t / T
 
-        print(f'MTE({name_translate(config.problem_from)}_{config.difficulty_from}, {name_translate(config.problem_to)}_{config.difficulty_to}) of {config.agent}: '
+        print(f'MTE({self.name_translate(config.problem_from)}_{config.difficulty_from}, {self.name_translate(config.problem_to)}_{config.difficulty_to}) of {agent}: '
             f'{MTE}')
 
         ax = plt.gca()
@@ -712,7 +727,7 @@ class Tester(object):
         plt.legend(loc=0, fontsize=60)
         plt.xlabel('Learning Steps', fontsize=55)
         plt.ylabel('Avg Return', fontsize=55)
-        plt.title(f'Fine-tuning ({name_translate(config.problem_from)} $\\rightarrow$ {name_translate(config.problem_to)})',
+        plt.title(f'Fine-tuning ({self.name_translate(config.problem_from)} $\\rightarrow$ {self.name_translate(config.problem_to)})',
                 fontsize=60)
         plt.tight_layout()
         plt.grid()
