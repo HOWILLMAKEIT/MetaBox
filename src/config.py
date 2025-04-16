@@ -32,7 +32,7 @@ def get_config(args=None):
     parser.add_argument('--task_cnt', type=int, default=10, help='number of tasks in multitask') #for multitask
     parser.add_argument('--generation', type=int, default=250, help='total generations for L2O') #for multitask
 
-    parser.add_argument('--full_meta_data', default=None, help='store the metadata')
+    parser.add_argument('--full_meta_data', type=bool, default=True, help='store the metadata')
     # Training parameters
     parser.add_argument('--max_learning_step', type=int, default=1500000, help='the maximum learning step for training')
     parser.add_argument('--train_batch_size', type=int, default=1, help='batch size of train set')
@@ -97,7 +97,7 @@ def get_config(args=None):
     parser.add_argument('--seed', type = int, default = 3849)
     parser.add_argument('--epoch_seed', type = int, default = 100)
     parser.add_argument('--id_seed', type = int, default = 5)
-    parser.add_argument('--train_mode', type = str, choices = ['single', 'multi'])
+    parser.add_argument('--train_mode', default='single', type = str, choices = ['single', 'multi'])
     parser.add_argument('--end_mode', type = str, choices = ['step', 'epoch'])
 
     parser.add_argument('--test_run', type = int, default = 51)

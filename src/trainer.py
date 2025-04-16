@@ -82,7 +82,7 @@ class Trainer(object):
         self.train_set, self.test_set = construct_problem_set(config)
         self.config.dim = max(self.train_set.maxdim, self.test_set.maxdim)
         
-        if self.config.problem == 'bbob-surrogate':
+        if self.config.train_problem == 'bbob-surrogate':
             self.config.is_train = True
             
         if self.config.resume_dir is None:
@@ -142,7 +142,7 @@ class Trainer(object):
             self.train_set.shuffle()
             return_record = 0
             loss_record = 0
-            with tqdm(range(np.ceil(self.train_set.N / self.train_set.batch_size)), desc = f'Training {self.agent.__class__.__name__} Epoch {epoch}') as pbar:
+            with tqdm(range(int(np.ceil(self.train_set.N / self.train_set.batch_size))), desc = f'Training {self.agent.__class__.__name__} Epoch {epoch}') as pbar:
                 for problem_id, problem in enumerate(self.train_set):
                     # set seed
                     seed_list = (epoch * epoch_seed + id_seed * (np.arange(bs) + bs * problem_id) + seed).tolist()
@@ -162,7 +162,7 @@ class Trainer(object):
                     # exceed_max_ls, pbar_info_train = self.agent.train_episode(env)  # pbar_info -> dict
                     meanR = torch.mean(train_meta_data['return'])
                     postfix_str = (
-                        f"loss={train_meta_data['loss']:.2e}, "
+                        f"loss={torch.sum(train_meta_data['loss']):.2e}, "
                         f"learn_steps={train_meta_data['learn_steps']}, "
                         f"return={f'{meanR:.2e}'}"
                     )
