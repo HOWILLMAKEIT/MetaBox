@@ -108,7 +108,7 @@ class LES(Basic_Agent):
         return_info['gbest'] = env_population[0].get_env_attr('cost')[-1],
         for key in required_info.keys():
             return_info[key] =  env_population[0].get_env_attr(required_info[key])
-        for i, e in enumerate(env_populaton):
+        for i, e in enumerate(env_population):
             e.close()
         # return exceed_max_ls
         return self.__learning_step >= self.__config.max_learning_step, return_info
