@@ -21,6 +21,8 @@ class PSORLNS_Optimizer(Learnable_Optimizer):
 
         self.fes = None
         self.cost = None
+        self.pr = None
+        self.sr = None
         self.log_index = None
         self.log_interval = None
 
@@ -83,6 +85,9 @@ class PSORLNS_Optimizer(Learnable_Optimizer):
 
         self.log_index = 1
         self.cost = [self.particles['gbest_val']]
+        raw_pr, raw_sr = self.cal_pr_sr(problem)
+        self.pr = [raw_pr.copy()]
+        self.sr = [raw_sr.copy()]
 
         # get state
 
@@ -214,8 +219,8 @@ class PSORLNS_Optimizer(Learnable_Optimizer):
             self.meta_X.append(self.particles['current_position'].copy())
             self.meta_Cost.append(self.particles['c_cost'].copy())
             raw_pr, raw_sr = self.cal_pr_sr(problem)
-            self.meta_Pr = [raw_pr.copy()]
-            self.meta_Sr = [raw_sr.copy()]
+            self.meta_Pr.append(raw_pr.copy())
+            self.meta_Sr.append(raw_sr.copy())
 
 
         # see if the end condition is satisfied
@@ -230,12 +235,24 @@ class PSORLNS_Optimizer(Learnable_Optimizer):
         if self.fes >= self.log_index * self.log_interval:
             self.log_index += 1
             self.cost.append(self.particles['gbest_val'])
+            raw_pr, raw_sr = self.cal_pr_sr(problem)
+            self.pr.append(raw_pr.copy())
+            self.sr.append(raw_sr.copy())
+
             
         if is_end[0]:
             if len(self.cost) >= self.__config.n_logpoint + 1:
                 self.cost[-1] = self.particles['gbest_val']
+                raw_pr, raw_sr = self.cal_pr_sr(problem)
+                self.pr[-1] = raw_pr.copy()
+                self.sr[-1] = raw_sr.copy()
             else:
                 self.cost.append(self.particles['gbest_val'])
+                raw_pr, raw_sr = self.cal_pr_sr(problem)
+                self.pr.append(raw_pr.copy())
+                self.sr.append(raw_sr.copy())
+            
+
 
         info = {}
         return next_state, reward, is_end, info

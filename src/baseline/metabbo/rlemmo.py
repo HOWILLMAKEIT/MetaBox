@@ -470,14 +470,15 @@ class RLEMMO(PPO_Agent):
 
         env_cost = env.get_env_attr('cost')
         env_fes = env.get_env_attr('fes')
-        results = {'cost': env_cost, 'fes': env_fes, 'return': _Rs}
+        env_pr = env.get_env_attr('pr')
+        env_sr = env.get_env_attr('sr')
+        results = {'cost': env_cost, 'fes': env_fes, 'return': _Rs, 'pr': env_pr, 'sr':env_sr}
         if self.config.full_meta_data:
             meta_X = env.get_env_attr('meta_X')
             meta_Cost = env.get_env_attr('meta_Cost')
             meta_Pr = env.get_env_attr('meta_Pr')
             meta_Sr = env.get_env_attr('meta_Sr')
-            meta_T1 = env.get_env_attr('T1')
-            metadata = {'X': meta_X, 'Cost': meta_Cost, 'Pr': meta_Pr, 'Sr': meta_Sr, 'T1': meta_T1}
+            metadata = {'X': meta_X, 'Cost': meta_Cost, 'Pr': meta_Pr, 'Sr': meta_Sr}
             results['metadata'] = metadata
 
         for key in required_info.keys():
@@ -504,15 +505,16 @@ class RLEMMO(PPO_Agent):
                 R += reward
             env_cost = env.get_env_attr('cost')
             env_fes = env.get_env_attr('fes')
-            results = {'cost': env_cost, 'fes': env_fes, 'return': R}
+            env_pr = env.get_env_attr('pr')
+            env_sr = env.get_env_attr('sr')
+            results = {'cost': env_cost, 'fes': env_fes, 'return': R, 'pr': env_pr, 'sr':env_sr}
 
             if self.config.full_meta_data:
                 meta_X = env.get_env_attr('meta_X')
                 meta_Cost = env.get_env_attr('meta_Cost')
                 meta_Pr = env.get_env_attr('meta_Pr')
                 meta_Sr = env.get_env_attr('meta_Sr')
-                meta_T1 = env.get_env_attr('T1')
-                metadata = {'X': meta_X, 'Cost': meta_Cost, 'Pr': meta_Pr, 'Sr': meta_Sr, 'T1': meta_T1}
+                metadata = {'X': meta_X, 'Cost': meta_Cost, 'Pr': meta_Pr, 'Sr': meta_Sr}
                 results['metadata'] = metadata
     
             for key in required_info.keys():

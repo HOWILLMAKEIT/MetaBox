@@ -21,19 +21,19 @@ colors = ['b', 'g', 'orange', 'r', 'purple', 'brown', 'grey', 'limegreen', 'turq
           ]
 
 
-def data_wrapper_prsr(data, ):
-    res = []
-    for key in data.keys():
-        res.append(np.array(data[key][:, -1, 3]))
-    return np.array(res)
+# def data_wrapper_prsr(data, ):
+#     res = []
+#     for key in data.keys():
+#         res.append(np.array(data[key][:, -1, 3]))
+#     return np.array(res)
 
 
 def data_wrapper_cost(data, ):
     return np.array(data)[:, :, -1]
 
 
-def data_wrapper_prsr_test(data, ):
-    return np.array(data)[:,-1, 3]
+# def data_wrapper_prsr_test(data, ):
+#     return np.array(data)[:,-1, 3]
 
 
 def to_label(agent_name: str) -> str:
@@ -1152,6 +1152,285 @@ class MOO_Logger(Basic_Logger):
         self.draw_train_logger('return', results['return'], log_dir + 'pics/', pdf_fig=pdf_fig)
         for indicator in self.indicators:
             self.draw_train_logger(indicator, results[indicator], log_dir + 'pics/', pdf_fig=pdf_fig)
+
+
+
+class MMO_Logger(Basic_Logger):
+    def __init__(self, config: argparse.Namespace) -> None:
+        super().__init__(config)
+
+    def data_wrapper_prsr_rollout(data, ):
+        res = []
+        for key in data.keys():
+            res.append(np.array(data[key][:, -1, 3]))
+        return np.array(res)
+
+    def data_wrapper_prsr_test(data, ):
+        return np.array(data)[:, -1, 3]
+
+    def data_wrapper_prsr_draw_list(data,):
+        return np.array(data)[:, :, 3]
+
+    def data_wrapper_cost_rollout(data, ):
+        res = []
+        for key in data.keys():
+            res.append(np.array(data[key][:, -1]))
+        return np.array(res)
+
+    def data_wrapper_cost_test(data, ):
+        return np.array(data)[:, -1]
+
+    def data_wrapper_return_rollout(data, ):
+        res = []
+        for key in data.keys():
+            res.append(np.array(data[key]))
+        return np.array(res)
+
+    def gen_agent_performance_table(self, results: dict, data_type: str, out_dir: str,data_wrapper: Callable = None) -> None:
+        """
+        Store the `Worst`, `Best`, `Median`, `Mean` and `Std` of cost results of each agent as excel
+        """
+        total_cost=results
+        table_data={}
+        indexs=[]
+        columns=['Worst','Best','Median','Mean','Std']
+        for problem,value in total_cost.items():
+            indexs.append(problem)
+            problem_cost=value
+            for alg,alg_cost in problem_cost.items():
+                n_cost=data_wrapper(alg_cost)
+                # if alg == 'MadDE' and problem == 'F5':
+                #     for run in alg_cost:
+                #         print(len(run))
+                #     print(len(n_cost))
+                best=np.min(n_cost)
+                best=np.format_float_scientific(best,precision=3,exp_digits=3)
+                worst=np.max(n_cost)
+                worst=np.format_float_scientific(worst,precision=3,exp_digits=3)
+                median=np.median(n_cost)
+                median=np.format_float_scientific(median,precision=3,exp_digits=3)
+                mean=np.mean(n_cost)
+                mean=np.format_float_scientific(mean,precision=3,exp_digits=3)
+                std=np.std(n_cost)
+                std=np.format_float_scientific(std,precision=3,exp_digits=3)
+
+                if not alg in table_data:
+                    table_data[alg]=[]
+                table_data[alg].append([worst,best,median,mean,std])
+        for alg,data in table_data.items():
+            dataframe=pd.DataFrame(data=data,index=indexs,columns=columns)
+            #print(dataframe)
+            dataframe.to_excel(os.path.join(out_dir,f'{alg}_concrete_performance_{data_type}_table.xlsx'))
+
+    def gen_overall_tab(results: dict, out_dir: str) -> None:
+        """
+        Store the overall results inculding `objective values` (costs), `pr` and `sr` as excel
+        """
+        # get multi-indexes first
+        problems = []
+        statics = ['Obj','Pr', 'Sr']
+        optimizers = []
+        for problem in results['cost'].keys():
+            problems.append(problem)
+        for optimizer in results['cost'][problems[0]].keys():
+            optimizers.append(optimizer)
+        multi_columns = pd.MultiIndex.from_product(
+            [problems,statics], names=('Problem', 'metric')
+        )
+        df_results = pd.DataFrame(np.ones(shape=(len(optimizers),len(problems)*len(statics))),
+                                index=optimizers,
+                                columns=multi_columns)
+
+        # # calculate baseline1 cmaes
+        # cmaes_obj = {}
+        # for problem in problems:
+        #     blobj_problem = results['cost'][problem]['DEAP_CMAES']  # 51 * record_length
+        #     objs = []
+        #     for run in range(51):
+        #         objs.append(blobj_problem[run][-1])
+        #     cmaes_obj[problem] = sum(objs) / 51
+
+        # # calculate baseline2 random_search
+        # rs_obj = {}
+        # for problem in problems:
+        #     blobj_problem = results['cost'][problem]['Random_search']  # 51 * record_length
+        #     objs = []
+        #     for run in range(51):
+        #         objs.append(blobj_problem[run][-1])
+        #     rs_obj[problem] = sum(objs) / 51
+
+        # calculate each Obj
+        for problem in problems:
+            for optimizer in optimizers:
+                obj_problem_optimizer = results['cost'][problem][optimizer]
+                objs_ = data_wrapper_cost_test(obj_problem_optimizer)
+                avg_obj = sum(objs_)/51
+                std_obj = np.std(objs_)
+                df_results.loc[optimizer, (problem, 'Obj')] = np.format_float_scientific(avg_obj, precision=3, exp_digits=1) + "(" + np.format_float_scientific(std_obj, precision=3, exp_digits=1) + ")"
+
+                pr_problem_optimizer = results['pr'][problem][optimizer]
+                prs_ = data_wrapper_prsr_test(pr_problem_optimizer)
+                avg_pr = sum(prs_)/51
+                std_pr = np.std(prs_)
+                df_results.loc[optimizer, (problem, 'Pr')] = np.format_float_scientific(avg_pr, precision=3, exp_digits=1) + "(" + np.format_float_scientific(std_pr, precision=3, exp_digits=1) + ")"
+
+                sr_problem_optimizer = results['sr'][problem][optimizer]
+                srs_ = data_wrapper_prsr_test(sr_problem_optimizer)
+                avg_sr = sum(srs_)/51
+                std_sr = np.std(srs_)
+                df_results.loc[optimizer, (problem, 'Sr')] = np.format_float_scientific(avg_sr, precision=3, exp_digits=1) + "(" + np.format_float_scientific(std_sr, precision=3, exp_digits=1) + ")"
+
+        df_results.to_excel(out_dir+'overall_table.xlsx')
+
+    def draw_concrete_performance_hist(self, data: dict, data_type: str,output_dir: str, Name: Optional[Union[str, list]]=None, pdf_fig: bool = True, data_wrapper: Callable = None) -> None:
+        fig_type = 'pdf' if pdf_fig else 'png'
+        D = {}
+        X = []
+        for problem in list(data.keys()):
+            if Name is not None and (isinstance(Name, str) and problem != Name) or (isinstance(Name, list) and problem not in Name):
+                continue
+            else:
+                name = problem
+            X.append(name)
+            for agent in list(data[name].keys()):
+                if agent not in D.keys():
+                    D[agent] = []
+                values = data_wrapper(data[name][agent])
+                D[agent].append(values[:, -1] / values[:, 0])
+
+        for agent in D.keys():
+            plt.figure()
+            # plt.title(f'{agent} performance histgram')
+            X = list(data.keys())
+            D[agent] = np.mean(np.array(D[agent]), -1)
+            plt.bar(X, D[agent])
+            for a,b in zip(X, D[agent]):
+                plt.text(a, b, '%.2f' % b, ha='center', fontsize=15)
+            plt.xticks(rotation=30, fontsize=13)
+            plt.xlabel('Problems')
+            plt.ylabel(f'Normalized {data_type}')
+            plt.savefig(output_dir + f'{agent}_concrete_performance_{data_type}_hist.{fig_type}', bbox_inches='tight')
+
+    def draw_boxplot(self, data: dict, data_type: str,output_dir: str, Name: Optional[Union[str, list]]=None, ignore: Optional[list]=None, pdf_fig: bool = True,data_wrapper: Callable = None) -> None:
+        fig_type = 'pdf' if pdf_fig else 'png'
+        for problem in list(data.keys()):
+            if Name is not None and (isinstance(Name, str) and problem != Name) or (isinstance(Name, list) and problem not in Name):
+                continue
+            else:
+                name = problem
+            Y = []
+            X = []
+            plt.figure(figsize=(30, 15))
+            for agent in list(data[name].keys()):
+                if ignore is not None and agent in ignore:
+                    continue
+                X.append(agent)
+                # values = np.array(data[name][agent])
+                # Y.append(values[:, -1])
+                Y.append(data_wrapper(data[name][agent]))
+            Y = np.transpose(Y)
+            plt.boxplot(Y, labels=X, showmeans=True, patch_artist=True, showfliers=False,
+                        medianprops={'color': 'green', 'linewidth': 3}, 
+                        meanprops={'markeredgecolor': 'red', 'markerfacecolor': 'red', 'markersize': 10, 'marker': 'D'}, 
+                        boxprops={'color': 'black', 'facecolor': 'lightskyblue'},
+                        capprops={'linewidth': 2},
+                        whiskerprops={'linewidth': 2},
+                        )
+            plt.xticks(rotation=30, fontsize=18)
+            plt.xlabel('Agents')
+            plt.ylabel(f'{name} {data_type} Boxplots')
+            plt.savefig(output_dir + f'{name}_{data_type}_boxplot.{fig_type}', bbox_inches='tight')
+            plt.close()
+
+    def draw_overall_boxplot_pr(self, data: dict, data_type: str,output_dir: str, ignore: Optional[list]=None, pdf_fig: bool = True,data_wrapper: Callable = None) -> None:
+        fig_type = 'pdf' if pdf_fig else 'png'
+        problems=[]
+        agents=[]
+        for problem in data.keys():
+            problems.append(problem)
+        for agent in data[problems[0]].keys():
+            if ignore is not None and agent in ignore:
+                continue
+            agents.append(agent)
+        run = len(data[problems[0]][agents[0]])
+        values = np.zeros((len(agents), len(problems), run))
+        plt.figure(figsize=(30, 15))
+        for ip, problem in enumerate(problems):
+            for ia, agent in enumerate(agents):
+                values[ia][ip] = data_wrapper(data[problem][agent])
+            values[:, ip, :] = (values[:, ip, :] - np.min(values[:, ip, :])) / (np.max(values[:, ip, :]) - np.min(values[:, ip, :]))
+        values = values.reshape(len(agents), -1).transpose()
+        
+        plt.boxplot(values, labels=agents, showmeans=True, patch_artist=True, showfliers=False,
+                    medianprops={'color': 'green', 'linewidth': 3}, 
+                    meanprops={'markeredgecolor': 'red', 'markerfacecolor': 'red', 'markersize': 10, 'marker': 'D'}, 
+                    boxprops={'color': 'black', 'facecolor': 'lightskyblue'},
+                    capprops={'linewidth': 2},
+                    whiskerprops={'linewidth': 2},
+                    )
+        plt.xticks(rotation=30, fontsize=18)
+        plt.xlabel('Agents')
+        plt.ylabel(f'{data_type} Boxplots')
+        plt.savefig(output_dir + f'overall_{data_type}_boxplot.{fig_type}', bbox_inches='tight')
+        plt.close()
+
+    def draw_rank_hist(self, data: dict, data_type: str,output_dir: str, pdf_fig: bool = True,data_wrapper: Callable = None) -> None:
+        fig_type = 'pdf' if pdf_fig else 'png'
+        metric, metric_std = self.get_average_data(data, norm = False, data_wrapper = data_wrapper)
+        X, Y = list(metric.keys()), list(metric.values())
+        _, S = list(metric_std.keys()), list(metric_std.values())
+        n_agents = len(X)
+        for i in range(n_agents):
+            X[i] = to_label(X[i])
+
+        plt.figure(figsize=(4*n_agents,15))
+        plt.bar(X, Y)
+        plt.errorbar(X, Y, S, fmt='s', ecolor='dimgray', ms=1, color='dimgray', elinewidth=5, capsize=30, capthick=5)
+        for a,b in zip(X, Y):
+            plt.text(a, b+0.05, '%.2f' % b, ha='center', fontsize=55)
+        plt.xticks(rotation=45, fontsize=60)
+        plt.yticks(fontsize=60)
+        plt.ylim(0, np.max(np.array(Y) + np.array(S)) * 1.1)
+        plt.title(f'The {data_type} for {self.config.problem}-{self.config.difficulty}', fontsize=70)
+        plt.ylabel(f'{data_type}', fontsize=60)
+        plt.savefig(output_dir + f'{data_type}_rank_hist.{fig_type}', bbox_inches='tight')
+
+    def post_processing_test_statics(self, log_dir: str, pdf_fig: bool = True) -> None:
+        with open(log_dir + 'test.pkl', 'rb') as f:
+            results = pickle.load(f)
+            
+        metabbo = self.config.agent
+        bbo = self.config.t_optimizer
+        
+
+        if not os.path.exists(log_dir + 'tables/'):
+            os.makedirs(log_dir + 'tables/')
+
+        gen_overall_tab(results, log_dir + 'tables/')
+        gen_algorithm_complexity_table(results, log_dir + 'tables/')
+        gen_agent_performance_table(results['pr'],'pr', log_dir+'tables/', data_wrapper_prsr_test) 
+        gen_agent_performance_table(results['sr'], 'sr',log_dir + 'tables/', data_wrapper_prsr_test)
+
+
+        if not os.path.exists(log_dir + 'pics/'):
+            os.makedirs(log_dir + 'pics/')
+
+        self.draw_test_data(results['cost'], 'cost', log_dir + 'pics/', logged=True, categorized=True, pdf_fig=pdf_fig, data_wrapper=np.array)
+        self.draw_test_data(results['pr'],'pr', log_dir + 'pics/', logged=False, categorized=True, pdf_fig=pdf_fig, data_wrapper=data_wrapper_prsr_draw_list)
+        self.draw_test_data(results['sr'],'sr', log_dir + 'pics/', logged=False, categorized=True, pdf_fig=pdf_fig, data_wrapper=data_wrapper_prsr_draw_list)
+        self.draw_rank_hist(results['pr'], 'pr',log_dir + 'pics/', pdf_fig=pdf_fig, data_wrapper=data_wrapper_prsr_test) 
+        self.draw_rank_hist(results['sr'], 'sr', log_dir + 'pics/',pdf_fig=pdf_fig, data_wrapper = data_wrapper_prsr_test)
+
+
+    def post_processing_rollout_statics(self, log_dir: str, pdf_fig: bool = True) -> None:
+        with open(log_dir+'rollout.pkl', 'rb') as f:
+            results = pickle.load(f)
+        if not os.path.exists(log_dir + 'pics/'):
+            os.makedirs(log_dir + 'pics/')
+        self.draw_train_logger('return', results['return'], log_dir + 'pics/', pdf_fig=pdf_figj, data_wrapper=data_wrapper_return_rollout)
+        self.draw_train_logger('cost', results['cost'], log_dir + 'pics/', pdf_fig=pdf_fig, data_wrapper=data_wrapper_cost_rollout)
+        self.draw_train_logger('pr', results['pr'], log_dir + 'pics/', pdf_fig=pdf_fig, data_wrapper=data_wrapper_prsr_rollout)
+        self.draw_train_logger('sr', results['sr'], log_dir + 'pics/', pdf_fig=pdf_fig, data_wrapper=data_wrapper_prsr_rollout)
 
 
 

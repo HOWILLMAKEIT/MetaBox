@@ -20,6 +20,8 @@ class RLEMMO_Optimizer(Learnable_Optimizer):
 
         self.fes = None
         self.cost = None
+        self.pr = None
+        self.sr = None
         self.log_index = None
         self.log_interval = None
 
@@ -181,6 +183,9 @@ class RLEMMO_Optimizer(Learnable_Optimizer):
         # initialize the population
         self.initialize_individuals(problem)
         self.cost = [self.individuals['gbest_val']]
+        raw_pr, raw_sr = self.cal_pr_sr(problem)
+        self.pr = [raw_pr.copy()]
+        self.sr = [raw_sr.copy()]
         
         # get state
         state=self.observe() # ps, 9
@@ -373,13 +378,22 @@ class RLEMMO_Optimizer(Learnable_Optimizer):
         if self.fes >= self.log_index * self.log_interval:
             self.log_index += 1
             self.cost.append(self.individuals['gbest_val'])
+            raw_pr, raw_sr = self.cal_pr_sr(problem)
+            self.pr.append(raw_pr.copy())
+            self.sr.append(raw_sr.copy())
 
         if is_end:
             if len(self.cost) >= self.__config.n_logpoint + 1:
                 self.cost[-1] = self.individuals['gbest_val']
+                raw_pr, raw_sr = self.cal_pr_sr(problem)
+                self.pr[-1] = raw_pr.copy()
+                self.sr[-1] = raw_sr.copy()
             else:
                 self.cost.append(self.individuals['gbest_val'])
-        
+                raw_pr, raw_sr = self.cal_pr_sr(problem)
+                self.pr.append(raw_pr.copy())
+                self.sr.append(raw_sr.copy())
+
         info = {}
         return next_state, reward, is_end, info
 
