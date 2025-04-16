@@ -114,7 +114,7 @@ def _worker(
             elif cmd == "getenv":
                 p.send(CloudpickleWrapper(env))
             else:
-                result = eval('env.'+cmd)(**data)
+                result = eval('env.'+cmd)(**data) if data is not None else eval('env.'+cmd)()
                 p.send(result)
     except KeyboardInterrupt:
         p.close()
@@ -149,7 +149,7 @@ class SubprocEnvWorker(EnvWorker):
         self.is_reset = False
         super().__init__(env_fn)
         
-    def customized_method(self, func: str, data) -> Any:
+    def customized_method(self, func: str, data = None) -> Any:
         self.parent_remote.send([func, data])
 
     def get_env_attr(self, key: str) -> Any:

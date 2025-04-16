@@ -37,8 +37,8 @@ class DummyEnvWorker(EnvWorker):
     def send(self, action: Optional[np.ndarray]) -> None:
         self.result = self.env.step(action)
         
-    def customized_method(self, func: str, data) -> Any:
-        self.result = eval('self.env.'+func)(**data)
+    def customized_method(self, func: str, data = None) -> Any:
+        self.result = eval('self.env.'+func)(**data) if data is not None else eval('self.env.'+func)()
             
     def send_reset(self) -> None:
         self.result = self.env.reset()

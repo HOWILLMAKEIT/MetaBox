@@ -57,7 +57,7 @@ class RaySubprocEnvWorker(EnvWorker):
         workers.close()
         return results, loads(dumps(envs))
     
-    def customized_method(self, func: str, data, id=None) -> Any:
+    def customized_method(self, func: str, data = None, id=None) -> Any:
         if id is None:
             id = list(range(self.env_num))
         self.result = self.ray_customized.options(num_cpus=self.num_cpu_per_worker, num_gpus=self.num_gpu_per_worker).remote(self.worker_fn, self.envs, func, data, id, self.no_warning)

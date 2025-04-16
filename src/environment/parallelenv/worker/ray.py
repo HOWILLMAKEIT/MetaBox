@@ -78,15 +78,15 @@ class RayEnvWorker(EnvWorker):
         results = env.step(action)
         return *results, loads(dumps(env))
     
-    def customized_method(self, func: str, data) -> Any:
+    def customized_method(self, func: str, data= None) -> Any:
         self.result = self.ray_customized.options(num_cpus=self.num_cpu_per_worker, num_gpus=self.num_gpu_per_worker).remote(loads(dumps(self.env)), func, data, self.no_warning)
     
     @ray.remote(num_cpus=num_cpu_per_worker, num_gpus=num_gpu_per_worker)
-    def ray_customized(env, func, data, no_warning):
+    def ray_customized(env, func, data=None, no_warning=False):
         if no_warning:
             warnings.filterwarnings("ignore")
         env = loads(dumps(env))
-        results = eval('env.'+func)(**data)
+        results = eval('env.'+func)(**data) if data is not None else eval('env.'+func)()
         return results, loads(dumps(env))
         
     def recv(

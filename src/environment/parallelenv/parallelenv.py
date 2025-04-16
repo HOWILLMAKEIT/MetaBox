@@ -105,7 +105,7 @@ class ParallelEnv():
         """if all envs done"""
         return self.done.all()
     
-    def customized_method(self, env_method: str, data, id: Optional[Union[int, List[int], np.ndarray]] = None):
+    def customized_method(self, env_method: str, data = None, id: Optional[Union[int, List[int], np.ndarray]] = None):
         """if user declares a method in the env named [env_method] and requiring arguments in a dictionary [data], this method can call the function in parallel.
         ```python
         # For instance, to run a ``func`` method on 8 of a batch of 16 envs which requires
@@ -117,7 +117,10 @@ class ParallelEnv():
         results = VectorEnv.customized_method("func", data, id)
         ```
         """
-        return self.workers.customized_method(env_method, data, id)
+        if data is not None:
+            return self.workers.customized_method(env_method, data, id)
+        else:
+            return self.workers.customized_method(env_method, id)
         
     def reset(self, id: Optional[Union[int, List[int], np.ndarray]] = None):
         """reset the envs with index in [id], default to reset all envs"""
