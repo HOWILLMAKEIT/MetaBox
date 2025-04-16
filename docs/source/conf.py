@@ -29,7 +29,8 @@ release = 'v0.0.1'
 extensions = [
     'autodoc2',
     'sphinx_markdown_tables',
-    'myst_parser'
+    'myst_parser',
+
 ]
 autodoc2_packages = [
     {
