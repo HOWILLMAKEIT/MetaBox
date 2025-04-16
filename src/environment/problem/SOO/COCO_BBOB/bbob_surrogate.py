@@ -15,19 +15,20 @@ class bbob_surrogate_model(Basic_Problem):
 		self.device = config.device
 		self.optimum = None
 
-		base_dir = path.dirname(path.dirname(path.dirname(path.abspath(__file__))))
+		# base_dir = path.dirname(path.dirname(path.dirname(path.abspath(__file__))))
+		base_dir = path.dirname(path.abspath(__file__))
 
 		if dim == 2:
 
 			if func_id in [1, 6, 8, 9, 12, 14, 19, 20, 23]:
 				self.model = KAN.loadckpt(
-					path.join(base_dir, f'datafiles\\SOO\\surrogate_model\\Dim{dim}\\KAN\\{self.instance}\\model'))
+					path.join(base_dir, f'datafile\\Dim{dim}\\KAN\\{self.instance}\\model'))
 			# elif func_id in [2, 3, 4, 5, 7, 10, 11, 13, 15, 16, 17, 18, 21, 22, 23]:
 			else:
 				self.model = MLP(dim)
 				self.model.load_state_dict(
 					torch.load(path.join(base_dir,
-										 f'datafiles\\SOO\\surrogate_model\\Dim{dim}\\MLP\\{self.instance}\\model.pth'))
+										 f'datafile\\Dim{dim}\\MLP\\{self.instance}\\model.pth'))
 				)
 
 
@@ -35,12 +36,12 @@ class bbob_surrogate_model(Basic_Problem):
 
 			if func_id in [1, 2, 4, 6, 8, 9, 11, 12, 14, 20, 23]:
 				self.model = KAN.loadckpt(
-					path.join(base_dir, f'datafiles\\SOO\\surrogate_model\\Dim{dim}\\KAN\\{self.instance}\\model'))
+					path.join(base_dir, f'datafile\\Dim{dim}\\KAN\\{self.instance}\\model'))
 			else:
 				self.model = MLP(dim)
 				self.model.load_state_dict(
 					torch.load(path.join(base_dir,
-										 f'datafiles\\SOO\\surrogate_model\\Dim{dim}\\MLP\\{self.instance}\\model.pth'))
+										 f'datafile\\Dim{dim}\\MLP\\{self.instance}\\model.pth'))
 				)
 
 		elif dim == 10:
@@ -101,9 +102,11 @@ class bbob_surrogate_Dataset(Dataset):
 		self.index = np.arange(self.N)
 
 	@staticmethod
-	def get_datasets(dim, config, upperbound=5, train_batch_size=1,
-					 test_batch_size=1, difficulty='easy', seed=3849,
-					 shifted=True, biased=True, rotated=True):
+	def get_datasets(version='torch', train_batch_size=1,
+					 test_batch_size=1, difficulty='easy',
+					 user_train_list=None, user_test_list=None,
+					 seed=3849, shifted=True, biased=True, rotated=True,
+					 dim=10, config=None, upperbound=5, ):
 
 		is_train = config.is_train
 
@@ -124,6 +127,9 @@ class bbob_surrogate_Dataset(Dataset):
 				train_id = [1, 2, 5, 6, 10, 11, 13, 14]
 			elif dim == 10:
 				train_id = [1, 2, 5, 6, 10, 11, 13, 20]
+		elif difficulty == None and user_train_list is not None and user_test_list is not None:
+			train_id = user_train_list
+			test_id = user_test_list
 		else:
 			raise ValueError(f'{difficulty} difficulty is invalid.')
 

@@ -2,7 +2,7 @@ from environment.problem.basic_problem import Basic_Problem
 import numpy as np
 
 
-class BBOB_Problem(Basic_Problem):
+class BBOB_Numpy_Problem(Basic_Problem):
     def __init__(self, dim, shift, rotate, bias, lb, ub):
         self.dim = dim
         self.shift = shift
@@ -32,7 +32,7 @@ class NoisyProblem:
     def boundaryHandling(self, x):
         return 100. * pen_func(x, self.ub)
 
-class GaussNoisyProblem(BBOB_Problem):
+class GaussNoisyProblem(BBOB_Numpy_Problem):
     """
     Attribute 'gause_beta' need to be defined in subclass.
     """
@@ -79,7 +79,7 @@ class CauchyNoisyProblem(NoisyProblem):
                                                                                   *ftrue_unbiased.shape)) + 1e-199))
         return np.where(ftrue_unbiased >= 1e-8, fnoisy_unbiased + bias + 1.01 * 1e-8, ftrue)
 
-class _Sphere(BBOB_Problem):
+class _Sphere(BBOB_Numpy_Problem):
     """
     Abstract Sphere
     """
@@ -200,7 +200,7 @@ class F109(CauchyNoisyProblem, _Sphere):
     def __str__(self):
         return 'Sphere_cauchy'
 
-class F2(BBOB_Problem):
+class F2(BBOB_Numpy_Problem):
     """
     Ellipsoidal
     """
@@ -218,7 +218,7 @@ class F2(BBOB_Problem):
         i = np.arange(nx)
         return np.sum(np.power(10, 6 * i / (nx - 1)) * (z ** 2), -1) + self.bias
 
-class F3(BBOB_Problem):
+class F3(BBOB_Numpy_Problem):
     """
     Rastrigin
     """
@@ -234,14 +234,14 @@ class F3(BBOB_Problem):
         z = self.scales * asy_transform(osc_transform(sr_func(x, self.shift, self.rotate)), beta=0.2)
         return 10. * (self.dim - np.sum(np.cos(2. * np.pi * z), axis=-1)) + np.sum(z ** 2, axis=-1) + self.bias
 
-class F4(BBOB_Problem):
+class F4(BBOB_Numpy_Problem):
     """
     Buche_Rastrigin
     """
     def __init__(self, dim, shift, rotate, bias, lb, ub):
         shift[::2] = np.abs(shift[::2])
         self.scales = ((10. ** 0.5) ** np.linspace(0, 1, dim))
-        BBOB_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        BBOB_Numpy_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
 
     def __str__(self):
         return 'Buche_Rastrigin'
@@ -255,7 +255,7 @@ class F4(BBOB_Problem):
         z *= self.scales
         return 10 * (self.dim - np.sum(np.cos(2 * np.pi * z), axis=-1)) + np.sum(z ** 2, axis=-1) + 100 * pen_func(x, self.ub) + self.bias
 
-class F5(BBOB_Problem):
+class F5(BBOB_Numpy_Problem):
     """
     Linear_Slope
     """
@@ -263,7 +263,7 @@ class F5(BBOB_Problem):
         shift = np.sign(shift)
         shift[shift == 0.] = np.random.choice([-1., 1.], size=(shift == 0.).sum())
         shift = shift * ub
-        BBOB_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        BBOB_Numpy_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
 
     def __str__(self):
         return 'Linear_Slope'
@@ -276,14 +276,14 @@ class F5(BBOB_Problem):
         s = np.sign(self.shift) * (10 ** np.linspace(0, 1, self.dim))
         return np.sum(self.ub * np.abs(s) - z * s, axis=-1) + self.bias
 
-class F6(BBOB_Problem):
+class F6(BBOB_Numpy_Problem):
     """
     Attractive_Sector
     """
     def __init__(self, dim, shift, rotate, bias, lb, ub):
         scales = (10. ** 0.5) ** np.linspace(0, 1, dim)
         rotate = np.matmul(np.matmul(rotate_gen(dim), np.diag(scales)), rotate)
-        BBOB_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        BBOB_Numpy_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
 
     def __str__(self):
         return 'Attractive_Sector'
@@ -295,7 +295,7 @@ class F6(BBOB_Problem):
         z[idx] *= 100.
         return osc_transform(np.sum(z ** 2, -1)) ** 0.9 + self.bias
 
-class _Step_Ellipsoidal(BBOB_Problem):
+class _Step_Ellipsoidal(BBOB_Numpy_Problem):
     """
     Abstract Step_Ellipsoidal
     """
@@ -303,7 +303,7 @@ class _Step_Ellipsoidal(BBOB_Problem):
         scales = (10. ** 0.5) ** np.linspace(0, 1, dim)
         rotate = np.matmul(np.diag(scales), rotate)
         self.Q_rotate = rotate_gen(dim)
-        BBOB_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        BBOB_Numpy_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
 
     def func(self, x):
         self.FES += x.shape[0]
@@ -336,14 +336,14 @@ class F115(CauchyNoisyProblem, _Step_Ellipsoidal):
     def __str__(self):
         return 'Step_Ellipsoidal_cauchy'
 
-class _Rosenbrock(BBOB_Problem):
+class _Rosenbrock(BBOB_Numpy_Problem):
     """
     Abstract Rosenbrock_original
     """
     def __init__(self, dim, shift, rotate, bias, lb, ub):
         shift *= 0.75  # range_of_shift=0.8*0.75*ub=0.6*ub
         rotate = np.eye(dim)
-        BBOB_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        BBOB_Numpy_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
 
     def func(self, x):
         self.FES += x.shape[0]
@@ -391,7 +391,7 @@ class F112(CauchyNoisyProblem, _Rosenbrock):
     def __str__(self):
         return 'Rosenbrock_cauchy'
 
-class F9(BBOB_Problem):
+class F9(BBOB_Numpy_Problem):
     """
     Rosenbrock_rotated
     """
@@ -399,7 +399,7 @@ class F9(BBOB_Problem):
         scale = max(1., dim ** 0.5 / 8.)
         self.linearTF = scale * rotate
         shift = np.matmul(0.5 * np.ones(dim), self.linearTF) / (scale ** 2)
-        BBOB_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        BBOB_Numpy_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
 
     def __str__(self):
         return 'Rosenbrock_rotated'
@@ -409,14 +409,14 @@ class F9(BBOB_Problem):
         z = np.matmul(x, self.linearTF.T) + 0.5
         return np.sum(100 * (z[:, :-1] ** 2 - z[:, 1:]) ** 2 + (z[:, :-1] - 1) ** 2, axis=-1) + self.bias
 
-class _Ellipsoidal(BBOB_Problem):
+class _Ellipsoidal(BBOB_Numpy_Problem):
     """
     Abstract Ellipsoidal
     """
     condition = None
 
     def __init__(self, dim, shift, rotate, bias, lb, ub):
-        BBOB_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        BBOB_Numpy_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
 
     def func(self, x):
         self.FES += x.shape[0]
@@ -454,12 +454,12 @@ class F118(CauchyNoisyProblem, _Ellipsoidal):
     def __str__(self):
         return 'Ellipsoidal_cauchy'
 
-class F11(BBOB_Problem):
+class F11(BBOB_Numpy_Problem):
     """
     Discus
     """
     def __init__(self, dim, shift, rotate, bias, lb, ub):
-        BBOB_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        BBOB_Numpy_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
 
     def __str__(self):
         return 'Discus'
@@ -470,14 +470,14 @@ class F11(BBOB_Problem):
         z = osc_transform(z)
         return np.power(10, 6) * (z[:, 0] ** 2) + np.sum(z[:, 1:] ** 2, -1) + self.bias
 
-class F12(BBOB_Problem):
+class F12(BBOB_Numpy_Problem):
     """
     Bent_Cigar
     """
     beta = 0.5
 
     def __init__(self, dim, shift, rotate, bias, lb, ub):
-        BBOB_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        BBOB_Numpy_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
 
     def __str__(self):
         return 'Bent_Cigar'
@@ -489,14 +489,14 @@ class F12(BBOB_Problem):
         z = np.matmul(z, self.rotate.T)
         return z[:, 0] ** 2 + np.sum(np.power(10, 6) * (z[:, 1:] ** 2), -1) + self.bias
 
-class F13(BBOB_Problem):
+class F13(BBOB_Numpy_Problem):
     """
     Sharp_Ridge
     """
     def __init__(self, dim, shift, rotate, bias, lb, ub):
         scales = (10 ** 0.5) ** np.linspace(0, 1, dim)
         rotate = np.matmul(np.matmul(rotate_gen(dim), np.diag(scales)), rotate)
-        BBOB_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        BBOB_Numpy_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
 
     def __str__(self):
         return 'Sharp_Ridge'
@@ -506,12 +506,12 @@ class F13(BBOB_Problem):
         z = sr_func(x, self.shift, self.rotate)
         return z[:, 0] ** 2. + 100. * np.sqrt(np.sum(z[:, 1:] ** 2., axis=-1)) + self.bias
 
-class _Dif_powers(BBOB_Problem):
+class _Dif_powers(BBOB_Numpy_Problem):
     """
     Abstract Different_Powers
     """
     def __init__(self, dim, shift, rotate, bias, lb, ub):
-        BBOB_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        BBOB_Numpy_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
 
     def func(self, x):
         self.FES += x.shape[0]
@@ -543,14 +543,14 @@ class F121(CauchyNoisyProblem, _Dif_powers):
     def __str__(self):
         return 'Different_Powers_cauchy'
 
-class F15(BBOB_Problem):
+class F15(BBOB_Numpy_Problem):
     """
     Rastrigin_F15
     """
     def __init__(self, dim, shift, rotate, bias, lb, ub):
         scales = (10. ** 0.5) ** np.linspace(0, 1, dim)
         self.linearTF = np.matmul(np.matmul(rotate, np.diag(scales)), rotate_gen(dim))
-        BBOB_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        BBOB_Numpy_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
 
     def __str__(self):
         return 'Rastrigin_F15'
@@ -562,7 +562,7 @@ class F15(BBOB_Problem):
         z = np.matmul(z, self.linearTF.T)
         return 10. * (self.dim - np.sum(np.cos(2. * np.pi * z), axis=-1)) + np.sum(z ** 2, axis=-1) + self.bias
 
-class F16(BBOB_Problem):
+class F16(BBOB_Numpy_Problem):
     """
     Weierstrass
     """
@@ -572,7 +572,7 @@ class F16(BBOB_Problem):
         self.aK = 0.5 ** np.arange(12)
         self.bK = 3.0 ** np.arange(12)
         self.f0 = np.sum(self.aK * np.cos(np.pi * self.bK))
-        BBOB_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        BBOB_Numpy_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
 
     def __str__(self):
         return 'Weierstrass'
@@ -584,7 +584,7 @@ class F16(BBOB_Problem):
         return 10 * np.power(np.mean(np.sum(self.aK * np.cos(np.matmul(2 * np.pi * (z[:, :, None] + 0.5), self.bK[None, :])), axis=-1), axis=-1) - self.f0, 3) + \
                10 / self.dim * pen_func(x, self.ub) + self.bias
 
-class _Scaffer(BBOB_Problem):
+class _Scaffer(BBOB_Numpy_Problem):
     """
     Abstract Scaffers
     """
@@ -593,7 +593,7 @@ class _Scaffer(BBOB_Problem):
     def __init__(self, dim, shift, rotate, bias, lb, ub):
         scales = (self.condition ** 0.5) ** np.linspace(0, 1, dim)
         self.linearTF = np.matmul(np.diag(scales), rotate_gen(dim))
-        BBOB_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        BBOB_Numpy_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
 
     def func(self, x):
         self.FES += x.shape[0]
@@ -639,7 +639,7 @@ class F124(CauchyNoisyProblem, _Scaffer):
     def __str__(self):
         return 'Schaffers_cauchy'
 
-class _Composite_Grie_rosen(BBOB_Problem):
+class _Composite_Grie_rosen(BBOB_Numpy_Problem):
     """
     Abstract Composite_Grie_rosen
     """
@@ -649,7 +649,7 @@ class _Composite_Grie_rosen(BBOB_Problem):
         scale = max(1., dim ** 0.5 / 8.)
         self.linearTF = scale * rotate
         shift = np.matmul(0.5 * np.ones(dim) / (scale ** 2.), self.linearTF)
-        BBOB_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        BBOB_Numpy_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
 
     def func(self, x):
         self.FES += x.shape[0]
@@ -685,13 +685,13 @@ class F127(CauchyNoisyProblem, _Composite_Grie_rosen):
     def __str__(self):
         return 'Composite_Grie_rosen_cauchy'
 
-class F20(BBOB_Problem):
+class F20(BBOB_Numpy_Problem):
     """
     Schwefel
     """
     def __init__(self, dim, shift, rotate, bias, lb, ub):
         shift = 0.5 * 4.2096874633 * np.random.choice([-1., 1.], size=dim)
-        BBOB_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        BBOB_Numpy_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
 
     def __str__(self):
         return 'Schwefel'
@@ -706,7 +706,7 @@ class F20(BBOB_Problem):
         b = 4.189828872724339
         return b - 0.01 * np.mean(z * np.sin(np.sqrt(np.abs(z))), axis=-1) + 100 * pen_func(z / 100, self.ub) + self.bias
 
-class _Gallagher(BBOB_Problem):
+class _Gallagher(BBOB_Numpy_Problem):
     """
     Abstract Gallagher
     """
@@ -737,7 +737,7 @@ class _Gallagher(BBOB_Problem):
         # generate the weight w[i]
         self.w = np.insert(np.linspace(1.1, 9.1, self.n_peaks - 1), 0, 10.)  # [n_peaks]
 
-        BBOB_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        BBOB_Numpy_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
 
     def func(self, x):
         self.FES += x.shape[0]
@@ -784,14 +784,14 @@ class F130(CauchyNoisyProblem, _Gallagher):
         return 'Gallagher_101Peaks_cauchy'
 
 
-class F23(BBOB_Problem):
+class F23(BBOB_Numpy_Problem):
     """
     Katsuura
     """
     def __init__(self, dim, shift, rotate, bias, lb, ub):
         scales = (100. ** 0.5) ** np.linspace(0, 1, dim)
         rotate = np.matmul(np.matmul(rotate_gen(dim), np.diag(scales)), rotate)
-        BBOB_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        BBOB_Numpy_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
 
     def __str__(self):
         return 'Katsuura'
@@ -810,7 +810,7 @@ class F23(BBOB_Problem):
         return res * tmp - tmp + pen_func(x, self.ub) + self.bias
 
 
-class F24(BBOB_Problem):
+class F24(BBOB_Numpy_Problem):
     """
     Lunacek_bi_Rastrigin
     """

@@ -100,7 +100,7 @@ class SurrRLDE_Optimizer(Learnable_Optimizer):
 		#(-5,5)
 		self.population = self.population.to(self.device)
 
-		if self.config.train_problem == 'bbob-surrogate' or self.config.test_problem == 'bbob-surrogate':
+		if self.config.train_problem == 'bbob-surrogate' and self.config.is_train:
 			self.fitness = problem.eval(self.population.clone().to(self.device))
 		else:
 			if problem.optimum is None:
@@ -188,7 +188,7 @@ class SurrRLDE_Optimizer(Learnable_Optimizer):
 		mut_population = self.mutation(mut_way)
 		crossover_population = self.crossover(mut_population)
 
-		if self.config.train_problem == 'bbob-surrogate' or self.config.test_problem == 'bbob-surrogate':
+		if self.config.train_problem == 'bbob-surrogate' and self.config.is_train:
 			temp_fit = problem.eval(crossover_population.clone().to(self.device))
 		else:
 			if problem.optimum is None:
