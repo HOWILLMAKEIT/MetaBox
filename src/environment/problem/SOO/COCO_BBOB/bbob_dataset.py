@@ -15,7 +15,6 @@ class BBOB_Dataset(Dataset):
 
     @staticmethod
     def get_datasets(suit,
-                     dim,
                      upperbound,
                      shifted=True,
                      rotated=True,
@@ -26,6 +25,8 @@ class BBOB_Dataset(Dataset):
                      version='numpy',
                      instance_seed=3849):
         # get functions ID of indicated suit
+        dim = int(suit[-3:-1])
+        suit = suit[:-4]
         if suit == 'bbob':
             func_id = [i for i in range(1, 25)]     # [1, 24]
             small_set_func_id = [1, 5, 6, 10, 15, 20]

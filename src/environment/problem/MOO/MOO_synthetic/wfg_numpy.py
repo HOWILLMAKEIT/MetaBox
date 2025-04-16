@@ -6,7 +6,7 @@ import geatpy as ea
 # from pymoo.util.function_loader import load_function
 # from pymoo.util.misc import powerset
 
-from problem.basic_problem import Basic_Problem
+from environment.problem.basic_problem import Basic_Problem
 
 
 class WFG(Basic_Problem):

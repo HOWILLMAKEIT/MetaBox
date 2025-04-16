@@ -3,7 +3,7 @@ import geatpy as ea
 import torch as th
 import math
 
-from problem.basic_problem import Basic_Problem_Torch
+from environment.problem.basic_problem import Basic_Problem_Torch
 
 
 class WFG_Torch(Basic_Problem_Torch):

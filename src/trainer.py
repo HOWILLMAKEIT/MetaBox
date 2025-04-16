@@ -160,10 +160,11 @@ class Trainer(object):
                                                                               para_mode = self.config.train_parallel_mode,
                                                                               )
                     # exceed_max_ls, pbar_info_train = self.agent.train_episode(env)  # pbar_info -> dict
+                    meanR = torch.mean(train_meta_data['return'])
                     postfix_str = (
                         f"loss={train_meta_data['loss']:.2e}, "
                         f"learn_steps={train_meta_data['learn_steps']}, "
-                        f"return={f'{torch.mean(train_meta_data['return']):.2e}'}"
+                        f"return={f'{meanR:.2e}'}"
                     )
 
                     pbar.set_postfix_str(postfix_str)

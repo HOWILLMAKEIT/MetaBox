@@ -12,7 +12,7 @@ from rl.utils import *
 from rl.basic_agent import Basic_Agent
 
 
-from environment.VectorEnv.great_para_env import ParallelEnv
+from environment.parallelenv.parallelenv import ParallelEnv
 
 
 def clip_grad_norms(param_groups, max_norm=math.inf):

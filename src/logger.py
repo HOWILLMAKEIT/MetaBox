@@ -1427,7 +1427,7 @@ class MMO_Logger(Basic_Logger):
             results = pickle.load(f)
         if not os.path.exists(log_dir + 'pics/'):
             os.makedirs(log_dir + 'pics/')
-        self.draw_train_logger('return', results['return'], log_dir + 'pics/', pdf_fig=pdf_figj, data_wrapper=data_wrapper_return_rollout)
+        self.draw_train_logger('return', results['return'], log_dir + 'pics/', pdf_fig=pdf_fig, data_wrapper=data_wrapper_return_rollout)
         self.draw_train_logger('cost', results['cost'], log_dir + 'pics/', pdf_fig=pdf_fig, data_wrapper=data_wrapper_cost_rollout)
         self.draw_train_logger('pr', results['pr'], log_dir + 'pics/', pdf_fig=pdf_fig, data_wrapper=data_wrapper_prsr_rollout)
         self.draw_train_logger('sr', results['sr'], log_dir + 'pics/', pdf_fig=pdf_fig, data_wrapper=data_wrapper_prsr_rollout)

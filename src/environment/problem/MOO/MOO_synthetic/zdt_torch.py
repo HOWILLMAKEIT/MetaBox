@@ -1,6 +1,6 @@
 
 import torch as th
-from problem.basic_problem import Basic_Problem_Torch
+from environment.problem.basic_problem import Basic_Problem_Torch
 import geatpy as ea
 import math
 

@@ -1,4 +1,4 @@
-from problem.basic_problem import Basic_Problem
+from environment.problem.basic_problem import Basic_Problem
 import numpy as np
 import time 
 

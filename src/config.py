@@ -110,7 +110,6 @@ def get_config(args=None):
 
     config.maxFEs = 2500
     # for bo, maxFEs is relatively smaller due to time limit
-    config.bo_maxFEs = 10 * config.dim
     config.n_logpoint = 50
     
     if config.test_problem is None:
@@ -118,17 +117,16 @@ def get_config(args=None):
     if config.test_difficulty is None:
         config.test_difficulty = config.train_difficulty
 
-    if config.run_experiment and len(config.agent_for_cp) >= 1:
-        assert config.agent_load_dir is not None, "Option --agent_load_dir must be given since you specified option --agent_for_cp."
+    # if config.run_experiment and len(config.agent_for_cp) >= 1:
+    #     assert config.agent_load_dir is not None, "Option --agent_load_dir must be given since you specified option --agent_for_cp."
 
     if config.mgd_test or config.mte_test:
         config.train_problem = config.problem_to
         config.train_difficulty = config.difficulty_to
 
-    if config.problem in ['protein', 'protein-torch']:
+    if config.train_problem in ['protein', 'protein-torch']:
         config.dim = 12
         config.maxFEs = 1000
-        config.bo_maxFEs = 10
         config.n_logpoint = 5
 
     config.run_time = f'{time.strftime("%Y%m%dT%H%M%S")}_{config.train_problem}_{config.train_difficulty}'

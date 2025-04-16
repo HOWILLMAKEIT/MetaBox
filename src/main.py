@@ -62,10 +62,10 @@ if __name__ == '__main__':
         for filename in os.listdir(agent_save_dir):
             if os.path.isfile(os.path.join(agent_save_dir, filename)):
                 shutil.copy(os.path.join(agent_save_dir, filename), rollout_save_dir)
-        test_agent_load_dir = None
-        if config.agent_load_dir is not None:
-            test_agent_load_dir = config.agent_load_dir
-        config.agent_load_dir = agent_save_dir  # let config.agent_load_dir = config.agent_save_dir to load model
+        # test_agent_load_dir = None
+        # if config.agent_load_dir is not None:
+        #     test_agent_load_dir = config.agent_load_dir
+        # config.agent_load_dir = agent_save_dir  # let config.agent_load_dir = config.agent_save_dir to load model
         config.agent_for_rollout = [config.train_agent]
         config.optimizer_for_rollout = [config.train_optimizer]
         torch.set_grad_enabled(False)
@@ -74,8 +74,8 @@ if __name__ == '__main__':
         logger.post_processing_rollout_statics(config.rollout_log_dir)
 
         # test
-        if test_agent_load_dir is not None:
-            config.agent_load_dir = test_agent_load_dir
+        # if test_agent_load_dir is not None:
+        #     config.agent_load_dir = test_agent_load_dir
         with open('model.json', 'r', encoding = 'utf-8') as f:
             json_data = json.load(f)
         json_data[config.train_agent] = {'Agent': config.train_agent, 'Optimizer': config.train_optimizer, 'dir': os.path.join(agent_save_dir, 'checkpoint20.pkl')}

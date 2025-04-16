@@ -20,7 +20,6 @@ class PlatypusError(Exception):
 
 
 class Indicator(object):
-    __metaclass = ABCMeta
 
     def __init__(self):
         super(Indicator, self).__init__()

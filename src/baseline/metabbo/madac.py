@@ -5,7 +5,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 import os
 
-from rl.VDN import VDN_Agent
+from rl.vdn import VDN_Agent
 
 
 class MultiAgentQNet(nn.Module):

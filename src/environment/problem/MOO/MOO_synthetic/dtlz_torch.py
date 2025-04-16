@@ -1,5 +1,5 @@
 
-from problem.basic_problem import Basic_Problem_Torch
+from environment.problem.basic_problem import Basic_Problem_Torch
 import torch as th
 # import numpy as th
 import geatpy as ea

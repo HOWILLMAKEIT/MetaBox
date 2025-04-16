@@ -2,7 +2,7 @@ import geatpy as ea
 # import numpy as th
 import torch as th
 import math
-from problem.basic_problem import Basic_Problem_Torch 
+from environment.problem.basic_problem import Basic_Problem_Torch 
 
 
 class UF1_Torch(Basic_Problem_Torch):

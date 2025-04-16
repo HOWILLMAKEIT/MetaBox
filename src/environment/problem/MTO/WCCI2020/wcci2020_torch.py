@@ -1,4 +1,4 @@
-from problem.basic_problem import Basic_Problem_Torch
+from environment.problem.basic_problem import Basic_Problem_Torch
 import numpy as np
 import time 
 import torch

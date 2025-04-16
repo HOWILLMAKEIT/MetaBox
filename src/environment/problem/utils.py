@@ -1,18 +1,17 @@
 import pickle
-from utils import *
 import os
 
-from problem.MMO.CEC2013MMO.cec2013mmo_dataset import CEC2013MMO_Dataset 
-from problem.MOO.MOO_synthetic.moo_synthetic_dataset import MOO_Synthetic_Dataset
-from problem.MTO.WCCI2020.wcci2020_dataset import WCCI2020_Dataset
-from problem.MTO.CEC2017MTO.cec2017mto_dataset import CEC2017MTO_Dataset
-from problem.SOO.COCO_BBOB.bbob_dataset import BBOB_Dataset
-from problem.SOO.COCO_BBOB.bbob_surrogate import bbob_surrogate_Dataset
-from problem.SOO.CEC2013LSGO.cec2013lsgo_dataset import CEC2013LSGO_Dataset
-from problem.SOO.UAV.uav_dataset import UAV_Dataset
-from problem.SOO.PROTEIN_DOCKING.protein_docking_dataset import Protein_Docking_Dataset
-from problem.SOO.HPO_B.hpob_dataset import HPOB_Dataset
-from problem.SOO.NE.evox_ne import NE_Dataset
+from environment.problem.MMO.CEC2013MMO.cec2013mmo_dataset import CEC2013MMO_Dataset 
+from environment.problem.MOO.MOO_synthetic.moo_synthetic_dataset import MOO_Synthetic_Dataset
+from environment.problem.MTO.WCCI2020.wcci2020_dataset import WCCI2020_Dataset
+from environment.problem.MTO.CEC2017MTO.cec2017mto_dataset import CEC2017MTO_Dataset
+from environment.problem.SOO.COCO_BBOB.bbob_dataset import BBOB_Dataset
+from environment.problem.SOO.COCO_BBOB.bbob_surrogate import bbob_surrogate_Dataset
+from environment.problem.SOO.CEC2013LSGO.cec2013lsgo_dataset import CEC2013LSGO_Dataset
+from environment.problem.SOO.UAV.uav_dataset import UAV_Dataset
+from environment.problem.SOO.PROTEIN_DOCKING.protein_docking_dataset import Protein_Docking_Dataset
+from environment.problem.SOO.HPO_B.hpob_dataset import HPOB_Dataset
+from environment.problem.SOO.NE.evox_ne import NE_Dataset
 
 def save_class(dir, file_name, saving_class):
     if not os.path.exists(dir):
@@ -31,7 +30,7 @@ def construct_problem_set(config):
 
 
 def get_problem_set(config, problem, difficulty, train_list, test_list):
-    if problem in ['bbob', 'bbob-torch']:
+    if problem in ['bbob-10D', 'bbob-30D', 'bbob-torch-10D', 'bbob-torch-30D']:
         return BBOB_Dataset.get_datasets(suit=problem,
                                         upperbound=config.upperbound,
                                         train_batch_size=config.train_batch_size,
@@ -41,7 +40,7 @@ def get_problem_set(config, problem, difficulty, train_list, test_list):
                                         user_test_list=test_list,
                                         version='torch' if 'torch' in problem else 'numpy')
         
-    elif problem in ['bbob-noisy', 'bbob-noisy-torch']:
+    elif problem in ['bbob-noisy-10D', 'bbob-noisy-30D', 'bbob-noisy-torch-10D', 'bbob-noisy-torch-30D']:
         return BBOB_Dataset.get_datasets(suit=problem,
                                         upperbound=config.upperbound,
                                         train_batch_size=config.train_batch_size,
@@ -114,7 +113,6 @@ def get_problem_set(config, problem, difficulty, train_list, test_list):
         return WCCI2020_Dataset.get_datasets(train_batch_size=config.train_batch_size,
                                             test_batch_size=config.test_batch_size,
                                             difficulty=difficulty,
-                                            task_cnt=config.task_cnt,
                                             user_train_list=train_list,
                                             user_test_list=test_list,
                                             version='torch' if 'torch' in problem else 'numpy')
@@ -122,7 +120,6 @@ def get_problem_set(config, problem, difficulty, train_list, test_list):
         return CEC2017MTO_Dataset.get_datasets(train_batch_size=config.train_batch_size,
                                             test_batch_size=config.test_batch_size,
                                             difficulty=difficulty,
-                                            task_cnt=config.task_cnt, 
                                             user_train_list=train_list,
                                             user_test_list=test_list,
                                             version='torch' if 'torch' in problem else 'numpy')

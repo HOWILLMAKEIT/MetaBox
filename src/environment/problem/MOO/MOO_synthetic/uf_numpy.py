@@ -1,6 +1,6 @@
 import geatpy as ea
 import numpy as np
-from problem.basic_problem import Basic_Problem
+from environment.problem.basic_problem import Basic_Problem
 
 
 class UF1(Basic_Problem):
