@@ -221,27 +221,27 @@ class Basic_Logger:
         for problem in problems:
             blobj_problem = results['cost'][problem]['DEAP_CMAES']  # 51 * record_length
             objs = []
-            for run in range(config.test_run):
+            for run in range(self.config.test_run):
                 objs.append(blobj_problem[run][-1])
-            cmaes_obj[problem] = sum(objs) / config.test_run
+            cmaes_obj[problem] = sum(objs) / self.config.test_run
 
         # calculate baseline2 random_search
         rs_obj = {}
         for problem in problems:
             blobj_problem = results['cost'][problem]['Random_search']  # 51 * record_length
             objs = []
-            for run in range(config.test_run):
+            for run in range(self.config.test_run):
                 objs.append(blobj_problem[run][-1])
-            rs_obj[problem] = sum(objs) / config.test_run
+            rs_obj[problem] = sum(objs) / self.config.test_run
 
         # calculate each Obj
         for problem in problems:
             for optimizer in optimizers:
                 obj_problem_optimizer = results['cost'][problem][optimizer]
                 objs_ = []
-                for run in range(config.test_run):
+                for run in range(self.config.test_run):
                     objs_.append(obj_problem_optimizer[run][-1])
-                avg_obj = sum(objs_)/config.test_run
+                avg_obj = sum(objs_)/self.config.test_run
                 std_obj = np.std(objs_)
                 df_results.loc[optimizer, (problem, 'Obj')] = np.format_float_scientific(avg_obj, precision=3, exp_digits=1) + "(" + np.format_float_scientific(std_obj, precision=3, exp_digits=1) + ")"
                 # calculate each Gap
@@ -1240,37 +1240,37 @@ class MMO_Logger(Basic_Logger):
         # for problem in problems:
         #     blobj_problem = results['cost'][problem]['DEAP_CMAES']  # 51 * record_length
         #     objs = []
-        #     for run in range(config.test_run):
+        #     for run in range(self.config.test_run):
         #         objs.append(blobj_problem[run][-1])
-        #     cmaes_obj[problem] = sum(objs) / config.test_run
+        #     cmaes_obj[problem] = sum(objs) / self.config.test_run
 
         # # calculate baseline2 random_search
         # rs_obj = {}
         # for problem in problems:
         #     blobj_problem = results['cost'][problem]['Random_search']  # 51 * record_length
         #     objs = []
-        #     for run in range(config.test_run):
+        #     for run in range(self.config.test_run):
         #         objs.append(blobj_problem[run][-1])
-        #     rs_obj[problem] = sum(objs) / config.test_run
+        #     rs_obj[problem] = sum(objs) / self.config.test_run
 
         # calculate each Obj
         for problem in problems:
             for optimizer in optimizers:
                 obj_problem_optimizer = results['cost'][problem][optimizer]
                 objs_ = np.array(obj_problem_optimizer)[:, -1]
-                avg_obj = sum(objs_)/config.test_run
+                avg_obj = sum(objs_)/self.config.test_run
                 std_obj = np.std(objs_)
                 df_results.loc[optimizer, (problem, 'Obj')] = np.format_float_scientific(avg_obj, precision=3, exp_digits=1) + "(" + np.format_float_scientific(std_obj, precision=3, exp_digits=1) + ")"
 
                 pr_problem_optimizer = results['pr'][problem][optimizer]
                 prs_ = np.array(pr_problem_optimizer)[:, -1, 3]
-                avg_pr = sum(prs_)/config.test_run
+                avg_pr = sum(prs_)/self.config.test_run
                 std_pr = np.std(prs_)
                 df_results.loc[optimizer, (problem, 'Pr')] = np.format_float_scientific(avg_pr, precision=3, exp_digits=1) + "(" + np.format_float_scientific(std_pr, precision=3, exp_digits=1) + ")"
 
                 sr_problem_optimizer = results['sr'][problem][optimizer]
                 srs_ = np.array(sr_problem_optimizer)[:, -1, 3]
-                avg_sr = sum(srs_)/config.test_run
+                avg_sr = sum(srs_)/self.config.test_run
                 std_sr = np.std(srs_)
                 df_results.loc[optimizer, (problem, 'Sr')] = np.format_float_scientific(avg_sr, precision=3, exp_digits=1) + "(" + np.format_float_scientific(std_sr, precision=3, exp_digits=1) + ")"
 
@@ -1442,8 +1442,8 @@ class MMO_Logger(Basic_Logger):
         self.draw_overall_boxplot_prsr(results['sr'], 'sr', log_dir+'pics/',pdf_fig=pdf_fig)
 
         self.draw_test_data(results['cost'], 'cost', log_dir + 'pics/', logged=True, categorized=True, pdf_fig=pdf_fig, data_wrapper=np.array)
-        self.draw_test_data(results['pr'],'pr', log_dir + 'pics/', logged=False, categorized=True, pdf_fig=pdf_fig, data_wrapper=data_wrapper_prsr_hist)
-        self.draw_test_data(results['sr'],'sr', log_dir + 'pics/', logged=False, categorized=True, pdf_fig=pdf_fig, data_wrapper=data_wrapper_prsr_hist)
+        self.draw_test_data(results['pr'],'pr', log_dir + 'pics/', logged=False, categorized=True, pdf_fig=pdf_fig, data_wrapper=self.data_wrapper_prsr_hist)
+        self.draw_test_data(results['sr'],'sr', log_dir + 'pics/', logged=False, categorized=True, pdf_fig=pdf_fig, data_wrapper=self.data_wrapper_prsr_hist)
         self.draw_rank_hist_prsr(results['pr'], 'pr',log_dir + 'pics/', pdf_fig=pdf_fig) 
         self.draw_rank_hist_prsr(results['sr'], 'sr', log_dir + 'pics/',pdf_fig=pdf_fig)
 
@@ -1453,10 +1453,10 @@ class MMO_Logger(Basic_Logger):
             results = pickle.load(f)
         if not os.path.exists(log_dir + 'pics/'):
             os.makedirs(log_dir + 'pics/')
-        self.draw_train_logger('return', results['return'], log_dir + 'pics/', pdf_fig=pdf_fig, data_wrapper=data_wrapper_return_rollout)
-        self.draw_train_logger('cost', results['cost'], log_dir + 'pics/', pdf_fig=pdf_fig, data_wrapper=data_wrapper_cost_rollout)
-        self.draw_train_logger('pr', results['pr'], log_dir + 'pics/', pdf_fig=pdf_fig, data_wrapper=data_wrapper_prsr_rollout)
-        self.draw_train_logger('sr', results['sr'], log_dir + 'pics/', pdf_fig=pdf_fig, data_wrapper=data_wrapper_prsr_rollout)
+        self.draw_train_logger('return', results['return'], log_dir + 'pics/', pdf_fig=pdf_fig, data_wrapper=self.data_wrapper_return_rollout)
+        self.draw_train_logger('cost', results['cost'], log_dir + 'pics/', pdf_fig=pdf_fig, data_wrapper=self.data_wrapper_cost_rollout)
+        self.draw_train_logger('pr', results['pr'], log_dir + 'pics/', pdf_fig=pdf_fig, data_wrapper=self.data_wrapper_prsr_rollout)
+        self.draw_train_logger('sr', results['sr'], log_dir + 'pics/', pdf_fig=pdf_fig, data_wrapper=self.data_wrapper_prsr_rollout)
 
 
 
