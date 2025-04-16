@@ -317,7 +317,7 @@ class L2T(PPO_Agent):
 
                 if self.learning_time >= self.config.max_learning_step:
                     memory.clear_memory()
-                    return_info = {'return': _R, 'learn_steps': self.learning_time, 'loss':np.mean(_loss)}
+                    return_info = {'return': _R, 'learn_steps': self.learning_time, 'loss':_loss}
                     return_info['gbest'] = env.get_env_attr('gbest')
                     for key in required_info.keys():
                         return_info[key] = env.get_env_attr(required_info[key])
@@ -327,7 +327,7 @@ class L2T(PPO_Agent):
             memory.clear_memory()
         
         is_train_ended = self.learning_time >= self.config.max_learning_step
-        return_info = {'return': _R, 'learn_steps': self.learning_time, 'loss':np.mean(_loss)}
+        return_info = {'return': _R, 'learn_steps': self.learning_time, 'loss':_loss}
         return_info['gbest'] = env.get_env_attr('gbest')
         for key in required_info.keys():
             return_info[key] = env.get_env_attr(required_info[key])

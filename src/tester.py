@@ -161,10 +161,10 @@ class Tester(object):
             os.makedirs(self.log_dir)
         self.config = config
 
-        if self.config.problem[-6:]=='-torch':
-            self.config.problem=self.config.problem[:-6]
+        # if self.config.test_problem[-6:]=='-torch':
+        #     self.config.test_problem=self.config.test_problem[:-6]
 
-        if config.problem =='bbob-surrogate':
+        if config.test_problem =='bbob-surrogate':
             config.is_train = False
 
         _, self.test_set = construct_problem_set(self.config)

@@ -128,7 +128,7 @@ class RLPSO(REINFORCE_Agent):
                                      log_prob)
 
         is_train_ended = self.learning_time >= self.config.max_learning_step
-        return_info = {'return': _R.numpy(), 'loss' : np.mean(_loss),'learn_steps': self.learning_time, }
+        return_info = {'return': _R.numpy(), 'loss' : _loss,'learn_steps': self.learning_time, }
         env_cost = env.get_env_attr('cost')
         return_info['normalizer'] = env_cost[0]
         return_info['gbest'] = env_cost[-1]
