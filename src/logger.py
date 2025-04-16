@@ -221,27 +221,27 @@ class Basic_Logger:
         for problem in problems:
             blobj_problem = results['cost'][problem]['DEAP_CMAES']  # 51 * record_length
             objs = []
-            for run in range(51):
+            for run in range(config.test_run):
                 objs.append(blobj_problem[run][-1])
-            cmaes_obj[problem] = sum(objs) / 51
+            cmaes_obj[problem] = sum(objs) / config.test_run
 
         # calculate baseline2 random_search
         rs_obj = {}
         for problem in problems:
             blobj_problem = results['cost'][problem]['Random_search']  # 51 * record_length
             objs = []
-            for run in range(51):
+            for run in range(config.test_run):
                 objs.append(blobj_problem[run][-1])
-            rs_obj[problem] = sum(objs) / 51
+            rs_obj[problem] = sum(objs) / config.test_run
 
         # calculate each Obj
         for problem in problems:
             for optimizer in optimizers:
                 obj_problem_optimizer = results['cost'][problem][optimizer]
                 objs_ = []
-                for run in range(51):
+                for run in range(config.test_run):
                     objs_.append(obj_problem_optimizer[run][-1])
-                avg_obj = sum(objs_)/51
+                avg_obj = sum(objs_)/config.test_run
                 std_obj = np.std(objs_)
                 df_results.loc[optimizer, (problem, 'Obj')] = np.format_float_scientific(avg_obj, precision=3, exp_digits=1) + "(" + np.format_float_scientific(std_obj, precision=3, exp_digits=1) + ")"
                 # calculate each Gap
@@ -1165,10 +1165,7 @@ class MMO_Logger(Basic_Logger):
             res.append(np.array(data[key][:, -1, 3]))
         return np.array(res)
 
-    def data_wrapper_prsr_test(data, ):
-        return np.array(data)[:, -1, 3]
-
-    def data_wrapper_prsr_draw_list(data,):
+    def data_wrapper_prsr_hist(data,):
         return np.array(data)[:, :, 3]
 
     def data_wrapper_cost_rollout(data, ):
@@ -1177,41 +1174,38 @@ class MMO_Logger(Basic_Logger):
             res.append(np.array(data[key][:, -1]))
         return np.array(res)
 
-    def data_wrapper_cost_test(data, ):
-        return np.array(data)[:, -1]
-
     def data_wrapper_return_rollout(data, ):
         res = []
         for key in data.keys():
             res.append(np.array(data[key]))
         return np.array(res)
 
-    def gen_agent_performance_table(self, results: dict, data_type: str, out_dir: str,data_wrapper: Callable = None) -> None:
+    def gen_agent_performance_prsr_table(self, results: dict, data_type: str, out_dir: str) -> None:
         """
         Store the `Worst`, `Best`, `Median`, `Mean` and `Std` of cost results of each agent as excel
         """
-        total_cost=results
+        total_data=results
         table_data={}
         indexs=[]
         columns=['Worst','Best','Median','Mean','Std']
-        for problem,value in total_cost.items():
+        for problem,value in total_data.items():
             indexs.append(problem)
             problem_cost=value
-            for alg,alg_cost in problem_cost.items():
-                n_cost=data_wrapper(alg_cost)
+            for alg,alg_data in problem_cost.items():
+                n_data=np.array(alg_data)[:, -1, 3]
                 # if alg == 'MadDE' and problem == 'F5':
-                #     for run in alg_cost:
+                #     for run in alg_data:
                 #         print(len(run))
-                #     print(len(n_cost))
-                best=np.min(n_cost)
+                #     print(len(n_data))
+                best=np.min(n_data)
                 best=np.format_float_scientific(best,precision=3,exp_digits=3)
-                worst=np.max(n_cost)
+                worst=np.max(n_data)
                 worst=np.format_float_scientific(worst,precision=3,exp_digits=3)
-                median=np.median(n_cost)
+                median=np.median(n_data)
                 median=np.format_float_scientific(median,precision=3,exp_digits=3)
-                mean=np.mean(n_cost)
+                mean=np.mean(n_data)
                 mean=np.format_float_scientific(mean,precision=3,exp_digits=3)
-                std=np.std(n_cost)
+                std=np.std(n_data)
                 std=np.format_float_scientific(std,precision=3,exp_digits=3)
 
                 if not alg in table_data:
@@ -1222,7 +1216,7 @@ class MMO_Logger(Basic_Logger):
             #print(dataframe)
             dataframe.to_excel(os.path.join(out_dir,f'{alg}_concrete_performance_{data_type}_table.xlsx'))
 
-    def gen_overall_tab(results: dict, out_dir: str) -> None:
+    def gen_overall_tab(self, results: dict, out_dir: str) -> None:
         """
         Store the overall results inculding `objective values` (costs), `pr` and `sr` as excel
         """
@@ -1246,43 +1240,43 @@ class MMO_Logger(Basic_Logger):
         # for problem in problems:
         #     blobj_problem = results['cost'][problem]['DEAP_CMAES']  # 51 * record_length
         #     objs = []
-        #     for run in range(51):
+        #     for run in range(config.test_run):
         #         objs.append(blobj_problem[run][-1])
-        #     cmaes_obj[problem] = sum(objs) / 51
+        #     cmaes_obj[problem] = sum(objs) / config.test_run
 
         # # calculate baseline2 random_search
         # rs_obj = {}
         # for problem in problems:
         #     blobj_problem = results['cost'][problem]['Random_search']  # 51 * record_length
         #     objs = []
-        #     for run in range(51):
+        #     for run in range(config.test_run):
         #         objs.append(blobj_problem[run][-1])
-        #     rs_obj[problem] = sum(objs) / 51
+        #     rs_obj[problem] = sum(objs) / config.test_run
 
         # calculate each Obj
         for problem in problems:
             for optimizer in optimizers:
                 obj_problem_optimizer = results['cost'][problem][optimizer]
-                objs_ = data_wrapper_cost_test(obj_problem_optimizer)
-                avg_obj = sum(objs_)/51
+                objs_ = np.array(obj_problem_optimizer)[:, -1]
+                avg_obj = sum(objs_)/config.test_run
                 std_obj = np.std(objs_)
                 df_results.loc[optimizer, (problem, 'Obj')] = np.format_float_scientific(avg_obj, precision=3, exp_digits=1) + "(" + np.format_float_scientific(std_obj, precision=3, exp_digits=1) + ")"
 
                 pr_problem_optimizer = results['pr'][problem][optimizer]
-                prs_ = data_wrapper_prsr_test(pr_problem_optimizer)
-                avg_pr = sum(prs_)/51
+                prs_ = np.array(pr_problem_optimizer)[:, -1, 3]
+                avg_pr = sum(prs_)/config.test_run
                 std_pr = np.std(prs_)
                 df_results.loc[optimizer, (problem, 'Pr')] = np.format_float_scientific(avg_pr, precision=3, exp_digits=1) + "(" + np.format_float_scientific(std_pr, precision=3, exp_digits=1) + ")"
 
                 sr_problem_optimizer = results['sr'][problem][optimizer]
-                srs_ = data_wrapper_prsr_test(sr_problem_optimizer)
-                avg_sr = sum(srs_)/51
+                srs_ = np.array(sr_problem_optimizer)[:, -1, 3]
+                avg_sr = sum(srs_)/config.test_run
                 std_sr = np.std(srs_)
                 df_results.loc[optimizer, (problem, 'Sr')] = np.format_float_scientific(avg_sr, precision=3, exp_digits=1) + "(" + np.format_float_scientific(std_sr, precision=3, exp_digits=1) + ")"
 
         df_results.to_excel(out_dir+'overall_table.xlsx')
 
-    def draw_concrete_performance_hist(self, data: dict, data_type: str,output_dir: str, Name: Optional[Union[str, list]]=None, pdf_fig: bool = True, data_wrapper: Callable = None) -> None:
+    def draw_concrete_performance_prsr_hist(self, data: dict, data_type: str,output_dir: str, Name: Optional[Union[str, list]]=None, pdf_fig: bool = True) -> None:
         fig_type = 'pdf' if pdf_fig else 'png'
         D = {}
         X = []
@@ -1295,7 +1289,7 @@ class MMO_Logger(Basic_Logger):
             for agent in list(data[name].keys()):
                 if agent not in D.keys():
                     D[agent] = []
-                values = data_wrapper(data[name][agent])
+                values = np.array(data[name][agent])[:, :, 3]
                 D[agent].append(values[:, -1] / values[:, 0])
 
         for agent in D.keys():
@@ -1311,7 +1305,7 @@ class MMO_Logger(Basic_Logger):
             plt.ylabel(f'Normalized {data_type}')
             plt.savefig(output_dir + f'{agent}_concrete_performance_{data_type}_hist.{fig_type}', bbox_inches='tight')
 
-    def draw_boxplot(self, data: dict, data_type: str,output_dir: str, Name: Optional[Union[str, list]]=None, ignore: Optional[list]=None, pdf_fig: bool = True,data_wrapper: Callable = None) -> None:
+    def draw_boxplot_prsr(self, data: dict, data_type: str,output_dir: str, Name: Optional[Union[str, list]]=None, ignore: Optional[list]=None, pdf_fig: bool = True) -> None:
         fig_type = 'pdf' if pdf_fig else 'png'
         for problem in list(data.keys()):
             if Name is not None and (isinstance(Name, str) and problem != Name) or (isinstance(Name, list) and problem not in Name):
@@ -1327,7 +1321,7 @@ class MMO_Logger(Basic_Logger):
                 X.append(agent)
                 # values = np.array(data[name][agent])
                 # Y.append(values[:, -1])
-                Y.append(data_wrapper(data[name][agent]))
+                Y.append(np.array(data[name][agent])[:,-1,3])
             Y = np.transpose(Y)
             plt.boxplot(Y, labels=X, showmeans=True, patch_artist=True, showfliers=False,
                         medianprops={'color': 'green', 'linewidth': 3}, 
@@ -1342,7 +1336,7 @@ class MMO_Logger(Basic_Logger):
             plt.savefig(output_dir + f'{name}_{data_type}_boxplot.{fig_type}', bbox_inches='tight')
             plt.close()
 
-    def draw_overall_boxplot_pr(self, data: dict, data_type: str,output_dir: str, ignore: Optional[list]=None, pdf_fig: bool = True,data_wrapper: Callable = None) -> None:
+    def draw_overall_boxplot_prsr(self, data: dict, data_type: str,output_dir: str, ignore: Optional[list]=None, pdf_fig: bool = True) -> None:
         fig_type = 'pdf' if pdf_fig else 'png'
         problems=[]
         agents=[]
@@ -1357,7 +1351,7 @@ class MMO_Logger(Basic_Logger):
         plt.figure(figsize=(30, 15))
         for ip, problem in enumerate(problems):
             for ia, agent in enumerate(agents):
-                values[ia][ip] = data_wrapper(data[problem][agent])
+                values[ia][ip] = np.array(data[problem][agent])[:, -1, 3]
             values[:, ip, :] = (values[:, ip, :] - np.min(values[:, ip, :])) / (np.max(values[:, ip, :]) - np.min(values[:, ip, :]))
         values = values.reshape(len(agents), -1).transpose()
         
@@ -1374,9 +1368,30 @@ class MMO_Logger(Basic_Logger):
         plt.savefig(output_dir + f'overall_{data_type}_boxplot.{fig_type}', bbox_inches='tight')
         plt.close()
 
-    def draw_rank_hist(self, data: dict, data_type: str,output_dir: str, pdf_fig: bool = True,data_wrapper: Callable = None) -> None:
+    def get_average_prsr_rank(self, results: dict):
+        problems=[]
+        agents=[]
+        for problem in results.keys():
+            problems.append(problem)
+        for agent in results[problems[0]].keys():
+            agents.append(agent)
+        avg_data={}
+        std_data={}
+        for agent in agents:
+            avg_data[agent]=[]
+            std_data[agent]=[]
+            for problem in problems:
+                values = results[problem][agent]
+                values = np.array(values)[:, -1, 3]
+                std_data[agent].append(np.std(values, -1))
+                avg_data[agent].append(np.mean(values, -1))
+            avg_data[agent] = np.mean(avg_data[agent], 0)
+            std_data[agent] = np.mean(std_data[agent], 0)
+        return avg_data, std_data
+
+    def draw_rank_hist_prsr(self, data: dict, data_type: str,output_dir: str, pdf_fig: bool = True) -> None:
         fig_type = 'pdf' if pdf_fig else 'png'
-        metric, metric_std = self.get_average_data(data, norm = False, data_wrapper = data_wrapper)
+        metric, metric_std = self.get_average_prsr_rank(data)
         X, Y = list(metric.keys()), list(metric.values())
         _, S = list(metric_std.keys()), list(metric_std.values())
         n_agents = len(X)
@@ -1406,20 +1421,31 @@ class MMO_Logger(Basic_Logger):
         if not os.path.exists(log_dir + 'tables/'):
             os.makedirs(log_dir + 'tables/')
 
-        gen_overall_tab(results, log_dir + 'tables/')
-        gen_algorithm_complexity_table(results, log_dir + 'tables/')
-        gen_agent_performance_table(results['pr'],'pr', log_dir+'tables/', data_wrapper_prsr_test) 
-        gen_agent_performance_table(results['sr'], 'sr',log_dir + 'tables/', data_wrapper_prsr_test)
-
+        self.gen_overall_tab(results, log_dir + 'tables/')
+        self.gen_algorithm_complexity_table(results, log_dir + 'tables/')
+        self.gen_agent_performance_table(results['cost'], log_dir + 'tables/')
+        self.gen_agent_performance_prsr_table(results['pr'],'pr', log_dir+'tables/') 
+        self.gen_agent_performance_prsr_table(results['sr'], 'sr',log_dir + 'tables/')
+        
 
         if not os.path.exists(log_dir + 'pics/'):
             os.makedirs(log_dir + 'pics/')
 
+        self.draw_concrete_performance_hist(result['cost'], log_dir+'pics/',pdf_fig=pdf_fig)
+        self.draw_concrete_performance_prsr_hist(results['pr'], 'pr', log_dir+'pics/', pdf_fig = pdf_fig)
+        self.draw_concrete_performance_prsr_hist(results['sr'], 'sr', log_dir+'pics/', pdf_fig = pdf_fig)
+        self.draw_boxplot(results['cost'], log_dir+'pics/', pdf_fig=pdf_fig)
+        self.draw_boxplot_prsr(results['pr'], 'pr', log_dir+'pics/', pdf_fig=pdf_fig)
+        self.draw_boxplot_prsr(results['sr'], 'sr', log_dir+'pics/', pdf_fig=pdf_fig)
+        self.draw_overall_boxplot(results['cost'], log_dir+'pics/', pdf_fig=pdf_fig)
+        self.draw_overall_boxplot_prsr(results['pr'], 'pr', log_dir+'pics/',pdf_fig=pdf_fig)
+        self.draw_overall_boxplot_prsr(results['sr'], 'sr', log_dir+'pics/',pdf_fig=pdf_fig)
+
         self.draw_test_data(results['cost'], 'cost', log_dir + 'pics/', logged=True, categorized=True, pdf_fig=pdf_fig, data_wrapper=np.array)
-        self.draw_test_data(results['pr'],'pr', log_dir + 'pics/', logged=False, categorized=True, pdf_fig=pdf_fig, data_wrapper=data_wrapper_prsr_draw_list)
-        self.draw_test_data(results['sr'],'sr', log_dir + 'pics/', logged=False, categorized=True, pdf_fig=pdf_fig, data_wrapper=data_wrapper_prsr_draw_list)
-        self.draw_rank_hist(results['pr'], 'pr',log_dir + 'pics/', pdf_fig=pdf_fig, data_wrapper=data_wrapper_prsr_test) 
-        self.draw_rank_hist(results['sr'], 'sr', log_dir + 'pics/',pdf_fig=pdf_fig, data_wrapper = data_wrapper_prsr_test)
+        self.draw_test_data(results['pr'],'pr', log_dir + 'pics/', logged=False, categorized=True, pdf_fig=pdf_fig, data_wrapper=data_wrapper_prsr_hist)
+        self.draw_test_data(results['sr'],'sr', log_dir + 'pics/', logged=False, categorized=True, pdf_fig=pdf_fig, data_wrapper=data_wrapper_prsr_hist)
+        self.draw_rank_hist_prsr(results['pr'], 'pr',log_dir + 'pics/', pdf_fig=pdf_fig) 
+        self.draw_rank_hist_prsr(results['sr'], 'sr', log_dir + 'pics/',pdf_fig=pdf_fig)
 
 
     def post_processing_rollout_statics(self, log_dir: str, pdf_fig: bool = True) -> None:
