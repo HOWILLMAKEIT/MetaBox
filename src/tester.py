@@ -447,7 +447,6 @@ class Tester(object):
         else:
             raise ValueError(problem + ' is not defined!')
 
-
     def mgd_test(self, ):
         config = self.config
         print(f'start MGD_test: {config.run_time}')
@@ -496,53 +495,119 @@ class Tester(object):
         # calculate T0
         self.test_results['T0'] = cal_t0(config.dim, config.maxFEs)
         # begin mgd_test
-        seed = range(51)
-        pbar_len = len(agent_name_list) * len(test_set) * 51
-        with tqdm(range(pbar_len), desc='MGD_Test') as pbar:
-            for i, problem in enumerate(test_set):
-                # run model_from and model_to
-                for agent_id, agent in enumerate([agent_from, agent_to]):
-                    T1 = 0
-                    T2 = 0
-                    for run in range(51):
-                        start = time.perf_counter()
-                        np.random.seed(seed[run])
-                        # construct an ENV for (problem,optimizer)
-                        env = PBO_Env(problem, l_optimizer)
-                        info = agent.rollout_episode(env)
-                        cost = info['cost']
-                        while len(cost) < 51:
-                            cost.append(cost[-1])
-                        fes = info['fes']
-                        end = time.perf_counter()
-                        if i == 0:
-                            T1 += env.problem.T1
-                            T2 += (end - start) * 1000  # ms
-                        test_results['cost'][problem.__str__()][agent_name_list[agent_id]].append(cost)
-                        test_results['fes'][problem.__str__()][agent_name_list[agent_id]].append(fes)
-                        pbar_info = {'problem': problem.__str__(),
-                                    'optimizer': agent_name_list[agent_id],
-                                    'run': run,
-                                    'cost': cost[-1],
-                                    'fes': fes}
-                        pbar.set_postfix(pbar_info)
-                        pbar.update(1)
-                    if i == 0:
-                        test_results['T1'][agent_name_list[agent_id]] = T1 / 51
-                        test_results['T2'][agent_name_list[agent_id]] = T2 / 51
-        if not os.path.exists(config.mgd_test_log_dir):
-            os.makedirs(config.mgd_test_log_dir)
-        with open(config.mgd_test_log_dir + 'test.pkl', 'wb') as f:
-            pickle.dump(test_results, f, -1)
-        random_search_results = test_for_random_search(config)
-        with open(config.mgd_test_log_dir + 'random_search_baseline.pkl', 'wb') as f:
-            pickle.dump(random_search_results, f, -1)
-        logger = Logger(config)
-        aei, aei_std = logger.aei_metric(test_results, random_search_results, config.maxFEs)
-        print(f'AEI: {aei}')
-        print(f'AEI STD: {aei_std}')
-        print(f'MGD({name_translate(config.problem_from)}_{config.difficulty_from}, {name_translate(config.problem_to)}_{config.difficulty_to}) of {config.agent}: '
-            f'{100 * (1 - aei[config.agent+"_from"] / aei[config.agent+"_to"])}%')
+
+        test_run = self.config.test_run
+        parallel_batch = self.config.parallel_batch
+        seed_list = list(range(1, test_run + 1))
+
+        if parallel_batch == 'Full':
+            testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent_from), PBO_Env(copy.deepcopy(p), copy.deepcopy(l_optimizer)), seed) for p in test_set.data for seed in seed_list]
+            testunit_list += [MetaBBO_TestUnit(copy.deepcopy(agent_to), PBO_Env(copy.deepcopy(p), copy.deepcopy(l_optimizer)), seed) for p in test_set.data for seed in seed_list]
+
+            MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray')
+            meta_test_data = MetaBBO_test.customized_method('run_batch_episode')
+            self.record_test_data(meta_test_data)
+            self.store_meta_data()
+
+        elif parallel_batch == 'Baseline_Problem':
+            pbar = tqdm(total = len(seed_list), desc = "Baseline_Problem Testing")
+            for seed in seed_list:
+                testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent_from), PBO_Env(copy.deepcopy(p), copy.deepcopy(l_optimizer)), seed) for p in test_set.data]
+                testunit_list += [MetaBBO_TestUnit(copy.deepcopy(agent_to), PBO_Env(copy.deepcopy(p), copy.deepcopy(l_optimizer)), seed) for p in test_set.data]
+                MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray')
+                meta_test_data = MetaBBO_test.customized_method('run_batch_episode')
+                self.record_test_data(meta_test_data)
+                self.store_meta_data()
+                pbar.update()
+            pbar.close()
+
+        elif parallel_batch == 'Problem_Testrun':
+            pbar_len = 2
+            pbar = tqdm(total = pbar_len, desc = "Problem_Testrun Testing")
+            pbar.set_description(f"Problem_Testrun Testing from {agent_from.__str__()} to {agent_to.__str__()}")
+            testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent_from), PBO_Env(copy.deepcopy(p), copy.deepcopy(l_optimizer)), seed)
+                             for p in self.test_set.data
+                             for seed in seed_list]
+            MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray')
+            meta_test_data = MetaBBO_test.customized_method('run_batch_episode')
+            self.record_test_data(meta_test_data)
+            self.store_meta_data()
+            pbar.update()
+
+            testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent_to), PBO_Env(copy.deepcopy(p), copy.deepcopy(l_optimizer)), seed)
+                             for p in self.test_set.data
+                             for seed in seed_list]
+            MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray')
+            meta_test_data = MetaBBO_test.customized_method('run_batch_episode')
+            self.record_test_data(meta_test_data)
+            self.store_meta_data()
+            pbar.update()
+            pbar.close()
+
+        elif parallel_batch == 'Batch':
+            pbar_len = np.ceil(test_set.N / config.test_batch_size) * test_run
+            pbar = tqdm(total = pbar_len, desc = "Batch Testing")
+            for problem in test_set:
+                for i, seed in enumerate(seed_list):
+                    pbar.set_description_str(f"Batch Testing with Problem {problem.__class__.__name__}, Run {i}")
+                    testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent_from), PBO_Env(copy.deepcopy(p), copy.deepcopy(l_optimizer)), seed) for p in problem]
+                    testunit_list += [MetaBBO_TestUnit(copy.deepcopy(agent_to), PBO_Env(copy.deepcopy(p), copy.deepcopy(l_optimizer)), seed) for p in problem]
+                    MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray')
+                    meta_test_data = MetaBBO_test.customized_method('run_batch_episode')
+                    self.record_test_data(meta_test_data)
+                    pbar.update()
+            self.store_meta_data()
+            pbar.close()
+
+        with open(config.mgd_test_log_dir + 'test_results.pkl', 'wb') as f:
+            pickle.dump(self.test_results, f, -1)
+
+        # pbar_len = len(agent_name_list) * len(test_set) * 51
+        # with tqdm(range(pbar_len), desc='MGD_Test') as pbar:
+        #     for i, problem in enumerate(test_set):
+        #         # run model_from and model_to
+        #         for agent_id, agent in enumerate([agent_from, agent_to]):
+        #             T1 = 0
+        #             T2 = 0
+        #             for run in range(51):
+        #                 start = time.perf_counter()
+        #                 np.random.seed(seed[run])
+        #                 # construct an ENV for (problem,optimizer)
+        #                 env = PBO_Env(problem, l_optimizer)
+        #                 info = agent.rollout_episode(env)
+        #                 cost = info['cost']
+        #                 while len(cost) < 51:
+        #                     cost.append(cost[-1])
+        #                 fes = info['fes']
+        #                 end = time.perf_counter()
+        #                 if i == 0:
+        #                     T1 += env.problem.T1
+        #                     T2 += (end - start) * 1000  # ms
+        #                 test_results['cost'][problem.__str__()][agent_name_list[agent_id]].append(cost)
+        #                 test_results['fes'][problem.__str__()][agent_name_list[agent_id]].append(fes)
+        #                 pbar_info = {'problem': problem.__str__(),
+        #                             'optimizer': agent_name_list[agent_id],
+        #                             'run': run,
+        #                             'cost': cost[-1],
+        #                             'fes': fes}
+        #                 pbar.set_postfix(pbar_info)
+        #                 pbar.update(1)
+        #             if i == 0:
+        #                 test_results['T1'][agent_name_list[agent_id]] = T1 / 51
+        #                 test_results['T2'][agent_name_list[agent_id]] = T2 / 51
+        # if not os.path.exists(config.mgd_test_log_dir):
+        #     os.makedirs(config.mgd_test_log_dir)
+        # with open(config.mgd_test_log_dir + 'test.pkl', 'wb') as f:
+        #     pickle.dump(test_results, f, -1)
+        # random_search_results = test_for_random_search(config)
+        # with open(config.mgd_test_log_dir + 'random_search_baseline.pkl', 'wb') as f:
+        #     pickle.dump(random_search_results, f, -1)
+        # logger = Logger(config)
+        # aei, aei_std = logger.aei_metric(test_results, random_search_results, config.maxFEs)
+        # print(f'AEI: {aei}')
+        # print(f'AEI STD: {aei_std}')
+        # print(f'MGD({name_translate(config.problem_from)}_{config.difficulty_from}, {name_translate(config.problem_to)}_{config.difficulty_to}) of {config.agent}: '
+        #     f'{100 * (1 - aei[config.agent+"_from"] / aei[config.agent+"_to"])}%')
 
 
     def mte_test(self, ):
