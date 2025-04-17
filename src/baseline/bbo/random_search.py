@@ -8,7 +8,6 @@ class Random_search(Basic_Optimizer):
         self.__fes=0
         self.log_index=None
         self.cost=None
-        self.__dim=config.dim
         self.__max_fes=config.maxFEs
         self.__NP=100
         self.__n_logpoint = config.n_logpoint
@@ -25,7 +24,7 @@ class Random_search(Basic_Optimizer):
         self.log_index=1
     
     def __random_population(self,problem,init):
-        rand_pos=self.rng.uniform(low=problem.lb,high=problem.ub,size=(self.__NP,self.__dim))
+        rand_pos=self.rng.uniform(low=problem.lb,high=problem.ub,size=(self.__NP, problem.dim))
         if problem.optimum is None:
             cost=problem.eval(rand_pos)
         else:

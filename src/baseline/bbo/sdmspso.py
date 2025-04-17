@@ -11,9 +11,9 @@ class SDMSPSO(Basic_Optimizer):
         self.__m,self.__R,self.__LP,self.__LA,self.__L,self.__L_FEs=3,10,10,8,100,200
         self.__NP=99
         self.__w_decay=True
-        self.config=config
+        self.config = config
 
-        self.__dim,self.__max_fes=config.dim,config.maxFEs
+        self.__max_fes = config.maxFEs
 
         self.__n_swarm=self.__NP//self.__m
         self.__fes=0
@@ -51,6 +51,7 @@ class SDMSPSO(Basic_Optimizer):
         return cost
 
     def __initilize(self,problem):
+        self.__dim = problem.dim
         rand_pos=self.rng.uniform(low=problem.lb,high=problem.ub,size=(self.__NP,self.__dim))
         self.__max_velocity=0.1*(problem.ub-problem.lb)
         rand_vel = self.rng.uniform(low=-self.__max_velocity,high=self.__max_velocity,size=(self.__NP,self.__dim))
@@ -74,6 +75,7 @@ class SDMSPSO(Basic_Optimizer):
         self.__particles['lbest_position']=np.zeros((self.__n_swarm,self.__dim))
         
     def __reset(self,problem):
+        self.__dim = problem.dim
         if self.__w_decay:
             self.__w=0.9
         self.__gen=0
