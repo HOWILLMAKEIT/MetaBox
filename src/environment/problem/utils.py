@@ -91,6 +91,7 @@ def get_problem_set(config, problem, difficulty, train_list, test_list):
     elif problem in ['hpo-b']:
         return HPOB_Dataset.get_datasets(train_batch_size = config.train_batch_size,
                                         test_batch_size = config.test_batch_size,
+                                        upperbound=config.upperbound,
                                         difficulty = difficulty,
                                         user_train_list=train_list,
                                         user_test_list=test_list,
