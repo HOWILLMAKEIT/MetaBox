@@ -277,7 +277,7 @@ class GLEET_Optimizer(Learnable_Optimizer):
         if problem.optimum is None:
             is_end = self.fes >= self.max_fes
         else:
-            is_end = self.fes >= self.max_fes or self.particles['gbest_val'] <= 1e-8
+            is_end = self.fes >= self.max_fes
 
         # cal the reward
         if self.reward_func == '11':

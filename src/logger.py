@@ -100,11 +100,13 @@ class Basic_Logger:
         Get the results of Random Search for further usage, i.e., for normalization
         """
         baseline = {}
-        complexity = []
+        T1 = []
+        T2 = []
         for pname in results['T1'].keys():
-            complexity.append(np.log10(1. / (results['T2'][pname]['Random_search'] - results['T1'][pname]['Random_search']) / results['T0']))
-        baseline['complexity_std'] = np.mean(complexity)
-        # baseline['complexity_std'] = 0.005
+            T1.append(results['T1'][pname]['Random_search'])
+            T2.append(results['T2'][pname]['Random_search'])
+        baseline['complexity_avg'] = np.mean(np.log10(1. / (np.array(T2) - np.array(T1)) / results['T0']))
+        baseline['complexity_std'] = np.std(np.log10(1. / (np.array(T2) - np.array(T1)) / results['T0']))
         avg = []
         std = []
         for problem in results['fes'].keys():
@@ -129,31 +131,26 @@ class Basic_Logger:
         """
         save_list=[]
         t0=results['T0']
-        t1=results['T1']
-        is_dict=False
-        if type(t1) is dict:
-            is_dict=True
-        t2s=results['T2']
         ratios=[]
-        t2_list=[]
-        indexs=[]
+        t1_list = {}
+        t2_list = {}
+        indexs=list(results['T1'][list(results['T1'].keys())[0]].keys())
         columns=['T0','T1','T2','(T2-T1)/T0']
-        for key,value in t2s.items():
-            indexs.append(key)
-            t2_list.append(value)
-            if is_dict:
-                ratios.append((value-t1[key])/t0)
-            else:
-                ratios.append((value-t1)/t0)
-        n=len(t2_list)
+        for agent in indexs:
+            t1_list[agent] = []
+            t2_list[agent] = []
+            for pname in results['T1'].keys():
+                t1_list[agent].append(results['T1'][pname][agent])
+                t2_list[agent].append(results['T1'][pname][agent])
+            t1_list[agent] = np.mean(t1_list[agent])
+            t2_list[agent] = np.mean(t2_list[agent])
+            ratios.append((t2_list[agent] - t1_list[agent])/t0)
+
+        n=len(indexs)
         data=np.zeros((n,4))
         data[:,0]=t0
-        if is_dict:
-            for i,(key,value) in enumerate(t1.items()):
-                data[i,1]=value
-        else:
-            data[:,1]=t1
-        data[:,2]=t2_list
+        data[:,1]=list(t1_list.values())
+        data[:,2]=list(t2_list.values())
         data[:,3]=ratios
         table=pd.DataFrame(data=np.round(data,2),index=indexs,columns=columns)
         table.to_excel(os.path.join(out_dir,'algorithm_complexity.xlsx'))
@@ -289,20 +286,18 @@ class Basic_Logger:
     def aei_complexity(self, complexity_data: dict, baseline: dict, ignore: Optional[list]=None):
         avg = baseline['complexity_avg']
         std = baseline['complexity_std']
-        problems = complexity_data.keys()
-        agents = complexity_data[list(problems)[0]].keys()
+        problems = complexity_data['T1'].keys()
+        agents = complexity_data['T1'][list(problems)[0]].keys()
         results_complex = {}
+        complexity_data['complexity'] = {}
         for key in agents:
             if (ignore is not None) and (key in ignore):
                 continue
             if key not in complexity_data['complexity'].keys():
                 t0 = complexity_data['T0']
-                if isinstance(complexity_data['T1'], dict):
-                    t1 = complexity_data['T1'][key]
-                else:
-                    t1 = complexity_data['T1']
-                t2 = complexity_data['T2'][key]
-                complexity_data['complexity'][key] = ((t2 - t1) / t0)
+                t1 = np.array([complexity_data['T1'][pname][key] for pname in problems])
+                t2 = np.array([complexity_data['T2'][pname][key] for pname in problems])
+                complexity_data['complexity'][key] = np.mean((t2 - t1) / t0)
             results_complex[key] = np.exp((np.log10(1/complexity_data['complexity'][key]) - avg)/std/1000 * 1)
         aei_mean, aei_std = self.cal_aei(results_complex, agents, ignore)
         return results_complex, aei_mean, aei_std
@@ -333,7 +328,7 @@ class Basic_Logger:
         
         results_cost, aei_cost_mean, aei_cost_std = self.aei_cost(data['cost'], baseline, ignore)
         results_fes, aei_fes_mean, aei_fes_std = self.aei_fes(data['fes'], baseline, maxFEs, ignore)
-        results_complex, aei_clx_mean, aei_clx_std = self.aei_fes(data['complexity'], baseline, ignore)
+        results_complex, aei_clx_mean, aei_clx_std = self.aei_complexity(data, baseline, ignore)
         
         mean = {}
         std = {}
@@ -400,7 +395,7 @@ class Basic_Logger:
                 if agent not in self.color_arrangement.keys():
                     self.color_arrangement[agent] = colors[self.arrange_index]
                     self.arrange_index += 1
-                values = np.array(data[name][agent])
+                values = np.array(data[name][agent])[:, -1]
                 plt.ecdf(values, label=to_label(agent), marker='*', markevery=8, markersize=13, c=self.color_arrangement[agent])
             plt.grid()
             plt.xlabel('costs')
@@ -622,6 +617,7 @@ class Basic_Logger:
 
     def draw_boxplot(self, data: dict, output_dir: str, Name: Optional[Union[str, list]]=None, ignore: Optional[list]=None, pdf_fig: bool = True) -> None:
         fig_type = 'pdf' if pdf_fig else 'png'
+        data = data['cost']
         for problem in list(data.keys()):
             if Name is not None and (isinstance(Name, str) and problem != Name) or (isinstance(Name, list) and problem not in Name):
                 continue

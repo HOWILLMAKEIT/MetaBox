@@ -279,7 +279,7 @@ class Tester(object):
         for key in self.test_results.keys():
             self.initialize_record(key)
         self.test_results['config'] = copy.deepcopy(self.config)
-        self.test_results['T0'] = 0.
+        self.test_results['T0'] = np.mean([cal_t0(p.dim, config.maxFEs) for p in self.test_set.data])
         if config.full_meta_data:
             for problem in self.test_set.data:
                 self.meta_data_results[problem.__str__()] = {}
@@ -519,7 +519,7 @@ class Tester(object):
                     self.meta_data_results[problem.__str__()][type(optimizer).__name__] = []
 
         # calculate T0
-        self.test_results['T0'] = cal_t0(config.dim, config.maxFEs)
+        self.test_results['T0'] = np.mean([cal_t0(p.dim, config.maxFEs) for p in self.test_set.data])
         # begin mgd_test
 
         test_run = self.config.test_run

@@ -407,9 +407,6 @@ class BaseVectorEnv(gym.Env):
 class DummyVectorEnv(BaseVectorEnv):
     """Dummy vectorized environment wrapper, implemented in for-loop.
 
-    .. seealso::
-
-        Please refer to :class:`~tianshou.env.BaseVectorEnv` for other APIs' usage.
     """
 
     def __init__(self, env_fns: List[Callable[[], gym.Env]], num_cpus=1, num_gpus=0, no_warning=False, **kwargs: Any) -> None:
@@ -419,9 +416,6 @@ class DummyVectorEnv(BaseVectorEnv):
 class SubprocVectorEnv(BaseVectorEnv):
     """Vectorized environment wrapper based on subprocess.
 
-    .. seealso::
-
-        Please refer to :class:`~tianshou.env.BaseVectorEnv` for other APIs' usage.
     """
 
     def __init__(self, env_fns: List[Callable[[], gym.Env]], num_cpus=1, num_gpus=0, no_warning=False, **kwargs: Any) -> None:
@@ -432,32 +426,9 @@ class SubprocVectorEnv(BaseVectorEnv):
         super().__init__(env_fns, worker_fn, no_warning=no_warning, **kwargs)
 
 
-class ShmemVectorEnv(BaseVectorEnv):
-    """Optimized SubprocVectorEnv with shared buffers to exchange observations.
-
-    ShmemVectorEnv has exactly the same API as SubprocVectorEnv.
-
-    .. seealso::
-
-        Please refer to :class:`~tianshou.env.BaseVectorEnv` for other APIs' usage.
-    """
-
-    def __init__(self, env_fns: List[Callable[[], gym.Env]], num_cpus=1, num_gpus=0, no_warning=False, **kwargs: Any) -> None:
-
-        def worker_fn(fn: Callable[[], gym.Env]) -> SubprocEnvWorker:
-            return SubprocEnvWorker(fn, share_memory=True)
-
-        super().__init__(env_fns, worker_fn, no_warning=no_warning, **kwargs)
-
-
 class RayVectorEnv(BaseVectorEnv):
     """Vectorized environment wrapper based on ray.
 
-    This is a choice to run distributed environments in a cluster.
-
-    .. seealso::
-
-        Please refer to :class:`~tianshou.env.BaseVectorEnv` for other APIs' usage.
     """
 
     def __init__(self, env_fns: List[Callable[[], gym.Env]], num_cpus=1, num_gpus=0, no_warning=False, temp_ray_dir=None, num_cpu_per_worker=1, num_gpu_per_worker=0, **kwargs: Any) -> None:
@@ -501,9 +472,6 @@ class RaySubprocVectorEnv(BaseVectorEnv):
 
     This is a choice to run distributed environments in a cluster.
 
-    .. seealso::
-
-        Please refer to :class:`~tianshou.env.BaseVectorEnv` for other APIs' usage.
     """
 
     def __init__(self, env_fns: List[Callable[[], gym.Env]], num_cpus, num_gpus=0, no_warning=False, temp_ray_dir=None, num_cpu_per_worker=1, num_gpu_per_worker=0, **kwargs: Any) -> None:
