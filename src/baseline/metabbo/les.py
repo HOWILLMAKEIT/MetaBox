@@ -107,7 +107,7 @@ class LES(Basic_Agent):
             save_class(self.__config.agent_save_dir, 'checkpoint-'+str(self.__cur_checkpoint), self)
             self.__cur_checkpoint += 1
 
-        return_info = {'return': 0, 'loss': torch.tensor(0), 'learn_steps': self.__learning_step, }
+        return_info = {'return': 0, 'loss': [0], 'learn_steps': self.__learning_step, }
         return_info['gbest'] = env_population[0].get_env_attr('cost')[-1],
         for key in required_info.keys():
             return_info[key] =  env_population[0].get_env_attr(required_info[key])
