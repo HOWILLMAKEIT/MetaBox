@@ -130,11 +130,12 @@ class Trainer(object):
             tb_logger.add_scalar("epoch-step", 0, 0)
         train_log = {'loss': [], 'learn_steps': [], 'return': [], 'runtime': [], 'config': copy.deepcopy(self.config)}
         if not os.path.exists(os.path.join('output/train_log', self.config.run_time)):
-            os.path.join('output/train_log', self.config.run_time)
+            os.makedirs('output/train_log', self.config.run_time)
         epoch = 0
         bs = self.config.train_batch_size
         if self.config.train_mode == "single":
             self.train_set.batch_size = 1
+            self.train_set.ptr = [i for i in range(0, self.train_set.N)]
         elif self.config.train_mode == "multi":
             self.train_set.batch_size = bs
 
@@ -154,7 +155,7 @@ class Trainer(object):
 
                     # 这里前面已经判断好 train_mode，这里只需要根据 train_mode 构造env就行
                     if self.config.train_mode == "single":
-                        env_list = [PBO_Env(copy.deepcopy(problem), copy.deepcopy(self.optimizer)) for _ in range(bs)] # bs
+                        env_list = [PBO_Env(copy.deepcopy(problem[0]), copy.deepcopy(self.optimizer)) for _ in range(bs)] # bs
                     elif self.config.train_mode == "multi":
                         env_list = [PBO_Env(copy.deepcopy(p), copy.deepcopy(self.optimizer)) for p in problem] # bs
 
