@@ -30,10 +30,10 @@ class Actor(nn.Module):
     def forward(self, obs, fix_action = None, require_entropy = False):
         feature = list(obs[:, 0])
         if not isinstance(feature, torch.Tensor):
-            feature = torch.tensor(feature, dtype=torch.float).to(self.device)
+            feature = torch.Tensor(feature).to(self.device)
         moves = []
         for i in range(len(self.embedders)):
-            moves.append(self.embedders[i](torch.tensor(list(obs[:, i + 1]), dtype=torch.float).to(self.device)))
+            moves.append(self.embedders[i](torch.Tensor(list(obs[:, i + 1])).to(self.device)))
         moves = torch.cat(moves, dim=-1)
         batch = obs.shape[0]
         feature = torch.cat((feature, moves), dim=-1).view(batch, -1)
@@ -78,10 +78,10 @@ class Critic(nn.Module):
     def forward(self, obs):
         feature = list(obs[:, 0])
         if not isinstance(feature, torch.Tensor):
-            feature = torch.tensor(feature, dtype=torch.float).to(self.device)
+            feature = torch.Tensor(feature).to(self.device)
         moves = []
         for i in range(len(self.embedders)):
-            moves.append(self.embedders[i](torch.tensor(list(obs[:, i + 1]), dtype=torch.float).to(self.device)))
+            moves.append(self.embedders[i](torch.Tensor(list(obs[:, i + 1])).to(self.device)))
         moves = torch.cat(moves, dim=-1)
         batch = obs.shape[0]
         feature = torch.cat((feature, moves), dim=-1).view(batch, -1)
@@ -175,7 +175,7 @@ class RLDAS(PPO_Agent):
             while t - t_s < n_step and not env.all_done():
 
                 memory.states.append(state.copy())
-                action, log_lh, entro_p = self.actor(state)
+                action, log_lh, entro_p = self.actor(state, require_entropy = True)
 
 
                 memory.actions.append(action.clone() if isinstance(action, torch.Tensor) else copy.deepcopy(action))

@@ -35,7 +35,7 @@ class QLPSO(QLearning_Agent):
         q_values = self.q_table[state]  # shape: (bs, n_actions)
 
         # Compute the action probabilities for each state
-        prob = softmax(q_values)  # shape: (bs, n_actions)
+        prob = torch.softmax(q_values, dim = 0)  # shape: (bs, n_actions)
 
         # Choose an action based on the probabilities
         action = torch.multinomial(prob, 1)  # shape: (bs, 1)
@@ -50,6 +50,7 @@ class QLPSO(QLearning_Agent):
                       asynchronous: Literal[None, 'idle', 'restart', 'continue']=None,
                       num_cpus: Optional[Union[int, None]]=1,
                       num_gpus: int=0,
+                      tb_logger = None,
                       required_info={}):
         if self.device != 'cpu':
             num_gpus = max(num_gpus, 1)
@@ -63,6 +64,7 @@ class QLPSO(QLearning_Agent):
         
         _R = torch.zeros(len(env))
         _loss = []
+        _reward = []
         # sample trajectory
         while not env.all_done():
             action = self.__get_action(state)
@@ -71,6 +73,7 @@ class QLPSO(QLearning_Agent):
             _R += reward
 
             reward = torch.Tensor(reward).to(self.device)
+            _reward.append(reward)
             TD_error = reward + gamma * torch.max(self.q_table[next_state], dim = 1)[0] - self.q_table[state, action]
 
             _loss.append(TD_error.mean().item())
@@ -79,9 +82,15 @@ class QLPSO(QLearning_Agent):
             
             self.learning_time += 1
 
-            if self.learning_time >= (self.config.save_interval * self.cur_checkpoint):
-                save_class(self.config.agent_save_dir, 'checkpoint-'+str(self.cur_checkpoint), self)
+            if self.learning_time >= (self.config.save_interval * self.cur_checkpoint) and self.config.end_mode == "step":
+                save_class(self.config.agent_save_dir, 'checkpoint-' + str(self.cur_checkpoint), self)
                 self.cur_checkpoint += 1
+
+            if not self.config.no_tb and self.learning_time % int(self.config.log_step) == 0:
+                self.log_to_tb_train(tb_logger, self.learning_time,
+                                     TD_error.mean(),
+                                     _R, _reward,
+                                     )
 
             if self.learning_time >= self.config.max_learning_step:
                 _Rs = _R.detach().numpy().tolist()

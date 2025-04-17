@@ -35,8 +35,7 @@ class NRLPSO(QLearning_Agent):
         q_values = self.q_table[state]  # shape: (bs, n_actions)
 
         # Compute the action probabilities for each state
-        prob = softmax(q_values)  # shape: (bs, n_actions)
-
+        prob = torch.softmax(q_values, dim = 0)  # shape: (bs, n_actions)
         # Choose an action based on the probabilities
         action = torch.multinomial(prob, 1)  # shape: (bs, 1)
 
@@ -82,8 +81,8 @@ class NRLPSO(QLearning_Agent):
 
             self.learning_time += 1
 
-            if self.learning_time >= (self.config.save_interval * self.cur_checkpoint):
-                save_class(self.config.agent_save_dir, 'checkpoint-'+str(self.cur_checkpoint), self)
+            if self.learning_time >= (self.config.save_interval * self.cur_checkpoint) and self.config.end_mode == "step":
+                save_class(self.config.agent_save_dir, 'checkpoint-' + str(self.cur_checkpoint), self)
                 self.cur_checkpoint += 1
 
             if not self.config.no_tb and self.learning_time % int(self.config.log_step) == 0:
