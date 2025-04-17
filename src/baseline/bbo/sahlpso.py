@@ -7,7 +7,7 @@ class SAHLPSO(Basic_Optimizer):
     def __init__(self, config):
         super().__init__(config)
         self.config = config
-        self.dim, self.NP, self.maxFEs, self.lb, self.ub, self.v_max = config.dim, 40, config.maxFEs, -5, 5, 1
+        self.NP, self.maxFEs, self.lb, self.ub, self.v_max = 40, config.maxFEs, -5, 5, 1
         self.H_cr = 5
         self.M_cr = [0.0001,0.0005,0.001,0.005,0.01,0.05,0.1,0.5]
         self.H_ls = 15
