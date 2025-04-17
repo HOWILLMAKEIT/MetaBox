@@ -15,14 +15,14 @@ class CMAES(Basic_Optimizer):
         self.__toolbox = base.Toolbox()
         self.__creator = creator
         self.__algorithm = algorithms
-        self.__creator.create("Fitnessmin", base.Fitness, weights=(-1.0,))
-        self.__creator.create("Individual", list, fitness=creator.Fitnessmin)
         self.log_interval = config.log_interval
         self.full_meta_data = config.full_meta_data
 
     def __str__(self):
         return "CMAES"
     def run_episode(self, problem):
+        self.__creator.create("Fitnessmin", base.Fitness, weights=(-1.0,))
+        self.__creator.create("Individual", list, fitness=creator.Fitnessmin)
         if self.full_meta_data:
             self.meta_Cost = []
             self.meta_X = []

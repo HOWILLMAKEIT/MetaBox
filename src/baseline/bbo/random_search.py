@@ -5,7 +5,7 @@ from environment.optimizer.basic_optimizer import Basic_Optimizer
 class Random_search(Basic_Optimizer):
     def __init__(self, config):
         super().__init__(config)
-        self.__fes=0
+        self.__FEs=0
         self.log_index=None
         self.cost=None
         self.__max_fes=config.maxFEs
@@ -15,9 +15,10 @@ class Random_search(Basic_Optimizer):
         self.full_meta_data = config.full_meta_data
     
     def __str__(self):
-        return 'RandomSearch'
+        return 'Random_search'
+    
     def __reset(self,problem):
-        self.__fes=0
+        self.__FEs=0
         self.cost=[]
         self.__random_population(problem,init=True)
         self.cost.append(self.gbest)
@@ -33,7 +34,7 @@ class Random_search(Basic_Optimizer):
         if self.full_meta_data:
             self.meta_Cost.append(cost)
             self.meta_X.append(rand_pos)
-        self.__fes+=self.__NP
+        self.__FEs+=self.__NP
         if init:
             self.gbest=np.min(cost)
         else:
@@ -49,14 +50,14 @@ class Random_search(Basic_Optimizer):
         is_done = False
         while not is_done:
             self.__random_population(problem,init=False)
-            if self.__fes >= self.log_index * self.log_interval:
+            if self.__FEs >= self.log_index * self.log_interval:
                 self.log_index += 1
                 self.cost.append(self.gbest)
 
             if problem.optimum is None:
-                is_done = self.__fes>=self.__max_fes
+                is_done = self.__FEs>=self.__max_fes
             else:
-                is_done = self.gbest<=1e-8 or self.__fes>=self.__max_fes
+                is_done = self.gbest<=1e-8 or self.__FEs>=self.__max_fes
 
             if is_done:
                 if len(self.cost) >= self.__n_logpoint + 1:

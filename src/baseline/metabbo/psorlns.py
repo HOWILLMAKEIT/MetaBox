@@ -125,7 +125,7 @@ class PSORLNS(DQN_Agent):
 
                 if self.learning_time >= self.config.max_learning_step:
                     _Rs = _R.detach().numpy().tolist()
-                    return_info = {'return': _Rs, 'learn_steps': self.learning_time, }
+                    return_info = {'return': _Rs, 'loss': torch.tensor(_loss), 'learn_steps': self.learning_time, }
                     env_cost = env.get_env_attr('cost')
                     return_info['gbest'] = env_cost[-1]
                     for key in required_info:
@@ -136,7 +136,7 @@ class PSORLNS(DQN_Agent):
 
         is_train_ended = self.learning_time >= self.config.max_learning_step
         _Rs = _R.detach().numpy().tolist()
-        return_info = {'return': _Rs, 'learn_steps': self.learning_time}
+        return_info = {'return': _Rs, 'loss': torch.tensor(_loss), 'learn_steps': self.learning_time}
         env_cost = env.get_env_attr('cost')
         return_info['gbest'] = env_cost[-1]
         for key in required_info:

@@ -89,7 +89,7 @@ class CEC2013MMO_Torch_Problem(Basic_Problem_Torch):
 
         return seeds_idx
 
-class CFunction_Torch_Problem(CEC2013MMO_Torch_Problem):
+class CFunction(CEC2013MMO_Torch_Problem):
     # Abstract composition function
     __nofunc_ = -1
     __C_ = 2000.0
@@ -107,7 +107,7 @@ class CFunction_Torch_Problem(CEC2013MMO_Torch_Problem):
     __function_ = None
 
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes, nofunc):
-        super(CFunction_Torch_Problem, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes)
+        super(CFunction, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes)
         self.__nofunc_ = nofunc
 
     def func(self, x):
@@ -409,7 +409,7 @@ class F8_Torch(CEC2013MMO_Torch_Problem): # modified_rastrigin_all
         result = torch.sum(10 + 9 * torch.cos(torch.tensor(2 * np.pi * np.array(k), device = x.device)[None, :] * x), dim=1)
         return -(-result)
 
-class F9_Torch(CFunction_Torch_Problem): # CF1
+class F9_Torch(CFunction): # CF1
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
         super(F9_Torch, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes, 6)
 
@@ -453,7 +453,7 @@ class F9_Torch(CFunction_Torch_Problem): # CF1
         self.FES += x.shape[0]
         return -self._CFunction__evaluate_inner_(x)
 
-class F10_Torch(CFunction_Torch_Problem): # CF2
+class F10_Torch(CFunction): # CF2
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
         super(F10_Torch, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes, 8)
 
@@ -500,7 +500,7 @@ class F10_Torch(CFunction_Torch_Problem): # CF2
         self.FES += x.shape[0]
         return -self._CFunction__evaluate_inner_(x)
 
-class F11_Torch(CFunction_Torch_Problem): # CF3
+class F11_Torch(CFunction): # CF3
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
         super(F11_Torch, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes, 6)
 
@@ -549,7 +549,7 @@ class F11_Torch(CFunction_Torch_Problem): # CF3
         self.FES += x.shape[0]
         return -self._CFunction__evaluate_inner_(x)
 
-class F12_Torch(CFunction_Torch_Problem): # CF4
+class F12_Torch(CFunction): # CF4
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
         super(F12_Torch, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes, 8)
 
