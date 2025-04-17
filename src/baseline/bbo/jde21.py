@@ -6,7 +6,6 @@ from environment.optimizer.basic_optimizer import Basic_Optimizer
 class JDE21(Basic_Optimizer):
     def __init__(self, config):
         super(JDE21, self).__init__(config)
-        # self.__dim = config.dim      # problem dimension
         self.__sNP = 10       # size of small population
         self.__bNP = 160      # size of big population
         self.__NP = self.__sNP + self.__bNP
