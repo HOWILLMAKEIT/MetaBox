@@ -100,6 +100,9 @@ class bbob_surrogate_Dataset(Dataset):
 		self.N = len(self.data)
 		self.ptr = [i for i in range(0, self.N, batch_size)]
 		self.index = np.arange(self.N)
+		self.maxdim = 0
+	        for item in self.data:
+	            self.maxdim = max(self.maxdim, item.dim)
 
 	@staticmethod
 	def get_datasets(version='torch', train_batch_size=1,
