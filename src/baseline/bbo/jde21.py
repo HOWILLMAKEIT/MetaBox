@@ -6,7 +6,7 @@ from environment.optimizer.basic_optimizer import Basic_Optimizer
 class JDE21(Basic_Optimizer):
     def __init__(self, config):
         super(JDE21, self).__init__(config)
-        self.__dim = config.dim      # problem dimension
+        # self.__dim = config.dim      # problem dimension
         self.__sNP = 10       # size of small population
         self.__bNP = 160      # size of big population
         self.__NP = self.__sNP + self.__bNP
@@ -69,14 +69,14 @@ class JDE21(Basic_Optimizer):
         self.__cost = self.__cost[ind]
         self.__population = self.__population[ind]
 
-    def __reinitialize(self, size, ub, lb):
-        return self.rng.random((size, self.__dim)) * (ub - lb) + ub
+    def __reinitialize(self, size, problem):
+        return self.rng.random((size, problem.dim)) * (problem.ub - problem.lb) + problem.ub
 
     def __init_population(self, problem):
         self.__sNP = 10
         self.__bNP = 160
         self.__NP = self.__sNP + self.__bNP
-        self.__population = self.rng.rand(self.__NP, self.__dim) * (problem.ub - problem.lb) + problem.lb
+        self.__population = self.rng.rand(self.__NP, problem.dim) * (problem.ub - problem.lb) + problem.lb
         self.__cost = self.__evaluate(problem, self.__population)
         self.__FEs = self.__NP
         self.__cbest = self.gbest = np.min(self.__cost)
@@ -92,7 +92,7 @@ class JDE21(Basic_Optimizer):
                  ):
         # initialize population
         NP = self.__NP
-        dim = self.__dim
+        dim = problem.dim
         sNP = self.__sNP
         bNP = NP - sNP
         age = 0
@@ -160,7 +160,7 @@ class JDE21(Basic_Optimizer):
         SCr = np.array([])
         if self.__prevecEnakih(self.__cost[:bNP], self.gbest) or age > self.__MaxFEs / 10:
             self.__nReset += 1
-            self.__population[:bNP] = self.__reinitialize(bNP, problem.ub, problem.lb)
+            self.__population[:bNP] = self.__reinitialize(bNP, problem)
             self.__F[:bNP] = self.__Finit
             self.__Cr[:bNP] = self.__CRinit
             self.__cost[:bNP] = 1e15
@@ -207,7 +207,7 @@ class JDE21(Basic_Optimizer):
             cbest = self.__cbest
             cbest_id = self.__cbest_id
             tmp = copy.deepcopy(self.__population[cbest_id])
-            self.__population[bNP:] = self.__reinitialize(sNP, problem.ub, problem.lb)
+            self.__population[bNP:] = self.__reinitialize(sNP, problem)
             self.__F[bNP:] = self.__Finit
             self.__Cr[bNP:] = self.__CRinit
             self.__cost[bNP:] = 1e15
