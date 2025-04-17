@@ -41,7 +41,7 @@ class PYPOP7(Basic_Optimizer):
             return fitness
 
         cost_fn = {'fitness_function': problem_eval,
-                   'ndim_problem': self.__config.dim,
+                   'ndim_problem': problem.dim,
                    'lower_boundary': problem.lb,
                    'upper_boundary': problem.ub,
                    'problem_name': problem.__str__(),
