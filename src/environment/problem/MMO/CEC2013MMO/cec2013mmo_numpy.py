@@ -53,7 +53,7 @@ class CEC2013MMO_Numpy_Problem(Basic_Problem):
                 seeds_idx.append(i)
         return seeds_idx
 
-class CFunction_Numpy_Problem(CEC2013MMO_Numpy_Problem):
+class CFunction(CEC2013MMO_Numpy_Problem):
     # Abstract composition function
     __nofunc_ = -1
     __C_ = 2000.0
@@ -71,7 +71,7 @@ class CFunction_Numpy_Problem(CEC2013MMO_Numpy_Problem):
     __function_ = None
 
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes, nofunc):
-        super(CFunction_Numpy_Problem, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes)
+        super(CFunction, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes)
         self.__nofunc_ = nofunc
 
     def func(self, x):
@@ -374,7 +374,7 @@ class F8(CEC2013MMO_Numpy_Problem): # modified_rastrigin_all
         result = np.sum(10 + 9 * np.cos(2 * math.pi * np.array(k)[None, :] * x), axis=1)
         return -(-result)
 
-class F9(CFunction_Numpy_Problem): # CF1
+class F9(CFunction): # CF1
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
         super(F9, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes, 6)
 
@@ -418,7 +418,7 @@ class F9(CFunction_Numpy_Problem): # CF1
         self.FES += x.shape[0]
         return -self._CFunction__evaluate_inner_(x)
 
-class F10(CFunction_Numpy_Problem): # CF2
+class F10(CFunction): # CF2
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
         super(F10, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes, 8)
 
@@ -466,7 +466,7 @@ class F10(CFunction_Numpy_Problem): # CF2
         self.FES += x.shape[0]
         return -self._CFunction__evaluate_inner_(x)
 
-class F11(CFunction_Numpy_Problem): # CF3
+class F11(CFunction): # CF3
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
         super(F11, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes, 6)
 
@@ -515,7 +515,7 @@ class F11(CFunction_Numpy_Problem): # CF3
         self.FES += x.shape[0]
         return -self._CFunction__evaluate_inner_(x)
 
-class F12(CFunction_Numpy_Problem): # CF4
+class F12(CFunction): # CF4
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
         super(F12, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes, 8)
 

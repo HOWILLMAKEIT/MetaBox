@@ -9,6 +9,9 @@ class CEC2013MMO_Dataset(Dataset):
     def __init__(self, data, batch_size = 1):
         super().__init__()
         self.data = data
+        self.maxdim = 0
+        for item in self.data:
+            self.maxdim = max(self.maxdim, item.dim)
         self.batch_size = batch_size
         self.N = len(self.data)
         self.ptr = [i for i in range(0, self.N, batch_size)]
