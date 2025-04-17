@@ -23,6 +23,7 @@ class SAHLPSO(Basic_Optimizer):
         return 'SAHLPSO'
 
     def run_episode(self,problem):
+        self.dim = problem.dim
         if self.full_meta_data:
             self.meta_Cost = []
             self.meta_X = []
