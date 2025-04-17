@@ -153,7 +153,7 @@ class DEDQN_Optimizer(Learnable_Optimizer):
         self.__state = self.__cal_feature(problem)
 
         if self.__config.full_meta_data:
-            self.meta_X = [self.__X.copy()]
+            self.meta_X = [self.__population.copy()]
             self.meta_Cost = [self.__cost.copy()]
 
         return self.__state
@@ -202,7 +202,7 @@ class DEDQN_Optimizer(Learnable_Optimizer):
             is_done = self.fes >= self.__maxFEs or self.__cost.min() <= 1e-8
 
         if self.__config.full_meta_data:
-            self.meta_X.append(self.__X.copy())
+            self.meta_X.append(self.__population.copy())
             self.meta_Cost.append(self.__cost.copy())
 
         if is_done:

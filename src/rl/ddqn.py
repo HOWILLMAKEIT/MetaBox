@@ -131,7 +131,7 @@ class DDQN_Agent(Basic_Agent):
 
         state = env.reset()
         try:
-            state = torch.FloatTensor(state)
+            state = torch.Tensor(state)
         except:
             pass
 
@@ -145,11 +145,11 @@ class DDQN_Agent(Basic_Agent):
             # state transient
             next_state, reward, is_end, info = env.step(action)
             _R += reward
-            _reward.append(torch.FloatTensor(reward))
+            _reward.append(torch.Tensor(reward))
             # store info
             # convert next_state into tensor
             try:
-                next_state = torch.FloatTensor(next_state).to(self.device)
+                next_state = torch.Tensor(next_state).to(self.device)
             except:
                 pass
             for s, a, r, ns, d in zip(state, action, reward, next_state, is_end):
@@ -231,7 +231,7 @@ class DDQN_Agent(Basic_Agent):
             R = 0
             while not is_done:
                 try:
-                    state = torch.FloatTensor(state).unsqueeze(0).to(self.device)
+                    state = torch.Tensor(state).unsqueeze(0).to(self.device)
                 except:
                     state = [state]
                 action = self.get_action(state)[0]
@@ -270,7 +270,7 @@ class DDQN_Agent(Basic_Agent):
         env.seed(seeds)
         state = env.reset()
         try:
-            state = torch.FloatTensor(state).to(self.device)
+            state = torch.Tensor(state).to(self.device)
         except:
             pass
 
@@ -283,10 +283,10 @@ class DDQN_Agent(Basic_Agent):
             # state transient
             state, rewards, is_end, info = env.step(action)
             # print('step:{},max_reward:{}'.format(t,torch.max(rewards)))
-            R += torch.FloatTensor(rewards).squeeze()
+            R += torch.Tensor(rewards).squeeze()
             # store info
             try:
-                state = torch.FloatTensor(state).to(self.device)
+                state = torch.Tensor(state).to(self.device)
             except:
                 pass
         _Rs = R.detach().numpy().tolist()
