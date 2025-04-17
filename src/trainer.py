@@ -17,6 +17,7 @@ import matplotlib.pyplot as plt
 from rl.utils import save_class
 from tensorboardX import SummaryWriter
 
+from environment.optimizer.l2t_optimizer import L2T_Optimizer
 from environment.optimizer import (
     DEDDQN_Optimizer,
     DEDQN_Optimizer,
@@ -34,7 +35,7 @@ from environment.optimizer import (
     RLDEAFL_Optimizer,
     SurrRLDE_Optimizer,
     RLEMMO_Optimizer,
-    madac_optimizer
+    #madac_optimizer
 )
 
 from baseline.bbo import (
@@ -50,6 +51,7 @@ from baseline.bbo import (
     Random_search,
 )
 
+from baseline.metabbo.l2t import L2T
 from baseline.metabbo import (
     GLEET,
     DEDDQN,
@@ -62,7 +64,7 @@ from baseline.metabbo import (
     RLDAS,
     SurrRLDE,
     RLEMMO,
-    madac
+    #madac
 )
 
 
@@ -82,8 +84,8 @@ class Trainer(object):
         self.train_set, self.test_set = construct_problem_set(config)
         self.config.dim = max(self.train_set.maxdim, self.test_set.maxdim)
         
-        if self.config.problem == 'bbob-surrogate':
-            self.config.is_train = True
+        # if self.config.problem == 'bbob-surrogate':
+        #     self.config.is_train = True
             
         if self.config.resume_dir is None:
             self.agent = eval(self.config.train_agent)(self.config)
@@ -142,7 +144,7 @@ class Trainer(object):
             self.train_set.shuffle()
             return_record = 0
             loss_record = 0
-            with tqdm(range(np.ceil(self.train_set.N / self.train_set.batch_size)), desc = f'Training {self.agent.__class__.__name__} Epoch {epoch}') as pbar:
+            with tqdm(range(int(np.ceil(self.train_set.N / self.train_set.batch_size))), desc = f'Training {self.agent.__class__.__name__} Epoch {epoch}') as pbar:
                 for problem_id, problem in enumerate(self.train_set):
                     # set seed
                     seed_list = (epoch * epoch_seed + id_seed * (np.arange(bs) + bs * problem_id) + seed).tolist()
@@ -172,7 +174,8 @@ class Trainer(object):
                     learn_step = train_meta_data['learn_steps']
                     
                     return_record += torch.sum(train_meta_data['return'])
-                    loss_record += torch.sum(train_meta_data['loss']).detach()
+                    #loss_record += torch.sum(train_meta_data['loss']).detach()
+                    loss_record += train_meta_data['loss']
                     
                     # for id, p in enumerate(problem):
                     #     name = p.__str__()

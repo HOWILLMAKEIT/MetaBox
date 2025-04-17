@@ -6,7 +6,7 @@ import os
 import scipy.io as sio
 
 
-def mat2np(self, path):
+def mat2np(path):
         data = sio.loadmat(path)
         return data
 
@@ -18,6 +18,10 @@ class CEC2017MTO_Dataset(Dataset):
         super().__init__()
         self.data = data
         self.batch_size = batch_size
+        self.maxdim = 0
+        for data_lis in self.data:
+            for item in data_lis:
+                self.maxdim = max(self.maxdim, item.dim)
         self.N = len(self.data)
         self.ptr = [i for i in range(0, self.N, batch_size)]
         self.index = np.arange(self.N)
@@ -55,7 +59,7 @@ class CEC2017MTO_Dataset(Dataset):
         if difficulty not in ['easy', 'difficult', 'all', None]:
             raise ValueError(f'{difficulty} difficulty is invalid.')
         
-        folder_dir = os.path.join(os.path.dirname(__file__),'.','datafiles','MTO','classical','CEC2017')
+        folder_dir = os.path.join(os.path.dirname(__file__),'datafile')
         func_id = [i for i in range(0, 9)]
         if difficulty == 'easy':
             train_id = [0, 1, 2, 3, 4, 5]

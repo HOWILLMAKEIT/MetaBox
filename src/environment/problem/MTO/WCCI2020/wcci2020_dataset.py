@@ -11,6 +11,10 @@ class WCCI2020_Dataset(Dataset):
         super().__init__()
         self.data = data
         self.batch_size = batch_size
+        self.maxdim = 0
+        for data_lis in self.data:
+            for item in data_lis:
+                self.maxdim = max(self.maxdim, item.dim)
         self.N = len(self.data)
         self.ptr = [i for i in range(0, self.N, batch_size)]
         self.index = np.arange(self.N)
@@ -93,7 +97,7 @@ class WCCI2020_Dataset(Dataset):
                 id = (task_id-1) % len(choice_functions)
                 func_id = choice_functions[id]
 
-                folder_dir = os.path.join(os.path.dirname(__file__),'.','datafiles_MTO','MTO','classical','WCCI2020',f'benchmark_{task_ID+1}')
+                folder_dir = os.path.join(os.path.dirname(__file__),'datafile',f'benchmark_{task_ID+1}')
                 shift_file = os.path.join(folder_dir, f'bias_{task_id}')
                 rotate_file = os.path.join(folder_dir, f'matrix_{task_id}')
 

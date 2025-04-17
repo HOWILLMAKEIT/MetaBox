@@ -119,7 +119,9 @@ class Learnable_Optimizer:
         self.rng_cpu = torch.Generator().manual_seed(rng_seed)
 
         self.rng_gpu = None
-        if self.__config.device.type == 'cuda':
+        # if self.__config.device.type == 'cuda':
+        #     self.rng_gpu = torch.Generator(device = self.__config.device).manual_seed(rng_seed)
+        if self.__config.device == 'cuda':
             self.rng_gpu = torch.Generator(device = self.__config.device).manual_seed(rng_seed)
         # GPU: torch.rand(4, generator = rng_gpu, device = 'self.__config.device')
         # CPU: torch.rand(4, generator = rng_cpu)
@@ -129,8 +131,16 @@ class L2T_Optimizer(Learnable_Optimizer):
     def __init__(self, config):
         super().__init__(config)
         self.__config = config
-        self.task_cnt = config.task_cnt
-        self.dim = config.dim
+        # self.task_cnt = config.task_cnt
+        if config.train_problem == 'wcci2020':
+            self.task_cnt = 50
+        if config.train_problem == 'cec2017mto':
+            self.task_cnt = 2
+        if config.test_problem == 'wcci2020':
+            self.task_cnt = 50
+        if config.test_problem == 'cec2017mto':
+            self.task_cnt = 2
+        self.dim = config.dim = 50
         self.generation = 0
         self.pop_cnt = 50
         self.total_generation = config.generation

@@ -43,6 +43,10 @@ class Augmented_WCCI2020_Dataset(Dataset):
         super().__init__()
         self.data = data
         self.batch_size = batch_size
+        self.maxdim = 0
+        for data_lis in self.data:
+            for item in data_lis:
+                self.maxdim = max(self.maxdim, item.dim)
         self.N = len(self.data)
         self.ptr = [i for i in range(0, self.N, batch_size)]
         self.index = np.arange(self.N)

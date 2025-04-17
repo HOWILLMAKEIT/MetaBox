@@ -113,16 +113,26 @@ class L2T(PPO_Agent):
         self.config.eps_clip = 0.2
         self.config.max_grad_norm = 0.1
         self.config.device = self.config.device
-        self.config.n_state = self.config.task_cnt * 7 + 1
-        self.config.n_action = self.config.task_cnt * 3
+        if config.train_problem == 'wcci2020':
+            self.task_cnt = 50
+        if config.train_problem == 'cec2017mto':
+            self.task_cnt = 2
+        if config.test_problem == 'wcci2020':
+            self.task_cnt = 50
+        if config.test_problem == 'cec2017mto':
+            self.task_cnt = 2
+        # self.config.n_state = self.config.task_cnt * 7 + 1
+        # self.config.n_action = self.config.task_cnt * 3
+        self.config.n_state = self.task_cnt * 7 + 1
+        self.config.n_action = self.task_cnt * 3
         
         # figure out the actor network
         # self.actor = None
-        actor = Actor(self.config.n_state, self.config.n_action)
+        actor = Actor(self.config.n_state, self.config.n_action).float()
         
         # figure out the critic network
         # self.critic = None
-        critic = Critic(self.config.n_state)
+        critic = Critic(self.config.n_state).float()
 
         super().__init__(self.config, {'actor': actor, 'critic': critic}, [self.config.lr_actor, self.config.lr_critic])
 
