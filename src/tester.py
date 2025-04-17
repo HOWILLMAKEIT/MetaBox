@@ -815,7 +815,7 @@ def rollout_batch(config):
                 meta_data_results[problem.__str__()][agent_name+f'-{agent_id}'] = []
 
     pbar_len = int(np.ceil(test_set.N * n_checkpoint / test_set.batch_size))
-    seed_list = list(range(1, 5 + 1))
+    seed_list = list(range(1, config.rollout_run + 1))
 
     if parallel_batch == 'Full':
         testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent), PBO_Env(copy.deepcopy(p), copy.deepcopy(optimizer)), seed, ckp) for (ckp, agent, optimizer) in zip(checkpoints, agents, optimizer_for_rollout)
