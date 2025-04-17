@@ -24,10 +24,15 @@ class BBOB_Dataset(Dataset):
                      biased=True,
                      train_batch_size=1,
                      test_batch_size=1,
-                     difficulty='easy',
+                     difficulty=None,
                      version='numpy',
-                     instance_seed=3849):
+                     instance_seed=3849,
+                     user_train_list=None,
+                     user_test_list=None):
         # get functions ID of indicated suit
+        if difficulty == None and user_test_list == None and user_train_list == None:
+            raise ValueError('Please set difficulty or user_train_list and user_test_list.')
+
         dim = int(suit[-3:-1])
         suit = suit[:-4]
         if suit == 'bbob':
@@ -38,7 +43,7 @@ class BBOB_Dataset(Dataset):
             small_set_func_id = [101, 105, 115, 116, 117, 119, 120, 125]
         else:
             raise ValueError(f'{suit} function suit is invalid or is not supported yet.')
-        if difficulty != 'easy' and difficulty != 'difficult':
+        if difficulty != 'easy' and difficulty != 'difficult' and difficulty is not None:
             raise ValueError(f'{difficulty} difficulty is invalid.')
         # get problem instances
         if instance_seed > 0:
@@ -65,10 +70,17 @@ class BBOB_Dataset(Dataset):
                 instance = eval(f'F{id}')(dim=dim, shift=shift, rotate=H, bias=bias, lb=lb, ub=ub)
             else:
                 instance = eval(f'F{id}_torch')(dim=dim, shift=shift, rotate=H, bias=bias, lb=lb, ub=ub)
-            if (difficulty == 'easy' and id not in small_set_func_id) or (difficulty == 'difficult' and id in small_set_func_id):
-                train_set.append(instance)
+
+            if user_test_list is None and user_test_list is None and difficulty is not None:
+                if (difficulty == 'easy' and id not in small_set_func_id) or (difficulty == 'difficult' and id in small_set_func_id):
+                    train_set.append(instance)
+                else:
+                    test_set.append(instance)
             else:
-                test_set.append(instance)
+                if (id in user_train_list):
+                    train_set.append(instance)
+                else:
+                    test_set.append(instance)
         return BBOB_Dataset(train_set, train_batch_size), BBOB_Dataset(test_set, test_batch_size)
 
     def __getitem__(self, item):

@@ -2,11 +2,11 @@ from os import path
 import torch
 import numpy as np
 from torch.utils.data import Dataset
-from environment.problem.basic_problem import Basic_Problem
+from environment.problem.basic_problem import Basic_Problem, Basic_Problem_Torch
 import time
 
 
-class Protein_Docking_Problem(Basic_Problem):
+class Protein_Docking_Numpy_Problem(Basic_Problem):
     n_atoms = 100  # number of interface atoms considered for computational concern
     dim = 12
     lb = -1.5
@@ -48,7 +48,7 @@ class Protein_Docking_Problem(Basic_Problem):
         return energy
 
 
-class Protein_Docking_torch(Basic_Problem):
+class Protein_Docking_Torch_Problem(Basic_Problem_Torch):
     n_atoms = 100  # number of interface atoms considered for computational concern
     dim = 12
     lb = -1.5
