@@ -183,8 +183,8 @@ class Trainer(object):
                     pbar.update(self.train_set.batch_size)
                     learn_step = train_meta_data['learn_steps']
                     
-                    return_record += torch.sum(train_meta_data['return'])
-                    loss_record += torch.sum(train_meta_data['loss']).detach()
+                    return_record += np.sum(train_meta_data['return'])
+                    loss_record += np.sum(train_meta_data['loss'])
                     
                     # for id, p in enumerate(problem):
                     #     name = p.__str__()

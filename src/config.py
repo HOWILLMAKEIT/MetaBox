@@ -69,7 +69,7 @@ def get_config(args=None):
 
     # Rollout parameters
     parser.add_argument('--agent_for_rollout', type=str, help='learnable agent for rollout')
-    parser.add_argument('--checkpoints_for_rollout', type=int, nargs='+', help='the index of checkpoints for rollout')
+    parser.add_argument('--checkpoints_for_rollout', default=None, type=int, nargs='+', help='the index of checkpoints for rollout')
     parser.add_argument('--plot_smooth', type=float, default=0.8,
                         help='a float between 0 and 1 to control the smoothness of figure curves')
 
@@ -108,7 +108,7 @@ def get_config(args=None):
 
     config = parser.parse_args(args)
 
-    config.maxFEs = 2500
+    config.maxFEs = 20000
     # for bo, maxFEs is relatively smaller due to time limit
     config.n_logpoint = 50
     

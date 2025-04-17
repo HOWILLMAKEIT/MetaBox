@@ -773,9 +773,6 @@ def rollout_batch(config):
     agent_for_rollout=config.agent_for_rollout
     parallel_batch = config.parallel_batch
 
-    checkpoints = config.checkpoints_for_rollout
-    n_checkpoint=len(checkpoints)
-
     agents=[]
     optimizer_for_rollout = []
     with open('model.json', 'r', encoding = 'utf-8') as f:
@@ -790,6 +787,13 @@ def rollout_batch(config):
     upper_dir = baseline['dir']
     if not os.path.isdir(upper_dir):  # path to .pkl files
         upper_dir = os.path.join(*tuple(str.split(upper_dir, '/')[:-1]))
+        
+    checkpoints = config.checkpoints_for_rollout
+    if checkpoints is None:
+        epoch_list = os.listdir(upper_dir)
+        checkpoints = np.arange(len(epoch_list))
+    n_checkpoint=len(checkpoints)
+
     # get agent
     for agent_id in checkpoints:
         with open(os.path.join(upper_dir, f'checkpoint-{agent_id}.pkl'), 'rb') as f:
