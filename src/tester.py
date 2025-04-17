@@ -321,7 +321,7 @@ class Tester(object):
         parallel_batch = self.config.parallel_batch  # 'Full', 'Baseline_Problem', 'Problem_Testrun', 'Batch'
         test_run = self.config.test_run
         seed_list = list(range(1, test_run + 1)) # test_run
-        
+        num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
         if parallel_batch == 'Full':
             testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent), PBO_Env(copy.deepcopy(p), copy.deepcopy(optimizer)), seed) for (agent, optimizer) in zip(self.agent_for_cp, self.l_optimizer_for_cp)
                                                                                                                                for p in self.test_set.data
@@ -329,7 +329,7 @@ class Tester(object):
             testunit_list += [BBO_TestUnit(copy.deepcopy(optimizer), copy.deepcopy(p), seed) for optimizer in self.t_optimizer_for_cp
                                                                                         for p in self.test_set.data
                                                                                         for seed in seed_list]
-            MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray')
+            MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray', num_gpus=num_gpus)
             meta_test_data = MetaBBO_test.rollout()
             self.record_test_data(meta_test_data)
             self.meta_data_results = store_meta_data(self.log_dir, self.meta_data_results)
@@ -343,7 +343,7 @@ class Tester(object):
                 testunit_list += [BBO_TestUnit(copy.deepcopy(optimizer), copy.deepcopy(p), seed, self.config) for optimizer in self.t_optimizer_for_cp
                                                                                                 for p in self.test_set.data
                                                                                                 ]
-                MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray')
+                MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray', num_gpus=num_gpus)
                 meta_test_data = MetaBBO_test.rollout()
                 self.record_test_data(meta_test_data)
                 self.meta_data_results = store_meta_data(self.log_dir, self.meta_data_results)
@@ -357,7 +357,7 @@ class Tester(object):
                 testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent), PBO_Env(copy.deepcopy(p), copy.deepcopy(optimizer)), seed) 
                                                                                                                                 for p in self.test_set.data
                                                                                                                                 for seed in seed_list]
-                MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray')
+                MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray', num_gpus=num_gpus)
                 meta_test_data = MetaBBO_test.rollout()
                 self.record_test_data(meta_test_data)
                 self.meta_data_results = store_meta_data(self.log_dir, self.meta_data_results)
@@ -366,7 +366,7 @@ class Tester(object):
                 pbar.set_description(f"Problem_Testrun Testing {optimizer.__str__()}")
                 testunit_list += [BBO_TestUnit(copy.deepcopy(optimizer), copy.deepcopy(p), seed) for p in self.test_set.data
                                                                                                  for seed in seed_list]
-                MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray')
+                MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray', num_gpus=num_gpus)
                 meta_test_data = MetaBBO_test.rollout()
                 self.record_test_data(meta_test_data)
                 self.meta_data_results = store_meta_data(self.log_dir, self.meta_data_results)
@@ -381,7 +381,7 @@ class Tester(object):
                     for i, seed in enumerate(seed_list):
                         pbar.set_description_str(f"Batch Testing Agent {agent.__str__()} with Problem Batch {ip}, Run {i}")
                         testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent), PBO_Env(copy.deepcopy(p), copy.deepcopy(optimizer)), seed) for p in problem]
-                        MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray')
+                        MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray', num_gpus=num_gpus)
                         meta_test_data = MetaBBO_test.rollout()
                         self.record_test_data(meta_test_data)
                         pbar.update()
@@ -391,7 +391,7 @@ class Tester(object):
                     for i, seed in enumerate(seed_list):
                         pbar.set_description_str(f"Batch Testing Optimizer {optimizer.__str__()} with Problem Batch {ip}, Run {i}")
                         testunit_list = [BBO_TestUnit(loads(dumps(optimizer)), copy.deepcopy(p), seed) for p in problem]
-                        MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray')
+                        MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray', num_gpus=num_gpus)
                         meta_test_data = MetaBBO_test.rollout()
                         self.record_test_data(meta_test_data)
                         pbar.update()
@@ -478,7 +478,7 @@ class Tester(object):
         config = self.config
         print(f'start MGD_test: {config.run_time}')
         # get test set
-
+        num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
         if config.problem == 'bbob-surrogate':
             config.is_train = False
 
@@ -502,7 +502,6 @@ class Tester(object):
         # initialize the dataframe for logging
         self.test_results = {'cost': {},
                              'fes': {},
-                             'T0': 0.,
                              'T1': {},
                              'T2': {},
                              }
@@ -531,7 +530,7 @@ class Tester(object):
             testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent_from), PBO_Env(copy.deepcopy(p), copy.deepcopy(l_optimizer)), seed) for p in test_set.data for seed in seed_list]
             testunit_list += [MetaBBO_TestUnit(copy.deepcopy(agent_to), PBO_Env(copy.deepcopy(p), copy.deepcopy(l_optimizer)), seed) for p in test_set.data for seed in seed_list]
 
-            MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray')
+            MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray', num_gpus=num_gpus)
             meta_test_data = MetaBBO_test.rollout()
             self.record_test_data(meta_test_data)
             self.meta_data_results = store_meta_data(self.log_dir, self.meta_data_results)
@@ -541,7 +540,7 @@ class Tester(object):
             for seed in seed_list:
                 testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent_from), PBO_Env(copy.deepcopy(p), copy.deepcopy(l_optimizer)), seed) for p in test_set.data]
                 testunit_list += [MetaBBO_TestUnit(copy.deepcopy(agent_to), PBO_Env(copy.deepcopy(p), copy.deepcopy(l_optimizer)), seed) for p in test_set.data]
-                MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray')
+                MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray', num_gpus=num_gpus)
                 meta_test_data = MetaBBO_test.rollout()
                 self.record_test_data(meta_test_data)
                 self.meta_data_results = store_meta_data(self.log_dir, self.meta_data_results)
@@ -555,7 +554,7 @@ class Tester(object):
             testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent_from), PBO_Env(copy.deepcopy(p), copy.deepcopy(l_optimizer)), seed)
                              for p in self.test_set.data
                              for seed in seed_list]
-            MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray')
+            MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray', num_gpus=num_gpus)
             meta_test_data = MetaBBO_test.rollout()
             self.record_test_data(meta_test_data)
             self.meta_data_results = store_meta_data(self.log_dir, self.meta_data_results)
@@ -564,7 +563,7 @@ class Tester(object):
             testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent_to), PBO_Env(copy.deepcopy(p), copy.deepcopy(l_optimizer)), seed)
                              for p in self.test_set.data
                              for seed in seed_list]
-            MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray')
+            MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray', num_gpus=num_gpus)
             meta_test_data = MetaBBO_test.rollout()
             self.record_test_data(meta_test_data)
             self.meta_data_results = store_meta_data(self.log_dir, self.meta_data_results)
@@ -578,7 +577,7 @@ class Tester(object):
                 for i, seed in enumerate(seed_list):
                     pbar.set_description_str(f"Batch Testing From Agent {agent_from.__str__()} with Problem Batch {ip}, Run {i}")
                     testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent_from), PBO_Env(copy.deepcopy(p), copy.deepcopy(l_optimizer)), seed) for p in problem]
-                    MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray')
+                    MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray', num_gpus=num_gpus)
                     meta_test_data = MetaBBO_test.rollout()
                     self.record_test_data(meta_test_data)
                     pbar.update()
@@ -587,7 +586,7 @@ class Tester(object):
                 for i, seed in enumerate(seed_list):
                     pbar.set_description_str(f"Batch Testing To Agent {agent_to.__str__()} with Problem Batch {ip}, Run {i}")
                     testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent_to), PBO_Env(copy.deepcopy(p), copy.deepcopy(l_optimizer)), seed) for p in problem]
-                    MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray')
+                    MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray', num_gpus=num_gpus)
                     meta_test_data = MetaBBO_test.rollout()
                     self.record_test_data(meta_test_data)
                     pbar.update()
@@ -766,7 +765,7 @@ class Tester(object):
 
 def rollout_batch(config):
     print(f'start rollout: {config.run_time}')
-
+    num_gpus = 0 if config.device == 'cpu' else 1
     if config.test_problem == 'bbob-surrogate':
         config.is_train = False
     train_set, test_set = construct_problem_set(config)
@@ -821,7 +820,7 @@ def rollout_batch(config):
         testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent), PBO_Env(copy.deepcopy(p), copy.deepcopy(optimizer)), seed, ckp) for (ckp, agent, optimizer) in zip(checkpoints, agents, optimizer_for_rollout)
                                                                                                                             for p in test_set.data
                                                                                                                             for seed in seed_list]
-        MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray')
+        MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray', num_gpus=num_gpus)
         meta_test_data = MetaBBO_test.rollout()
         rollout_results, meta_data_results = record_data(meta_test_data, test_set, agents, checkpoints, rollout_results, meta_data_results, config)
         meta_data_results = store_meta_data(config.rollout_log_dir, meta_data_results)
@@ -832,7 +831,7 @@ def rollout_batch(config):
             testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent), PBO_Env(copy.deepcopy(p), copy.deepcopy(optimizer)), seed, ckp) for (ckp, agent, optimizer) in zip(checkpoints, agents, optimizer_for_rollout)
                                                                                                                             for p in test_set.data
                                                                                                                             ]
-            MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray')
+            MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray', num_gpus=num_gpus)
             meta_test_data = MetaBBO_test.rollout()
             rollout_results, meta_data_results = record_data(meta_test_data, test_set, agents, checkpoints, rollout_results, meta_data_results, config)
             meta_data_results = store_meta_data(config.rollout_log_dir, meta_data_results)
@@ -846,7 +845,7 @@ def rollout_batch(config):
             testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent), PBO_Env(copy.deepcopy(p), copy.deepcopy(optimizer)), seed, ckp) 
                                                                                                                             for p in test_set.data
                                                                                                                             for seed in seed_list]
-            MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray')
+            MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray', num_gpus=num_gpus)
             meta_test_data = MetaBBO_test.rollout()
             rollout_results, meta_data_results = record_data(meta_test_data, test_set, agents, checkpoints, rollout_results, meta_data_results, config)
             meta_data_results = store_meta_data(config.rollout_log_dir, meta_data_results)
@@ -861,7 +860,7 @@ def rollout_batch(config):
                 for i, seed in enumerate(seed_list):
                     pbar.set_description_str(f"Batch Rollouting Checkpoint {ckp} with Problem Batch {ip}, Run {i}")
                     testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent), PBO_Env(copy.deepcopy(p), copy.deepcopy(optimizer)), seed, ckp) for p in problem]
-                    MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray')
+                    MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray', num_gpus=num_gpus)
                     meta_test_data = MetaBBO_test.rollout()
                     rollout_results, meta_data_results = record_data(meta_test_data, test_set, agents, checkpoints, rollout_results, meta_data_results, config)
                     pbar.update()
