@@ -130,7 +130,7 @@ class Trainer(object):
             tb_logger.add_scalar("epoch-step", 0, 0)
         train_log = {'loss': [], 'learn_steps': [], 'return': [], 'runtime': [], 'config': copy.deepcopy(self.config)}
         if not os.path.exists(os.path.join('output/train_log', self.config.run_time)):
-            os.makedirs('output/train_log', self.config.run_time)
+            os.makedirs(os.path.join('output/train_log', self.config.run_time))
         epoch = 0
         bs = self.config.train_batch_size
         if self.config.train_mode == "single":
