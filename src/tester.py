@@ -377,9 +377,9 @@ class Tester(object):
             pbar_len = (len(self.agent_for_cp) + len(self.t_optimizer_for_cp)) * np.ceil(self.test_set.N / self.config.test_batch_size) * self.config.test_run
             pbar = tqdm(total=pbar_len, desc="Batch Testing")
             for (agent, optimizer) in zip(self.agent_for_cp, self.l_optimizer_for_cp):
-                for problem in self.test_set:
+                for ip, problem in enumerate(self.test_set):
                     for i, seed in enumerate(seed_list):
-                        pbar.set_description_str(f"Batch Testing Agent {agent.__str__()} with Problem {problem.__class__.__name__}, Run {i}")
+                        pbar.set_description_str(f"Batch Testing Agent {agent.__str__()} with Problem Batch {ip}, Run {i}")
                         testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent), PBO_Env(copy.deepcopy(p), copy.deepcopy(optimizer)), seed) for p in problem]
                         MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray')
                         meta_test_data = MetaBBO_test.rollout()
@@ -387,9 +387,9 @@ class Tester(object):
                         pbar.update()
                 self.meta_data_results = store_meta_data(self.log_dir, self.meta_data_results)
             for optimizer in self.t_optimizer_for_cp:
-                for problem in self.test_set:
+                for ip, problem in enumerate(self.test_set):
                     for i, seed in enumerate(seed_list):
-                        pbar.set_description_str(f"Batch Testing Optimizer {optimizer.__str__()} with Problem {problem.__class__.__name__}, Run {i}")
+                        pbar.set_description_str(f"Batch Testing Optimizer {optimizer.__str__()} with Problem Batch {ip}, Run {i}")
                         testunit_list = [BBO_TestUnit(loads(dumps(optimizer)), copy.deepcopy(p), seed) for p in problem]
                         MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray')
                         meta_test_data = MetaBBO_test.rollout()
@@ -574,18 +574,18 @@ class Tester(object):
         elif parallel_batch == 'Batch':
             pbar_len = 2 * np.ceil(test_set.N / config.test_batch_size) * test_run
             pbar = tqdm(total = pbar_len, desc = "Batch Testing")
-            for problem in test_set:
+            for ip, problem in enumerate(test_set):
                 for i, seed in enumerate(seed_list):
-                    pbar.set_description_str(f"Batch Testing From Agent {agent_from.__str__()} with Problem {problem.__class__.__name__}, Run {i}")
+                    pbar.set_description_str(f"Batch Testing From Agent {agent_from.__str__()} with Problem Batch {ip}, Run {i}")
                     testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent_from), PBO_Env(copy.deepcopy(p), copy.deepcopy(l_optimizer)), seed) for p in problem]
                     MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray')
                     meta_test_data = MetaBBO_test.rollout()
                     self.record_test_data(meta_test_data)
                     pbar.update()
             self.meta_data_results = store_meta_data(self.log_dir, self.meta_data_results)
-            for problem in test_set:
+            for ip, problem in enumerate(test_set):
                 for i, seed in enumerate(seed_list):
-                    pbar.set_description_str(f"Batch Testing To Agent {agent_to.__str__()} with Problem {problem.__class__.__name__}, Run {i}")
+                    pbar.set_description_str(f"Batch Testing To Agent {agent_to.__str__()} with Problem Batch {ip}, Run {i}")
                     testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent_to), PBO_Env(copy.deepcopy(p), copy.deepcopy(l_optimizer)), seed) for p in problem]
                     MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray')
                     meta_test_data = MetaBBO_test.rollout()
@@ -853,9 +853,9 @@ def rollout_batch(config):
         pbar_len = len(agents)  * np.ceil(test_set.N / config.test_batch_size) * config.test_run
         pbar = tqdm(total=pbar_len, desc="Batch Rollouting")
         for (ckp, agent, optimizer) in zip(checkpoints, agents, optimizer_for_rollout):
-            for problem in test_set:
+            for ip, problem in enumerate(test_set):
                 for i, seed in enumerate(seed_list):
-                    pbar.set_description_str(f"Batch Rollouting Checkpoint {ckp} with Problem {problem.__class__.__name__}, Run {i}")
+                    pbar.set_description_str(f"Batch Rollouting Checkpoint {ckp} with Problem Batch {ip}, Run {i}")
                     testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent), PBO_Env(copy.deepcopy(p), copy.deepcopy(optimizer)), seed, ckp) for p in problem]
                     MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray')
                     meta_test_data = MetaBBO_test.rollout()

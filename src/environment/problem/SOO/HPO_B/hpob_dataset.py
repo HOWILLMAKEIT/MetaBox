@@ -116,8 +116,7 @@ class HPOB_Dataset(Dataset):
         return HPOB_Dataset(train_set, train_batch_size), HPOB_Dataset(test_set, test_batch_size)
 
     def __getitem__(self, item):
-        if self.batch_size < 2:
-            return self.data[self.index[item]]
+        
         ptr = self.ptr[item]
         index = self.index[ptr: min(ptr + self.batch_size, self.N)]
         res = []

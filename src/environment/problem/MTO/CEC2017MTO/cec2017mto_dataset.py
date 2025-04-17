@@ -26,8 +26,7 @@ class CEC2017MTO_Dataset(Dataset):
             self.maxdim = max(self.maxdim, item.dim)
 
     def __getitem__(self, item):
-        if self.batch_size < 2:
-            return self.data[self.index[item]]
+        
         ptr = self.ptr[item]
         index = self.index[ptr: min(ptr + self.batch_size, self.N)]
         res = []

@@ -80,8 +80,7 @@ class Protein_Docking_Dataset(Dataset):
         return Protein_Docking_Dataset(data[:n_train_instances], train_batch_size), Protein_Docking_Dataset(data[n_train_instances:], test_batch_size)
 
     def __getitem__(self, item):
-        if self.batch_size < 2:
-            return self.data[self.index[item]]
+        
         ptr = self.ptr[item]
         index = self.index[ptr: min(ptr + self.batch_size, self.N)]
         res = []

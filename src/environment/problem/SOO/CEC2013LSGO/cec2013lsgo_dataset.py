@@ -76,8 +76,7 @@ class CEC2013LSGO_Dataset(Dataset):
 
     # get a batch of data
     def __getitem__(self, item):
-        if self.batch_size < 2:
-            return self.data[self.index[item]]
+        
         ptr = self.ptr[item]
         index = self.index[ptr: min(ptr + self.batch_size, self.N)]
         res = []
