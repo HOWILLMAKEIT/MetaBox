@@ -67,9 +67,9 @@ class GLHF_Optimizer(Learnable_Optimizer):
         new_population = action(batch_pop)[0]
         new_cost = self.get_costs(position = new_population, problem = problem)
 
-        optim = new_cost.detach() < pre_gbest
         old_population = self.population.clone().detach()
         old_c_cost = self.c_cost.clone().detach()
+        optim = new_cost.detach() < old_c_cost.detach()
 
         old_population[optim] = new_population[optim]
         old_c_cost[optim] = new_cost[optim]

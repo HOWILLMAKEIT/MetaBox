@@ -66,7 +66,7 @@ class RLHPSDE(QLearning_Agent):
             next_state, reward, is_end, info = env.step(action)
             _R += reward
             # update Q-table
-            reward = torch.FloatTensor(reward).to(self.device)
+            reward = torch.Tensor(reward).to(self.device)
             TD_error = reward + gamma * torch.max(self.q_table[next_state], dim = 1)[0] - self.q_table[state, action]
 
             _loss.append(TD_error.mean().item())

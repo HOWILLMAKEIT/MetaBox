@@ -59,7 +59,7 @@ class PSORLNS(DQN_Agent):
         
         state = env.reset()
         try:
-            state = torch.FloatTensor(state).reshape(-1, self.state_size)
+            state = torch.Tensor(state).reshape(-1, self.state_size)
         except:
             pass
         
@@ -75,17 +75,17 @@ class PSORLNS(DQN_Agent):
             reward = reward.reshape(len(env) * self.ps)
             is_end = is_end.reshape(len(env)*self.ps)
             _R += reward
-            _reward.append(torch.FloatTensor(reward))
+            _reward.append(torch.Tensor(reward))
             # store info
             # convert next_state into tensor
             try:
-                next_state = torch.FloatTensor(next_state).to(self.device).reshape(-1, self.state_size)
+                next_state = torch.Tensor(next_state).to(self.device).reshape(-1, self.state_size)
             except:
                 pass
             for s, a, r, ns, d in zip(state, action, reward, next_state, is_end):
                 self.replay_buffer.append((s, a, r, ns, d))
             try:
-                state = torch.FloatTensor(next_state).to(self.device)
+                state = torch.Tensor(next_state).to(self.device)
             except:
                 state = copy.deepcopy(next_state)
             
@@ -159,7 +159,7 @@ class PSORLNS(DQN_Agent):
             R = np.zeros(self.ps)
             while not is_done[0]:
                 try:
-                    state = torch.FloatTensor(state).unsqueeze(0).to(self.device).reshape(-1, self.state_size)
+                    state = torch.Tensor(state).unsqueeze(0).to(self.device).reshape(-1, self.state_size)
                 except:
                     st = state.reshape(-1, self.state_size)
                 action = self.get_action(state)
@@ -206,7 +206,7 @@ class PSORLNS(DQN_Agent):
         self.ps = env.get_env_attr('ps')
         state = env.reset()
         try:
-            state = torch.FloatTensor(state).to(self.device).reshape(-1, self.state_size)
+            state = torch.Tensor(state).to(self.device).reshape(-1, self.state_size)
         except:
             pass
         
@@ -221,10 +221,10 @@ class PSORLNS(DQN_Agent):
             state, rewards, is_end, info = env.step(action.reshape(len(env), self.ps))
             rewards = rewards.reshape(len(env)*self.ps)
             # print('step:{},max_reward:{}'.format(t,torch.max(rewards)))
-            R += torch.FloatTensor(rewards).squeeze()
+            R += torch.Tensor(rewards).squeeze()
             # store info
             try:
-                state = torch.FloatTensor(state).to(self.device).reshape(-1, self.state_size)
+                state = torch.Tensor(state).to(self.device).reshape(-1, self.state_size)
             except:
                 pass
         _Rs = torch.mean(R.reshape(len(env), self.ps), dim = -1).detach().numpy().tolist()

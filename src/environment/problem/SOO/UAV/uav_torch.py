@@ -97,6 +97,7 @@ class UAV_Torch_Problem(Basic_Problem_Torch):
         # Since we are interested in r, phi, psi for nVar points in each item of the population
         bounds = np.tile(bounds, (int(nVar), 1))
 
+        bounds = torch.Tensor(bounds)
         # Assign the 0th column to self.lb and the 1st column to self.ub
         self.lb = bounds[:, 0]
         self.ub = bounds[:, 1]
@@ -231,11 +232,20 @@ class Terrain(UAV_Torch_Problem):
         N = x_all.shape[1] # Full path length
 
         # Altitude wrt sea level = z_relative + ground_level
-        z_abs = torch.zeros((NP, N), dtype = torch.float64)
+        # z_abs = torch.zeros((NP, N), dtype = torch.float64)
+        # for i in range(N):
+        #     x_index = np.round(x_all[:, i].detach().numpy()).astype(int) - 1
+        #     y_index = np.round(y_all[:, i].detach().numpy()).astype(int) - 1
+        #     z_abs[:, i] = z_all[:, i] + H[y_index, x_index]
+
+        z_abs_list = []
         for i in range(N):
-            x_index = np.round(x_all[:, i].cpu().numpy()).astype(int) - 1
-            y_index = np.round(y_all[:, i].cpu().numpy()).astype(int) - 1
-            z_abs[:, i] = z_all[:, i] + H[y_index, x_index]
+            x_index = torch.round(x_all[:, i]).long() - 1
+            y_index = torch.round(y_all[:, i]).long() - 1
+            terrain_height = H[y_index, x_index]
+            z_abs_i = z_all[:, i] + terrain_height
+            z_abs_list.append(z_abs_i.unsqueeze(1))
+        z_abs = torch.cat(z_abs_list, dim = 1)  # [NP, N]
 
         # ---------- J1 Cost for path length ----------
         diff = torch.stack((x_all[:, 1:] - x_all[:, :-1],
@@ -265,7 +275,7 @@ class Terrain(UAV_Torch_Problem):
                 threat_cost = torch.where(dist > threat_radius + model['drone_size'] + model['danger_dist'], torch.tensor(0.0, dtype = torch.float64), threat_cost)  # No Collision
                 threat_cost = torch.where(dist < threat_radius + model['drone_size'], J_pen, threat_cost)  # Collision
 
-                J2 += threat_cost
+                J2 = J2 + threat_cost
 
         # ---------- J3 - Altitude cost ----------
         z_max = torch.tensor(model['zmax'], dtype = torch.float64)
@@ -317,7 +327,7 @@ class Terrain(UAV_Torch_Problem):
             addition_J_1 = torch.where(torch.abs(turning_angle) > turning_max, torch.abs(turning_angle), torch.tensor(0.0, dtype = torch.float64))
             addition_J_2 = torch.where(torch.abs(climb_angle2 - climb_angle1) > climb_max, torch.abs(climb_angle2 - climb_angle1), torch.tensor(0.0, dtype = torch.float64))
 
-            J4 += addition_J_1 + addition_J_2
+            J4 = J4 + addition_J_1 + addition_J_2
 
             # ---------- J5 - terrain cost ----------
             J5 = torch.full([NP], J_pen, dtype = torch.float64)
@@ -351,12 +361,12 @@ class Terrain(UAV_Torch_Problem):
         H_rows, H_cols = H_np.shape
         x_indices = np.arange(H_cols)  # X-direction indices
         y_indices = np.arange(H_rows)  # Y-direction indices
-        interp_func = RegularGridInterpolator((y_indices, x_indices), H)
+        interp_func = RegularGridInterpolator((y_indices, x_indices), H_np, bounds_error = False, fill_value = np.nan)
 
         # Calculate the sample points for all line segments
-        x_interp = np.linspace(x_all_np[:, :-1], x_all_np[:, 1:], steps = num_samples, axis = 2)
-        y_interp = np.linspace(y_all_np[:, :-1], y_all_np[:, 1:], steps = num_samples, axis = 2)
-        z_interp = np.linspace(z_abs_np[:, :-1], z_abs_np[:, 1:], steps = num_samples, axis = 2)
+        x_interp = np.linspace(x_all_np[:, :-1], x_all_np[:, 1:], num_samples, axis = 2)
+        y_interp = np.linspace(y_all_np[:, :-1], y_all_np[:, 1:], num_samples, axis = 2)
+        z_interp = np.linspace(z_abs_np[:, :-1], z_abs_np[:, 1:], num_samples, axis = 2)
 
         # Compute the terrain heights at all interpolated points
         terrain_heights = interp_func(np.stack([y_interp, x_interp], axis = -1))  # (NP, N-1, num_samples)

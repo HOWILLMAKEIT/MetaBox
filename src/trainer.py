@@ -34,7 +34,10 @@ from environment.optimizer import (
     RLDEAFL_Optimizer,
     SurrRLDE_Optimizer,
     RLEMMO_Optimizer,
-    madac_optimizer
+    madac_optimizer,
+    GLHF_Optimizer,
+    B2OPT_Optimizer,
+    LGA_Optimizer
 )
 
 from baseline.bbo import (
@@ -62,7 +65,11 @@ from baseline.metabbo import (
     RLDAS,
     SurrRLDE,
     RLEMMO,
-    madac
+    madac,
+
+    GLHF,
+    B2OPT,
+    LGA
 )
 
 
@@ -146,8 +153,8 @@ class Trainer(object):
         while not is_end:
             learn_step = 0
             self.train_set.shuffle()
-            return_record = 0
-            loss_record = 0
+            return_record = []
+            loss_record = []
             with tqdm(range(int(np.ceil(self.train_set.N / self.train_set.batch_size))), desc = f'Training {self.agent.__class__.__name__} Epoch {epoch}') as pbar:
                 for problem_id, problem in enumerate(self.train_set):
                     # set seed
@@ -165,17 +172,22 @@ class Trainer(object):
                                                                               tb_logger = tb_logger,
                                                                               para_mode = self.config.train_parallel_mode,
                                                                               )
+                    # train_meta_data {'return': list[], 'loss': list[], 'learn_steps': int}
+
                     # exceed_max_ls, pbar_info_train = self.agent.train_episode(env)  # pbar_info -> dict
-                    meanR = np.mean(train_meta_data['return'])
                     postfix_str = (
-                        f"loss={np.sum(train_meta_data['loss']):.2e}, "
+                        f"loss={np.mean(train_meta_data['loss']):.2e}, "
                         f"learn_steps={train_meta_data['learn_steps']}, "
-                        f"return={f'{meanR:.2e}'}"
+                        f"return={np.mean(train_meta_data['return']):.2e}"
                     )
                     train_log['loss'].append(train_meta_data['loss'])
                     train_log['learn_steps'].append(train_meta_data['learn_steps'])
                     train_log['return'].append(train_meta_data['return'])
                     train_log['runtime'].append(time.time() - start_time)
+
+                    if not os.path.exists(os.path.join('output/train_log', self.config.run_time)):
+                        os.makedirs(os.path.join('output/train_log', self.config.run_time))
+
                     with open(os.path.join('output/train_log', self.config.run_time, 'train_log.pkl'), 'wb') as f:
                         pickle.dump(train_log, f)
                     
@@ -183,8 +195,8 @@ class Trainer(object):
                     pbar.update(self.train_set.batch_size)
                     learn_step = train_meta_data['learn_steps']
                     
-                    return_record += np.sum(train_meta_data['return'])
-                    loss_record += np.sum(train_meta_data['loss'])
+                    return_record.append(np.mean(train_meta_data['return']))
+                    loss_record.append(np.mean(train_meta_data['loss']))
                     
                     # for id, p in enumerate(problem):
                     #     name = p.__str__()
@@ -207,8 +219,8 @@ class Trainer(object):
 
             if not self.config.no_tb:
                 tb_logger.add_scalar("epoch-step", learn_step, epoch)
-                tb_logger.add_scalar("epoch-avg-return", return_record/(self.train_set.N / self.train_set.batch_size * bs), epoch)
-                tb_logger.add_scalar("epoch-avg-loss", loss_record/(self.train_set.N / self.train_set.batch_size * bs), epoch)
+                tb_logger.add_scalar("epoch-avg-return", np.mean(return_record), epoch)
+                tb_logger.add_scalar("epoch-avg-loss", np.mean(loss_record), epoch)
 
             if epoch >= (self.config.save_interval * self.agent.cur_checkpoint) and self.config.end_mode == "epoch":
                 save_class(self.config.agent_save_dir, 'checkpoint' + str(self.agent.cur_checkpoint), self.agent)

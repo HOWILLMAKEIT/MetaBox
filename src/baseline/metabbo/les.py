@@ -6,6 +6,7 @@ from cmaes import CMA
 import copy
 from environment.parallelenv.parallelenv import ParallelEnv
 import numpy as np
+from dill import loads, dumps
 
 class LES(Basic_Agent):
     def __init__(self, config):
@@ -76,10 +77,12 @@ class LES(Basic_Agent):
             num_gpus = compute_resource['num_gpus']
         env = ParallelEnv(envs, para_mode, num_cpus=num_cpus, num_gpus=num_gpus)
         env.seed(seeds)
-        
-        env_population = [copy.deepcopy(env) for _ in range(self.meta_pop_size)]
-        
-        
+
+        env.set_env_attr("rng_cpu", "None")
+        if self.__config.device != 'cpu':
+            env.set_env_attr("rng_gpu", "None")
+        env_population = [loads(dumps(env)) for _ in range(self.meta_pop_size)]
+
         # sequential
         for i, e in enumerate(env_population):
             e.reset()

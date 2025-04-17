@@ -7,7 +7,7 @@ mutation_operators = ['DE1', 'DE2', 'DE3', 'DE4', 'DE5', 'DE6', 'DE7', 'DE8', 'D
 
 class select_mutation:
     def __init__(self, rng):
-        print(mutation_operators)
+        # print(mutation_operators)
         operators = {}
         self.rng = rng
         for operator_name in mutation_operators:
@@ -25,7 +25,7 @@ class select_mutation:
 class select_crossover:
     def __init__(self, rng):
         self.rng = rng
-        print(crossover_operators)
+        # print(crossover_operators)
         operators = {}
         for operator_name in crossover_operators:
             operators[operator_name] = eval(operator_name)(rng)
@@ -55,8 +55,8 @@ class RLDEAFL_Optimizer(Learnable_Optimizer):
         self.max_fes = config.maxFEs
         self.__reward_ratio = 1
 
-        self.__mu_selector = select_mutation(self.rng)
-        self.__cr_selector = select_crossover(self.rng)
+        self.__mu_selector = None
+        self.__cr_selector = None
 
 
         self.log_index = None
@@ -86,6 +86,10 @@ class RLDEAFL_Optimizer(Learnable_Optimizer):
         return pop
 
     def init_population(self, problem):
+        if self.__mu_selector is None:
+            self.__mu_selector = select_mutation(self.rng)
+            self.__cr_selector = select_crossover(self.rng)
+
         self.fes = 0
         NP = self.__NP
         dim = self.__dim
@@ -105,7 +109,7 @@ class RLDEAFL_Optimizer(Learnable_Optimizer):
         self.__init_gbest = self.gbest_val
 
         if self.__config.full_meta_data:
-            self.meta_X = [self.current_vector.copy()]
+            self.meta_X = [self.current_vector.copy() * (problem.ub - problem.lb) + problem.lb]
             self.meta_Cost = [self.current_fitness.copy()]
 
         return self.observe()
@@ -184,7 +188,7 @@ class RLDEAFL_Optimizer(Learnable_Optimizer):
             self.cost.append(self.gbest_val)
 
         if self.__config.full_meta_data:
-            self.meta_X.append(self.current_vector.copy())
+            self.meta_X.append(self.current_vector.copy() * (problem.ub - problem.lb) + problem.lb)
             self.meta_Cost.append(self.current_fitness.copy())
 
         if problem.optimum is None:

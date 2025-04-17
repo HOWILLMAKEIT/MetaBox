@@ -209,21 +209,20 @@ class B2OPT(Basic_Agent):
         _loss = []
         _R = torch.zeros(len(env))
         t = 0
+        memory.append(state)
         while not env.all_done():
-
-            memory.append(state)
-
             action = [self.Opt for _ in range(len(env))]
             next_state, rewards, done, info = env.step(action)
 
             _R += rewards
             state = next_state
+            memory.append(state)
             t += 1
 
-        memory.append(state) # 3D [T, BS, NP]
+        # memory.append(state) # 3D [T, BS, NP]
         memory_tensor = torch.stack(memory, dim = 0)
-
-        loss = (torch.mean(memory_tensor[0, :, :], dim = 1) - torch.mean(memory_tensor[1:, :, :], dim = (0, 2))) / torch.mean(memory_tensor[0, :, :], dim = 1) # bs
+        init_ = torch.mean(memory_tensor[0, :, :], dim = 1).detach()
+        loss = (init_ - torch.mean(memory_tensor[1:, :, :], dim = (0, 2))) / init_ # bs
 
         loss = -torch.mean(loss)
 
