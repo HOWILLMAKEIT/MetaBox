@@ -1,10 +1,32 @@
 from .kan import *
-from .mlp import MLP
 from environment.problem.basic_problem import Basic_Problem
 from environment.problem.SOO.COCO_BBOB.bbob_numpy import *
 from os import path
 from torch.utils.data import Dataset
 
+import torch.nn as nn
+
+# MLP
+class MLP(nn.Module):
+	def __init__(self, input_dim):
+		super(MLP, self).__init__()
+		self.ln1 = nn.Linear(input_dim, 32)
+		self.ln2 = nn.Linear(32, 64)
+		self.ln3 = nn.Linear(64, 32)
+		self.ln4 = nn.Linear(32, 1)
+		self.relu1 = nn.ReLU()
+		self.relu2 = nn.ReLU()
+		self.relu3 = nn.ReLU()
+
+	def forward(self, x):
+		x = self.ln1(x)
+		x = self.relu1(x)
+		x = self.ln2(x)
+		x = self.relu2(x)
+		x = self.ln3(x)
+		x = self.relu3(x)
+		x = self.ln4(x)
+		return x
 
 class bbob_surrogate_model(Basic_Problem):
 	def __init__(self, dim, func_id, lb, ub, shift, rotate, bias, config):
@@ -48,13 +70,13 @@ class bbob_surrogate_model(Basic_Problem):
 
 			if func_id in [1, 2, 4, 6, 9, 12, 14, 23]:
 				self.model = KAN.loadckpt(
-					path.join(base_dir, f'datafiles\\SOO\\surrogate_model\\Dim{dim}\\KAN\\{self.instance}\\model'))
+					path.join(base_dir, f'datafile\\Dim{dim}\\KAN\\{self.instance}\\model'))
 			# elif func_id in [2, 5, 8, 9, 11, 16, 17, 18, 19, 20, 21, 22]:
 			else:
 				self.model = MLP(dim)
 				self.model.load_state_dict(
 					torch.load(path.join(base_dir,
-										 f'datafiles\\SOO\\surrogate_model\\Dim{dim}\\MLP\\{self.instance}\\model.pth'))
+										 f'datafile\\Dim{dim}\\MLP\\{self.instance}\\model.pth'))
 				)
 
 
@@ -105,17 +127,27 @@ class bbob_surrogate_Dataset(Dataset):
 	            self.maxdim = max(self.maxdim, item.dim)
 
 	@staticmethod
-	def get_datasets(version='torch', train_batch_size=1,
+	def get_datasets(version='torch', suit='bbob-surrogate-10D',
+					 train_batch_size=1,
 					 test_batch_size=1, difficulty='easy',
 					 user_train_list=None, user_test_list=None,
 					 seed=3849, shifted=True, biased=True, rotated=True,
-					 dim=10, config=None, upperbound=5, ):
+					  config=None, upperbound=5):
 
 		is_train = config.is_train
 
 		# train_id = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
 		# 			20]
 		# test_id = [16, 17, 18, 19, 21, 22, 23, 24]
+		if suit == 'bbob-surrogate-10D':
+			dim = 10
+		elif suit == 'bbob-surrogate-5D':
+			dim = 5
+		elif suit == 'bbob-surrogate-2D':
+			dim = 2
+		else:
+			raise ValueError(f'{suit} is not supported.')
+
 
 		if difficulty == 'easy':
 			if dim == 2:

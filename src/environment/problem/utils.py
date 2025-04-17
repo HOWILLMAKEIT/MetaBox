@@ -58,8 +58,9 @@ def get_problem_set(config, problem, difficulty, train_list, test_list):
                                                     user_test_list=test_list,
                                                     difficulty=difficulty)
 
-    elif problem in ['bbob-surrogate']:
+    elif problem in ['bbob-surrogate-2D','bbob-surrogate-5D','bbob-surrogate-10D']:
         return bbob_surrogate_Dataset.get_datasets(config=config,
+                                                   suit=problem,
                                                     upperbound=config.upperbound,
                                                     train_batch_size=config.train_batch_size,
                                                     test_batch_size=config.test_batch_size,
