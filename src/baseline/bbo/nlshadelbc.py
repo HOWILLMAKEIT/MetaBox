@@ -13,7 +13,7 @@ class NLSHADELBC(Basic_Optimizer):
         super(NLSHADELBC, self).__init__(config)
         self.__pb = 0.4  # rate of best individuals in mutation
         self.__pa = 0.5  # rate of selecting individual from archive
-        self.__dim = config.dim  # dimension of problem
+        self.__dim = 10  # dimension of problem
         self.__m = 1.5
         self.__p_iniF = 3.5
         self.__p_iniCr = 1.0
