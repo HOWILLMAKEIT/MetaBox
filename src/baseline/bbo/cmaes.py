@@ -19,7 +19,6 @@ class CMAES(Basic_Optimizer):
         self.__creator.create("Individual", list, fitness=creator.Fitnessmin)
         self.log_interval = config.log_interval
         self.full_meta_data = config.full_meta_data
-        creator.create("Individual", list, fitness=self.__config.maxFEs)
 
     def __str__(self):
         return "CMAES"
