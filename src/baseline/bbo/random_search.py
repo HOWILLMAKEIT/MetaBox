@@ -25,7 +25,7 @@ class Random_search(Basic_Optimizer):
         self.log_index=1
     
     def __random_population(self,problem,init):
-        rand_pos=self.rng.uniform(low=problem.lb,high=problem.ub,size=(self.__NP,self.__dim))
+        rand_pos=self.rng.uniform(low=problem.lb,high=problem.ub,size=(self.__NP,proble.dim))
         if problem.optimum is None:
             cost=problem.eval(rand_pos)
         else:
