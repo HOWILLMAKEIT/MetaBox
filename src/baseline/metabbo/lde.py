@@ -86,7 +86,7 @@ class LDE(REINFORCE_Agent):
                       tb_logger = None,
                       required_info = {}):
         num_cpus = None
-        num_gpus = 0
+        num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
         if 'num_cpus' in compute_resource.keys():
             num_cpus = compute_resource['num_cpus']
         if 'num_gpus' in compute_resource.keys():
@@ -224,7 +224,7 @@ class LDE(REINFORCE_Agent):
                               compute_resource = {},
                               required_info = {}):
         num_cpus = None
-        num_gpus = 0
+        num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
         if 'num_cpus' in compute_resource.keys():
             num_cpus = compute_resource['num_cpus']
         if 'num_gpus' in compute_resource.keys():

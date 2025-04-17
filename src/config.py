@@ -69,7 +69,7 @@ def get_config(args=None):
 
     # Rollout parameters
     parser.add_argument('--agent_for_rollout', type=str, help='learnable agent for rollout')
-    parser.add_argument('--checkpoints_for_rollout', type=int, nargs='+', help='the index of checkpoints for rollout')
+    parser.add_argument('--checkpoints_for_rollout', default=None, type=int, nargs='+', help='the index of checkpoints for rollout')
     parser.add_argument('--plot_smooth', type=float, default=0.8,
                         help='a float between 0 and 1 to control the smoothness of figure curves')
 
@@ -101,6 +101,7 @@ def get_config(args=None):
     parser.add_argument('--end_mode', type = str, choices = ['step', 'epoch'])
 
     parser.add_argument('--test_run', type = int, default = 51)
+    parser.add_argument('--rollout_run', type = int, default = 10)
 
     parser.add_argument('--no_tb', action='store_true', default = False, help = 'disable tensorboard logging')
     parser.add_argument('--log_step', type = int, default = 50, help = 'log every log_step steps')
@@ -108,7 +109,7 @@ def get_config(args=None):
 
     config = parser.parse_args(args)
 
-    config.maxFEs = 2500
+    config.maxFEs = 20000
     # for bo, maxFEs is relatively smaller due to time limit
     config.n_logpoint = 50
     
