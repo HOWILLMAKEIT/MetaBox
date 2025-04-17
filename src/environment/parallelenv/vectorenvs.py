@@ -486,6 +486,14 @@ class RayVectorEnv(BaseVectorEnv):
         RayEnvWorker.num_cpu_per_worker = num_cpu_per_worker
         RayEnvWorker.num_gpu_per_worker = num_gpu_per_worker
         super().__init__(env_fns, RayEnvWorker, num_cpu_per_worker=num_cpu_per_worker, num_gpu_per_worker=num_gpu_per_worker, no_warning=no_warning, **kwargs)
+    
+    def rollout(self):
+        self._assert_is_not_closed()
+        id = self._wrap_id(None)
+        for i, j in enumerate(id):
+            self.workers[j].rollout()
+        results = [self.workers[i].recv_once() for i in id]
+        return results
 
 
 class RaySubprocVectorEnv(BaseVectorEnv):

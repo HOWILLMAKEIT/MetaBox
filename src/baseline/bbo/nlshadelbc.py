@@ -153,7 +153,7 @@ class NLSHADELBC(Basic_Optimizer):
             self.__NA = A
             self.__archive = self.__archive[:A]
 
-    def __init_population(self, problem)
+    def __init_population(self, problem):
         self.__Nmax = 23 * problem.dim
         self.__H = 20 * problem.dim
         self.__NP = 23 * problem.dim

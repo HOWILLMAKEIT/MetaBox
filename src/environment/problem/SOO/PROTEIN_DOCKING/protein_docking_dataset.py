@@ -4,7 +4,7 @@ import numpy as np
 from torch.utils.data import Dataset
 from environment.problem.basic_problem import Basic_Problem
 import time
-from protein_docking import Protein_Docking_Torch_Problem, Protein_Docking_Numpy_Problem
+from .protein_docking import Protein_Docking_Torch_Problem, Protein_Docking_Numpy_Problem
 class Protein_Docking_Dataset(Dataset):
     proteins_set = {'rigid': ['1AVX', '1BJ1', '1BVN', '1CGI', '1DFJ', '1EAW', '1EWY', '1EZU', '1IQD', '1JPS',
                               '1KXQ', '1MAH', '1N8O', '1PPE', '1R0R', '2B42', '2I25', '2JEL', '7CEI', '1AY7'],
