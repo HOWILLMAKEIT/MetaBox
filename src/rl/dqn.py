@@ -72,7 +72,7 @@ class DQN_Agent(Basic_Agent):
         self.cur_checkpoint = 0
 
         # save init agent
-        save_class(self.config.agent_save_dir,'checkpoint'+str(self.cur_checkpoint),self)
+        save_class(self.config.agent_save_dir,'checkpoint-'+str(self.cur_checkpoint),self)
         self.cur_checkpoint += 1
 
     def set_network(self, networks: dict, learning_rates: float):
@@ -133,7 +133,7 @@ class DQN_Agent(Basic_Agent):
                       tb_logger = None,
                       required_info = {}):
         num_cpus = None
-        num_gpus = 0
+        num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
         if 'num_cpus' in compute_resource.keys():
             num_cpus = compute_resource['num_cpus']
         if 'num_gpus' in compute_resource.keys():
@@ -145,7 +145,7 @@ class DQN_Agent(Basic_Agent):
         
         state = env.reset()
         try:
-            state = torch.FloatTensor(state)
+            state = torch.Tensor(state)
         except:
             pass
         
@@ -159,17 +159,17 @@ class DQN_Agent(Basic_Agent):
             # state transient
             next_state, reward, is_end, info = env.step(action)
             _R += reward
-            _reward.append(torch.FloatTensor(reward))
+            _reward.append(torch.Tensor(reward))
             # store info
             # convert next_state into tensor
             try:
-                next_state = torch.FloatTensor(next_state).to(self.device)
+                next_state = torch.Tensor(next_state).to(self.device)
             except:
                 pass
             for s, a, r, ns, d in zip(state, action, reward, next_state, is_end):
                 self.replay_buffer.append((s, a, r, ns, d))
             try:
-                state = torch.FloatTensor(next_state).to(self.device)
+                state = torch.Tensor(next_state).to(self.device)
             except:
                 state = copy.deepcopy(next_state)
             
@@ -197,7 +197,7 @@ class DQN_Agent(Basic_Agent):
 
                 self.learning_time += 1
                 if self.learning_time >= (self.config.save_interval * self.cur_checkpoint):
-                    save_class(self.config.agent_save_dir, 'checkpoint'+str(self.cur_checkpoint), self)
+                    save_class(self.config.agent_save_dir, 'checkpoint-'+str(self.cur_checkpoint), self)
                     self.cur_checkpoint += 1
 
                 if not self.config.no_tb and self.learning_time % int(self.config.log_step) == 0:
@@ -209,7 +209,7 @@ class DQN_Agent(Basic_Agent):
 
                 if self.learning_time >= self.config.max_learning_step:
                     _Rs = _R.detach().numpy().tolist()
-                    return_info = {'return': _Rs, 'loss': np.mean(_loss), 'learn_steps': self.learning_time, }
+                    return_info = {'return': _Rs, 'loss': _loss, 'learn_steps': self.learning_time, }
                     env_cost = env.get_env_attr('cost')
                     return_info['normalizer'] = env_cost[0]
                     return_info['gbest'] = env_cost[-1]
@@ -221,7 +221,7 @@ class DQN_Agent(Basic_Agent):
 
         is_train_ended = self.learning_time >= self.config.max_learning_step
         _Rs = _R.detach().numpy().tolist()
-        return_info = {'return': _Rs, 'loss': np.mean(_loss), 'learn_steps': self.learning_time}
+        return_info = {'return': _Rs, 'loss': _loss, 'learn_steps': self.learning_time}
         env_cost = env.get_env_attr('cost')
         return_info['normalizer'] = env_cost[0]
         return_info['gbest'] = env_cost[-1]
@@ -244,7 +244,7 @@ class DQN_Agent(Basic_Agent):
             R = 0
             while not is_done:
                 try:
-                    state = torch.FloatTensor(state).unsqueeze(0).to(self.device)
+                    state = torch.Tensor(state).unsqueeze(0).to(self.device)
                 except:
                     st = [state]
                 action = self.get_action(state)[0]
@@ -275,7 +275,7 @@ class DQN_Agent(Basic_Agent):
                               compute_resource = {},
                               required_info = {}):
         num_cpus = None
-        num_gpus = 0
+        num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
         if 'num_cpus' in compute_resource.keys():
             num_cpus = compute_resource['num_cpus']
         if 'num_gpus' in compute_resource.keys():
@@ -284,7 +284,7 @@ class DQN_Agent(Basic_Agent):
         env.seed(seeds)
         state = env.reset()
         try:
-            state = torch.FloatTensor(state).to(self.device)
+            state = torch.Tensor(state).to(self.device)
         except:
             pass
         
@@ -298,10 +298,10 @@ class DQN_Agent(Basic_Agent):
             # state transient
             state, rewards, is_end, info = env.step(action)
             # print('step:{},max_reward:{}'.format(t,torch.max(rewards)))
-            R += torch.FloatTensor(rewards).squeeze()
+            R += torch.Tensor(rewards).squeeze()
             # store info
             try:
-                state = torch.FloatTensor(state).to(self.device)
+                state = torch.Tensor(state).to(self.device)
             except:
                 pass
         _Rs = R.detach().numpy().tolist()

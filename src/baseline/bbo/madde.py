@@ -6,7 +6,6 @@ from environment.optimizer.basic_optimizer import Basic_Optimizer
 class MADDE(Basic_Optimizer):
     def __init__(self, config):
         super(MADDE, self).__init__(config)
-        self.__dim = config.dim
         self.__p = 0.18
         self.__PqBX = 0.01
         self.__F0 = 0.2
@@ -15,8 +14,6 @@ class MADDE(Basic_Optimizer):
         self.__npm = 2
         self.__hm = 10
         self.__Nmin = 4
-        self.__Nmax = self.__npm * self.__dim * self.__dim
-        self.__H = self.__hm * self.__dim
         self.__FEs = 0
         self.__MaxFEs = config.maxFEs
         self.__n_logpoint = config.n_logpoint
@@ -142,9 +139,9 @@ class MADDE(Basic_Optimizer):
         self.__cost = self.__cost[ind]
         self.__population = self.__population[ind]
 
-    def __update_archive(self, old_id):
+    def __update_archive(self, old_id, problem):
         if self.__archive.shape[0] < self.__NA:
-            self.__archive = np.append(self.__archive, self.__population[old_id]).reshape(-1, self.__dim)
+            self.__archive = np.append(self.__archive, self.__population[old_id]).reshape(-1, problem.dim)
         else:
             self.__archive[self.rng.randint(self.__archive.shape[0])] = self.__population[old_id]
 
@@ -181,9 +178,11 @@ class MADDE(Basic_Optimizer):
             self.__MCr[self.__k] = 0.5
 
     def __init_population(self, problem):
+        self.__Nmax = self.__npm * problem.dim * problem.dim
+        self.__H = self.__hm * problem.dim
         self.__NP = self.__Nmax
         self.__NA = int(2.3 * self.__NP)
-        self.__population = self.rng.rand(self.__NP, self.__dim) * (problem.ub - problem.lb) + problem.lb
+        self.__population = self.rng.rand(self.__NP, problem.dim) * (problem.ub - problem.lb) + problem.lb
         if problem.optimum is None:
             self.__cost = problem.eval(self.__population)
         else:
@@ -204,7 +203,7 @@ class MADDE(Basic_Optimizer):
 
     def __update(self, problem):
         self.__sort()
-        NP, dim = self.__NP, self.__dim
+        NP, dim = self.__NP, problem.dim
         q = 2 * self.__p - self.__p * self.__FEs / self.__MaxFEs
         Fa = 0.5 + 0.5 * self.__FEs / self.__MaxFEs
         Cr, F = self.__choose_F_Cr()
@@ -245,7 +244,7 @@ class MADDE(Basic_Optimizer):
         self.__FEs += NP
         optim = np.where(ncost < self.__cost)[0]
         for i in optim:
-            self.__update_archive(i)
+            self.__update_archive(i, problem)
         SF = F[optim]
         SCr = Cr[optim]
         df = np.maximum(0, self.__cost - ncost)

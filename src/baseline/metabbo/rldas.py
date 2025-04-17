@@ -30,10 +30,10 @@ class Actor(nn.Module):
     def forward(self, obs, fix_action = None, require_entropy = False):
         feature = list(obs[:, 0])
         if not isinstance(feature, torch.Tensor):
-            feature = torch.tensor(feature, dtype=torch.float).to(self.device)
+            feature = torch.Tensor(feature).to(self.device)
         moves = []
         for i in range(len(self.embedders)):
-            moves.append(self.embedders[i](torch.tensor(list(obs[:, i + 1]), dtype=torch.float).to(self.device)))
+            moves.append(self.embedders[i](torch.Tensor(list(obs[:, i + 1])).to(self.device)))
         moves = torch.cat(moves, dim=-1)
         batch = obs.shape[0]
         feature = torch.cat((feature, moves), dim=-1).view(batch, -1)
@@ -78,10 +78,10 @@ class Critic(nn.Module):
     def forward(self, obs):
         feature = list(obs[:, 0])
         if not isinstance(feature, torch.Tensor):
-            feature = torch.tensor(feature, dtype=torch.float).to(self.device)
+            feature = torch.Tensor(feature).to(self.device)
         moves = []
         for i in range(len(self.embedders)):
-            moves.append(self.embedders[i](torch.tensor(list(obs[:, i + 1]), dtype=torch.float).to(self.device)))
+            moves.append(self.embedders[i](torch.Tensor(list(obs[:, i + 1])).to(self.device)))
         moves = torch.cat(moves, dim=-1)
         batch = obs.shape[0]
         feature = torch.cat((feature, moves), dim=-1).view(batch, -1)
@@ -133,7 +133,7 @@ class RLDAS(PPO_Agent):
                       tb_logger = None,
                       required_info = {}):
         num_cpus = None
-        num_gpus = 0
+        num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
         if 'num_cpus' in compute_resource.keys():
             num_cpus = compute_resource['num_cpus']
         if 'num_gpus' in compute_resource.keys():
@@ -155,7 +155,7 @@ class RLDAS(PPO_Agent):
 
         state = env.reset()
         try:
-            state = torch.FloatTensor(state).to(self.device)
+            state = torch.Tensor(state).to(self.device)
         except:
             pass
 
@@ -175,7 +175,7 @@ class RLDAS(PPO_Agent):
             while t - t_s < n_step and not env.all_done():
 
                 memory.states.append(state.copy())
-                action, log_lh, entro_p = self.actor(state)
+                action, log_lh, entro_p = self.actor(state, require_entropy = True)
 
 
                 memory.actions.append(action.clone() if isinstance(action, torch.Tensor) else copy.deepcopy(action))
@@ -190,7 +190,7 @@ class RLDAS(PPO_Agent):
 
                 # state transient
                 state, rewards, is_end, info = env.step(action.detach().cpu().numpy())
-                memory.rewards.append(torch.FloatTensor(rewards).to(self.device))
+                memory.rewards.append(torch.Tensor(rewards).to(self.device))
                 # print('step:{},max_reward:{}'.format(t,torch.max(rewards)))
                 _R += rewards
                 # store info
@@ -199,7 +199,7 @@ class RLDAS(PPO_Agent):
                 t = t + 1
 
                 try:
-                    state = torch.FloatTensor(state).to(self.device)
+                    state = torch.Tensor(state).to(self.device)
                 except:
                     pass
 
@@ -308,7 +308,7 @@ class RLDAS(PPO_Agent):
                 if self.learning_time >= self.config.max_learning_step:
                     memory.clear_memory()
                     _Rs = _R.detach().numpy().tolist()
-                    return_info = {'return': _Rs, 'loss': np.mean(_loss),'learn_steps': self.learning_time, }
+                    return_info = {'return': _Rs, 'loss': _loss,'learn_steps': self.learning_time, }
                     env_cost = env.get_env_attr('cost')
                     return_info['normalizer'] = env_cost[0]
                     return_info['gbest'] = env_cost[-1]
@@ -321,7 +321,7 @@ class RLDAS(PPO_Agent):
 
         is_train_ended = self.learning_time >= self.config.max_learning_step
         _Rs = _R.detach().numpy().tolist()
-        return_info = {'return': _Rs, 'loss': np.mean(_loss),'learn_steps': self.learning_time,}
+        return_info = {'return': _Rs, 'loss': _loss,'learn_steps': self.learning_time,}
         env_cost = env.get_env_attr('cost')
         return_info['normalizer'] = env_cost[0]
         return_info['gbest'] = env_cost[-1]
@@ -340,7 +340,7 @@ class RLDAS(PPO_Agent):
                               compute_resource = {},
                               required_info = {}):
         num_cpus = None
-        num_gpus = 0
+        num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
         if 'num_cpus' in compute_resource.keys():
             num_cpus = compute_resource['num_cpus']
         if 'num_gpus' in compute_resource.keys():
@@ -350,7 +350,7 @@ class RLDAS(PPO_Agent):
         env.seed(seeds)
         state = env.reset()
         try:
-            state = torch.FloatTensor(state).to(self.device)
+            state = torch.Tensor(state).to(self.device)
         except:
             pass
 
@@ -363,10 +363,10 @@ class RLDAS(PPO_Agent):
             # state transient
             state, rewards, is_end, info = env.step(action.detach().cpu().numpy())
             # print('step:{},max_reward:{}'.format(t,torch.max(rewards)))
-            R += torch.FloatTensor(rewards).squeeze()
+            R += torch.Tensor(rewards).squeeze()
             # store info
             try:
-                state = torch.FloatTensor(state).to(self.device)
+                state = torch.Tensor(state).to(self.device)
             except:
                 pass
         _Rs = R.detach().numpy().tolist()
@@ -389,7 +389,7 @@ class RLDAS(PPO_Agent):
             R = 0
             while not is_done:
                 try:
-                    state = torch.FloatTensor(state).unsqueeze(0).to(self.device)
+                    state = torch.Tensor(state).unsqueeze(0).to(self.device)
                 except:
                     state = [state]
                 action = self.actor(state)[0]

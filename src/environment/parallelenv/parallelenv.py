@@ -105,7 +105,7 @@ class ParallelEnv():
         """if all envs done"""
         return self.done.all()
     
-    def customized_method(self, env_method: str, data, id: Optional[Union[int, List[int], np.ndarray]] = None):
+    def customized_method(self, env_method: str, data = None, id: Optional[Union[int, List[int], np.ndarray]] = None):
         """if user declares a method in the env named [env_method] and requiring arguments in a dictionary [data], this method can call the function in parallel.
         ```python
         # For instance, to run a ``func`` method on 8 of a batch of 16 envs which requires
@@ -117,7 +117,10 @@ class ParallelEnv():
         results = VectorEnv.customized_method("func", data, id)
         ```
         """
-        return self.workers.customized_method(env_method, data, id)
+        if data is not None:
+            return self.workers.customized_method(env_method, data, id)
+        else:
+            return self.workers.customized_method(env_method, id)
         
     def reset(self, id: Optional[Union[int, List[int], np.ndarray]] = None):
         """reset the envs with index in [id], default to reset all envs"""
@@ -216,35 +219,9 @@ class ParallelEnv():
     def __update_done(self, done_list):
         self.done = done_list
     
-    def rollout(self, data, call_method='rollout', repeat=1, seed=None):
-        """rollout/valiadtion/testing/expensive evaluation using Ray or Ray-Subproc parellel
-        :param data:          any data need for rollout, each data item should be organized as batched data for all envs.
-        :param call_method:   the method name to be called for rollout or evaluation, default to call a interface named ''rollout'', you can change it to your own interface name.
-        :param repeat:        the repeat times for the rollout, default to be 1. It is recommended to run all baselines and all runs in parallel instead of running multiple runs on one env.
-        :param seed:          the seed for all envs, can be list or array which assigns different seeds to each envs, or an integer which assign the same seed for all envs, or None for no seed. You can assign seeds for each run (i.e., repeat > 1) using a two-dimensional seed list or array.
-        ```python
-        # For instance, to run a ``rollout`` method in a batch of 16 envs which requires 
-        # arguments ``a`` and ``b`` for each env, we should organize the argument values for all
-        # envs into 16-element list of dictionaries.
-        data = [{'a': .., 'b': ..}, {'a': .., 'b': ..}, ...]
-        # Initialize the VectorEnv
-        VectorEnv = ParallelEnv(...)
-        # And call the rollout interface, 
-        # i.e., repeatly run each env for 5 runs with random seeds
-        seeds = np.random.randint(low=1, high=100, size=(5, 16))
-        results = VectorEnv.rollout(data, call_method='rollout', repeat=5, seed=seeds)
-        ```
-        """
-        # assert self.para_mode == 'ray' or self.para_mode == 'ray-subproc' or self.para_mode == 'dummy'
-        results = []
-        for rp in range(repeat):
-            if seed is not None:
-                if (isinstance(seed, list) or isinstance(seed, np.array)) and len(np.array(seed).shape) == 2:
-                    self.workers.seed(seed[rp])
-                else:
-                    self.workers.seed(seed)
-            results.append(self.customized_method(call_method, data))
-        return results
+    def rollout(self, ):
+        assert self.para_mode == 'ray'
+        return self.workers.rollout()
     
     def close(self):
         """close the envs to avoid memory or process leak"""

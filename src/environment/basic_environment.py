@@ -24,7 +24,6 @@ class PBO_Env(gym.Env):
                 self.problem[_].reset()
         else:
             self.problem.reset()
-        #self.problem.reset()
         reset_ = self.optimizer.init_population(self.problem)
         return reset_
 

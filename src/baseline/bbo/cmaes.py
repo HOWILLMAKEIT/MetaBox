@@ -15,14 +15,14 @@ class CMAES(Basic_Optimizer):
         self.__toolbox = base.Toolbox()
         self.__creator = creator
         self.__algorithm = algorithms
-        self.__creator.create("Fitnessmin", base.Fitness, weights=(-1.0,))
-        self.__creator.create("Individual", list, fitness=creator.Fitnessmin)
         self.log_interval = config.log_interval
         self.full_meta_data = config.full_meta_data
 
     def __str__(self):
         return "CMAES"
     def run_episode(self, problem):
+        self.__creator.create("Fitnessmin", base.Fitness, weights=(-1.0,))
+        self.__creator.create("Individual", list, fitness=creator.Fitnessmin)
         if self.full_meta_data:
             self.meta_Cost = []
             self.meta_X = []
@@ -37,7 +37,7 @@ class CMAES(Basic_Optimizer):
             return fitness,   # return a tuple
 
         self.__toolbox.register("evaluate", problem_eval)
-        strategy = cma.Strategy(centroid=[problem.ub] * self.__config.dim, sigma=0.5, lambda_=self.__config.NP)
+        strategy = cma.Strategy(centroid=[problem.ub] * problem.dim, sigma=0.5, lambda_=self.__config.NP)
         self.__toolbox.register("generate", strategy.generate, creator.Individual)
         self.__toolbox.register("update", strategy.update)
 

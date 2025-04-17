@@ -47,7 +47,7 @@ class QLearning_Agent(Basic_Agent):
         self.cur_checkpoint = 0
 
         # save init agent
-        save_class(self.config.agent_save_dir,'checkpoint'+str(self.cur_checkpoint),self)
+        save_class(self.config.agent_save_dir,'checkpoint-'+str(self.cur_checkpoint),self)
         self.cur_checkpoint += 1
 
     def update_setting(self, config):
@@ -86,7 +86,7 @@ class QLearning_Agent(Basic_Agent):
                       tb_logger = None,
                       required_info = {}):
         num_cpus = None
-        num_gpus = 0
+        num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
         if 'num_cpus' in compute_resource.keys():
             num_cpus = compute_resource['num_cpus']
         if 'num_gpus' in compute_resource.keys():
@@ -121,7 +121,7 @@ class QLearning_Agent(Basic_Agent):
             
             self.learning_time += 1
             if self.learning_time >= (self.config.save_interval * self.cur_checkpoint):
-                save_class(self.config.agent_save_dir, 'checkpoint'+str(self.cur_checkpoint), self)
+                save_class(self.config.agent_save_dir, 'checkpoint-'+str(self.cur_checkpoint), self)
                 self.cur_checkpoint += 1
 
             if self.learning_time >= self.config.max_learning_step:
@@ -184,7 +184,7 @@ class QLearning_Agent(Basic_Agent):
                               compute_resource = {},
                               required_info = {}):
         num_cpus = None
-        num_gpus = 0
+        num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
         if 'num_cpus' in compute_resource.keys():
             num_cpus = compute_resource['num_cpus']
         if 'num_gpus' in compute_resource.keys():

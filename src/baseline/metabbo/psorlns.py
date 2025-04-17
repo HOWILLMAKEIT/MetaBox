@@ -46,7 +46,7 @@ class PSORLNS(DQN_Agent):
                       tb_logger = None,
                       required_info = {}):
         num_cpus = None
-        num_gpus = 0
+        num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
         if 'num_cpus' in compute_resource.keys():
             num_cpus = compute_resource['num_cpus']
         if 'num_gpus' in compute_resource.keys():
@@ -59,7 +59,7 @@ class PSORLNS(DQN_Agent):
         
         state = env.reset()
         try:
-            state = torch.FloatTensor(state).reshape(-1, self.state_size)
+            state = torch.Tensor(state).reshape(-1, self.state_size)
         except:
             pass
         
@@ -75,17 +75,17 @@ class PSORLNS(DQN_Agent):
             reward = reward.reshape(len(env) * self.ps)
             is_end = is_end.reshape(len(env)*self.ps)
             _R += reward
-            _reward.append(torch.FloatTensor(reward))
+            _reward.append(torch.Tensor(reward))
             # store info
             # convert next_state into tensor
             try:
-                next_state = torch.FloatTensor(next_state).to(self.device).reshape(-1, self.state_size)
+                next_state = torch.Tensor(next_state).to(self.device).reshape(-1, self.state_size)
             except:
                 pass
             for s, a, r, ns, d in zip(state, action, reward, next_state, is_end):
                 self.replay_buffer.append((s, a, r, ns, d))
             try:
-                state = torch.FloatTensor(next_state).to(self.device)
+                state = torch.Tensor(next_state).to(self.device)
             except:
                 state = copy.deepcopy(next_state)
             
@@ -113,7 +113,7 @@ class PSORLNS(DQN_Agent):
 
                 self.learning_time += 1
                 if self.learning_time >= (self.config.save_interval * self.cur_checkpoint):
-                    save_class(self.config.agent_save_dir, 'checkpoint'+str(self.cur_checkpoint), self)
+                    save_class(self.config.agent_save_dir, 'checkpoint-'+str(self.cur_checkpoint), self)
                     self.cur_checkpoint += 1
 
                 if not self.config.no_tb and self.learning_time % int(self.config.log_step) == 0:
@@ -125,7 +125,7 @@ class PSORLNS(DQN_Agent):
 
                 if self.learning_time >= self.config.max_learning_step:
                     _Rs = _R.detach().numpy().tolist()
-                    return_info = {'return': _Rs, 'learn_steps': self.learning_time, }
+                    return_info = {'return': _Rs, 'loss': _loss, 'learn_steps': self.learning_time, }
                     env_cost = env.get_env_attr('cost')
                     return_info['gbest'] = env_cost[-1]
                     for key in required_info:
@@ -136,7 +136,7 @@ class PSORLNS(DQN_Agent):
 
         is_train_ended = self.learning_time >= self.config.max_learning_step
         _Rs = _R.detach().numpy().tolist()
-        return_info = {'return': _Rs, 'learn_steps': self.learning_time}
+        return_info = {'return': _Rs, 'loss': _loss, 'learn_steps': self.learning_time}
         env_cost = env.get_env_attr('cost')
         return_info['gbest'] = env_cost[-1]
         for key in required_info:
@@ -159,7 +159,7 @@ class PSORLNS(DQN_Agent):
             R = np.zeros(self.ps)
             while not is_done[0]:
                 try:
-                    state = torch.FloatTensor(state).unsqueeze(0).to(self.device).reshape(-1, self.state_size)
+                    state = torch.Tensor(state).unsqueeze(0).to(self.device).reshape(-1, self.state_size)
                 except:
                     st = state.reshape(-1, self.state_size)
                 action = self.get_action(state)
@@ -196,7 +196,7 @@ class PSORLNS(DQN_Agent):
                               compute_resource = {},
                               required_info = {}):
         num_cpus = None
-        num_gpus = 0
+        num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
         if 'num_cpus' in compute_resource.keys():
             num_cpus = compute_resource['num_cpus']
         if 'num_gpus' in compute_resource.keys():
@@ -206,7 +206,7 @@ class PSORLNS(DQN_Agent):
         self.ps = env.get_env_attr('ps')
         state = env.reset()
         try:
-            state = torch.FloatTensor(state).to(self.device).reshape(-1, self.state_size)
+            state = torch.Tensor(state).to(self.device).reshape(-1, self.state_size)
         except:
             pass
         
@@ -221,10 +221,10 @@ class PSORLNS(DQN_Agent):
             state, rewards, is_end, info = env.step(action.reshape(len(env), self.ps))
             rewards = rewards.reshape(len(env)*self.ps)
             # print('step:{},max_reward:{}'.format(t,torch.max(rewards)))
-            R += torch.FloatTensor(rewards).squeeze()
+            R += torch.Tensor(rewards).squeeze()
             # store info
             try:
-                state = torch.FloatTensor(state).to(self.device).reshape(-1, self.state_size)
+                state = torch.Tensor(state).to(self.device).reshape(-1, self.state_size)
             except:
                 pass
         _Rs = torch.mean(R.reshape(len(env), self.ps), dim = -1).detach().numpy().tolist()

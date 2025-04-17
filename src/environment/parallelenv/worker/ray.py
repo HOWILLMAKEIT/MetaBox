@@ -78,23 +78,40 @@ class RayEnvWorker(EnvWorker):
         results = env.step(action)
         return *results, loads(dumps(env))
     
-    def customized_method(self, func: str, data) -> Any:
+    def customized_method(self, func: str, data= None) -> Any:
         self.result = self.ray_customized.options(num_cpus=self.num_cpu_per_worker, num_gpus=self.num_gpu_per_worker).remote(loads(dumps(self.env)), func, data, self.no_warning)
     
     @ray.remote(num_cpus=num_cpu_per_worker, num_gpus=num_gpu_per_worker)
-    def ray_customized(env, func, data, no_warning):
+    def ray_customized(env, func, data=None, no_warning=False):
         if no_warning:
             warnings.filterwarnings("ignore")
         env = loads(dumps(env))
-        results = eval('env.'+func)(**data)
+        results = eval('env.'+func)(**data) if data is not None else eval('env.'+func)()
         return results, loads(dumps(env))
+
+    @ray.remote(num_cpus=num_cpu_per_worker, num_gpus=num_gpu_per_worker)
+    def ray_rollout(env, no_warning=False):
+        if no_warning:
+            warnings.filterwarnings("ignore")
+        env = loads(dumps(env))
+        results = env.run_batch_episode()
+        return results
+
+    def rollout(self):
+        self.result = self.ray_rollout.options(num_cpus=self.num_cpu_per_worker, num_gpus=self.num_gpu_per_worker).remote(loads(dumps(self.env)), self.no_warning)
         
     def recv(
         self
     ) -> Union[Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray], np.ndarray]:
         results = list(ray.get(self.result))
         self.env = results[-1]
-        return results[:-1]
+        return results[:-1] if len(results) > 2 else results[0]
+
+    def recv_once(
+        self
+    ) -> Union[Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray], np.ndarray]:
+        results = ray.get(self.result)
+        return results
 
     def seed(self, seed: Optional[int] = None) -> List[int]:
         super().seed(seed)

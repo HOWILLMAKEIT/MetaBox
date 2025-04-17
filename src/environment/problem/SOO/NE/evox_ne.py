@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 from evox.problems.neuroevolution.brax import BraxProblem
 from evox.utils import ParamsAndVector
-from torch.utils.data import Dataset
+
 from environment.problem.basic_problem import Basic_Problem
 
 
@@ -59,13 +59,14 @@ class NE_Problem(Basic_Problem):
         self.dim = sum(p.numel() for p in self.nn_model.parameters())
         self.ub = 5.
         self.lb = -5.
+        self.pop_size = 500
         self.adapter = ParamsAndVector(dummy_model= self.nn_model) 
         self.evaluator = BraxProblem(
             policy=self.nn_model,
             env_name=env_name,
             max_episode_length=200, #todo: 10,3,5,1 should be indicated in config.py and loaded here
             num_episodes=10,
-            pop_size=2,
+            pop_size=self.pop_size,
             seed=seed,
             reduce_fn=torch.mean,
         )
@@ -74,100 +75,17 @@ class NE_Problem(Basic_Problem):
         # x_cuda = torch.from_numpy(x).double().to(torch.get_default_device())
         # x_cuda = torch.from_numpy(x)
         # print(1)
+        torch.set_default_device("cuda")
         assert x.shape[-1] == self.dim, "solution dimension not equal to problem dimension!"
+        x = torch.tensor(x, device=torch.get_default_device()).float()
+        pop_size = x.shape[0]
+        if x.shape[0] < self.pop_size:
+            x = torch.concat([x, torch.zeros(self.pop_size - pop_size, self.dim)], 0)
         nn_population = self.adapter.batched_to_params(x)
         # for key in nn_population.keys():
         #     print(nn_population[key].shape)
         rewards = self.evaluator.evaluate(nn_population)
-        return rewards
+        torch.set_default_device("cpu")
+        return rewards[:pop_size]
 
-
-class NE_Dataset(Dataset):
-    def __init__(self,
-                 data,
-                 batch_size=1):
-        super().__init__()
-        self.data = data
-        self.batch_size = batch_size
-        self.N = len(self.data)
-        self.ptr = [i for i in range(0, self.N, batch_size)]
-        self.index = np.arange(self.N)
-
-    @staticmethod
-    def get_datasets(
-                     train_batch_size=1,
-                     test_batch_size=1,
-                     difficulty='easy',
-                     usr_train_list = None,
-                     usr_test_list = None,
-                     instance_seed=3849):
-        assert difficulty in ['all','easy','difficult','user-define']
-        train_set = []
-        test_set = []
-        if difficulty == 'all':
-            for env in envs.keys():
-                for depth in model_depth:
-                    train_set.append(NE_Problem(env, depth, instance_seed))
-                    test_set.append(NE_Problem(env, depth, instance_seed))
-            return NE_Dataset(train_set, train_batch_size), NE_Dataset(test_set, test_batch_size)
-            
-        elif difficulty == 'easy':
-            for env in envs.keys():
-                for depth in model_depth:
-                    if depth <=2:
-                        test_set.append(NE_Problem(env, depth, instance_seed))
-                    else:
-                        train_set.append(NE_Problem(env, depth, instance_seed))
-            return NE_Dataset(train_set, train_batch_size), NE_Dataset(test_set, test_batch_size)
-        
-        elif difficulty == 'difficult':
-            for env in envs.keys():
-                for depth in model_depth:
-                    if depth <=2:
-                        train_set.append(NE_Problem(env, depth, instance_seed))
-                    else:
-                        test_set.append(NE_Problem(env, depth, instance_seed))
-            return NE_Dataset(train_set, train_batch_size), NE_Dataset(test_set, test_batch_size)
-        
-        elif difficulty == 'user-define':
-            for env in envs.keys():
-                for depth in model_depth:
-                    if usr_train_list is not None and usr_test_list is not None:
-                        if f'{env}-{depth}' in usr_train_list:
-                            train_set.append(NE_Problem(env, depth, instance_seed))
-                        if f'{env}-{depth}' in usr_test_list:
-                            test_set.append(NE_Problem(env, depth, instance_seed))
-                    elif usr_train_list is not None:
-                        if f'{env}-{depth}' in usr_train_list:
-                            train_set.append(NE_Problem(env, depth, instance_seed))
-                        else:
-                            test_set.append(NE_Problem(env, depth, instance_seed))
-                    elif usr_test_list is not None:
-                        if f'{env}-{depth}' in usr_test_list:
-                            test_set.append(NE_Problem(env, depth, instance_seed))
-                        else:
-                            train_set.append(NE_Problem(env, depth, instance_seed))
-                    else:
-                        raise NotImplementedError
-                
-            return NE_Dataset(train_set, train_batch_size), NE_Dataset(test_set, test_batch_size)
-
-    def __getitem__(self, item):
-        if self.batch_size < 2:
-            return self.data[self.index[item]]
-        ptr = self.ptr[item]
-        index = self.index[ptr: min(ptr + self.batch_size, self.N)]
-        res = []
-        for i in range(len(index)):
-            res.append(self.data[index[i]])
-        return res
-
-    def __len__(self):
-        return self.N
-
-    def __add__(self, other: 'NE_Dataset'):
-        return NE_Dataset(self.data + other.data, self.batch_size)
-
-    def shuffle(self):
-        self.index = np.random.permutation(self.N)
 

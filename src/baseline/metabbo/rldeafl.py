@@ -151,7 +151,7 @@ class Feature_Extractor(nn.Module):
         # mean
         # o_i = torch.mean(o_i, 1).view(bs, pop_size, node_dim).to(self.device) # (bs, pop_size, hidden_dim)
 
-        tensor_fes = torch.tensor(fes, dtype = torch.float32).to(self.device)
+        tensor_fes = torch.tensor(fes).to(self.device)
         embed_fes = self.fes_embedder(tensor_fes).to(self.device)  # [bs, 16]
         embed_fes = embed_fes.unsqueeze(1)  # [bs, 1, 16]
         embed_fes = embed_fes.expand(-1, pop_size, -1)  # [bs, pop_size, 16]
@@ -407,7 +407,7 @@ class RLDEAFL(PPO_Agent):
                       tb_logger = None,
                       required_info = {}):
         num_cpus = None
-        num_gpus = 0
+        num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
         if 'num_cpus' in compute_resource.keys():
             num_cpus = compute_resource['num_cpus']
         if 'num_gpus' in compute_resource.keys():
@@ -429,7 +429,7 @@ class RLDEAFL(PPO_Agent):
         # 3D [bs, NP, DIM + 2]
         state = env.reset()
         try:
-            state = torch.FloatTensor(state).to(self.device)
+            state = torch.Tensor(state).to(self.device)
         except:
             pass
 
@@ -465,7 +465,7 @@ class RLDEAFL(PPO_Agent):
                 action = action.cpu().numpy()
                 # state transient
                 state, rewards, is_end, info = env.step(action)
-                memory.rewards.append(torch.FloatTensor(rewards).to(self.device))
+                memory.rewards.append(torch.Tensor(rewards).to(self.device))
 
                 _R += rewards
                 # store info
@@ -474,7 +474,7 @@ class RLDEAFL(PPO_Agent):
                 t = t + 1
 
                 try:
-                    state = torch.FloatTensor(state).to(self.device)
+                    state = torch.Tensor(state).to(self.device)
                 except:
                     pass
             # store info
@@ -588,7 +588,7 @@ class RLDEAFL(PPO_Agent):
                 if self.learning_time >= self.config.max_learning_step:
                     memory.clear_memory()
                     _Rs = _R.detach().numpy().tolist()
-                    return_info = {'return': _Rs, 'loss': np.mean(_loss), 'learn_steps': self.learning_time, }
+                    return_info = {'return': _Rs, 'loss': _loss, 'learn_steps': self.learning_time, }
                     env_cost = env.get_env_attr('cost')
                     return_info['normalizer'] = env_cost[0]
                     return_info['gbest'] = env_cost[-1]
@@ -601,7 +601,7 @@ class RLDEAFL(PPO_Agent):
 
         is_train_ended = self.learning_time >= self.config.max_learning_step
         _Rs = _R.detach().numpy().tolist()
-        return_info = {'return': _Rs, 'loss': np.mean(_loss), 'learn_steps': self.learning_time, }
+        return_info = {'return': _Rs, 'loss': _loss, 'learn_steps': self.learning_time, }
         env_cost = env.get_env_attr('cost')
         return_info['normalizer'] = env_cost[0]
         return_info['gbest'] = env_cost[-1]
@@ -620,7 +620,7 @@ class RLDEAFL(PPO_Agent):
                               compute_resource = {},
                               required_info = {}):
         num_cpus = None
-        num_gpus = 0
+        num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
         if 'num_cpus' in compute_resource.keys():
             num_cpus = compute_resource['num_cpus']
         if 'num_gpus' in compute_resource.keys():
@@ -635,7 +635,7 @@ class RLDEAFL(PPO_Agent):
 
         state = env.reset()
         try:
-            state = torch.FloatTensor(state).to(self.device)
+            state = torch.Tensor(state).to(self.device)
         except:
             pass
 
@@ -649,10 +649,10 @@ class RLDEAFL(PPO_Agent):
             # state transient
             state, rewards, is_end, info = env.step(action)
             # print('step:{},max_reward:{}'.format(t,torch.max(rewards)))
-            R += torch.FloatTensor(rewards).squeeze()
+            R += torch.Tensor(rewards).squeeze()
             # store info
             try:
-                state = torch.FloatTensor(state).to(self.device)
+                state = torch.Tensor(state).to(self.device)
             except:
                 pass
         _Rs = R.detach().numpy().tolist()
@@ -677,7 +677,7 @@ class RLDEAFL(PPO_Agent):
             R = 0
             while not is_done:
                 try:
-                    state = torch.FloatTensor(state).to(self.device)
+                    state = torch.Tensor(state).to(self.device)
                 except:
                     pass
                 feature = self.fe(state).to(self.config.device)

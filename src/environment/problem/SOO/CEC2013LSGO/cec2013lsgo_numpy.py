@@ -5,7 +5,7 @@ class CEC2013LSGO_Numpy_Problem(Basic_Problem):
     def __init__(self):
         
         # 设置默认的数据类型
-        self.data_dir = "/home/qiuwenjie/MetaBox-union/src/environment/problem/SOO/CEC2013LSGO/datafile" # 数据文件夹
+        self.data_dir = "environment/problem/SOO/CEC2013LSGO/datafile" # 数据文件夹
 
         # 子空间的维度大小, 先提供了三种子空间的维度大小
         self.min_dim = 25

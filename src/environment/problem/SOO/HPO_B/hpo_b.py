@@ -6,7 +6,7 @@ from environment.problem.basic_problem import Basic_Problem
 
 
 class HPOB_Problem(Basic_Problem):
-    def __init__(self,bst_surrogate,dim,y_min,y_max,normalized=False) -> None:
+    def __init__(self,bst_surrogate,dim,y_min,y_max,lb,ub,normalized=False) -> None:
         self.bst_surrogate=bst_surrogate
         self.y_min=y_min
         self.y_max=y_max
@@ -14,7 +14,9 @@ class HPOB_Problem(Basic_Problem):
         self.gbest=1e+10
         self.normalized = normalized
         self.collect_gbest=[]
-
+        self.lb = lb
+        self.ub = ub
+        self.optimum = None
     def func(self,position):
         x_q = xgb.DMatrix(position.reshape(-1,self.dim))
         new_y = self.bst_surrogate.predict(x_q)

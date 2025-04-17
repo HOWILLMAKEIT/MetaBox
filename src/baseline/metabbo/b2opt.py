@@ -180,7 +180,7 @@ class B2OPT(Basic_Agent):
                       tb_logger = None,
                       required_info = {}):
         num_cpus = None
-        num_gpus = 0
+        num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
         if 'num_cpus' in compute_resource.keys():
             num_cpus = compute_resource['num_cpus']
         if 'num_gpus' in compute_resource.keys():
@@ -209,21 +209,20 @@ class B2OPT(Basic_Agent):
         _loss = []
         _R = torch.zeros(len(env))
         t = 0
+        memory.append(state)
         while not env.all_done():
-
-            memory.append(state)
-
             action = [self.Opt for _ in range(len(env))]
             next_state, rewards, done, info = env.step(action)
 
             _R += rewards
             state = next_state
+            memory.append(state)
             t += 1
 
-        memory.append(state) # 3D [T, BS, NP]
+        # memory.append(state) # 3D [T, BS, NP]
         memory_tensor = torch.stack(memory, dim = 0)
-
-        loss = (torch.mean(memory_tensor[0, :, :], dim = 1) - torch.mean(memory_tensor[1:, :, :], dim = (0, 2))) / torch.mean(memory_tensor[0, :, :], dim = 1) # bs
+        init_ = torch.mean(memory_tensor[0, :, :], dim = 1).detach()
+        loss = (init_ - torch.mean(memory_tensor[1:, :, :], dim = (0, 2))) / init_ # bs
 
         loss = -torch.mean(loss)
 
@@ -248,7 +247,7 @@ class B2OPT(Basic_Agent):
 
         is_train_ended = self.learning_time >= self.config.max_learning_step
         _Rs = _R.detach().numpy().tolist()
-        return_info = {'return': _Rs, 'loss': np.mean(_loss), 'learn_steps': self.learning_time}
+        return_info = {'return': _Rs, 'loss': _loss, 'learn_steps': self.learning_time}
         env_cost = env.get_env_attr('cost')
         return_info['normalizer'] = env_cost[0]
         return_info['gbest'] = env_cost[-1]
@@ -295,7 +294,7 @@ class B2OPT(Basic_Agent):
                               compute_resource = {},
                               required_info = {}):
         num_cpus = None
-        num_gpus = 0
+        num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
         if 'num_cpus' in compute_resource.keys():
             num_cpus = compute_resource['num_cpus']
         if 'num_gpus' in compute_resource.keys():

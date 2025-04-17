@@ -12,8 +12,6 @@ class PSORLNS_Optimizer(Learnable_Optimizer):
         self.c1 = 1.49445
         self.c2 = 1.49445
         self.ps = 1000
-        self.generation = 500
-        self.max_fes = self.generation * self.ps
         self.eps =  0.1  # todo: 邻域个数判断阈值
         self.TT2 = 0.8 # 选择worse better的随机数阈值
         self.neighbor_num = [5,10,20,30,40]
@@ -71,6 +69,7 @@ class PSORLNS_Optimizer(Learnable_Optimizer):
 
     # the interface for environment reseting
     def init_population(self, problem):
+        self.max_fes = problem.maxfes
         self.log_interval =(self.max_fes // self.__config.n_logpoint)
         self.dim = problem.dim
         self.fes = 0

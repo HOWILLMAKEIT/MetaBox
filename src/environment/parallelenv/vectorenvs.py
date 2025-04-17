@@ -357,7 +357,7 @@ class BaseVectorEnv(gym.Env):
             )
         return [w.render(**kwargs) for w in self.workers]
     
-    def customized_method(self, call_method, data, id: Optional[Union[int, List[int], np.ndarray]] = None):
+    def customized_method(self, call_method, data = None, id: Optional[Union[int, List[int], np.ndarray]] = None):
         self._assert_is_not_closed()
         id = self._wrap_id(id)
         if self.is_async:
@@ -365,10 +365,14 @@ class BaseVectorEnv(gym.Env):
         # send(None) == reset() in worker
         if self.worker_name != 'RaySubprocEnvWorker':
             for i, j in enumerate(id):
-                self.workers[j].customized_method(call_method, data[i])
+                self.workers[j].customized_method(call_method, data[i]) if data is not None else self.workers[j].customized_method(call_method)
             results = [self.workers[i].recv() for i in id]
         else:
-            ids, datas = self._wrap_RSEW_id(id, data)
+            if data is not None:
+                ids, datas = self._wrap_RSEW_id(id, data)
+            else:
+                ids = self._wrap_RSEW_id(id)
+                datas = [None] * self.worker_num
             for i in range(self.worker_num):
                 if len(ids[i]) > 0:
                     self.workers[i].customized_method(call_method, datas[i], ids[i])
@@ -378,7 +382,6 @@ class BaseVectorEnv(gym.Env):
                     res = self.workers[i].recv()
                     results += res
         return results
-                    
                     
     def close(self) -> None:
         """Close all of the environments.
@@ -483,6 +486,14 @@ class RayVectorEnv(BaseVectorEnv):
         RayEnvWorker.num_cpu_per_worker = num_cpu_per_worker
         RayEnvWorker.num_gpu_per_worker = num_gpu_per_worker
         super().__init__(env_fns, RayEnvWorker, num_cpu_per_worker=num_cpu_per_worker, num_gpu_per_worker=num_gpu_per_worker, no_warning=no_warning, **kwargs)
+    
+    def rollout(self):
+        self._assert_is_not_closed()
+        id = self._wrap_id(None)
+        for i, j in enumerate(id):
+            self.workers[j].rollout()
+        results = [self.workers[i].recv_once() for i in id]
+        return results
 
 
 class RaySubprocVectorEnv(BaseVectorEnv):

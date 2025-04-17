@@ -115,26 +115,26 @@ class _Sphere_torch(BBOB_Torch_Problem):
 
 def sr_func(x, Os, Mr):   #shift and rotate
     y = x[:, :Os.shape[-1]] - Os
-    return torch.matmul(Mr, y.t()).t()
+    return torch.matmul(Mr, y.T).T
 
-def rotate_gen(dim):  # Generate a rotate matrix
-    random_state = np.random
-    H = np.eye(dim)
-    D = np.ones((dim,))
-    for n in range(1, dim):
-        mat = np.eye(dim)
-        x = random_state.normal(size=(dim - n + 1,))
-        D[n - 1] = np.sign(x[0])
-        x[0] -= D[n - 1] * np.sqrt((x * x).sum())
-        # Householder transformation
-        Hx = (np.eye(dim - n + 1) - 2. * np.outer(x, x) / (x * x).sum())
-        mat[n - 1:, n - 1:] = Hx
-        H = np.dot(H, mat)
-    # Fix the last sign such that the determinant is 1
-    D[-1] = (-1) ** (1 - (dim % 2)) * D.prod()
-    # Equivalent to np.dot(np.diag(D), H) but faster, apparently
-    H = (D * H.T).T
-    return torch.tensor(H, dtype=torch.float64)
+# def rotate_gen(dim):  # Generate a rotate matrix
+#     random_state = np.random
+#     H = np.eye(dim)
+#     D = np.ones((dim,))
+#     for n in range(1, dim):
+#         mat = np.eye(dim)
+#         x = random_state.normal(size=(dim - n + 1,))
+#         D[n - 1] = np.sign(x[0])
+#         x[0] -= D[n - 1] * np.sqrt((x * x).sum())
+#         # Householder transformation
+#         Hx = (np.eye(dim - n + 1) - 2. * np.outer(x, x) / (x * x).sum())
+#         mat[n - 1:, n - 1:] = Hx
+#         H = np.dot(H, mat)
+#     # Fix the last sign such that the determinant is 1
+#     D[-1] = (-1) ** (1 - (dim % 2)) * D.prod()
+#     # Equivalent to np.dot(np.diag(D), H) but faster, apparently
+#     H = (D * H.T).T
+#     return torch.tensor(H, dtype=torch.float64)
 
 def osc_transform(x):
     """
@@ -395,7 +395,7 @@ class _Rosenbrock_torch(BBOB_Torch_Problem):
                          dim=-1) + self.bias + self.boundaryHandling(x)
 
 
-class F8(_Rosenbrock_torch):
+class F8_torch(_Rosenbrock_torch):
     def boundaryHandling(self, x):
         return 0.
 
@@ -739,7 +739,7 @@ class _Composite_Grie_rosen_torch(BBOB_Torch_Problem):
                     self.dim - 1.) + self.bias + self.boundaryHandling(x)
 
 
-class F19(_Composite_Grie_rosen_torch):
+class F19_torch(_Composite_Grie_rosen_torch):
     factor = 10.
 
     def boundaryHandling(self, x):

@@ -50,6 +50,9 @@ class Augmented_WCCI2020_Dataset(Dataset):
         self.N = len(self.data)
         self.ptr = [i for i in range(0, self.N, batch_size)]
         self.index = np.arange(self.N)
+        self.maxdim = 0
+        for item in self.data:
+            self.maxdim = max(self.maxdim, item.dim)
 
 
     @staticmethod
@@ -177,8 +180,7 @@ class Augmented_WCCI2020_Dataset(Dataset):
 
 
     def __getitem__(self, item):
-        if self.batch_size < 2:
-            return self.data[self.index[item]]
+        
         ptr = self.ptr[item]
         index = self.index[ptr: min(ptr + self.batch_size, self.N)]
         res = []

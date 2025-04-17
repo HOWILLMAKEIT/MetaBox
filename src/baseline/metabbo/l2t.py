@@ -150,7 +150,7 @@ class L2T(PPO_Agent):
                       tb_logger = None,
                       required_info={}):
         num_cpus = None
-        num_gpus = 0
+        num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
         if 'num_cpus' in compute_resource.keys():
             num_cpus = compute_resource['num_cpus']
         if 'num_gpus' in compute_resource.keys():
@@ -169,7 +169,7 @@ class L2T(PPO_Agent):
         state = env.reset()
 
         try:
-            state = torch.FloatTensor(state).to(self.device)
+            state = torch.Tensor(state).to(self.device)
         except:
             pass
         
@@ -202,7 +202,7 @@ class L2T(PPO_Agent):
 
                 # state transient
                 state, rewards, is_end, info = env.step(action)
-                memory.rewards.append(torch.FloatTensor(rewards).to(self.device))
+                memory.rewards.append(torch.Tensor(rewards).to(self.device))
                 # print('step:{},max_reward:{}'.format(t,torch.max(rewards)))
                 _R += rewards
                 # store info
@@ -211,7 +211,7 @@ class L2T(PPO_Agent):
                 t = t + 1
 
                 try:
-                    state = torch.FloatTensor(state).to(self.device)
+                    state = torch.Tensor(state).to(self.device)
                 except:
                     pass
                 
@@ -315,7 +315,7 @@ class L2T(PPO_Agent):
                 self.optimizer.step()
                 self.learning_time += 1
                 if self.learning_time >= (self.config.save_interval * self.cur_checkpoint):
-                    save_class(self.config.agent_save_dir, 'checkpoint'+str(self.cur_checkpoint), self)
+                    save_class(self.config.agent_save_dir, 'checkpoint-'+str(self.cur_checkpoint), self)
                     self.cur_checkpoint += 1
 
                 if not self.config.no_tb and self.learning_time % int(self.config.log_step) == 0:
@@ -327,7 +327,7 @@ class L2T(PPO_Agent):
 
                 if self.learning_time >= self.config.max_learning_step:
                     memory.clear_memory()
-                    return_info = {'return': _R, 'learn_steps': self.learning_time, 'loss':np.mean(_loss)}
+                    return_info = {'return': _R, 'learn_steps': self.learning_time, 'loss':_loss}
                     return_info['gbest'] = env.get_env_attr('gbest')
                     for key in required_info.keys():
                         return_info[key] = env.get_env_attr(required_info[key])
@@ -337,7 +337,7 @@ class L2T(PPO_Agent):
             memory.clear_memory()
         
         is_train_ended = self.learning_time >= self.config.max_learning_step
-        return_info = {'return': _R, 'learn_steps': self.learning_time, 'loss':np.mean(_loss)}
+        return_info = {'return': _R, 'learn_steps': self.learning_time, 'loss':_loss}
         return_info['gbest'] = env.get_env_attr('gbest')
         for key in required_info.keys():
             return_info[key] = env.get_env_attr(required_info[key])
@@ -356,7 +356,7 @@ class L2T(PPO_Agent):
             R = 0
             while not is_done:
                 try:
-                    state = torch.FloatTensor(state).to(self.device)
+                    state = torch.Tensor(state).to(self.device)
                 except:
                     state = [state]
                 action = self.actor(state)[0]
@@ -387,7 +387,7 @@ class L2T(PPO_Agent):
                               compute_resource = {},
                               required_info={}):
         num_cpus = None
-        num_gpus = 0
+        num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
         if 'num_cpus' in compute_resource.keys():
             num_cpus = compute_resource['num_cpus']
         if 'num_gpus' in compute_resource.keys():
@@ -397,7 +397,7 @@ class L2T(PPO_Agent):
         env.seed(seeds)
         state = env.reset()
         try:
-            state = torch.FloatTensor(state).to(self.device)
+            state = torch.Tensor(state).to(self.device)
         except:
             pass
         
@@ -410,10 +410,10 @@ class L2T(PPO_Agent):
             # state transient
             state, rewards, is_end, info = env.step(action)
             # print('step:{},max_reward:{}'.format(t,torch.max(rewards)))
-            _R += torch.FloatTensor(rewards)
+            _R += torch.Tensor(rewards)
             # store info
             try:
-                state = torch.FloatTensor(state).to(self.device)
+                state = torch.Tensor(state).to(self.device)
             except:
                 pass
 

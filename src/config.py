@@ -6,8 +6,8 @@ def get_config(args=None):
     parser = argparse.ArgumentParser()
     # Common config
     parser.add_argument('--train_problem', default = 'bbob', choices = ['bbob-10D', 'bbob-30D', 'bbob-torch-10D', 'bbob-torch-30D', 'bbob-noisy-10D', 
-                                                                        'bbob-noisy-30D', 'bbob-noisy-torch-10D', 'bbob-noisy-torch-30D', 'bbob-surrogate', 'hpo-b',
-                                                                                'lsgo', 'lsgo-torch', 'protein', 'protein-torch', 'uav', 'uav-torch',
+                                                                        'bbob-noisy-30D', 'bbob-noisy-torch-10D', 'bbob-noisy-torch-30D', 'bbob-surrogate-2D','bbob-surrogate-5D','bbob-surrogate-10D',
+                                                                         'hpo-b', 'lsgo', 'lsgo-torch', 'protein', 'protein-torch', 'uav', 'uav-torch',
                                                                                 'mmo', 'mmo-torch', 'wcci2020', 'cec2017mto', 'moo-synthetic'],
                         help='specify the problem suite for training')
     parser.add_argument('--test_problem', default = None, choices = [None, 'bbob-10D', 'bbob-30D', 'bbob-torch-10D', 'bbob-torch-30D', 'bbob-noisy-10D', 
@@ -32,7 +32,7 @@ def get_config(args=None):
     parser.add_argument('--task_cnt', type=int, default=10, help='number of tasks in multitask') #for multitask
     parser.add_argument('--generation', type=int, default=250, help='total generations for L2O') #for multitask
 
-    parser.add_argument('--full_meta_data', default=None, help='store the metadata')
+    parser.add_argument('--full_meta_data', type=bool, default=True, help='store the metadata')
     # Training parameters
     parser.add_argument('--max_learning_step', type=int, default=1500000, help='the maximum learning step for training')
     parser.add_argument('--train_batch_size', type=int, default=1, help='batch size of train set')
@@ -68,8 +68,8 @@ def get_config(args=None):
     
 
     # Rollout parameters
-    parser.add_argument('--agent_for_rollout', type=str, nargs='+', help='learnable agent for rollout')
-    parser.add_argument('--optimizer_for_rollout', type=str, nargs='+', help='learnabel optimizer for rollout')
+    parser.add_argument('--agent_for_rollout', type=str, help='learnable agent for rollout')
+    parser.add_argument('--checkpoints_for_rollout', default=None, type=int, nargs='+', help='the index of checkpoints for rollout')
     parser.add_argument('--plot_smooth', type=float, default=0.8,
                         help='a float between 0 and 1 to control the smoothness of figure curves')
 
@@ -88,8 +88,8 @@ def get_config(args=None):
     parser.add_argument('--model_to', type=str, help='the model trained on target problem set')
 
     # mte_test(transfer_learning) parameters
-    parser.add_argument('--pre_train_rollout', type=str, help='path of pre-train models rollout result .pkl file')
-    parser.add_argument('--scratch_rollout', type=str, help='path of scratch models rollout result .pkl file')
+    parser.add_argument('--pre_train_rollout', type=str, help='key of pre-train models rollout in model.json')
+    parser.add_argument('--scratch_rollout', type=str, help='key of scratch models rollout result in model.json')
 
     # todo add new config
 
@@ -97,10 +97,11 @@ def get_config(args=None):
     parser.add_argument('--seed', type = int, default = 3849)
     parser.add_argument('--epoch_seed', type = int, default = 100)
     parser.add_argument('--id_seed', type = int, default = 5)
-    parser.add_argument('--train_mode', type = str, choices = ['single', 'multi'])
+    parser.add_argument('--train_mode', default='single', type = str, choices = ['single', 'multi'])
     parser.add_argument('--end_mode', type = str, choices = ['step', 'epoch'])
 
     parser.add_argument('--test_run', type = int, default = 51)
+    parser.add_argument('--rollout_run', type = int, default = 10)
 
     parser.add_argument('--no_tb', action='store_true', default = False, help = 'disable tensorboard logging')
     parser.add_argument('--log_step', type = int, default = 50, help = 'log every log_step steps')
@@ -108,7 +109,7 @@ def get_config(args=None):
 
     config = parser.parse_args(args)
 
-    config.maxFEs = 2500
+    config.maxFEs = 20000
     # for bo, maxFEs is relatively smaller due to time limit
     config.n_logpoint = 50
     
@@ -116,7 +117,8 @@ def get_config(args=None):
         config.test_problem = config.train_problem
     if config.test_difficulty is None:
         config.test_difficulty = config.train_difficulty
-
+    if config.end_mode == 'epoch':
+        config.max_learning_step = 1e9
     # if config.run_experiment and len(config.agent_for_cp) >= 1:
     #     assert config.agent_load_dir is not None, "Option --agent_load_dir must be given since you specified option --agent_for_cp."
 
@@ -130,10 +132,10 @@ def get_config(args=None):
         config.n_logpoint = 5
 
     config.run_time = f'{time.strftime("%Y%m%dT%H%M%S")}_{config.train_problem}_{config.train_difficulty}'
-    config.test_log_dir = config.log_dir + '/test/' + config.run_time + '/'
-    config.rollout_log_dir = config.log_dir + '/rollout/' + config.run_time + '/'
-    config.mgd_test_log_dir = config.log_dir + '/mgd_test/' + config.run_time + '/'
-    config.mte_test_log_dir = config.log_dir + '/mte_test/' + config.run_time + '/'
+    config.test_log_dir = config.log_dir + 'test/' + config.run_time + '/'
+    config.rollout_log_dir = config.log_dir + 'rollout/' + config.run_time + '/'
+    config.mgd_test_log_dir = config.log_dir + 'mgd_test/' + config.run_time + '/'
+    config.mte_test_log_dir = config.log_dir + 'mte_test/' + config.run_time + '/'
 
     if config.train or config.run_experiment:
         config.agent_save_dir = config.agent_save_dir + config.train_agent + '/' + config.run_time + '/'
@@ -144,8 +146,8 @@ def get_config(args=None):
         config.save_interval = config.max_epoch // config.n_checkpoint
     config.log_interval = config.maxFEs // config.n_logpoint
 
-    if 'DEAP_CMAES' not in config.t_optimizer:
-        config.t_optimizer.append('DEAP_CMAES')
+    if 'CMAES' not in config.t_optimizer:
+        config.t_optimizer.append('CMAES')
     if 'Random_search' not in config.t_optimizer:
         config.t_optimizer.append('Random_search') # todo
 

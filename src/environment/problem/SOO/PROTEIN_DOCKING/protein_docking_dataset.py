@@ -4,7 +4,7 @@ import numpy as np
 from torch.utils.data import Dataset
 from environment.problem.basic_problem import Basic_Problem
 import time
-
+from .protein_docking import Protein_Docking_Torch_Problem, Protein_Docking_Numpy_Problem
 class Protein_Docking_Dataset(Dataset):
     proteins_set = {'rigid': ['1AVX', '1BJ1', '1BVN', '1CGI', '1DFJ', '1EAW', '1EWY', '1EZU', '1IQD', '1JPS',
                               '1KXQ', '1MAH', '1N8O', '1PPE', '1R0R', '2B42', '2I25', '2JEL', '7CEI', '1AY7'],
@@ -22,6 +22,9 @@ class Protein_Docking_Dataset(Dataset):
         self.N = len(self.data)
         self.ptr = [i for i in range(0, self.N, batch_size)]
         self.index = np.arange(self.N)
+        self.maxdim = 0
+        for item in self.data:
+            self.maxdim = max(self.maxdim, item.dim)
 
     @staticmethod
     def get_datasets(version,
@@ -47,10 +50,8 @@ class Protein_Docking_Dataset(Dataset):
             test_proteins_set.extend(permutated[n_train_proteins:])
         # construct problem instances
         data = []
-        # data_folder = path.join(path.dirname(__file__), 'protein_docking_data')
-        base_dir = path.dirname(path.dirname(path.dirname(path.abspath(__file__))))
-        data_folder = path.join(base_dir, 'datafiles', 'SOO', 'protein_docking_data')
-
+        base_dir = path.dirname(path.abspath(__file__))
+        data_folder = path.join(base_dir, 'datafile')
         for i in train_proteins_set + test_proteins_set:
             for j in range(Protein_Docking_Dataset.n_start_points):
                 problem_id = i + '_' + str(j + 1)
@@ -70,17 +71,16 @@ class Protein_Docking_Dataset(Dataset):
                 e = np.sqrt(np.matmul(e.T, e))
                 r = (r + r.T) / 2
                 if version == 'protein':
-                    data.append(Protein_Docking_Problem(coor_init, q, e, r, basis, eigval, problem_id))
+                    data.append(Protein_Docking_Numpy_Problem(coor_init, q, e, r, basis, eigval, problem_id))
                 elif version == 'protein-torch':
-                    data.append(Protein_Docking_torch(coor_init, q, e, r, basis, eigval, problem_id))
+                    data.append(Protein_Docking_Torch_Problem(coor_init, q, e, r, basis, eigval, problem_id))
                 else:
                     raise ValueError(f'{version} version is invalid or is not supported yet.')
         n_train_instances = len(train_proteins_set) * Protein_Docking_Dataset.n_start_points
         return Protein_Docking_Dataset(data[:n_train_instances], train_batch_size), Protein_Docking_Dataset(data[n_train_instances:], test_batch_size)
 
     def __getitem__(self, item):
-        if self.batch_size < 2:
-            return self.data[self.index[item]]
+        
         ptr = self.ptr[item]
         index = self.index[ptr: min(ptr + self.batch_size, self.N)]
         res = []

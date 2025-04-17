@@ -86,7 +86,7 @@ class LDE(REINFORCE_Agent):
                       tb_logger = None,
                       required_info = {}):
         num_cpus = None
-        num_gpus = 0
+        num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
         if 'num_cpus' in compute_resource.keys():
             num_cpus = compute_resource['num_cpus']
         if 'num_gpus' in compute_resource.keys():
@@ -106,7 +106,7 @@ class LDE(REINFORCE_Agent):
         for l in range(self.config.TRAJECTORY_NUM):
             input_net = env.reset()
             try:
-                input_net = torch.FloatTensor(input_net).to(self.device)
+                input_net = torch.Tensor(input_net).to(self.device)
                 # print(input_net.shape)
             except:
                 pass
@@ -116,7 +116,7 @@ class LDE(REINFORCE_Agent):
             for t in range(self.config.TRAJECTORY_LENGTH):
                 input_net = input_net.reshape(self.__feature_shape)
                 # [bs, NP+BINS*2]
-                action, h_, c_ = self.model.sampler(torch.FloatTensor(input_net[None, :]).to(self.config.device), h0, c0)  # parameter controller
+                action, h_, c_ = self.model.sampler(torch.Tensor(input_net[None, :]).to(self.config.device), h0, c0)  # parameter controller
                 action = action.reshape(self.__BATCH_SIZE, 1,-1).cpu().numpy()
                 # action = np.squeeze(action.cpu().numpy(), axis=1)
 
@@ -141,16 +141,16 @@ class LDE(REINFORCE_Agent):
         rewards = [np.stack(rewards_batch, axis=0).transpose((1, 0)).flatten()]
 
         # update network parameters
-        all_eps_mean, all_eps_std, all_eps_h, all_eps_c = self.model.forward(torch.FloatTensor(np.vstack(inputs)[None, :]).to(self.device),
+        all_eps_mean, all_eps_std, all_eps_h, all_eps_c = self.model.forward(torch.Tensor(np.vstack(inputs)[None, :]).to(self.device),
                                                                     torch.vstack(hs)[None, :],
                                                                     torch.vstack(cs)[None, :])
-        actions = torch.FloatTensor(np.vstack(actions)).to(self.device)
+        actions = torch.Tensor(np.vstack(actions)).to(self.device)
         all_eps_mean = torch.squeeze(all_eps_mean, 0).to(self.device)
         all_eps_std = torch.squeeze(all_eps_std, 0).to(self.device)
         normal_dis = torch.distributions.Normal(all_eps_mean, all_eps_std)
         log_prob = torch.sum(normal_dis.log_prob(actions + 1e-8), 1).to(self.device)
         all_eps_dis_reward = self.__discounted_norm_rewards(np.hstack(rewards))
-        loss = - torch.mean(log_prob * torch.FloatTensor(all_eps_dis_reward).to(self.device))
+        loss = - torch.mean(log_prob * torch.Tensor(all_eps_dis_reward).to(self.device))
         loss.backward()
         grad_norms = clip_grad_norms(self.optimizer.param_groups)
 
@@ -158,7 +158,7 @@ class LDE(REINFORCE_Agent):
         self.learning_time += 1
 
         if self.learning_time >= (self.config.save_interval * self.cur_checkpoint):
-            save_class(self.config.agent_save_dir,'checkpoint'+str(self.cur_checkpoint),self)
+            save_class(self.config.agent_save_dir,'checkpoint-'+str(self.cur_checkpoint),self)
             self.cur_checkpoint+=1
 
         if not self.config.no_tb:
@@ -170,7 +170,7 @@ class LDE(REINFORCE_Agent):
 
         is_train_ended = self.learning_time >= self.config.max_learning_step
         _Rs = _R.detach().numpy().tolist()
-        return_info = {'return': _Rs,'learn_steps': self.learning_time, }
+        return_info = {'return': _Rs,'loss':[loss.item()], 'learn_steps': self.learning_time, }
         env_cost = env.get_env_attr('cost')
         return_info['gbest'] = env_cost[-1]
         for key in required_info.keys():
@@ -192,7 +192,7 @@ class LDE(REINFORCE_Agent):
             R=0
             while not is_done:
                 # [bs, NP+BINS*2]
-                action, h_, c_ = self.model.sampler(torch.FloatTensor(input_net[None, :]).to(self.device), h0, c0)  # parameter controller
+                action, h_, c_ = self.model.sampler(torch.Tensor(input_net[None, :]).to(self.device), h0, c0)  # parameter controller
                 action = action.reshape(1,self.__BATCH_SIZE, -1)
                 action = np.squeeze(action.cpu().numpy(), axis=0)
                 next_input, reward, is_done,_ = env.step(action)
@@ -224,7 +224,7 @@ class LDE(REINFORCE_Agent):
                               compute_resource = {},
                               required_info = {}):
         num_cpus = None
-        num_gpus = 0
+        num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
         if 'num_cpus' in compute_resource.keys():
             num_cpus = compute_resource['num_cpus']
         if 'num_gpus' in compute_resource.keys():
@@ -234,7 +234,7 @@ class LDE(REINFORCE_Agent):
         env.seed(seeds)
         input_net = env.reset()
         try:
-            input_net = torch.FloatTensor(input_net).to(self.device)
+            input_net = torch.Tensor(input_net).to(self.device)
         except:
             pass
         h0 = torch.zeros(self.config.LAYERS_NUM, self.__BATCH_SIZE, self.config.CELL_SIZE).to(self.config.device)
@@ -243,7 +243,7 @@ class LDE(REINFORCE_Agent):
 
         while not env.all_done():
             # [bs, NP+BINS*2]
-            action, h_, c_ = self.model.sampler(torch.FloatTensor(input_net[None, :]).to(self.devicee), h0, c0)  # parameter controller
+            action, h_, c_ = self.model.sampler(torch.Tensor(input_net[None, :]).to(self.devicee), h0, c0)  # parameter controller
             action = action.reshape(self.__BATCH_SIZE, 1,-1).cpu().numpy()
             next_input, reward, is_done,_ = env.step(action)
             R += reward.reshape(-1)

@@ -33,18 +33,18 @@ class ReplayBuffer:
         # print(type(obs_batch),type(action_batch),type(reward_batch),type(next_obs_batch),type(done_batch))
         # print(type(action_batch[0]))
         # obs_batch = torch.FloatTensor(np.array(obs_batch))
-        obs_batch = torch.stack(obs_batch).float()
+        obs_batch = torch.stack(obs_batch)
         action_batch = torch.tensor(action_batch)
-        reward_batch = torch.FloatTensor(reward_batch)
+        reward_batch = torch.Tensor(reward_batch)
 
         # 兼容操作，满足MOO和SOO等需求
         if isinstance(next_obs_batch, (list, np.ndarray)):
-            next_obs_batch = torch.FloatTensor(np.array(next_obs_batch))
+            next_obs_batch = torch.Tensor(np.array(next_obs_batch))
         else:
-            next_obs_batch = torch.stack(next_obs_batch).float()
+            next_obs_batch = torch.stack(next_obs_batch)
 
         # next_obs_batch = torch.FloatTensor(np.array(next_obs_batch))
-        done_batch = torch.FloatTensor(done_batch)
+        done_batch = torch.Tensor(done_batch)
         return obs_batch, action_batch, reward_batch, next_obs_batch, done_batch
 
     def __len__(self):

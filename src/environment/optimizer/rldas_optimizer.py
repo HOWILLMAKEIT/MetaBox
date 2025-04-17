@@ -11,7 +11,8 @@ class RLDAS_Optimizer(Learnable_Optimizer):
         super().__init__(config)
         self.MaxFEs = config.maxFEs
         # self.period = 2500
-        if config.problem in ['protein', 'protein-torch']:
+
+        if 'protein' in config.train_problem or 'protein' in config.test_problem:
             self.period = 100
         else:
             self.period = 2500
@@ -163,6 +164,9 @@ class Population:
         self.gbest_solution = np.zeros(dim)  # the individual with global best cost
         self.Xmin = np.ones(dim) * -5  # the upperbound of individual value
         self.Xmax = np.ones(dim) * 5  # the lowerbound of individual value
+
+        self.rng = rng
+
         self.group = self.initialize_group()  # the population
         self.archive = np.array([])  # the archive(collection of replaced individuals)
         self.MF = np.ones(dim * 20) * 0.2  # the set of step length of DE
@@ -170,8 +174,6 @@ class Population:
         self.k = 0  # the index of updating element in MF and MCr
         self.F = np.ones(self.NP) * 0.5  # the set of successful step length
         self.Cr = np.ones(self.NP) * 0.9  # the set of successful crossover rate
-
-        self.rng = rng
 
     # generate an initialized population with size(default self population size)
     def initialize_group(self, size = -1):

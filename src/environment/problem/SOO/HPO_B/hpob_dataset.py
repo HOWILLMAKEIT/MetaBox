@@ -25,13 +25,14 @@ class HPOB_Dataset(Dataset):
     def get_datasets(datapath=None,
                      train_batch_size=1,
                      test_batch_size=1,
+                     upperbound = None,
                      difficulty = None,
                      user_train_list=None,
                      user_test_list=None,
                      cost_normalize=False,):
         # get functions ID of indicated suit
         if datapath is None:
-            datapath = 'problem/SOO/HPO-B/datafiles/'
+            datapath = 'environment/problem/SOO/HPO_B/datafiles/'
         root_dir = datapath+"HPO-B-main/hpob-data/"
         surrogates_dir = datapath+"HPO-B-main/saved-surrogates/"
         
@@ -65,7 +66,7 @@ class HPOB_Dataset(Dataset):
                         bst_model,y_min,y_max=get_bst(surrogates_dir=datapath+'HPO-B-main/saved-surrogates/',search_space_id=search_space_id,dataset_id=dataset_id,surrogates_stats=surrogates_stats)
                         X = np.array(data[search_space_id][dataset_id]["X"])
                         dim = X.shape[1]
-                        p=HPOB_Problem(bst_surrogate=bst_model,dim=dim,y_min=y_min,y_max=y_max,normalized=cost_normalize)
+                        p=HPOB_Problem(bst_surrogate=bst_model,dim=dim,y_min=y_min,y_max=y_max,lb = -upperbound,ub = upperbound,normalized=cost_normalize)
                         problems.append(p)
                         pbar.update()
                 pbar.close()
@@ -116,8 +117,7 @@ class HPOB_Dataset(Dataset):
         return HPOB_Dataset(train_set, train_batch_size), HPOB_Dataset(test_set, test_batch_size)
 
     def __getitem__(self, item):
-        if self.batch_size < 2:
-            return self.data[self.index[item]]
+        
         ptr = self.ptr[item]
         index = self.index[ptr: min(ptr + self.batch_size, self.N)]
         res = []

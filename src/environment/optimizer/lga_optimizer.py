@@ -11,7 +11,7 @@ def vector2nn(x,net):
     ptr = 0
     for v in params:
         num_of_params = v.nelement()
-        temp = torch.FloatTensor(x[ptr: ptr+num_of_params])
+        temp = torch.Tensor(x[ptr: ptr+num_of_params])
         v.data = temp.reshape(v.shape)
         ptr += num_of_params
     return net
@@ -28,18 +28,18 @@ class Policy(nn.Module):
         self.device = device
 
         # Linear layers with bias
-        self.W_QP = nn.Linear(self.DF, DK, bias = True)
-        self.W_KC = nn.Linear(self.DF, DK, bias = True)
-        self.W_VC = nn.Linear(self.DF, DK, bias = True)
+        self.W_QP = nn.Linear(self.DF, DK, bias = True) # 32 + 16 = 48
+        self.W_KC = nn.Linear(self.DF, DK, bias = True) # 32 + 16 = 48
+        self.W_VC = nn.Linear(self.DF, DK, bias = True) # 32 + 16 = 48
 
-        self.W_QS = nn.Linear(DK, DK, bias = True)
-        self.W_KS = nn.Linear(DK, DK, bias = True)
+        self.W_QS = nn.Linear(DK, DK, bias = True) # 256 + 16 = 272
+        self.W_KS = nn.Linear(self.DF, DK, bias = True) # 32 + 16 = 48
 
-        self.W_QM = nn.Linear(self.DF + self.D_sigma, DK, bias = True)
-        self.W_KM = nn.Linear(self.DF + self.D_sigma, DK, bias = True)
-        self.W_VM = nn.Linear(self.DF + self.D_sigma, DK, bias = True)
+        self.W_QM = nn.Linear(self.DF + self.D_sigma, DK, bias = True) # 48 + 16 = 64
+        self.W_KM = nn.Linear(self.DF + self.D_sigma, DK, bias = True) # 48 + 16 = 64
+        self.W_VM = nn.Linear(self.DF + self.D_sigma, DK, bias = True) # 48 + 16 = 64
 
-        self.W_sigma = nn.Linear(DK, self.D_sigma, bias = True)
+        self.W_sigma = nn.Linear(DK, self.D_sigma, bias = True) # 16 + 1 = 17
 
         # Apply custom initialization
         self._init_weights(self.mu, self.sigma)
@@ -63,11 +63,11 @@ class Policy(nn.Module):
 
     def adaptation(self, fitness, sigma):
         # 先变 torch
-        fitness = torch.Tensor(fitness, dtype=torch.float64).to(self.device)
-        sigma = torch.Tensor(sigma, dtype=torch.float64).to(self.device)
+        fitness = torch.Tensor(fitness).to(self.device)
+        sigma = torch.Tensor(sigma).to(self.device)
 
         F_P = self.trans_F(fitness)
-        F_M = torch.stack([F_P, sigma], dim=1) # [NP, 3]
+        F_M = torch.cat([F_P, sigma.unsqueeze(1)], dim = 1) # [NP, 3]
 
         K_M = self.W_KM(F_M) # [NP, DK]
         Q_M = self.W_QM(F_M) # [NP, DK]
@@ -83,8 +83,8 @@ class Policy(nn.Module):
 
     def selection(self, fitness_c, fitness_p):
         # 先变 torch
-        fitness_c = torch.Tensor(fitness_c, dtype=torch.float64).to(self.device)
-        fitness_p = torch.Tensor(fitness_p, dtype=torch.float64).to(self.device)
+        fitness_c = torch.Tensor(fitness_c).to(self.device)
+        fitness_p = torch.Tensor(fitness_p).to(self.device)
 
         F_C = self.trans_F(fitness_c)
         F_P = self.trans_F(fitness_p)
@@ -153,7 +153,7 @@ class LGA_Optimizer(Learnable_Optimizer):
         self.fes = 0
         dim = problem.dim
 
-        self.population = (problem.ub - problem.lb) * self.rng.rand((self.NP, dim)) + problem.lb
+        self.population = (problem.ub - problem.lb) * self.rng.rand(self.NP, dim) + problem.lb
         self.sigma = np.ones(self.NP) * 0.2
 
         self.c_cost = self.get_costs(self.population, problem)
@@ -202,7 +202,7 @@ class LGA_Optimizer(Learnable_Optimizer):
             sigma_C_dim = np.tile(sigma_C[:, None], (1, dim))
 
             # mutate
-            child_population = population + sigma_C_dim * self.rng.randn((self.NP, dim))  # [NP, dim]
+            child_population = population + sigma_C_dim * self.rng.randn(self.NP, dim)  # [NP, dim]
 
             child_population = np.clip(child_population, problem.lb, problem.ub)
 
@@ -219,6 +219,8 @@ class LGA_Optimizer(Learnable_Optimizer):
             self.sigma = S[:, :self.NP] @ sigma_C + np.diag(S[:, -1]) @ sigma
 
             self.fitness = S[:, :self.NP] @ child_fitness + np.diag(S[:, -1]) @ fitness
+
+            self.fitness = self.softmax(self.fitness)
 
             self.c_cost = S[:, :self.NP] @ child_c_cost + np.diag(S[:, -1]) @ c_cost
 

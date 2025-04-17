@@ -64,7 +64,7 @@ class PSO(Basic_Optimizer):
         smax = 0.5 * problem.ub
         smin = -smax
 
-        self.__toolbox.register("particle", generate, size=self.__config.dim, pmin=pmin, pmax=pmax, smin=smin, smax=smax)
+        self.__toolbox.register("particle", generate, size=problem.dim, pmin=pmin, pmax=pmax, smin=smin, smax=smax)
         self.__toolbox.register("population", tools.initRepeat, list, self.__toolbox.particle)
         self.__toolbox.register("update", updateParticle, phi1=self.__config.phi1, phi2=self.__config.phi2, pmin=pmin, pmax=pmax)
         self.__toolbox.register("evaluate", problem_eval)

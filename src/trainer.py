@@ -2,12 +2,12 @@
 This file is used to train the agent.(for the kind of optimizer that is learnable)
 """
 import pickle
-
+import time
 import torch
 from tqdm import tqdm
 from environment.basic_environment import PBO_Env
 from environment.parallelenv import *
-from logger import Logger
+from logger import *
 import copy
 from environment.problem.utils import *
 import numpy as np
@@ -36,6 +36,9 @@ from environment.optimizer import (
     SurrRLDE_Optimizer,
     RLEMMO_Optimizer,
     #madac_optimizer
+    GLHF_Optimizer,
+    B2OPT_Optimizer,
+    LGA_Optimizer
 )
 
 from baseline.bbo import (
@@ -65,6 +68,11 @@ from baseline.metabbo import (
     SurrRLDE,
     RLEMMO,
     #madac
+    GLHF,
+    B2OPT,
+    LDE,
+    RLEPSO,
+    RLPSO
 )
 
 
@@ -84,8 +92,8 @@ class Trainer(object):
         self.train_set, self.test_set = construct_problem_set(config)
         self.config.dim = max(self.train_set.maxdim, self.test_set.maxdim)
         
-        # if self.config.problem == 'bbob-surrogate':
-        #     self.config.is_train = True
+        if self.config.train_problem == 'bbob-surrogate':
+            self.config.is_train = True
             
         if self.config.resume_dir is None:
             self.agent = eval(self.config.train_agent)(self.config)
@@ -95,7 +103,6 @@ class Trainer(object):
                 self.agent = pickle.load(f)
             self.agent.update_setting(self.config)
         self.optimizer = eval(self.config.train_optimizer)(self.config)
-        self.logger = Logger(self.config)
 
     def save_log(self, epochs, steps, cost, returns, normalizer):
         log_dir = self.config.log_dir + f'/train/{self.agent.__class__.__name__}/{self.config.run_time}/log/'
@@ -124,14 +131,20 @@ class Trainer(object):
         is_end = False
         # todo tensorboard
         tb_logger = None
+        start_time = time.time()
         if not self.config.no_tb:
+            if not os.path.exists(os.path.join('output/tensorboard', self.config.run_time)):
+                os.makedirs(os.path.join('output/tensorboard', self.config.run_time))
             tb_logger = SummaryWriter(os.path.join('output/tensorboard', self.config.run_time))
             tb_logger.add_scalar("epoch-step", 0, 0)
-
+        train_log = {'loss': [], 'learn_steps': [], 'return': [], 'runtime': [], 'config': copy.deepcopy(self.config)}
+        if not os.path.exists(os.path.join('output/train_log', self.config.run_time)):
+            os.makedirs(os.path.join('output/train_log', self.config.run_time))
         epoch = 0
         bs = self.config.train_batch_size
         if self.config.train_mode == "single":
             self.train_set.batch_size = 1
+            self.train_set.ptr = [i for i in range(0, self.train_set.N)]
         elif self.config.train_mode == "multi":
             self.train_set.batch_size = bs
 
@@ -151,7 +164,7 @@ class Trainer(object):
 
                     # 这里前面已经判断好 train_mode，这里只需要根据 train_mode 构造env就行
                     if self.config.train_mode == "single":
-                        env_list = [PBO_Env(copy.deepcopy(problem), copy.deepcopy(self.optimizer)) for _ in range(bs)] # bs
+                        env_list = [PBO_Env(copy.deepcopy(problem[0]), copy.deepcopy(self.optimizer)) for _ in range(bs)] # bs
                     elif self.config.train_mode == "multi":
                         env_list = [PBO_Env(copy.deepcopy(p), copy.deepcopy(self.optimizer)) for p in problem] # bs
 
@@ -161,14 +174,22 @@ class Trainer(object):
                                                                               tb_logger = tb_logger,
                                                                               para_mode = self.config.train_parallel_mode,
                                                                               )
-                    # exceed_max_ls, pbar_info_train = self.agent.train_episode(env)  # pbar_info -> dict
-                    meanR = torch.mean(train_meta_data['return'])
-                    postfix_str = (
-                        f"loss={train_meta_data['loss']:.2e}, "
-                        f"learn_steps={train_meta_data['learn_steps']}, "
-                        f"return={f'{meanR:.2e}'}"
-                    )
+                    # train_meta_data {'return': list[], 'loss': list[], 'learn_steps': int}
 
+                    # exceed_max_ls, pbar_info_train = self.agent.train_episode(env)  # pbar_info -> dict
+                    postfix_str = (
+                        f"loss={np.mean(train_meta_data['loss']):.2e}, "
+                        f"learn_steps={train_meta_data['learn_steps']}, "
+                        f"return={np.mean(train_meta_data['return']):.2e}"
+                    )
+                    train_log['loss'].append(train_meta_data['loss'])
+                    train_log['learn_steps'].append(train_meta_data['learn_steps'])
+                    train_log['return'].append(train_meta_data['return'])
+                    train_log['runtime'].append(time.time() - start_time)
+
+                    with open(os.path.join('output/train_log', self.config.run_time, 'train_log.pkl'), 'wb') as f:
+                        pickle.dump(train_log, f)
+                    
                     pbar.set_postfix_str(postfix_str)
                     pbar.update(self.train_set.batch_size)
                     learn_step = train_meta_data['learn_steps']
@@ -183,18 +204,23 @@ class Trainer(object):
                     #     normalizer_record[name].append(train_meta_data['normalizer'][id])
                     #     return_record.append(np.mean(train_meta_data['return']))
                     # learn_steps.append(learn_step)
+                    # if learn_step >= (self.config.save_interval * self.agent.cur_checkpoint) and self.config.end_mode == "step":
+                    #     save_class(self.config.agent_save_dir, 'checkpoint' + str(self.agent.cur_checkpoint), self.agent)
+                    #     # 记录 checkpoint 和 total_step
+                    #     with open(self.config.agent_save_dir + "/checkpoint_log.txt", "a") as f:
+                    #         f.write(f"Checkpoint {self.agent.cur_checkpoint}: {learn_step}\n")
 
                     if self.config.end_mode == "step" and exceed_max_ls:
                         is_end = True
                         break
-                self.agent.train_epoch()
+                # self.agent.train_epoch()
             # epoch_steps.append(learn_step)
             epoch += 1
 
             if not self.config.no_tb:
                 tb_logger.add_scalar("epoch-step", learn_step, epoch)
-                tb_logger.add_scalar("epoch-avg-return", return_record/(self.train_set.N / self.train_set.batch_size * bs), epoch)
-                tb_logger.add_scalar("epoch-avg-loss", loss_record/(self.train_set.N / self.train_set.batch_size * bs), epoch)
+                tb_logger.add_scalar("epoch-avg-return", np.mean(return_record), epoch)
+                tb_logger.add_scalar("epoch-avg-loss", np.mean(loss_record), epoch)
 
             if epoch >= (self.config.save_interval * self.agent.cur_checkpoint) and self.config.end_mode == "epoch":
                 save_class(self.config.agent_save_dir, 'checkpoint' + str(self.agent.cur_checkpoint), self.agent)

@@ -6,6 +6,7 @@ from cmaes import CMA
 import copy
 from environment.parallelenv.parallelenv import ParallelEnv
 import numpy as np
+from dill import loads, dumps
 
 class LES(Basic_Agent):
     def __init__(self, config):
@@ -34,7 +35,7 @@ class LES(Basic_Agent):
         self.__cur_checkpoint=0
         # save init agent
         if self.__cur_checkpoint==0:
-            save_class(self.__config.agent_save_dir,'checkpoint'+str(self.__cur_checkpoint),self)
+            save_class(self.__config.agent_save_dir,'checkpoint-'+str(self.__cur_checkpoint),self)
             self.__cur_checkpoint+=1
 
     def __str__(self):
@@ -69,17 +70,19 @@ class LES(Basic_Agent):
                       required_info = {}):
 
         num_cpus = None
-        num_gpus = 0
+        num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
         if 'num_cpus' in compute_resource.keys():
             num_cpus = compute_resource['num_cpus']
         if 'num_gpus' in compute_resource.keys():
             num_gpus = compute_resource['num_gpus']
         env = ParallelEnv(envs, para_mode, num_cpus=num_cpus, num_gpus=num_gpus)
         env.seed(seeds)
-        
-        env_population = [copy.deepcopy(env) for _ in range(self.meta_pop_size)]
-        
-        
+
+        env.set_env_attr("rng_cpu", "None")
+        if self.__config.device != 'cpu':
+            env.set_env_attr("rng_gpu", "None")
+        env_population = [loads(dumps(env)) for _ in range(self.meta_pop_size)]
+
         # sequential
         for i, e in enumerate(env_population):
             e.reset()
@@ -101,10 +104,10 @@ class LES(Basic_Agent):
                 self.log_to_tb_train(tb_logger, self.learning_time, self.gbest)
             
         if self.__learning_step >= (self.__config.save_interval * self.__cur_checkpoint):
-            save_class(self.__config.agent_save_dir, 'checkpoint'+str(self.__cur_checkpoint), self)
+            save_class(self.__config.agent_save_dir, 'checkpoint-'+str(self.__cur_checkpoint), self)
             self.__cur_checkpoint += 1
 
-        return_info = {'return': 0, 'learn_steps': self.__learning_step, }
+        return_info = {'return': 0, 'loss': [0], 'learn_steps': self.__learning_step, }
         return_info['gbest'] = env_population[0].get_env_attr('cost')[-1],
         for key in required_info.keys():
             return_info[key] =  env_population[0].get_env_attr(required_info[key])
@@ -167,7 +170,7 @@ class LES(Basic_Agent):
                               compute_resource = {},
                               required_info = {}) :
         num_cpus = None
-        num_gpus = 0
+        num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
         if 'num_cpus' in compute_resource.keys():
             num_cpus = compute_resource['num_cpus']
         if 'num_gpus' in compute_resource.keys():

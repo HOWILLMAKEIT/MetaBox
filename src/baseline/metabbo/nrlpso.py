@@ -24,7 +24,7 @@ class NRLPSO(QLearning_Agent):
         super().__init__(self.config)
         # # save init agent
         # if self.__cur_checkpoint == 0:
-        #     save_class(self.__config.agent_save_dir, 'checkpoint'+str(self.__cur_checkpoint), self)
+        #     save_class(self.__config.agent_save_dir, 'checkpoint-'+str(self.__cur_checkpoint), self)
         #     self.__cur_checkpoint += 1
 
     def __str__(self):
@@ -35,8 +35,7 @@ class NRLPSO(QLearning_Agent):
         q_values = self.q_table[state]  # shape: (bs, n_actions)
 
         # Compute the action probabilities for each state
-        prob = softmax(q_values)  # shape: (bs, n_actions)
-
+        prob = torch.softmax(q_values, dim = 0)  # shape: (bs, n_actions)
         # Choose an action based on the probabilities
         action = torch.multinomial(prob, 1)  # shape: (bs, 1)
 
@@ -71,7 +70,7 @@ class NRLPSO(QLearning_Agent):
             # state transient
             next_state, reward, is_end, info = env.step(action)
             _R += reward
-            reward = torch.FloatTensor(reward).to(self.device)
+            reward = torch.Tensor(reward).to(self.device)
             _reward.append(reward)
             # update Q-table
             TD_error = reward + gamma * torch.max(self.q_table[next_state], dim = 1)[0] - self.q_table[state, action]
@@ -82,8 +81,8 @@ class NRLPSO(QLearning_Agent):
 
             self.learning_time += 1
 
-            if self.learning_time >= (self.config.save_interval * self.cur_checkpoint):
-                save_class(self.config.agent_save_dir, 'checkpoint'+str(self.cur_checkpoint), self)
+            if self.learning_time >= (self.config.save_interval * self.cur_checkpoint) and self.config.end_mode == "step":
+                save_class(self.config.agent_save_dir, 'checkpoint-' + str(self.cur_checkpoint), self)
                 self.cur_checkpoint += 1
 
             if not self.config.no_tb and self.learning_time % int(self.config.log_step) == 0:
@@ -94,7 +93,7 @@ class NRLPSO(QLearning_Agent):
 
             if self.learning_time >= self.config.max_learning_step:
                 _Rs = _R.detach().numpy().tolist()
-                return_info = {'return': _Rs, 'loss': np.mean(_loss), 'learn_steps': self.learning_time, }
+                return_info = {'return': _Rs, 'loss': _loss, 'learn_steps': self.learning_time, }
                 env_cost = env.get_env_attr('cost')
                 return_info['normalizer'] = env_cost[0]
                 return_info['gbest'] = env_cost[-1]
@@ -110,7 +109,7 @@ class NRLPSO(QLearning_Agent):
             
         is_train_ended = self.learning_time >= self.config.max_learning_step
         _Rs = _R.detach().numpy().tolist()
-        return_info = {'return': _Rs, 'loss': np.mean(_loss), 'learn_steps': self.learning_time, }
+        return_info = {'return': _Rs, 'loss': _loss, 'learn_steps': self.learning_time, }
         env_cost = env.get_env_attr('cost')
         return_info['normalizer'] = env_cost[0]
         return_info['gbest'] = env_cost[-1]

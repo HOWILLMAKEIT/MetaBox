@@ -8,16 +8,17 @@ from typing import Optional, Union, Literal, List
 import numpy as np
 from rl.utils import clip_grad_norms, save_class
 from cmaes import CMA
+from dill import loads, dumps
 
 class LGA(Basic_Agent):
     def __init__(self, config):
         super().__init__(config)
         self.config = config
 
-        self.M = 512
+        self.M = 256
         self.T = 50
         self.J = 256
-        self.optimizer = CMA(mean = np.zeros(897),
+        self.optimizer = CMA(mean = np.zeros(673),
                              sigma = 0.1,
                              population_size = self.M)
 
@@ -58,7 +59,7 @@ class LGA(Basic_Agent):
                       tb_logger = None,
                       required_info = {}):
         num_cpus = None
-        num_gpus = 0
+        num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
         if 'num_cpus' in compute_resource.keys():
             num_cpus = compute_resource['num_cpus']
         if 'num_gpus' in compute_resource.keys():
@@ -66,7 +67,10 @@ class LGA(Basic_Agent):
         env = ParallelEnv(envs, para_mode, num_cpus = num_cpus, num_gpus = num_gpus)
         env.seed(seeds)
 
-        env_population = [copy.deepcopy(env) for _ in range(self.M)]
+        env.set_env_attr("rng_cpu", "None")
+        if self.config.device != 'cpu':
+            env.set_env_attr("rng_gpu", "None")
+        env_population = [loads(dumps(env)) for _ in range(self.M)]
 
         for i, e in enumerate(env_population):
             e.reset()
@@ -89,14 +93,14 @@ class LGA(Basic_Agent):
             save_class(self.config.agent_save_dir, 'checkpoint' + str(self.cur_checkpoint), self)
             self.cur_checkpoint += 1
 
-        return_info = {'return': 0, 'learn_steps': self.learning_step, }
+        return_info = {'return': 0, 'loss':0 ,'learn_steps': self.learning_step, }
         return_info['gbest'] = env_population[0].get_env_attr('cost')[-1],
         for key in required_info.keys():
             return_info[key] = env_population[0].get_env_attr(required_info[key])
         for i, e in enumerate(env_population):
             e.close()
         # return exceed_max_ls
-        return self.learning_step >= self.__config.max_learning_step, return_info
+        return self.learning_step >= self.config.max_learning_step, return_info
 
     def rollout_episode(self, env, seed = None, required_info = {}):
         env.seed(seed)
@@ -133,7 +137,7 @@ class LGA(Basic_Agent):
                               compute_resource = {},
                               required_info = {}):
         num_cpus = None
-        num_gpus = 0
+        num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
         if 'num_cpus' in compute_resource.keys():
             num_cpus = compute_resource['num_cpus']
         if 'num_gpus' in compute_resource.keys():

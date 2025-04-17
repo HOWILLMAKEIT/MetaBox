@@ -35,7 +35,7 @@ class DE(Basic_Optimizer):
 
         self.__toolbox.register("evaluate", problem_eval)
         self.__toolbox.register("attr_float", np.random.uniform, problem.lb, problem.ub)
-        self.__toolbox.register("individual", tools.initRepeat, creator.Individual, self.__toolbox.attr_float, n=self.__config.dim)
+        self.__toolbox.register("individual", tools.initRepeat, creator.Individual, self.__toolbox.attr_float, n=problem.dim)
         self.__toolbox.register("population", tools.initRepeat, list, self.__toolbox.individual)
 
         hof = tools.HallOfFame(1)
@@ -59,7 +59,7 @@ class DE(Basic_Optimizer):
                 a, b, c = self.__toolbox.select(pop, 3)
                 y = self.__toolbox.clone(agent)
                 # mutate & crossover
-                index = np.random.randint(0, self.__config.dim, 1)[0]
+                index = np.random.randint(0, problem.dim, 1)[0]
                 for i, value in enumerate(agent):
                     if np.random.rand() < self.__config.Cr or i == index:
                         y[i] = a[i] + self.__config.F * (b[i] - c[i])
