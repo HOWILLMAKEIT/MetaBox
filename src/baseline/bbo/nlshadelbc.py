@@ -18,8 +18,8 @@ class NLSHADELBC(Basic_Optimizer):
         self.__p_iniF = 3.5
         self.__p_iniCr = 1.0
         self.__p_fin = 1.5
-        self.__Nmax = 23 * self.__dim  # the upperbound of population size
         self.__Nmin = 4  # the lowerbound of population size
+        self.__Nmax = 23 * self.__dim
         self.__NP = self.__Nmax  # the population size
         self.__NA = self.__NP  # the size of archive(collection of replaced individuals)
         self.__H = 20 * self.__dim
@@ -153,9 +153,11 @@ class NLSHADELBC(Basic_Optimizer):
             self.__NA = A
             self.__archive = self.__archive[:A]
 
-    def __init_population(self, problem):
-        self.__NP = 23 * self.__dim
-        self.__population = self.rng.rand(self.__NP, self.__dim) * (problem.ub - problem.lb) + problem.lb
+    def __init_population(self, problem)
+        self.__Nmax = 23 * problem.dim
+        self.__H = 20 * problem.dim
+        self.__NP = 23 * problem.dim
+        self.__population = self.rng.rand(self.__NP, problem.dim) * (problem.ub - problem.lb) + problem.lb
         self.__cost = self.__evaluate(problem, self.__population)
         self.__FEs = self.__NP
         self.__archive = np.array([])
