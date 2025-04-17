@@ -15,7 +15,7 @@ class Random_search(Basic_Optimizer):
         self.full_meta_data = config.full_meta_data
     
     def __str__(self):
-        return 'RandomSearch'
+        return 'Random_search'
     def __reset(self,problem):
         self.__fes=0
         self.cost=[]
@@ -65,7 +65,7 @@ class Random_search(Basic_Optimizer):
                     self.cost.append(self.gbest)
                 break
                 
-        results = {'cost': self.cost, 'fes': self.__FEs}
+        results = {'cost': self.cost, 'fes': self.__fes}
 
         if self.full_meta_data:
             metadata = {'X':self.meta_X, 'Cost':self.meta_Cost}

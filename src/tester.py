@@ -8,7 +8,7 @@ import time
 from tqdm import tqdm
 import os, psutil
 from environment.basic_environment import PBO_Env
-from logger import Logger
+from logger import *
 from environment.parallelenv.parallelenv import ParallelEnv
 import json
 import torch
@@ -385,7 +385,7 @@ class Tester(object):
                         meta_test_data = MetaBBO_test.rollout()
                         self.record_test_data(meta_test_data)
                         pbar.update()
-                self.meta_data_results = store_meta_data(self.log_dir, self.meta_data_results)
+                    self.meta_data_results = store_meta_data(self.log_dir, self.meta_data_results)
             for optimizer in self.t_optimizer_for_cp:
                 for ip, problem in enumerate(self.test_set):
                     for i, seed in enumerate(seed_list):
@@ -395,7 +395,7 @@ class Tester(object):
                         meta_test_data = MetaBBO_test.rollout()
                         self.record_test_data(meta_test_data)
                         pbar.update()
-                self.meta_data_results = store_meta_data(self.log_dir, self.meta_data_results)
+                    self.meta_data_results = store_meta_data(self.log_dir, self.meta_data_results)
             pbar.close()
                         
         else:

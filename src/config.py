@@ -132,10 +132,10 @@ def get_config(args=None):
         config.n_logpoint = 5
 
     config.run_time = f'{time.strftime("%Y%m%dT%H%M%S")}_{config.train_problem}_{config.train_difficulty}'
-    config.test_log_dir = config.log_dir + '/test/' + config.run_time + '/'
-    config.rollout_log_dir = config.log_dir + '/rollout/' + config.run_time + '/'
-    config.mgd_test_log_dir = config.log_dir + '/mgd_test/' + config.run_time + '/'
-    config.mte_test_log_dir = config.log_dir + '/mte_test/' + config.run_time + '/'
+    config.test_log_dir = config.log_dir + 'test/' + config.run_time + '/'
+    config.rollout_log_dir = config.log_dir + 'rollout/' + config.run_time + '/'
+    config.mgd_test_log_dir = config.log_dir + 'mgd_test/' + config.run_time + '/'
+    config.mte_test_log_dir = config.log_dir + 'mte_test/' + config.run_time + '/'
 
     if config.train or config.run_experiment:
         config.agent_save_dir = config.agent_save_dir + config.train_agent + '/' + config.run_time + '/'

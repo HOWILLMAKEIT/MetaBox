@@ -7,7 +7,7 @@ import torch
 from tqdm import tqdm
 from environment.basic_environment import PBO_Env
 from environment.parallelenv import *
-from logger import Logger
+from logger import *
 import copy
 from environment.problem.utils import *
 import numpy as np
@@ -103,7 +103,6 @@ class Trainer(object):
                 self.agent = pickle.load(f)
             self.agent.update_setting(self.config)
         self.optimizer = eval(self.config.train_optimizer)(self.config)
-        self.logger = Logger(self.config)
 
     def save_log(self, epochs, steps, cost, returns, normalizer):
         log_dir = self.config.log_dir + f'/train/{self.agent.__class__.__name__}/{self.config.run_time}/log/'
