@@ -15,7 +15,8 @@ class Random_search(Basic_Optimizer):
         self.full_meta_data = config.full_meta_data
     
     def __str__(self):
-        return 'RandomSearch'
+        return 'Random_search'
+    
     def __reset(self,problem):
         self.__FEs=0
         self.cost=[]
