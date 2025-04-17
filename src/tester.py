@@ -149,8 +149,9 @@ class BBO_TestUnit():
                  optimizer: Basic_Optimizer,
                  problem: Basic_Problem,
                  seed: int,
+                 config
                  ):
-        self.optimizer = optimizer
+        self.optimizer = optimizer(config)
         self.problem = problem
         self.seed = seed
 
@@ -326,7 +327,7 @@ class Tester(object):
             testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent), PBO_Env(copy.deepcopy(p), copy.deepcopy(optimizer)), seed) for (agent, optimizer) in zip(self.agent_for_cp, self.l_optimizer_for_cp)
                                                                                                                                for p in self.test_set.data
                                                                                                                                for seed in seed_list]
-            testunit_list += [BBO_TestUnit(copy.deepcopy(optimizer), copy.deepcopy(p), seed) for optimizer in self.t_optimizer_for_cp
+            testunit_list += [BBO_TestUnit(copy.deepcopy(optimizer), copy.deepcopy(p), seed, self.config) for optimizer in self.t_optimizer_for_cp
                                                                                         for p in self.test_set.data
                                                                                         for seed in seed_list]
             MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray')
@@ -340,7 +341,7 @@ class Tester(object):
                 testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent), PBO_Env(copy.deepcopy(p), copy.deepcopy(optimizer)), seed) for (agent, optimizer) in zip(self.agent_for_cp, self.l_optimizer_for_cp)
                                                                                                                                 for p in self.test_set.data
                                                                                                                                 ]
-                testunit_list += [BBO_TestUnit(copy.deepcopy(optimizer), copy.deepcopy(p), seed) for optimizer in self.t_optimizer_for_cp
+                testunit_list += [BBO_TestUnit(copy.deepcopy(optimizer), copy.deepcopy(p), seed, self.config) for optimizer in self.t_optimizer_for_cp
                                                                                                 for p in self.test_set.data
                                                                                                 ]
                 MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray')
@@ -364,7 +365,7 @@ class Tester(object):
                 pbar.update()
             for optimizer in self.t_optimizer_for_cp:
                 pbar.set_description(f"Problem_Testrun Testing {optimizer.__str__()}")
-                testunit_list += [BBO_TestUnit(copy.deepcopy(optimizer), copy.deepcopy(p), seed) for p in self.test_set.data
+                testunit_list += [BBO_TestUnit(copy.deepcopy(optimizer), copy.deepcopy(p), seed, self.config) for p in self.test_set.data
                                                                                                  for seed in seed_list]
                 MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray')
                 meta_test_data = MetaBBO_test.rollout()
@@ -390,7 +391,7 @@ class Tester(object):
                 for ip, problem in enumerate(self.test_set):
                     for i, seed in enumerate(seed_list):
                         pbar.set_description_str(f"Batch Testing Optimizer {optimizer.__str__()} with Problem Batch {ip}, Run {i}")
-                        testunit_list = [BBO_TestUnit(loads(dumps(optimizer)), copy.deepcopy(p), seed) for p in problem]
+                        testunit_list = [BBO_TestUnit(loads(dumps(optimizer)), copy.deepcopy(p), seed, self.config) for p in problem]
                         MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray')
                         meta_test_data = MetaBBO_test.rollout()
                         self.record_test_data(meta_test_data)
