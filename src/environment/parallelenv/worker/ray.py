@@ -94,7 +94,7 @@ class RayEnvWorker(EnvWorker):
     ) -> Union[Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray], np.ndarray]:
         results = list(ray.get(self.result))
         self.env = results[-1]
-        return results[:-1]
+        return results[:-1] if len(results) > 2 else results[0]
 
     def seed(self, seed: Optional[int] = None) -> List[int]:
         super().seed(seed)

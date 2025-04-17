@@ -499,7 +499,7 @@ class GLEET(PPO_Agent):
                     state = torch.FloatTensor(state).unsqueeze(0).to(self.device)
                 except:
                     state = [state]
-                action = self.actor(state)[0]
+                action = self.actor(state.double())[0]
                 action = action.cpu().numpy().squeeze()
                 state, reward, is_done, info = env.step(action)
                 R += reward

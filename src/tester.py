@@ -17,7 +17,7 @@ from typing import Optional, Union, Literal, List
 from environment.optimizer.basic_optimizer import Basic_Optimizer
 from rl import Basic_Agent
 from environment.problem.basic_problem import Basic_Problem
-
+from dill import dumps, loads
 from environment.optimizer import (
     DEDDQN_Optimizer,
     DEDQN_Optimizer,
@@ -185,14 +185,14 @@ class MetaBBO_TestUnit():
 
     def run_batch_episode(self, required_info = {}):
         start_time = time.time()
-        res = self.agent.run_episode(self.env, self.seed, required_info)
+        res = self.agent.rollout_episode(self.env, self.seed, required_info)
         end_time = time.time()
         res['T1'] = self.env.problem.T1
         res['T2'] = end_time - start_time
         agent_name = self.agent.__str__()
         if self.checkpoint is not None:
             agent_name += f'-{self.checkpoint}'
-        res['agent_name'] = self.agent.__str__()
+        res['agent_name'] = agent_name
         res['problem_name'] = self.env.problem.__str__()
         return res
 
@@ -211,7 +211,8 @@ class Tester(object):
         if config.test_problem =='bbob-surrogate':
             config.is_train = False
 
-        _, self.test_set = construct_problem_set(self.config)
+        self.train_set, self.test_set = construct_problem_set(self.config)
+        self.config.dim = max(self.train_set.maxdim, self.test_set.maxdim)
         # if 'L2L_Agent' in config.agent_for_cp or 'L2L_Agent' == config.agent:
         #     pre_problem=config.problem
         #     config.problem=pre_problem+'-torch'
@@ -222,12 +223,14 @@ class Tester(object):
         # initialize the dataframe for logging
         self.test_results = {'cost': {},
                              'fes': {},
-                             'T0': 0.,
                              'T1': {},
                              'T2': {},
                              }
         self.meta_data_results = {}
-
+        if not os.path.exists(self.log_dir+'/metadata/'):
+            os.makedirs(self.log_dir+'/metadata/')
+        with open(self.log_dir + f'/metadata/config.pkl', 'wb') as f:
+            pickle.dump(self.config, f, -1)
         # prepare experimental optimizers and agents
         self.agent_for_cp = []
         self.agent_name_list = []
@@ -275,7 +278,8 @@ class Tester(object):
 
         for key in self.test_results.keys():
             self.initialize_record(key)
-        
+        self.test_results['config'] = copy.deepcopy(self.config)
+        self.test_results['T0'] = 0.
         if config.full_meta_data:
             for problem in self.test_set.data:
                 self.meta_data_results[problem.__str__()] = {}
@@ -300,15 +304,16 @@ class Tester(object):
             for optimizer in self.t_optimizer_for_cp:
                 self.test_results[key][problem.__str__()][type(optimizer).__name__] = []  # 51 np.arrays
         
-    def record_test_data(self, data: dict):
+    def record_test_data(self, data: list):
         for item in data:
             for key in item.keys():
                 if key == 'metadata' and self.config.full_meta_data:
                     self.meta_data_results[item['problem_name']][item['agent_name']].append(item[key])
                     continue
-                if key not in ['agent_name', 'problem_name'] and key not in self.test_results.keys():
-                    self.initialize_record(key)
-                self.test_results[key][item['problem_name']][item['agent_name']].append(item[key])            
+                if key not in ['agent_name', 'problem_name']:
+                    if key not in self.test_results.keys():
+                        self.initialize_record(key)
+                    self.test_results[key][item['problem_name']][item['agent_name']].append(item[key])            
 
     def test(self, ):
         # todo 第三种 并行是 agent * bs 个问题 * run
@@ -385,7 +390,7 @@ class Tester(object):
                 for problem in self.test_set:
                     for i, seed in enumerate(seed_list):
                         pbar.set_description_str(f"Batch Testing Optimizer {optimizer.__str__()} with Problem {problem.__class__.__name__}, Run {i}")
-                        testunit_list = [BBO_TestUnit(copy.deepcopy(optimizer), copy.deepcopy(p), seed) for p in problem]
+                        testunit_list = [BBO_TestUnit(loads(dumps(optimizer)), copy.deepcopy(p), seed) for p in problem]
                         MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray')
                         meta_test_data = MetaBBO_test.customized_method('run_batch_episode')
                         self.record_test_data(meta_test_data)
@@ -792,7 +797,8 @@ def rollout_batch(config):
             optimizer_for_rollout.append(eval(l_optimizer)(copy.deepcopy(config)))
 
     rollout_results = {'cost': {},
-                        'return':{}}
+                        'return':{},
+                        'config': copy.deepcopy(config)}
     meta_data_results = {}
     for key in rollout_results.keys():
         if key not in rollout_results.keys():

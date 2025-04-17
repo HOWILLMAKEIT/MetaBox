@@ -116,7 +116,8 @@ def get_config(args=None):
         config.test_problem = config.train_problem
     if config.test_difficulty is None:
         config.test_difficulty = config.train_difficulty
-
+    if config.end_mode == 'epoch':
+        config.max_learning_step = 1e9
     # if config.run_experiment and len(config.agent_for_cp) >= 1:
     #     assert config.agent_load_dir is not None, "Option --agent_load_dir must be given since you specified option --agent_for_cp."
 
@@ -144,8 +145,8 @@ def get_config(args=None):
         config.save_interval = config.max_epoch // config.n_checkpoint
     config.log_interval = config.maxFEs // config.n_logpoint
 
-    if 'DEAP_CMAES' not in config.t_optimizer:
-        config.t_optimizer.append('DEAP_CMAES')
+    if 'CMAES' not in config.t_optimizer:
+        config.t_optimizer.append('CMAES')
     if 'Random_search' not in config.t_optimizer:
         config.t_optimizer.append('Random_search') # todo
 

@@ -128,7 +128,7 @@ class Trainer(object):
                 os.makedirs(os.path.join('output/tensorboard', self.config.run_time))
             tb_logger = SummaryWriter(os.path.join('output/tensorboard', self.config.run_time))
             tb_logger.add_scalar("epoch-step", 0, 0)
-        train_log = {'loss': [], 'learn_steps': [], 'return': [], 'runtime': []}
+        train_log = {'loss': [], 'learn_steps': [], 'return': [], 'runtime': [], 'config': copy.deepcopy(self.config)}
         if not os.path.exists(os.path.join('output/train_log', self.config.run_time)):
             os.path.join('output/train_log', self.config.run_time)
         epoch = 0
@@ -191,11 +191,11 @@ class Trainer(object):
                     #     normalizer_record[name].append(train_meta_data['normalizer'][id])
                     #     return_record.append(np.mean(train_meta_data['return']))
                     # learn_steps.append(learn_step)
-                    if learn_step >= (self.config.save_interval * self.agent.cur_checkpoint) and self.config.end_mode == "step":
-                        save_class(self.config.agent_save_dir, 'checkpoint' + str(self.agent.cur_checkpoint), self.agent)
-                        # 记录 checkpoint 和 total_step
-                        with open(self.config.agent_save_dir + "/checkpoint_log.txt", "a") as f:
-                            f.write(f"Checkpoint {self.agent.cur_checkpoint}: {learn_step}\n")
+                    # if learn_step >= (self.config.save_interval * self.agent.cur_checkpoint) and self.config.end_mode == "step":
+                    #     save_class(self.config.agent_save_dir, 'checkpoint' + str(self.agent.cur_checkpoint), self.agent)
+                    #     # 记录 checkpoint 和 total_step
+                    #     with open(self.config.agent_save_dir + "/checkpoint_log.txt", "a") as f:
+                    #         f.write(f"Checkpoint {self.agent.cur_checkpoint}: {learn_step}\n")
 
                     if self.config.end_mode == "step" and exceed_max_ls:
                         is_end = True

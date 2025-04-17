@@ -24,7 +24,7 @@ class NRLPSO(QLearning_Agent):
         super().__init__(self.config)
         # # save init agent
         # if self.__cur_checkpoint == 0:
-        #     save_class(self.__config.agent_save_dir, 'checkpoint'+str(self.__cur_checkpoint), self)
+        #     save_class(self.__config.agent_save_dir, 'checkpoint-'+str(self.__cur_checkpoint), self)
         #     self.__cur_checkpoint += 1
 
     def __str__(self):
@@ -83,7 +83,7 @@ class NRLPSO(QLearning_Agent):
             self.learning_time += 1
 
             if self.learning_time >= (self.config.save_interval * self.cur_checkpoint):
-                save_class(self.config.agent_save_dir, 'checkpoint'+str(self.cur_checkpoint), self)
+                save_class(self.config.agent_save_dir, 'checkpoint-'+str(self.cur_checkpoint), self)
                 self.cur_checkpoint += 1
 
             if not self.config.no_tb and self.learning_time % int(self.config.log_step) == 0:

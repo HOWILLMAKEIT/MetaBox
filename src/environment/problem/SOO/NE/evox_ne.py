@@ -59,13 +59,14 @@ class NE_Problem(Basic_Problem):
         self.dim = sum(p.numel() for p in self.nn_model.parameters())
         self.ub = 5.
         self.lb = -5.
+        self.pop_size = 500
         self.adapter = ParamsAndVector(dummy_model= self.nn_model) 
         self.evaluator = BraxProblem(
             policy=self.nn_model,
             env_name=env_name,
             max_episode_length=200, #todo: 10,3,5,1 should be indicated in config.py and loaded here
             num_episodes=10,
-            pop_size=2,
+            pop_size=self.pop_size,
             seed=seed,
             reduce_fn=torch.mean,
         )
@@ -74,11 +75,17 @@ class NE_Problem(Basic_Problem):
         # x_cuda = torch.from_numpy(x).double().to(torch.get_default_device())
         # x_cuda = torch.from_numpy(x)
         # print(1)
+        torch.set_default_device("cuda")
         assert x.shape[-1] == self.dim, "solution dimension not equal to problem dimension!"
+        x = torch.tensor(x, device=torch.get_default_device()).float()
+        pop_size = x.shape[0]
+        if x.shape[0] < self.pop_size:
+            x = torch.concat([x, torch.zeros(self.pop_size - pop_size, self.dim)], 0)
         nn_population = self.adapter.batched_to_params(x)
         # for key in nn_population.keys():
         #     print(nn_population[key].shape)
         rewards = self.evaluator.evaluate(nn_population)
-        return rewards
+        torch.set_default_device("cpu")
+        return rewards[:pop_size]
 
 
