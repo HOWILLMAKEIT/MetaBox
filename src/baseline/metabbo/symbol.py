@@ -132,7 +132,7 @@ class SYMBOL(PPO_Agent):
 
         state = env.reset()
         try:
-            state = torch.FloatTensor(state).to(self.device)
+            state = torch.Tensor(state).to(self.device)
         except:
             pass
 
@@ -179,7 +179,7 @@ class SYMBOL(PPO_Agent):
                 t = t + 1
 
                 try:
-                    state = torch.FloatTensor(state).to(self.device)
+                    state = torch.Tensor(state).to(self.device)
                 except:
                     pass
 
@@ -338,7 +338,7 @@ class SYMBOL(PPO_Agent):
         env.seed(seeds)
         state = env.reset()
         try:
-            state = torch.FloatTensor(state).to(self.device)
+            state = torch.Tensor(state).to(self.device)
         except:
             pass
 
@@ -355,10 +355,10 @@ class SYMBOL(PPO_Agent):
             # state transient
             state, rewards, is_end, info = env.step(action)
             # print('step:{},max_reward:{}'.format(t,torch.max(rewards)))
-            R += torch.FloatTensor(rewards).squeeze()
+            R += torch.Tensor(rewards).squeeze()
             # store info
             try:
-                state = torch.FloatTensor(state).to(self.device)
+                state = torch.Tensor(state).to(self.device)
             except:
                 pass
         _Rs = R.detach().numpy().tolist()
@@ -381,7 +381,7 @@ class SYMBOL(PPO_Agent):
             R = 0
             while not is_done:
                 try:
-                    state = torch.FloatTensor(state).to(self.device)
+                    state = torch.Tensor(state).to(self.device)
                 except:
                     state = [state]
                 seq, const_seq, log_prob = self.actor(state, save_data = False)
@@ -524,10 +524,10 @@ class LSTM(nn.Module):
             x_in = fix_action['x_in']  # x_in shape: (len, [bs,1,31*4])
             mask = fix_action['mask']  # mask shape: (len, [bs,vocab_size])
             working_index = fix_action['working_index']  # working_index
-            # seq=torch.FloatTensor(fix_action['seq']).to(device)
+            # seq=torch.Tensor(fix_action['seq']).to(device)
             seq = fix_action['seq']
             c_seq = fix_action['c_seq']
-            # c_seq=torch.FloatTensor(fix_action['c_seq']).to(device)
+            # c_seq=torch.Tensor(fix_action['c_seq']).to(device)
             position = fix_action['position']
             c_indexs = fix_action['c_index']
             filter_index = fix_action['filter_index']
@@ -892,7 +892,7 @@ def get_mask(pre_seq, tokenizer, position, max_layer):
         #     print(f'mask:{mask}, pos:{pos}, seq:{sub_seq}')
         masks.append(mask)
 
-    return torch.FloatTensor(masks).to(old_device)
+    return torch.Tensor(masks).to(old_device)
 
 
 def which_layer(position):

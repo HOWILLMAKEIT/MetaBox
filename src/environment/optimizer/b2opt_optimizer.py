@@ -72,17 +72,23 @@ class B2OPT_Optimizer(Learnable_Optimizer):
 
     def update(self, action, problem):
         # 这里的action 是policy 网络
-        pre_gbest = self.c_cost.detach().cpu()
+        pre_gbest = torch.min(self.c_cost.detach().cpu())
 
-        v = action(self.population[None, :], self.c_cost[None, :], self.ems_index)[0] # off
+
+        v = action(self.population[None, :].clone().detach(), self.c_cost[None, :].clone().detach(), self.ems_index)[0] # off
         self.ems_index += 1
 
         new_cost = self.get_costs(position = v, problem = problem)
         self.fes += self.NP
 
-        optim = new_cost < self.c_cost
-        self.population[optim] = v[optim]
-        self.c_cost[optim] = new_cost[optim]
+        old_population = self.population.clone().detach()
+        old_c_cost = self.c_cost.clone().detach()
+        optim = new_cost.detach() < old_c_cost
+
+        old_population[optim] = v[optim]
+        old_c_cost[optim] = new_cost[optim]
+        self.population = old_population
+        self.c_cost = old_c_cost
 
         new_gbest_val = torch.min(self.c_cost).detach().cpu()
 
@@ -90,7 +96,7 @@ class B2OPT_Optimizer(Learnable_Optimizer):
 
         new_gbest_val = new_gbest_val.numpy()
 
-        self.gbest_val = np.min(self.gbest_val, new_gbest_val)
+        self.gbest_val = np.minimum(self.gbest_val, new_gbest_val)
 
         if problem.optimum is None:
             is_end = self.fes >= self.MaxFEs

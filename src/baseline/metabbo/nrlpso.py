@@ -71,7 +71,7 @@ class NRLPSO(QLearning_Agent):
             # state transient
             next_state, reward, is_end, info = env.step(action)
             _R += reward
-            reward = torch.FloatTensor(reward).to(self.device)
+            reward = torch.Tensor(reward).to(self.device)
             _reward.append(reward)
             # update Q-table
             TD_error = reward + gamma * torch.max(self.q_table[next_state], dim = 1)[0] - self.q_table[state, action]

@@ -71,8 +71,7 @@ class SYMBOL_Optimizer(Learnable_Optimizer):
 
         self.log_interval = config.log_interval
 
-        # todo: modify teacher config
-        self.teacher_optimizer = eval(config.teacher)(config, self.rng)
+        self.teacher_optimizer = None
 
         # ! change when using symbol_optimizer
         self.is_train = True
@@ -87,6 +86,8 @@ class SYMBOL_Optimizer(Learnable_Optimizer):
         self.max_x = problem.ub
         self.min_x = problem.lb
         self.problem = problem
+        if self.teacher_optimizer is None:
+             self.teacher_optimizer = eval(self.__config.teacher)(self.__config, self.rng)
         if self.is_train:
             tea_pop = self.teacher_optimizer.init_population(copy.deepcopy(problem))
             self.population = Population(self.dim, self.NP, self.min_x, self.max_x, self.max_fes, copy.deepcopy(problem), self.rng)
@@ -490,8 +491,8 @@ class MadDE():
             v[mu == 1] = v2
             v[mu == 2] = v3
 
-            v[v < self.min_x] = (v[v < self.min_x] + self.min_x) / 2
-            v[v > self.max_x] = (v[v > self.max_x] + self.max_x) / 2
+            v = np.where(v < self.min_x, (v + self.min_x) / 2, v)
+            v = np.where(v > self.min_x, (v + self.max_x) / 2, v)
             rvs = np.random.rand(NP)
             Crs = Cr.repeat(dim).reshape(NP, dim)
             u = np.zeros((NP, dim))
@@ -558,7 +559,7 @@ class Population(object):
         self.max_x = max_x
         self.max_fes = max_fes
         self.problem = problem
-        self.max_dist = ((max_x - min_x) ** 2 * dim) ** 0.5
+        self.max_dist = np.sqrt(np.sum((problem.ub - problem.lb) ** 2))
         self.cur_fes = 0
         self.rng = rng
 

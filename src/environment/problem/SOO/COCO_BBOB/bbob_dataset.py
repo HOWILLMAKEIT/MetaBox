@@ -1,5 +1,5 @@
 from .bbob_numpy import *
-# from .bbob_torch import *
+from .bbob_torch import *
 from torch.utils.data import Dataset
 
 class BBOB_Dataset(Dataset):
@@ -34,7 +34,7 @@ class BBOB_Dataset(Dataset):
             raise ValueError('Please set difficulty or user_train_list and user_test_list.')
 
         dim = int(suit[-3:-1])
-        suit = suit[:-4]
+        suit = suit[:4]
         if suit == 'bbob':
             func_id = [i for i in range(1, 25)]     # [1, 24]
             small_set_func_id = [1, 5, 6, 10, 15, 20]
@@ -69,6 +69,9 @@ class BBOB_Dataset(Dataset):
             if version == 'numpy':
                 instance = eval(f'F{id}')(dim=dim, shift=shift, rotate=H, bias=bias, lb=lb, ub=ub)
             else:
+                shift = torch.Tensor(shift)
+                H = torch.Tensor(H)
+                bias = torch.Tensor([bias])
                 instance = eval(f'F{id}_torch')(dim=dim, shift=shift, rotate=H, bias=bias, lb=lb, ub=ub)
 
             if user_test_list is None and user_test_list is None and difficulty is not None:

@@ -246,7 +246,7 @@ class RLEMMO(PPO_Agent):
         
         state = env.reset()
         try:
-            state = torch.FloatTensor(state).to(self.device)
+            state = torch.Tensor(state).to(self.device)
         except:
             pass
         
@@ -281,7 +281,7 @@ class RLEMMO(PPO_Agent):
 
                 # state transient
                 state, rewards, is_end, info = env.step(action.cpu().numpy().squeeze())
-                memory.rewards.append(torch.FloatTensor(rewards).to(self.device))
+                memory.rewards.append(torch.Tensor(rewards).to(self.device))
                 # print('step:{},max_reward:{}'.format(t,torch.max(rewards)))
                 _R += rewards
                 # store info
@@ -290,7 +290,7 @@ class RLEMMO(PPO_Agent):
                 t = t + 1
 
                 try:
-                    state = torch.FloatTensor(state).to(self.device)
+                    state = torch.Tensor(state).to(self.device)
                 except:
                     pass
             
@@ -445,7 +445,7 @@ class RLEMMO(PPO_Agent):
         env.seed(seeds)
         state = env.reset()
         try:
-            state = torch.FloatTensor(state).to(self.device)
+            state = torch.Tensor(state).to(self.device)
         except:
             pass
 
@@ -459,10 +459,10 @@ class RLEMMO(PPO_Agent):
             # state transient
             state, rewards, is_end, info = env.step(action.cpu().numpy().squeeze())
             # print('step:{},max_reward:{}'.format(t,torch.max(rewards)))
-            R += torch.FloatTensor(rewards).squeeze()
+            R += torch.Tensor(rewards).squeeze()
             # store info
             try:
-                state = torch.FloatTensor(state).to(self.device)
+                state = torch.Tensor(state).to(self.device)
             except:
                 pass
 
@@ -496,7 +496,7 @@ class RLEMMO(PPO_Agent):
             R = 0
             while not is_done:
                 try:
-                    state = torch.FloatTensor(state).unsqueeze(0).to(self.device)
+                    state = torch.Tensor(state).unsqueeze(0).to(self.device)
                 except:
                     state = [state]
                 action = self.actor(state, sampling = False)[0]

@@ -89,7 +89,7 @@ class RLPSO(REINFORCE_Agent):
         # action in (0,1) the ratio to learn from pbest & gbest
         state = env.reset()
         try:
-            state = torch.FloatTensor(state).to(self.device)
+            state = torch.Tensor(state).to(self.device)
         except:
             pass
         
@@ -104,10 +104,10 @@ class RLPSO(REINFORCE_Agent):
             log_prob = log_prob.reshape(len(env))
             
             next_state, reward, is_done,_ = env.step(action)
-            reward = torch.FloatTensor(reward).to(self.device)
+            reward = torch.Tensor(reward).to(self.device)
             _R += reward
             _reward.append(reward)
-            state = torch.FloatTensor(next_state).to(self.device)
+            state = torch.Tensor(next_state).to(self.device)
             policy_gradient = -log_prob*reward
             loss = policy_gradient.mean()
             self.optimizer.zero_grad()
@@ -154,7 +154,7 @@ class RLPSO(REINFORCE_Agent):
         env.seed(seeds)
         state = env.reset()
         try:
-            state = torch.FloatTensor(state).to(self.device)
+            state = torch.Tensor(state).to(self.device)
         except:
             pass
         
@@ -168,10 +168,10 @@ class RLPSO(REINFORCE_Agent):
             # state transient
             state, rewards, is_end, info = env.step(action)
             # print('step:{},max_reward:{}'.format(t,torch.max(rewards)))
-            R += torch.FloatTensor(rewards).squeeze()
+            R += torch.Tensor(rewards).squeeze()
             # store info
             try:
-                state = torch.FloatTensor(state).to(self.device)
+                state = torch.Tensor(state).to(self.device)
             except:
                 pass
         _Rs = R.detach().numpy().tolist()

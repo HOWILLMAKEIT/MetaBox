@@ -115,7 +115,7 @@ class _Sphere_torch(BBOB_Torch_Problem):
 
 def sr_func(x, Os, Mr):   #shift and rotate
     y = x[:, :Os.shape[-1]] - Os
-    return torch.matmul(Mr, y.t()).t()
+    return torch.matmul(Mr, y.T).T
 
 def rotate_gen(dim):  # Generate a rotate matrix
     random_state = np.random
@@ -395,7 +395,7 @@ class _Rosenbrock_torch(BBOB_Torch_Problem):
                          dim=-1) + self.bias + self.boundaryHandling(x)
 
 
-class F8(_Rosenbrock_torch):
+class F8_torch(_Rosenbrock_torch):
     def boundaryHandling(self, x):
         return 0.
 
@@ -739,7 +739,7 @@ class _Composite_Grie_rosen_torch(BBOB_Torch_Problem):
                     self.dim - 1.) + self.bias + self.boundaryHandling(x)
 
 
-class F19(_Composite_Grie_rosen_torch):
+class F19_torch(_Composite_Grie_rosen_torch):
     factor = 10.
 
     def boundaryHandling(self, x):

@@ -17,6 +17,7 @@ class UAV_Dataset(Dataset):
         for item in self.data:
             self.maxdim = max(self.maxdim, item.dim)
 
+
     @staticmethod
     def get_datasets(version = 'numpy',
                      train_batch_size = 1,
@@ -89,7 +90,7 @@ class UAV_Dataset(Dataset):
             raise ValueError(f'difficulty must be either easy or difficult or all.')
 
         if mode == "standard":
-            pkl_file = './datafiles/Model56.pkl'
+            pkl_file = 'environment/problem/SOO/UAV/datafile/Model56.pkl'
             with open(pkl_file, 'rb') as f:
                 model_data = pickle.load(f)
             for id in range(56):
@@ -136,7 +137,6 @@ class UAV_Dataset(Dataset):
                UAV_Dataset(test_set, test_batch_size)
 
     def __getitem__(self, item):
-        
         ptr = self.ptr[item]
         index = self.index[ptr: min(ptr + self.batch_size, self.N)]
         res = []

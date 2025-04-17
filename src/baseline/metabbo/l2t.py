@@ -159,7 +159,7 @@ class L2T(PPO_Agent):
         state = env.reset()
 
         try:
-            state = torch.FloatTensor(state).to(self.device)
+            state = torch.Tensor(state).to(self.device)
         except:
             pass
         
@@ -192,7 +192,7 @@ class L2T(PPO_Agent):
 
                 # state transient
                 state, rewards, is_end, info = env.step(action)
-                memory.rewards.append(torch.FloatTensor(rewards).to(self.device))
+                memory.rewards.append(torch.Tensor(rewards).to(self.device))
                 # print('step:{},max_reward:{}'.format(t,torch.max(rewards)))
                 _R += rewards
                 # store info
@@ -201,7 +201,7 @@ class L2T(PPO_Agent):
                 t = t + 1
 
                 try:
-                    state = torch.FloatTensor(state).to(self.device)
+                    state = torch.Tensor(state).to(self.device)
                 except:
                     pass
                 
@@ -346,7 +346,7 @@ class L2T(PPO_Agent):
             R = 0
             while not is_done:
                 try:
-                    state = torch.FloatTensor(state).to(self.device)
+                    state = torch.Tensor(state).to(self.device)
                 except:
                     state = [state]
                 action = self.actor(state)[0]
@@ -387,7 +387,7 @@ class L2T(PPO_Agent):
         env.seed(seeds)
         state = env.reset()
         try:
-            state = torch.FloatTensor(state).to(self.device)
+            state = torch.Tensor(state).to(self.device)
         except:
             pass
         
@@ -400,10 +400,10 @@ class L2T(PPO_Agent):
             # state transient
             state, rewards, is_end, info = env.step(action)
             # print('step:{},max_reward:{}'.format(t,torch.max(rewards)))
-            _R += torch.FloatTensor(rewards)
+            _R += torch.Tensor(rewards)
             # store info
             try:
-                state = torch.FloatTensor(state).to(self.device)
+                state = torch.Tensor(state).to(self.device)
             except:
                 pass
 
