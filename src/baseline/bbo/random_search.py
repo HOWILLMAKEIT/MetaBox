@@ -8,7 +8,6 @@ class Random_search(Basic_Optimizer):
         self.__fes=0
         self.log_index=None
         self.cost=None
-        self.__dim=config.dim
         self.__max_fes=config.maxFEs
         self.__NP=100
         self.__n_logpoint = config.n_logpoint
