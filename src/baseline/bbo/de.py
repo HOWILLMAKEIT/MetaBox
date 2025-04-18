@@ -80,13 +80,14 @@ class DE(Basic_Optimizer):
                 if problem.optimum is None:
                     done = fes >= self.__config.maxFEs
                 else:
-                    done = fes >= self.__config.maxFEs or hof[0].fitness.values[0] <= 1e-8
+                    done = fes >= self.__config.maxFEs
 
                 if done:
                     if len(cost) >= self.__config.n_logpoint + 1:
                         cost[-1] = hof[0].fitness.values[0]
                     else:
-                        cost.append(hof[0].fitness.values[0])
+                        while len(cost) < self.__config.n_logpoint + 1:
+                            cost.append(hof[0].fitness.values[0])
                     break
             if self.full_meta_data:
                 gen_meta_cost = []
