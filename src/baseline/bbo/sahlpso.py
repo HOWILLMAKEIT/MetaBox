@@ -56,7 +56,7 @@ class SAHLPSO(Basic_Optimizer):
         ns_ls = np.zeros(H_ls)
         remain_index = np.array(range(NP))
         selected_indiv_index = self.rng.permutation(remain_index)[:int(self.Lg * NP)]
-        while fes < self.maxFEs and NP >= 4:
+        while fes < self.maxFEs :
             
             for i in remain_index:
                 cr, ls = 0, 0 # start generate exemplar
@@ -172,9 +172,11 @@ class SAHLPSO(Basic_Optimizer):
 
             # population size reduction
             NP_ = round((4 - self.NP) * fes / self.maxFEs + self.NP)
+            NP_ = max(NP_, 5) 
             if NP_ < NP:
                 remain_index = np.argsort(pBest_cost)[:NP_]
                 NP = NP_
+
             G += 1
 
         if len(cost) >= self.config.n_logpoint + 1:
