@@ -23,7 +23,11 @@ class DE(Basic_Optimizer):
 
 
     def run_episode(self, problem):
-        
+        self.rng_gpu = None
+        self.rng_cpu = None
+        self.rng = None
+        np.random.seed(self.rng_seed)
+
         self.__creator.create("Fitnessmin", base.Fitness, weights=(-1.0,))
         self.__creator.create("Individual", list, fitness=creator.Fitnessmin)
 
