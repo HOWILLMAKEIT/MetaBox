@@ -175,7 +175,7 @@ class LES_Optimizer(Learnable_Optimizer):
             if problem.optimum is None:
                 is_end = (self.fes >= self.max_fes)
             else:
-                is_end = (self.fes >= self.max_fes or gbest <= 1e-8)
+                is_end = self.fes >= self.max_fes or gbest <= 1e-8
             step += 1
             if skip_step is not None:
                 is_end = (step >= skip_step)
@@ -188,7 +188,8 @@ class LES_Optimizer(Learnable_Optimizer):
                 if len(self.cost) >= self.__config.n_logpoint + 1:
                     self.cost[-1] = gbest
                 else:
-                    self.cost.append(gbest)
+                    while len(self.cost) < self.__config.n_logpoint + 1:
+                        self.cost.append(gbest)
         
         info = {}
         return self.evolution_info['gbest'],(init_y - gbest) / init_y,is_end,info
