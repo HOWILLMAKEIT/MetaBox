@@ -309,7 +309,8 @@ class GLEET_Optimizer(Learnable_Optimizer):
             if len(self.cost) >= self.__config.n_logpoint + 1:
                 self.cost[-1] = self.particles['gbest_val']
             else:
-                self.cost.append(self.particles['gbest_val'])
+                while len(cost) < self.__config.n_logpoint + 1:
+                    self.cost.append(self.particles['gbest_val'])
 
         info = {}
         return next_state, reward, is_end, info
