@@ -46,7 +46,7 @@ class L2L_Optimizer(Learnable_Optimizer):
 
 
         is_done=False
-        if problem.optimum is not None and y<=1e-8:
+        if problem.optimum is not None:
             is_done=True
         if self.__fes>=100:
             is_done=True
