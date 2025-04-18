@@ -123,24 +123,6 @@ class SAHLPSO(Basic_Optimizer):
                     log_index += 1
                     cost.append(gBest_cost)
 
-                if problem.optimum is None:
-                    done = fes >= self.maxFEs
-                else:
-                    done = fes >= self.maxFEs or gBest_cost <= 1e-8
-
-                if done:
-                    if len(cost) >= self.config.n_logpoint + 1:
-                        cost[-1] = gBest_cost
-                    else:
-                        cost.append(gBest_cost)
-                    results = {'cost': cost, 'fes': fes}
-
-                    if self.full_meta_data:
-                        metadata = {'X':self.meta_X, 'Cost':self.meta_Cost}
-                        results['metadata'] = metadata
-                    # 与agent一致，去除return，加上metadata
-                    return results
-                
             if self.full_meta_data:
                 self.meta_Cost.append(f_X)
                 self.meta_X.append(X)    
@@ -182,7 +164,8 @@ class SAHLPSO(Basic_Optimizer):
         if len(cost) >= self.config.n_logpoint + 1:
             cost[-1] = gBest_cost
         else:
-            cost.append(gBest_cost)
+            while len(cost) < self.config.n_logpoint + 1:
+                cost.append(gBest_cost)
         results = {'cost': cost, 'fes': fes}
 
         if self.full_meta_data:

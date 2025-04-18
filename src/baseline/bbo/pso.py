@@ -15,19 +15,20 @@ class PSO(Basic_Optimizer):
         self.__config = config
         self.__toolbox = base.Toolbox()
         self.__creator = creator
-        self.__creator.create("Fitnessmin", base.Fitness, weights=(-1.0,))
-        self.__creator.create("Particle", np.ndarray, fitness=creator.Fitnessmin, speed=list, smin=None, smax=None, best=None)
         self.log_interval = config.log_interval
         self.full_meta_data = config.full_meta_data
         
     def __str__(self):
         return "PSO"
     def run_episode(self, problem):
+        self.__creator.create("Fitnessmin", base.Fitness, weights=(-1.0,))
+        self.__creator.create("Particle", np.ndarray, fitness=creator.Fitnessmin, speed=list, smin=None, smax=None, best=None)
+
         if self.full_meta_data:
             self.meta_Cost = []
             self.meta_X = []
         def generate(size, pmin, pmax, smin, smax):
-            part = creator.Particle(np.random.uniform(pmin, pmax, size))
+            part = self.__creator.Particle(np.random.uniform(pmin, pmax, size))
             part.speed = np.random.uniform(smin, smax, size)
             part.smin = smin
             part.smax = smax
@@ -80,10 +81,10 @@ class PSO(Basic_Optimizer):
         pop = self.__toolbox.population(n=self.__config.population_size)
         for part in pop:
             part.fitness.values = self.__toolbox.evaluate(part)
-            part.best = creator.Particle(part)
+            part.best = self.__creator.Particle(part)
             part.best.fitness.values = part.fitness.values
             if best is None or part.fitness.values[0] < best.fitness.values[0]:
-                best = creator.Particle(part)
+                best = self.__creator.Particle(part)
                 best.fitness.values = part.fitness.values
         
         if self.full_meta_data:

@@ -89,7 +89,6 @@ class MFEA(Basic_Optimizer):
     def __str__(self):
         return "MFEA"
     
-    
     def run_episode(self, tasks):
         rmp = 0.3
         population_cnt = 50

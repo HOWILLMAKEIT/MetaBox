@@ -11,6 +11,7 @@ class CMAES(Basic_Optimizer):
     def __init__(self, config):
         super().__init__(config)
         config.NP = 50
+
         self.__config = config
         self.__toolbox = base.Toolbox()
         self.__creator = creator
@@ -27,6 +28,7 @@ class CMAES(Basic_Optimizer):
         if self.full_meta_data:
             self.meta_Cost = []
             self.meta_X = []
+            
         def problem_eval(x):
             if problem.optimum is None:
                 fitness = problem.eval(x)
