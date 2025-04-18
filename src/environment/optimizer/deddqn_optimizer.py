@@ -229,7 +229,7 @@ class DEDDQN_Optimizer(Learnable_Optimizer):
             if len(self.cost) >= self.__config.n_logpoint + 1:
                 self.cost[-1] = self.__c_gbest
             else:
-                while len(cost) < self.__config.n_logpoint + 1:
+                while len(self.cost) < self.__config.n_logpoint + 1:
                     self.cost.append(self.__c_gbest)
 
         info = {}
