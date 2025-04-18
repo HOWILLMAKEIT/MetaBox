@@ -189,6 +189,6 @@ class GLPSO(Basic_Optimizer):
             if len(self.cost) >= self.config.n_logpoint + 1:
                 self.cost[-1] = self.__particles['gbest_val']
             else:
-                while len(cost) < self.__config.n_logpoint + 1:
+                while len(self.cost) < self.__config.n_logpoint + 1:
                     self.cost.append(self.__particles['gbest_val'])
         return is_end, {'cost': self.cost, 'fes': self.__fes}
