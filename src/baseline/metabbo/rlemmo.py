@@ -496,7 +496,7 @@ class RLEMMO(PPO_Agent):
             R = 0
             while not is_done:
                 try:
-                    state = torch.Tensor(state).unsqueeze(0).to(self.device)
+                    state = torch.Tensor(state).double().unsqueeze(0).to(self.device)
                 except:
                     state = [state]
                 action = self.actor(state, sampling = False)[0]

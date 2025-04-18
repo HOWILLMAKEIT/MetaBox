@@ -1155,22 +1155,22 @@ class MMO_Logger(Basic_Logger):
     def __init__(self, config: argparse.Namespace) -> None:
         super().__init__(config)
 
-    def data_wrapper_prsr_rollout(data, ):
+    def data_wrapper_prsr_rollout(self, data, ):
         res = []
         for key in data.keys():
             res.append(np.array(data[key][:, -1, 3]))
         return np.array(res)
 
-    def data_wrapper_prsr_hist(data,):
+    def data_wrapper_prsr_hist(self,data,):
         return np.array(data)[:, :, 3]
 
-    def data_wrapper_cost_rollout(data, ):
+    def data_wrapper_cost_rollout(self,data, ):
         res = []
         for key in data.keys():
             res.append(np.array(data[key][:, -1]))
         return np.array(res)
 
-    def data_wrapper_return_rollout(data, ):
+    def data_wrapper_return_rollout(self,data, ):
         res = []
         for key in data.keys():
             res.append(np.array(data[key]))
@@ -1286,7 +1286,7 @@ class MMO_Logger(Basic_Logger):
                 if agent not in D.keys():
                     D[agent] = []
                 values = np.array(data[name][agent])[:, :, 3]
-                D[agent].append(values[:, -1] / values[:, 0])
+                D[agent].append(values[:, -1])
 
         for agent in D.keys():
             plt.figure()
@@ -1402,7 +1402,7 @@ class MMO_Logger(Basic_Logger):
         plt.xticks(rotation=45, fontsize=60)
         plt.yticks(fontsize=60)
         plt.ylim(0, np.max(np.array(Y) + np.array(S)) * 1.1)
-        plt.title(f'The {data_type} for {self.config.problem}-{self.config.difficulty}', fontsize=70)
+        plt.title(f'The {data_type} for {self.config.test_problem}-{self.config.test_difficulty}', fontsize=70)
         plt.ylabel(f'{data_type}', fontsize=60)
         plt.savefig(output_dir + f'{data_type}_rank_hist.{fig_type}', bbox_inches='tight')
 
@@ -1419,7 +1419,7 @@ class MMO_Logger(Basic_Logger):
 
         self.gen_overall_tab(results, log_dir + 'tables/')
         self.gen_algorithm_complexity_table(results, log_dir + 'tables/')
-        self.gen_agent_performance_table(results['cost'], log_dir + 'tables/')
+        self.gen_agent_performance_table(results, log_dir + 'tables/')
         self.gen_agent_performance_prsr_table(results['pr'],'pr', log_dir+'tables/') 
         self.gen_agent_performance_prsr_table(results['sr'], 'sr',log_dir + 'tables/')
         
@@ -1430,16 +1430,16 @@ class MMO_Logger(Basic_Logger):
         self.draw_concrete_performance_hist(results['cost'], log_dir+'pics/',pdf_fig=pdf_fig)
         self.draw_concrete_performance_prsr_hist(results['pr'], 'pr', log_dir+'pics/', pdf_fig = pdf_fig)
         self.draw_concrete_performance_prsr_hist(results['sr'], 'sr', log_dir+'pics/', pdf_fig = pdf_fig)
-        self.draw_boxplot(results['cost'], log_dir+'pics/', pdf_fig=pdf_fig)
+        self.draw_boxplot(results, log_dir+'pics/', pdf_fig=pdf_fig)
         self.draw_boxplot_prsr(results['pr'], 'pr', log_dir+'pics/', pdf_fig=pdf_fig)
         self.draw_boxplot_prsr(results['sr'], 'sr', log_dir+'pics/', pdf_fig=pdf_fig)
         self.draw_overall_boxplot(results['cost'], log_dir+'pics/', pdf_fig=pdf_fig)
         self.draw_overall_boxplot_prsr(results['pr'], 'pr', log_dir+'pics/',pdf_fig=pdf_fig)
         self.draw_overall_boxplot_prsr(results['sr'], 'sr', log_dir+'pics/',pdf_fig=pdf_fig)
 
-        self.draw_test_data(results['cost'], 'cost', log_dir + 'pics/', logged=True, categorized=True, pdf_fig=pdf_fig, data_wrapper=np.array)
-        self.draw_test_data(results['pr'],'pr', log_dir + 'pics/', logged=False, categorized=True, pdf_fig=pdf_fig, data_wrapper=self.data_wrapper_prsr_hist)
-        self.draw_test_data(results['sr'],'sr', log_dir + 'pics/', logged=False, categorized=True, pdf_fig=pdf_fig, data_wrapper=self.data_wrapper_prsr_hist)
+        self.draw_test_data(results['cost'], 'cost', log_dir + 'pics/', logged=True, categorized=False, pdf_fig=pdf_fig, data_wrapper=np.array)
+        self.draw_test_data(results['pr'],'pr', log_dir + 'pics/', logged=False, categorized=False, pdf_fig=pdf_fig, data_wrapper=self.data_wrapper_prsr_hist)
+        self.draw_test_data(results['sr'],'sr', log_dir + 'pics/', logged=False, categorized=False, pdf_fig=pdf_fig, data_wrapper=self.data_wrapper_prsr_hist)
         self.draw_rank_hist_prsr(results['pr'], 'pr',log_dir + 'pics/', pdf_fig=pdf_fig) 
         self.draw_rank_hist_prsr(results['sr'], 'sr', log_dir + 'pics/',pdf_fig=pdf_fig)
 
