@@ -56,7 +56,7 @@ class HPOB_Dataset(Dataset):
             
         meta_train_data,meta_vali_data,meta_test_data,bo_initializations,surrogates_stats=get_data(root_dir=root_dir, mode="v3", surrogates_dir=surrogates_dir)
         
-        if user_train_list is None and user_test_list is None:
+        if (user_train_list is None and user_test_list is None) or difficulty == 'all':
             
             def process_data(data, name, n):
                 problems = []
@@ -74,6 +74,8 @@ class HPOB_Dataset(Dataset):
 
             train_set = process_data(meta_train_data, 'meta_train_data', 758)
             test_set = process_data(meta_vali_data, 'meta_vali_data', 91) + process_data(meta_test_data, 'meta_test_data', 86)
+            if difficulty == 'all':
+                train_set = test_set = train_set + test_set
             
         else:
             train_set = []
@@ -111,8 +113,6 @@ class HPOB_Dataset(Dataset):
             process_data(meta_vali_data, 'meta_vali_data', 91)
             process_data(meta_test_data, 'meta_test_data', 86)
         
-        if difficulty == 'all':
-            train_set = test_set = train_set + test_set
             
         return HPOB_Dataset(train_set, train_batch_size), HPOB_Dataset(test_set, test_batch_size)
 
