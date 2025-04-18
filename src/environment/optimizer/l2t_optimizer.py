@@ -316,7 +316,8 @@ class L2T_Optimizer(Learnable_Optimizer):
             if len(self.cost) >= self.__config.n_logpoint + 1:
                 self.cost[-1] = self.gbest
             else:
-                self.cost.append(self.gbest)
+                while len(self.cost) < self.__config.n_logpoint + 1:
+                    self.cost.append(self.gbest)
 
         info = {}
         return next_state, self.total_reward, is_end, info
