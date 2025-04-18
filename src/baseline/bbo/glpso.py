@@ -184,10 +184,11 @@ class GLPSO(Basic_Optimizer):
         if problem.optimum is None:
             is_end = self.__fes >= self.config.maxFEs
         else:
-            is_end = self.__fes >= self.config.maxFEs or self.__particles['gbest_val'] <= 1e-8
+            is_end = self.__fes >= self.config.maxFEs
         if is_end:
             if len(self.cost) >= self.config.n_logpoint + 1:
                 self.cost[-1] = self.__particles['gbest_val']
             else:
-                self.cost.append(self.__particles['gbest_val'])
+                while len(cost) < self.__config.n_logpoint + 1:
+                    self.cost.append(self.__particles['gbest_val'])
         return is_end, {'cost': self.cost, 'fes': self.__fes}
