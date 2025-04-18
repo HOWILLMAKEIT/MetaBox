@@ -83,6 +83,8 @@ class Trainer(object):
     def __init__(self, config):
         self.config = config
 
+        if self.config.train_problem in ['bbob-surrogate-10D','bbob-surrogate-5D','bbob-surrogate-2D']:
+            self.config.is_train = True
         self.train_set, self.test_set = construct_problem_set(config)
         self.config.dim = max(self.train_set.maxdim, self.test_set.maxdim)
 
@@ -92,8 +94,7 @@ class Trainer(object):
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
 
-        if self.config.train_problem == 'bbob-surrogate':
-            self.config.is_train = True
+
             
         if self.config.resume_dir is None:
             self.agent = eval(self.config.train_agent)(self.config)

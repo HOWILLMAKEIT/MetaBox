@@ -92,7 +92,7 @@ class SurrRLDE_Optimizer(Learnable_Optimizer):
 
 	def init_population(self, problem):
 		self.rng_torch = self.rng_cpu
-		if self.device.type == "cuda":
+		if self.device == "cuda":
 			self.rng_torch = self.rng_gpu
 
 		self.population = (torch.rand(self.pop_size, self.dim, generator = self.rng_torch, device = self.device)
