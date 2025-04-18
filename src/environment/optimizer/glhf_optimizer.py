@@ -81,7 +81,7 @@ class GLHF_Optimizer(Learnable_Optimizer):
         # self.population = new_population
         # self.c_cost = new_cost
 
-        new_gbest_val = torch.min(new_cost).detach().cpu()
+        new_gbest_val = torch.min(self.c_cost).detach().cpu()
 
         reward = (pre_gbest - new_gbest_val) / self.init_gbest
 
@@ -108,7 +108,7 @@ class GLHF_Optimizer(Learnable_Optimizer):
             if len(self.cost) >= self.config.n_logpoint + 1:
                 self.cost[-1] = self.gbest_val
             else:
-                while len(self.cost) < self.__config.n_logpoint + 1:
+                while len(self.cost) < self.config.n_logpoint + 1:
                     self.cost.append(self.gbest_val)
 
         info = {}

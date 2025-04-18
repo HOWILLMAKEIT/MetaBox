@@ -5,7 +5,7 @@ import torch
 import time
 
 class BBOB_Torch_Problem(Basic_Problem_Torch):
-    def __init__(self, dim, shift, rotate, bias, lb, ub):
+    def __init__(self, dim, shift, rotate, bias, lb, ub, device):
         self.dim = dim
         self.shift = shift
         self.rotate = rotate
@@ -14,39 +14,20 @@ class BBOB_Torch_Problem(Basic_Problem_Torch):
         self.ub = ub
         self.FES = 0
         self.opt = self.shift
+        self.device = device
         # self.optimum = self.eval(self.get_optimal())
         self.optimum = self.func(self.get_optimal().reshape(1, -1))[0]
 
+        self.move_tensors_to_device()
+
+    def move_tensors_to_device(self):
+        for name, value in self.__dict__.items():
+            if isinstance(value, torch.Tensor):
+                setattr(self, name, value.to(self.device))
+
+
     def get_optimal(self):
         return self.opt
-
-    def eval(self, x):
-        """
-        A general version of func() with adaptation to evaluate both individual and population.
-        """
-        start=time.perf_counter()
-        if not isinstance(x, torch.Tensor):
-            x = torch.tensor(x)
-        if x.dtype != torch.float64:
-            x = x.type(torch.float64)
-        if x.ndim == 1:  # x is a single individual
-            y=self.func(x.reshape(1, -1))[0]
-            end=time.perf_counter()
-            self.T1+=(end-start)*1000
-            return y
-        elif x.ndim == 2:  # x is a whole population
-            y=self.func(x)
-            end=time.perf_counter()
-            self.T1+=(end-start)*1000
-            return y
-        else:
-            y=self.func(x.reshape(-1, x.shape[-1]))
-            end=time.perf_counter()
-            self.T1+=(end-start)*1000
-            return y
-
-    def func(self, x):
-        raise NotImplementedError
 
 class NoisyProblem_torch:
     def noisy(self, ftrue):
@@ -93,7 +74,7 @@ class CauchyNoisyProblem_torch(NoisyProblem_torch):
 
     def noisy(self, ftrue):
         if not isinstance(ftrue, torch.Tensor):
-            ftrue = torch.tensor(ftrue, dtype=torch.float64)
+            ftrue = torch.tensor(ftrue, dtype=torch.float64).to(self.device)
         bias = self.optimum
         ftrue_unbiased = ftrue - bias
         fnoisy_unbiased = ftrue_unbiased + self.cauchy_alpha * torch.maximum(torch.tensor(0., dtype=torch.float64), 1e3 + (torch.rand(ftrue_unbiased.shape, dtype=torch.float64) < self.cauchy_p) * torch.randn(ftrue_unbiased.shape, dtype=torch.float64) / (torch.abs(torch.randn(ftrue_unbiased.shape, dtype=torch.float64)) + 1e-199))
@@ -104,8 +85,8 @@ class _Sphere_torch(BBOB_Torch_Problem):
     """
     Abstract Sphere
     """
-    def __init__(self, dim, shift, rotate, bias, lb, ub):
-        super().__init__(dim, shift, rotate, bias, lb, ub)
+    def __init__(self, dim, shift, rotate, bias, lb, ub, device):
+        super().__init__(dim, shift, rotate, bias, lb, ub, device)
 
     def func(self, x):
         self.FES += x.shape[0]
@@ -117,7 +98,7 @@ def sr_func(x, Os, Mr):   #shift and rotate
     y = x[:, :Os.shape[-1]] - Os
     return torch.matmul(Mr, y.T).T
 
-# def rotate_gen(dim):  # Generate a rotate matrix
+# def rotate_gen_torch(dim):  # Generate a rotate matrix
 #     random_state = np.random
 #     H = np.eye(dim)
 #     D = np.ones((dim,))
@@ -135,6 +116,25 @@ def sr_func(x, Os, Mr):   #shift and rotate
 #     # Equivalent to np.dot(np.diag(D), H) but faster, apparently
 #     H = (D * H.T).T
 #     return torch.tensor(H, dtype=torch.float64)
+
+def rotate_gen_torch(dim):
+    H = torch.eye(dim, dtype=torch.float64)
+    D = torch.ones(dim, dtype=torch.float64)
+    for n in range(1, dim):
+        mat = torch.eye(dim, dtype=torch.float64)
+        x = torch.randn(dim - n + 1, dtype=torch.float64)
+        D[n - 1] = torch.sign(x[0])
+        x[0] -= D[n - 1] * torch.sqrt(torch.sum(x * x))
+        # Householder transformation
+        xx = torch.outer(x, x)
+        Hx = torch.eye(dim - n + 1, dtype=torch.float64) - 2. * xx / torch.sum(x * x)
+        mat[n - 1:, n - 1:] = Hx
+        H = torch.matmul(H, mat)
+    # Fix the last sign such that the determinant is 1
+    D[-1] = (-1) ** (1 - (dim % 2)) * torch.prod(D)
+    H = (D * H.T).T
+    return H
+
 
 def osc_transform(x):
     """
@@ -235,8 +235,8 @@ class F2_torch(BBOB_Torch_Problem):
     Ellipsoidal
     """
 
-    def __init__(self, dim, shift, rotate, bias, lb, ub):
-        super().__init__(dim, shift, rotate, bias, lb, ub)
+    def __init__(self, dim, shift, rotate, bias, lb, ub, device):
+        super().__init__(dim, shift, rotate, bias, lb, ub, device)
 
     def __str__(self):
         return 'Ellipsoidal'
@@ -254,9 +254,9 @@ class F3_torch(BBOB_Torch_Problem):
     """
     Rastrigin
     """
-    def __init__(self, dim, shift, rotate, bias, lb, ub):
+    def __init__(self, dim, shift, rotate, bias, lb, ub, device):
         self.scales = (10. ** 0.5) ** torch.linspace(0, 1, dim, dtype=torch.float64)
-        super().__init__(dim, shift, rotate, bias, lb, ub)
+        super().__init__(dim, shift, rotate, bias, lb, ub, device)
 
     def __str__(self):
         return 'Rastrigin'
@@ -271,10 +271,10 @@ class F4_torch(BBOB_Torch_Problem):
     """
     Bueche_Rastrigin
     """
-    def __init__(self, dim, shift, rotate, bias, lb, ub):
+    def __init__(self, dim, shift, rotate, bias, lb, ub, device):
         shift[::2] = torch.abs(shift[::2])
         self.scales = ((10. ** 0.5) ** torch.linspace(0, 1, dim, dtype=torch.float64))
-        BBOB_Torch_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        BBOB_Torch_Problem.__init__(self, dim, shift, rotate, bias, lb, ub, device)
 
     def __str__(self):
         return 'Buche_Rastrigin'
@@ -293,11 +293,11 @@ class F5_torch(BBOB_Torch_Problem):
     """
     Linear_Slope
     """
-    def __init__(self, dim, shift, rotate, bias, lb, ub):
+    def __init__(self, dim, shift, rotate, bias, lb, ub, device):
         shift = np.sign(shift.numpy())
         shift[shift == 0.] = np.random.choice([-1., 1.], size=(shift == 0.).sum())
         shift = torch.tensor(shift, dtype=torch.float64) * ub
-        BBOB_Torch_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        BBOB_Torch_Problem.__init__(self, dim, shift, rotate, bias, lb, ub, device)
 
     def __str__(self):
         return 'Linear_Slope'
@@ -315,10 +315,10 @@ class F6_torch(BBOB_Torch_Problem):
     """
     Attractive_Sector
     """
-    def __init__(self, dim, shift, rotate, bias, lb, ub):
+    def __init__(self, dim, shift, rotate, bias, lb, ub, device):
         scales = (10. ** 0.5) ** torch.linspace(0, 1, dim, dtype=torch.float64)
-        rotate = torch.matmul(torch.matmul(rotate_gen(dim), torch.diag(scales)), rotate)
-        BBOB_Torch_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        rotate = torch.matmul(torch.matmul(rotate_gen_torch(dim), torch.diag(scales)), rotate)
+        BBOB_Torch_Problem.__init__(self, dim, shift, rotate, bias, lb, ub, device)
 
     def __str__(self):
         return 'Attractive_Sector'
@@ -335,11 +335,11 @@ class _Step_Ellipsoidal_torch(BBOB_Torch_Problem):
     """
     Abstract Step_Ellipsoidal
     """
-    def __init__(self, dim, shift, rotate, bias, lb, ub):
+    def __init__(self, dim, shift, rotate, bias, lb, ub, device):
         scales = (10. ** 0.5) ** torch.linspace(0, 1, dim, dtype=torch.float64)
         rotate = torch.matmul(torch.diag(scales), rotate)
-        self.Q_rotate = rotate_gen(dim)
-        BBOB_Torch_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        self.Q_rotate = rotate_gen_torch(dim)
+        BBOB_Torch_Problem.__init__(self, dim, shift, rotate, bias, lb, ub, device)
 
     def func(self, x):
         self.FES += x.shape[0]
@@ -383,10 +383,10 @@ class _Rosenbrock_torch(BBOB_Torch_Problem):
     """
     Abstract Rosenbrock_original
     """
-    def __init__(self, dim, shift, rotate, bias, lb, ub):
+    def __init__(self, dim, shift, rotate, bias, lb, ub, device):
         shift *= 0.75  # range_of_shift=0.8*0.75*ub=0.6*ub
         rotate = torch.eye(dim, dtype=torch.float64)
-        BBOB_Torch_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        BBOB_Torch_Problem.__init__(self, dim, shift, rotate, bias, lb, ub, device)
 
     def func(self, x):
         self.FES += x.shape[0]
@@ -447,11 +447,11 @@ class F9_torch(BBOB_Torch_Problem):
     """
     Rosenbrock_rotated
     """
-    def __init__(self, dim, shift, rotate, bias, lb, ub):
+    def __init__(self, dim, shift, rotate, bias, lb, ub, device):
         scale = max(1., dim ** 0.5 / 8.)
         self.linearTF = scale * rotate
         shift = torch.matmul(0.5 * torch.ones(dim, dtype=torch.float64), self.linearTF) / (scale ** 2)
-        BBOB_Torch_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        BBOB_Torch_Problem.__init__(self, dim, shift, rotate, bias, lb, ub, device)
 
     def __str__(self):
         return 'Rosenbrock_rotated'
@@ -468,8 +468,8 @@ class _Ellipsoidal_torch(BBOB_Torch_Problem):
     """
     condition = None
 
-    def __init__(self, dim, shift, rotate, bias, lb, ub):
-        BBOB_Torch_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+    def __init__(self, dim, shift, rotate, bias, lb, ub, device):
+        BBOB_Torch_Problem.__init__(self, dim, shift, rotate, bias, lb, ub, device)
 
     def func(self, x):
         self.FES += x.shape[0]
@@ -516,8 +516,8 @@ class F11_torch(BBOB_Torch_Problem):
     """
     Discus
     """
-    def __init__(self, dim, shift, rotate, bias, lb, ub):
-        BBOB_Torch_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+    def __init__(self, dim, shift, rotate, bias, lb, ub, device):
+        BBOB_Torch_Problem.__init__(self, dim, shift, rotate, bias, lb, ub, device)
 
     def __str__(self):
         return 'Discus'
@@ -535,8 +535,8 @@ class F12_torch(BBOB_Torch_Problem):
     """
     beta = 0.5
 
-    def __init__(self, dim, shift, rotate, bias, lb, ub):
-        BBOB_Torch_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+    def __init__(self, dim, shift, rotate, bias, lb, ub, device):
+        BBOB_Torch_Problem.__init__(self, dim, shift, rotate, bias, lb, ub, device)
 
     def __str__(self):
         return 'Bent_Cigar'
@@ -553,10 +553,10 @@ class F13_torch(BBOB_Torch_Problem):
     """
     Sharp Ridge
     """
-    def __init__(self, dim, shift, rotate, bias, lb, ub):
+    def __init__(self, dim, shift, rotate, bias, lb, ub, device):
         scales = (10 ** 0.5) ** torch.linspace(0, 1, dim, dtype=torch.float64)
-        rotate = torch.matmul(torch.matmul(rotate_gen(dim), torch.diag(scales)), rotate)
-        BBOB_Torch_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        rotate = torch.matmul(torch.matmul(rotate_gen_torch(dim), torch.diag(scales)), rotate)
+        BBOB_Torch_Problem.__init__(self, dim, shift, rotate, bias, lb, ub, device)
 
     def __str__(self):
         return 'Sharp_Ridge'
@@ -571,8 +571,8 @@ class _Dif_powers_torch(BBOB_Torch_Problem):
     """
     Abstract Different Powers
     """
-    def __init__(self, dim, shift, rotate, bias, lb, ub):
-        BBOB_Torch_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+    def __init__(self, dim, shift, rotate, bias, lb, ub, device):
+        BBOB_Torch_Problem.__init__(self, dim, shift, rotate, bias, lb, ub, device)
 
     def func(self, x):
         self.FES += x.shape[0]
@@ -614,10 +614,10 @@ class F15_torch(BBOB_Torch_Problem):
     """
     Rastrigin_F15
     """
-    def __init__(self, dim, shift, rotate, bias, lb, ub):
+    def __init__(self, dim, shift, rotate, bias, lb, ub, device):
         scales = (10. ** 0.5) ** torch.linspace(0, 1, dim, dtype=torch.float64)
-        self.linearTF = torch.matmul(torch.matmul(rotate, torch.diag(scales)), rotate_gen(dim))
-        BBOB_Torch_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        self.linearTF = torch.matmul(torch.matmul(rotate, torch.diag(scales)), rotate_gen_torch(dim))
+        BBOB_Torch_Problem.__init__(self, dim, shift, rotate, bias, lb, ub, device)
 
     def __str__(self):
         return 'Rastrigin_F15'
@@ -634,13 +634,13 @@ class F16_torch(BBOB_Torch_Problem):
     """
     Weierstrass
     """
-    def __init__(self, dim, shift, rotate, bias, lb, ub):
+    def __init__(self, dim, shift, rotate, bias, lb, ub, device):
         scales = (0.01 ** 0.5) ** torch.linspace(0, 1, dim, dtype=torch.float64)
-        self.linearTF = torch.matmul(torch.matmul(rotate, torch.diag(scales)), rotate_gen(dim))
+        self.linearTF = torch.matmul(torch.matmul(rotate, torch.diag(scales)), rotate_gen_torch(dim))
         self.aK = 0.5 ** torch.arange(12, dtype=torch.float64)
         self.bK = 3.0 ** torch.arange(12, dtype=torch.float64)
         self.f0 = torch.sum(self.aK * torch.cos(math.pi * self.bK))
-        BBOB_Torch_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        BBOB_Torch_Problem.__init__(self, dim, shift, rotate, bias, lb, ub, device)
 
     def __str__(self):
         return 'Weierstrass'
@@ -661,10 +661,10 @@ class _Scaffer_torch(BBOB_Torch_Problem):
     """
     condition = None  # need to be defined in subclass
 
-    def __init__(self, dim, shift, rotate, bias, lb, ub):
+    def __init__(self, dim, shift, rotate, bias, lb, ub, device):
         scales = (self.condition ** 0.5) ** torch.linspace(0, 1, dim, dtype=torch.float64)
-        self.linearTF = torch.matmul(torch.diag(scales), rotate_gen(dim))
-        BBOB_Torch_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        self.linearTF = torch.matmul(torch.diag(scales), rotate_gen_torch(dim))
+        BBOB_Torch_Problem.__init__(self, dim, shift, rotate, bias, lb, ub, device)
 
     def func(self, x):
         self.FES += x.shape[0]
@@ -725,11 +725,11 @@ class _Composite_Grie_rosen_torch(BBOB_Torch_Problem):
     """
     factor = None
 
-    def __init__(self, dim, shift, rotate, bias, lb, ub):
+    def __init__(self, dim, shift, rotate, bias, lb, ub, device):
         scale = max(1., dim ** 0.5 / 8.)
-        self.linearTF = scale * rotate
+        self.linearTF = (scale * rotate)
         shift = torch.matmul(0.5 * torch.ones(dim, dtype=torch.float64) / (scale ** 2.), self.linearTF)
-        BBOB_Torch_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        BBOB_Torch_Problem.__init__(self, dim, shift, rotate, bias, lb, ub, device)
 
     def func(self, x):
         self.FES += x.shape[0]
@@ -776,9 +776,9 @@ class F20_torch(BBOB_Torch_Problem):
     """
     Schwefel
     """
-    def __init__(self, dim, shift, rotate, bias, lb, ub):
+    def __init__(self, dim, shift, rotate, bias, lb, ub, device):
         shift = 0.5 * 4.2096874633 * torch.tensor(np.random.choice([-1., 1.], size=dim), dtype=torch.float64)
-        BBOB_Torch_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        BBOB_Torch_Problem.__init__(self, dim, shift, rotate, bias, lb, ub, device)
 
     def __str__(self):
         return 'Schwefel'
@@ -801,7 +801,7 @@ class _Gallagher_torch(BBOB_Torch_Problem):
     """
     n_peaks = None
 
-    def __init__(self, dim, shift, rotate, bias, lb, ub):
+    def __init__(self, dim, shift, rotate, bias, lb, ub, device):
         # problem param config
         if self.n_peaks == 101:   # F21
             opt_shrink = 1.       # shrink of global & local optima
@@ -826,7 +826,7 @@ class _Gallagher_torch(BBOB_Torch_Problem):
         # generate the weight w[i]
         self.w = torch.cat([torch.tensor([10.], dtype=torch.float64), torch.linspace(1.1, 9.1, self.n_peaks - 1, dtype=torch.float64)], dim=0)  # [n_peaks]
 
-        BBOB_Torch_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        BBOB_Torch_Problem.__init__(self, dim, shift, rotate, bias, lb, ub, device)
 
     def func(self, x):
         self.FES += x.shape[0]
@@ -883,10 +883,10 @@ class F23_torch(BBOB_Torch_Problem):
     """
     Katsuura
     """
-    def __init__(self, dim, shift, rotate, bias, lb, ub):
+    def __init__(self, dim, shift, rotate, bias, lb, ub, device):
         scales = (100. ** 0.5) ** torch.linspace(0, 1, dim, dtype=torch.float64)
-        rotate = torch.matmul(torch.matmul(rotate_gen(dim), torch.diag(scales)), rotate)
-        BBOB_Torch_Problem.__init__(self, dim, shift, rotate, bias, lb, ub)
+        rotate = torch.matmul(torch.matmul(rotate_gen_torch(dim), torch.diag(scales)), rotate)
+        BBOB_Torch_Problem.__init__(self, dim, shift, rotate, bias, lb, ub, device)
 
     def __str__(self):
         return 'Katsuura'
@@ -909,12 +909,12 @@ class F24_torch(BBOB_Torch_Problem):
     """
     Lunacek_bi_Rastrigin
     """
-    def __init__(self, dim, shift, rotate, bias, lb, ub):
+    def __init__(self, dim, shift, rotate, bias, lb, ub, device):
         self.mu0 = 2.5 / 5 * ub
         shift = torch.tensor(np.random.choice([-1., 1.], size=dim) * self.mu0 / 2, dtype=torch.float64)
         scales = (100 ** 0.5) ** torch.linspace(0, 1, dim, dtype=torch.float64)
-        rotate = torch.matmul(torch.matmul(rotate_gen(dim), torch.diag(scales)), rotate)
-        super().__init__(dim, shift, rotate, bias, lb, ub)
+        rotate = torch.matmul(torch.matmul(rotate_gen_torch(dim), torch.diag(scales)), rotate)
+        super().__init__(dim, shift, rotate, bias, lb, ub, device)
 
     def __str__(self):
         return 'Lunacek_bi_Rastrigin'

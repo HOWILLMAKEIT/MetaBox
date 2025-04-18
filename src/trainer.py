@@ -83,15 +83,15 @@ class Trainer(object):
     def __init__(self, config):
         self.config = config
 
+        self.train_set, self.test_set = construct_problem_set(config)
+        self.config.dim = max(self.train_set.maxdim, self.test_set.maxdim)
+
         torch.manual_seed(self.config.seed)
         torch.cuda.manual_seed_all(self.config.seed)
         np.random.seed(self.config.seed)
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
 
-        self.train_set, self.test_set = construct_problem_set(config)
-        self.config.dim = max(self.train_set.maxdim, self.test_set.maxdim)
-        
         if self.config.train_problem == 'bbob-surrogate':
             self.config.is_train = True
             

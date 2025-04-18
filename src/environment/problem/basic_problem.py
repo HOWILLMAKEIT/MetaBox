@@ -49,6 +49,7 @@ class Basic_Problem_Torch(Basic_Problem):
         """
         A general version of func() with adaptation to evaluate both individual and population.
         """
+        torch.set_default_device(x.device)
         start = time.perf_counter()
         if not isinstance(x, torch.Tensor):
             x = torch.tensor(x)
@@ -58,17 +59,16 @@ class Basic_Problem_Torch(Basic_Problem):
             y = self.func(x.reshape(1, -1))[0]
             end = time.perf_counter()
             self.T1 += (end - start) * 1000
-            return y
         elif x.ndim == 2:  # x is a whole population
             y = self.func(x)
             end = time.perf_counter()
             self.T1 += (end - start) * 1000
-            return y
         else:
             y = self.func(x.reshape(-1, x.shape[-1]))
             end = time.perf_counter()
             self.T1 += (end - start) * 1000
-            return y
+        torch.set_default_device("cpu")
+        return y
 
     def func(self, x):
         raise NotImplementedError
