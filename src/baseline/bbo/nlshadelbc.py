@@ -276,20 +276,21 @@ class NLSHADELBC(Basic_Optimizer):
             self.log_index += 1
             self.cost.append(self.gbest)
 
-        if problem.optimum is None:
-            return False
-        else:
-            return self.gbest <= 1e-8
+        # 取消早停
+        # if problem.optimum is None:
+        #     return False
+        # else:
+        #     return self.gbest <= 1e-8
 
     def run_episode(self, problem):
         if self.full_meta_data:
             self.meta_Cost = []
             self.meta_X = []
         self.__init_population(problem)
+        
         while self.__FEs < self.__MaxFEs:
-            is_done = self.__update(problem)
-            if is_done:
-                break
+            self.__update(problem)
+
         if len(self.cost) >= self.__n_logpoint + 1:
             self.cost[-1] = self.gbest
         else:
