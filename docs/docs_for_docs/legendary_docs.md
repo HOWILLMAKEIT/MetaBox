@@ -62,6 +62,15 @@ pip install myst-parser
 
 先写成 docstring 那种,还要再研究一下是什么规范
 
+ok 按照[autodoc2 官方文档](https://sphinx-autodoc2.readthedocs.io/en/stable/docstrings.html)中所写：
+
+> 在自动记录源代码时， 默认情况下，文档字符串将使用当前解析器呈现。（机翻）
+
+也就是说对于每种函数的 docstring，他都会将它解析成 markdown 格式，实测过后确实如此。
+对于使用 gpt 4o 的 copilot 来进行生成时，直接/doc 是无法生成 markdown 格式的，
+那最简单的方法就是 prompt engineering，也就是调整我们的提示词。
+我的方法是/doc 然后后面写上本文件夹下的 template.py 中的内容，实测下来确实按照要求写了，写的也很美观，供参考
+
 ## markdown 与 readthedocs 的一些使用问题
 
 感觉上 readthedocs 和 reST 语法更合得来（毕竟是人家的默认语言）
