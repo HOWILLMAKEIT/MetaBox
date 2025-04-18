@@ -235,6 +235,7 @@ class SurrRLDE_Optimizer(Learnable_Optimizer):
 			if len(self.cost) >= self.config.n_logpoint + 1:
 				self.cost[-1] = self.fit_history_best.clone().cpu().item()
 			else:
+			     while len(self.cost) < self.__config.n_logpoint + 1:
 				self.cost.append(self.fit_history_best.clone().cpu().item())
 
 		info = {}
