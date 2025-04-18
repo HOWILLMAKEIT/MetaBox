@@ -217,7 +217,7 @@ class DEDDQN_Optimizer(Learnable_Optimizer):
         if problem.optimum is None:
             is_done = (self.fes >= self.__maxFEs)
         else:
-            is_done = (self.fes >= self.__maxFEs or self.__c_gbest <= 1e-8)
+            is_done = self.fes >= self.__maxFEs
         # get next state
         next_state = self.__get_state(problem)
 
@@ -229,7 +229,8 @@ class DEDDQN_Optimizer(Learnable_Optimizer):
             if len(self.cost) >= self.__config.n_logpoint + 1:
                 self.cost[-1] = self.__c_gbest
             else:
-                self.cost.append(self.__c_gbest)
+                while len(cost) < self.__config.n_logpoint + 1:
+                    self.cost.append(self.__c_gbest)
 
         info = {}
         return next_state, reward, is_done, info
