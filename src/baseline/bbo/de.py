@@ -55,9 +55,7 @@ class DE(Basic_Optimizer):
 
         pop = self.__toolbox.population(n=self.__config.NP)
         fitnesses = self.__toolbox.map(self.__toolbox.evaluate, pop)
-        if self.full_meta_data:
-            self.meta_Cost.append(fitnesses)
-            self.meta_X.append(pop)
+
         self.__FEs = self.__config.NP
         for ind, fit in zip(pop, fitnesses):
             ind.fitness.values = fit
