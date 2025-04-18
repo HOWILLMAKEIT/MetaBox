@@ -209,7 +209,7 @@ class Tester(object):
         # if self.config.test_problem[-6:]=='-torch':
         #     self.config.test_problem=self.config.test_problem[:-6]
 
-        if config.test_problem =='bbob-surrogate':
+        if config.test_problem in ['bbob-surrogate-10D','bbob-surrogate-5D','bbob-surrogate-2D']:
             config.is_train = False
 
         self.train_set, self.test_set = construct_problem_set(self.config)
@@ -409,7 +409,7 @@ class Tester(object):
     def test_for_random_search(self):
         config = self.config
         # get entire problem set
-        if config.problem == 'bbob-surrogate':
+        if config.problem in ['bbob-surrogate-10D','bbob-surrogate-5D','bbob-surrogate-2D']:
             config.is_train = False
 
         train_set, test_set = construct_problem_set(config)
@@ -480,7 +480,7 @@ class Tester(object):
         print(f'start MGD_test: {config.run_time}')
         # get test set
         num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
-        if config.problem == 'bbob-surrogate':
+        if config.problem in ['bbob-surrogate-10D','bbob-surrogate-5D','bbob-surrogate-2D']:
             config.is_train = False
 
         _, test_set = construct_problem_set(config)
@@ -767,7 +767,7 @@ class Tester(object):
 def rollout_batch(config):
     print(f'start rollout: {config.run_time}')
     num_gpus = 0 if config.device == 'cpu' else 1
-    if config.test_problem == 'bbob-surrogate':
+    if config.test_problem in ['bbob-surrogate-10D','bbob-surrogate-5D','bbob-surrogate-2D']:
         config.is_train = False
     train_set, test_set = construct_problem_set(config)
     agent_for_rollout=config.agent_for_rollout
