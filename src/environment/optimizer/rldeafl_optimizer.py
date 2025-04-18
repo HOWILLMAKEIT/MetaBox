@@ -194,7 +194,7 @@ class RLDEAFL_Optimizer(Learnable_Optimizer):
         if problem.optimum is None:
             is_done = self.fes >= self.max_fes
         else:
-            is_done = self.fes >= self.max_fes or self.gbest_val <= 1e-8
+            is_done = self.fes >= self.max_fes
 
         reward = self.__reward_ratio * (pre_gbest - self.gbest_val) / self.__init_gbest
 
@@ -202,7 +202,8 @@ class RLDEAFL_Optimizer(Learnable_Optimizer):
             if len(self.cost) >= self.__config.n_logpoint + 1:
                 self.cost[-1] = self.gbest_val
             else:
-                self.cost.append(self.gbest_val)
+                while len(self.cost) < self.__config.n_logpoint + 1:
+                    self.cost.append(self.gbest_val)
         return self.observe(), reward, is_done, {}
 
 
