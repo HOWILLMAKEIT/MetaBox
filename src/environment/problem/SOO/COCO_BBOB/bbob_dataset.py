@@ -80,7 +80,9 @@ class BBOB_Dataset(Dataset):
                 bias = torch.Tensor([bias])
                 instance = eval(f'F{id}_torch')(dim=dim, shift=shift, rotate=H, bias=bias, lb=lb, ub=ub, device = device)
 
-            instance_list.append(instance)
+            if difficulty == "all":
+                instance_list.append(instance)
+                continue # all 优先级最高
 
             if user_test_list is None and user_test_list is None and difficulty is not None:
                 if (difficulty == 'easy' and id not in small_set_func_id) or (difficulty == 'difficult' and id in small_set_func_id):
@@ -107,7 +109,8 @@ class BBOB_Dataset(Dataset):
                         train_set.append(instance)
 
         if difficulty == 'all':
-            train_set = test_set = train_set + test_set
+            train_set = instance_list.copy()
+            test_set = instance_list.copy()
 
         return BBOB_Dataset(train_set, train_batch_size), BBOB_Dataset(test_set, test_batch_size)
 
