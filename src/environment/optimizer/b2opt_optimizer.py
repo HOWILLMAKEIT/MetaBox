@@ -101,7 +101,7 @@ class B2OPT_Optimizer(Learnable_Optimizer):
         if problem.optimum is None:
             is_end = self.fes >= self.MaxFEs
         else:
-            is_end = self.fes >= self.MaxFEs or self.gbest_val <= 1e-8
+            is_end = self.fes >= self.MaxFEs
 
         self.__sort()
 
@@ -119,7 +119,8 @@ class B2OPT_Optimizer(Learnable_Optimizer):
             if len(self.cost) >= self.config.n_logpoint + 1:
                 self.cost[-1] = self.gbest_val
             else:
-                self.cost.append(self.gbest_val)
+                while len(cost) < self.__config.n_logpoint + 1:
+                    self.cost.append(self.gbest_val)
 
         info = {}
 
