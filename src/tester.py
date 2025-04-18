@@ -582,7 +582,7 @@ class Tester(object):
                     meta_test_data = MetaBBO_test.rollout()
                     self.record_test_data(meta_test_data)
                     pbar.update()
-            self.meta_data_results = store_meta_data(self.log_dir, self.meta_data_results)
+                self.meta_data_results = store_meta_data(self.log_dir, self.meta_data_results)
             for ip, problem in enumerate(test_set):
                 for i, seed in enumerate(seed_list):
                     pbar.set_description_str(f"Batch Testing To Agent {agent_to.__str__()} with Problem Batch {ip}, Run {i}")
@@ -591,7 +591,7 @@ class Tester(object):
                     meta_test_data = MetaBBO_test.rollout()
                     self.record_test_data(meta_test_data)
                     pbar.update()
-            self.meta_data_results = store_meta_data(self.log_dir, self.meta_data_results)
+                self.meta_data_results = store_meta_data(self.log_dir, self.meta_data_results)
             pbar.close()
 
         with open(config.mgd_test_log_dir + 'test_results.pkl', 'wb') as f:
