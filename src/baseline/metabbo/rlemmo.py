@@ -391,7 +391,7 @@ class RLEMMO(PPO_Agent):
                 self.optimizer.step()
                 self.learning_time += 1
                 if self.learning_time >= (self.config.save_interval * self.cur_checkpoint) and self.config.end_mode == "step":
-                    save_class(self.config.agent_save_dir, 'checkpoint' + str(self.cur_checkpoint), self)
+                    save_class(self.config.agent_save_dir, 'checkpoint-' + str(self.cur_checkpoint), self)
                     self.cur_checkpoint += 1
 
                 if not self.config.no_tb:

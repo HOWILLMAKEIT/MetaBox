@@ -34,7 +34,7 @@ class LGA(Basic_Agent):
         self.learning_step = 0
         self.cur_checkpoint = 0
 
-        save_class(self.config.agent_save_dir, 'checkpoint' + str(self.cur_checkpoint), self)
+        save_class(self.config.agent_save_dir, 'checkpoint-' + str(self.cur_checkpoint), self)
         self.cur_checkpoint += 1
 
     def __str__(self):
@@ -90,7 +90,7 @@ class LGA(Basic_Agent):
                 self.log_to_tb_train(tb_logger, self.learning_step, self.gbest)
 
         if self.learning_step >= (self.config.save_interval * self.cur_checkpoint) and self.config.end_mode == "step":
-            save_class(self.config.agent_save_dir, 'checkpoint' + str(self.cur_checkpoint), self)
+            save_class(self.config.agent_save_dir, 'checkpoint-' + str(self.cur_checkpoint), self)
             self.cur_checkpoint += 1
 
         return_info = {'return': 0, 'loss':0 ,'learn_steps': self.learning_step, }

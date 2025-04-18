@@ -116,9 +116,9 @@ class RLPSO(REINFORCE_Agent):
             _loss.append(loss.item())
             self.optimizer.step()
             self.learning_time += 1
-            if self.learning_time >= (self.config.save_interval * self.cur_checkpoint):
-                save_class(self.config.agent_save_dir,'checkpoint-'+str(self.cur_checkpoint),self)
-                self.cur_checkpoint+=1
+            if self.learning_time >= (self.config.save_interval * self.cur_checkpoint) and self.config.end_mode == "step":
+                save_class(self.config.agent_save_dir, 'checkpoint-' + str(self.cur_checkpoint), self)
+                self.cur_checkpoint += 1
 
             if not self.config.no_tb and self.learning_time % int(self.config.log_step) == 0:
                 self.log_to_tb_train(tb_logger, self.learning_time,

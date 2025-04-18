@@ -294,8 +294,8 @@ class RLDAS(PPO_Agent):
                 # perform gradient descent
                 self.optimizer.step()
                 self.learning_time += 1
-                if self.learning_time >= (self.config.save_interval * self.cur_checkpoint):
-                    save_class(self.config.agent_save_dir, 'checkpoint' + str(self.cur_checkpoint), self)
+                if self.learning_time >= (self.config.save_interval * self.cur_checkpoint) and self.config.end_mode == "step":
+                    save_class(self.config.agent_save_dir, 'checkpoint-' + str(self.cur_checkpoint), self)
                     self.cur_checkpoint += 1
 
                 if not self.config.no_tb and self.learning_time % int(self.config.log_step) == 0:
@@ -389,10 +389,10 @@ class RLDAS(PPO_Agent):
             R = 0
             while not is_done:
                 try:
-                    state = torch.Tensor(state).unsqueeze(0).to(self.device)
+                    state = torch.Tensor(state).to(self.device)
                 except:
-                    state = [state]
-                action = self.actor(state)[0]
+                    pass
+                action = self.actor(np.array([state]))[0]
                 action = action.cpu().numpy().squeeze()
                 state, reward, is_done, info = env.step(action)
                 R += reward

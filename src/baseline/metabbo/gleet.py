@@ -402,7 +402,7 @@ class GLEET(PPO_Agent):
                 self.optimizer.step()
                 self.learning_time += 1
                 if self.learning_time >= (self.config.save_interval * self.cur_checkpoint) and self.config.end_mode == "step":
-                    save_class(self.config.agent_save_dir, 'checkpoint' + str(self.cur_checkpoint), self)
+                    save_class(self.config.agent_save_dir, 'checkpoint-' + str(self.cur_checkpoint), self)
                     self.cur_checkpoint += 1
 
                 if not self.config.no_tb:
@@ -499,7 +499,7 @@ class GLEET(PPO_Agent):
                     state = torch.Tensor(state).unsqueeze(0).to(self.device)
                 except:
                     state = [state]
-                action = self.actor(state.double())[0]
+                action = self.actor(state)[0]
                 action = action.cpu().numpy().squeeze()
                 state, reward, is_done, info = env.step(action)
                 R += reward

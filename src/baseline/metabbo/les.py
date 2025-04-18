@@ -34,9 +34,8 @@ class LES(Basic_Agent):
 
         self.__cur_checkpoint=0
         # save init agent
-        if self.__cur_checkpoint==0:
-            save_class(self.__config.agent_save_dir,'checkpoint-'+str(self.__cur_checkpoint),self)
-            self.__cur_checkpoint+=1
+        save_class(self.__config.agent_save_dir,'checkpoint-'+str(self.__cur_checkpoint),self)
+        self.__cur_checkpoint+=1
 
     def __str__(self):
         return "LES"

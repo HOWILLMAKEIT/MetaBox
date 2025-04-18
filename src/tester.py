@@ -156,6 +156,13 @@ class BBO_TestUnit():
         self.seed = seed
 
     def run_batch_episode(self):
+        torch.manual_seed(self.seed)
+        torch.cuda.manual_seed(self.seed)
+        np.random.seed(self.seed)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+
+        torch.set_default_dtype(torch.float64)
         self.optimizer.seed(self.seed)
         self.problem.reset()
         start_time = time.time()
@@ -185,6 +192,14 @@ class MetaBBO_TestUnit():
         self.checkpoint = checkpoint
 
     def run_batch_episode(self, required_info = {}):
+        torch.manual_seed(self.seed)
+        torch.cuda.manual_seed(self.seed)
+        np.random.seed(self.seed)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+
+        torch.set_default_dtype(torch.float64)
+
         start_time = time.time()
         res = self.agent.rollout_episode(self.env, self.seed, required_info)
         end_time = time.time()
@@ -823,9 +838,8 @@ def rollout_batch(config):
                                                                                                                             for seed in seed_list]
         MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray', num_gpus=num_gpus)
         meta_test_data = MetaBBO_test.rollout()
-        rollout_results, meta_data_results = record_data(meta_test_data, test_set, agents, checkpoints, rollout_results, meta_data_results, config)
+        rollout_results, meta_data_results = record_data(meta_test_data, test_set, agent_for_rollout, checkpoints, rollout_results, meta_data_results, config)
         meta_data_results = store_meta_data(config.rollout_log_dir, meta_data_results)
-            
     elif parallel_batch == 'Baseline_Problem':
         pbar = tqdm(total=len(seed_list), desc="Baseline_Problem Rollouting")
         for seed in seed_list:
@@ -834,7 +848,7 @@ def rollout_batch(config):
                                                                                                                             ]
             MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray', num_gpus=num_gpus)
             meta_test_data = MetaBBO_test.rollout()
-            rollout_results, meta_data_results = record_data(meta_test_data, test_set, agents, checkpoints, rollout_results, meta_data_results, config)
+            rollout_results, meta_data_results = record_data(meta_test_data, test_set, agent_for_rollout, checkpoints, rollout_results, meta_data_results, config)
             meta_data_results = store_meta_data(config.rollout_log_dir, meta_data_results)
             pbar.update()
         pbar.close()
@@ -848,7 +862,7 @@ def rollout_batch(config):
                                                                                                                             for seed in seed_list]
             MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray', num_gpus=num_gpus)
             meta_test_data = MetaBBO_test.rollout()
-            rollout_results, meta_data_results = record_data(meta_test_data, test_set, agents, checkpoints, rollout_results, meta_data_results, config)
+            rollout_results, meta_data_results = record_data(meta_test_data, test_set, agent_for_rollout, checkpoints, rollout_results, meta_data_results, config)
             meta_data_results = store_meta_data(config.rollout_log_dir, meta_data_results)
             pbar.update()
         pbar.close()
@@ -863,7 +877,7 @@ def rollout_batch(config):
                     testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent), PBO_Env(copy.deepcopy(p), copy.deepcopy(optimizer)), seed, ckp) for p in problem]
                     MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray', num_gpus=num_gpus)
                     meta_test_data = MetaBBO_test.rollout()
-                    rollout_results, meta_data_results = record_data(meta_test_data, test_set, agents, checkpoints, rollout_results, meta_data_results, config)
+                    rollout_results, meta_data_results = record_data(meta_test_data, test_set, agent_for_rollout, checkpoints, rollout_results, meta_data_results, config)
                     pbar.update()
             meta_data_results = store_meta_data(config.rollout_log_dir, meta_data_results)
         pbar.close()
