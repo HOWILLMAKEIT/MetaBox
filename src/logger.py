@@ -82,6 +82,10 @@ class Basic_Logger:
             std_data[agent] = np.mean(std_data[agent], 0)
         return avg_data, std_data
 
+    def data_wrapper_cost_rollout(self, data):
+        res = np.array(data)
+        return res[:, -1]
+
     def cal_scores1(self, D: dict, maxf: float):
         """
         Tool function for CEC metric
@@ -699,37 +703,68 @@ class Basic_Logger:
         plt.ylabel('AEI', fontsize=60)
         plt.savefig(output_dir + f'rank_hist.{fig_type}', bbox_inches='tight')
         
-    def draw_train_logger(self, data_type: str, data: dict, output_dir: str, ylabel: str = None, norm: bool = False, pdf_fig: bool = True, data_wrapper: Callable = None) -> None:
+    def draw_train_logger(self, data_type: str, steps: list, data: dict, output_dir: str, ylabel: str = None, norm: bool = False, pdf_fig: bool = True, data_wrapper: Callable = None) -> None:
         means, stds = self.get_average_data(data, norm=norm, data_wrapper=data_wrapper)
         plt.figure()
-        for agent in means.keys():
-            x = np.arange(len(means[agent]), dtype=np.float64)
-            x = (self.config.max_learning_step / x[-1]) * x
-            y = means[agent]
-            s = np.zeros(y.shape[0])
-            a = s[0] = y[0]
-            norm = self.config.plot_smooth + 1
-            for i in range(1, y.shape[0]):
-                a = a * self.config.plot_smooth + y[i]
-                s[i] = a / norm if norm > 0 else a
-                norm *= self.config.plot_smooth
-                norm += 1
-            if agent not in self.color_arrangement.keys():
-                self.color_arrangement[agent] = colors[self.arrange_index]
-                self.arrange_index += 1
-            plt.plot(x, s, label=to_label(agent), marker='*', markersize=12, markevery=2, c=self.color_arrangement[agent])
-            plt.fill_between(x, (s - stds[agent]), (s + stds[agent]), alpha=0.2, facecolor=self.color_arrangement[agent])
-            # plt.plot(x, returns[agent], label=to_label(agent))
+
+        y = np.array([means[k] for k in means])
+        y_std = np.array([stds[k] for k in stds])
+        x = np.array(steps, dtype = np.float64)
+
+        s = np.zeros(y.shape[0])
+        a = s[0] = y[0]
+
+        agent_for_rollout = self.config.agent_for_rollout
+
+        norm = self.config.plot_smooth + 1
+        for i in range(1, y.shape[0]):
+            a = a * self.config.plot_smooth + y[i]
+            s[i] = a / norm if norm > 0 else a
+            norm *= self.config.plot_smooth
+            norm += 1
+        if agent_for_rollout not in self.color_arrangement.keys():
+            self.color_arrangement[agent_for_rollout] = colors[self.arrange_index]
+            self.arrange_index += 1
+
+        plt.plot(x, s, label = to_label(agent_for_rollout), marker = '*', markersize = 12, markevery = 2, c = self.color_arrangement[agent_for_rollout])
+        plt.fill_between(x, (s - y_std), (s + y_std), alpha = 0.2, facecolor = self.color_arrangement[agent_for_rollout])
+
         plt.legend()
         plt.grid()
-        plt.xlabel('Learning Steps')    
+        plt.xlabel('Learning Steps')
         if ylabel is None:
             ylabel = data_type
         plt.ylabel(ylabel)
         fig_type = 'pdf' if pdf_fig else 'png'
         plt.savefig(output_dir + f'avg_{data_type}_curve.{fig_type}', bbox_inches='tight')
         plt.close()
-        
+
+
+        # if agent not in self.color_arrangement.keys():
+        #     self.color_arrangement[agent] = colors[self.arrange_index]
+        #     self.arrange_index += 1
+        # plt.plot(x, s, label = to_label(agent), marker = '*', markersize = 12, markevery = 2, c = self.color_arrangement[agent])
+        # plt.fill_between(x, (s - stds[agent]), (s + stds[agent]), alpha = 0.2, facecolor = self.color_arrangement[agent])
+
+
+        # for agent in means.keys():
+        #     x = np.arange(len(means[agent]), dtype=np.float64)
+        #     x = (self.config.maxFEs / x[-1]) * x
+        #     y = means[agent]
+        #     s = np.zeros(y.shape[0])
+        #     a = s[0] = y[0]
+        #     norm = self.config.plot_smooth + 1
+        #     for i in range(1, y.shape[0]):
+        #         a = a * self.config.plot_smooth + y[i]
+        #         s[i] = a / norm if norm > 0 else a
+        #         norm *= self.config.plot_smooth
+        #         norm += 1
+        #     if agent not in self.color_arrangement.keys():
+        #         self.color_arrangement[agent] = colors[self.arrange_index]
+        #         self.arrange_index += 1
+        #     plt.plot(x, s, label=to_label(agent), marker='*', markersize=12, markevery=2, c=self.color_arrangement[agent])
+        #     plt.fill_between(x, (s - stds[agent]), (s + stds[agent]), alpha=0.2, facecolor=self.color_arrangement[agent])
+        #     # plt.plot(x, returns[agent], label=to_label(agent))
     def post_processing_test_statics(self, log_dir: str, include_random_baseline: bool = True, pdf_fig: bool = True) -> None:
         print('Post processing & drawing')
         with open(log_dir + 'test_results.pkl', 'rb') as f:
@@ -765,8 +800,8 @@ class Basic_Logger:
             results = pickle.load(f)
         if not os.path.exists(log_dir + 'pics/'):
             os.makedirs(log_dir + 'pics/')
-        self.draw_train_logger('return', results['return'], log_dir + 'pics/', pdf_fig=pdf_fig)
-        self.draw_train_logger('cost', results['cost'], log_dir + 'pics/', pdf_fig=pdf_fig)
+        self.draw_train_logger('return', results['steps'], results['return'], log_dir + 'pics/', pdf_fig=pdf_fig)
+        self.draw_train_logger('cost', results['steps'], results['cost'], log_dir + 'pics/', pdf_fig=pdf_fig, data_wrapper = Basic_Logger.data_wrapper_cost_rollout)
 
     
 class MOO_Logger(Basic_Logger):

@@ -153,6 +153,7 @@ class Trainer(object):
         id_seed = self.config.id_seed
         seed = self.config.seed
 
+        checkpoint_time0 = time.time()
         while not is_end:
             learn_step = 0
             self.train_set.shuffle()
@@ -215,6 +216,7 @@ class Trainer(object):
                         break
                 # self.agent.train_epoch()
             # epoch_steps.append(learn_step)
+            checkpoint_time_epoch = time.time() - checkpoint_time0
             epoch += 1
 
             if not self.config.no_tb:
@@ -223,10 +225,10 @@ class Trainer(object):
                 tb_logger.add_scalar("epoch-avg-loss", np.mean(loss_record), epoch)
 
             if epoch >= (self.config.save_interval * self.agent.cur_checkpoint) and self.config.end_mode == "epoch":
-                save_class(self.config.agent_save_dir, 'checkpoint' + str(self.agent.cur_checkpoint), self.agent)
+                save_class(self.config.agent_save_dir, 'checkpoint-' + str(self.agent.cur_checkpoint), self.agent)
                 # 记录 checkpoint 和 total_step
                 with open(self.config.agent_save_dir + "/checkpoint_log.txt", "a") as f:
-                    f.write(f"Checkpoint {self.agent.cur_checkpoint}: {learn_step}\n")
+                    f.write(f"Checkpoint {self.agent.cur_checkpoint}: {learn_step}; Time: {checkpoint_time_epoch} s\n")
 
                 # todo rollout
                 # 保存状态

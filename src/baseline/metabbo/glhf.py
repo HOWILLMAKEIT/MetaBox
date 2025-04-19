@@ -307,6 +307,9 @@ class GLHF(Basic_Agent):
     def __str__(self):
         return 'GLHF'
 
+    def get_step(self):
+        return self.learning_time
+
     def train_episode(self,
                       envs,
                       seeds: Optional[Union[int, List[int], np.ndarray]],

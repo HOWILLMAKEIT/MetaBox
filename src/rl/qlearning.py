@@ -65,7 +65,9 @@ class QLearning_Agent(Basic_Agent):
     #     else:
     #         action = torch.argmax(Q_list, -1).numpy()
     #     return action
-    
+
+    def get_step(self):
+        return self.learning_time
     
     def get_action(self, state, epsilon_greedy=False):
         Q_list = torch.stack([self.q_table[st] for st in state ])

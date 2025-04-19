@@ -111,6 +111,9 @@ class PPO_Agent(Basic_Agent):
         for network_name in networks:
             getattr(self, network_name).to(self.device)
 
+    def get_step(self):
+        return self.learning_time
+
     def update_setting(self, config):
         self.config.max_learning_step = config.max_learning_step
         self.config.agent_save_dir = config.agent_save_dir

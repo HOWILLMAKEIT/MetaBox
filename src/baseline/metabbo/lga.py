@@ -34,11 +34,16 @@ class LGA(Basic_Agent):
         self.learning_step = 0
         self.cur_checkpoint = 0
 
+        self.task_step = 0
+
         save_class(self.config.agent_save_dir, 'checkpoint-' + str(self.cur_checkpoint), self)
         self.cur_checkpoint += 1
 
     def __str__(self):
         return "LGA"
+
+    def get_step(self):
+        return self.learning_step
 
     def optimizer_step(self):
         # inital sampling
@@ -82,10 +87,11 @@ class LGA(Basic_Agent):
 
             self.meta_performances[i].append(sub_best)
 
-        self.learning_step += len(env)
+        self.task_step += len(env)
         # Task 256
-        if self.learning_step % 256 == 0:
+        if self.task_step % 256 == 0:
             self.update()
+            self.learning_step += 1
             if not self.config.no_tb:
                 self.log_to_tb_train(tb_logger, self.learning_step, self.gbest)
 

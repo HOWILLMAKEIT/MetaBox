@@ -108,13 +108,14 @@ def record_data(data, test_set, agent_for_rollout, checkpoints, results, meta_re
             if key == 'metadata' and config.full_meta_data:
                 meta_results[item['problem_name']][item['agent_name']].append(item[key])
                 continue
-            if key not in ['agent_name', 'problem_name'] and key not in results.keys():
-                results[key] = {}
-                for problem in test_set.data:
-                    results[key][problem.__str__()] = {}
-                    for agent_id in checkpoints:
-                        results[key][problem.__str__()][agent_for_rollout+f'-{agent_id}'] = []  # 51 np.arrays
-            results[key][item['problem_name']][item['agent_name']].append(item[key])
+            if key not in ['agent_name', 'problem_name']:
+                if key not in results.keys():
+                    results[key] = {}
+                    for problem in test_set.data:
+                        results[key][problem.__str__()] = {}
+                        for agent_id in checkpoints:
+                            results[key][problem.__str__()][agent_for_rollout+f'-{agent_id}'] = []  # 51 np.arrays
+                results[key][item['problem_name']][item['agent_name']].append(item[key])
     return results, meta_results
 
 
@@ -810,14 +811,20 @@ def rollout_batch(config):
     n_checkpoint=len(checkpoints)
 
     # get agent
+    # learning_step
+    steps = []
     for agent_id in checkpoints:
         with open(os.path.join(upper_dir, f'checkpoint-{agent_id}.pkl'), 'rb') as f:
-            agents.append(pickle.load(f))
+            agent = pickle.load(f)
+            steps.append(agent.get_step())
+            if agent_id:
+                steps[-1] += 400
+            agents.append(agent)
             optimizer_for_rollout.append(eval(l_optimizer)(copy.deepcopy(config)))
 
     rollout_results = {'cost': {},
                         'return':{},
-                        'config': copy.deepcopy(config)}
+                       }
     meta_data_results = {}
     for key in rollout_results.keys():
         if key not in rollout_results.keys():
@@ -828,6 +835,8 @@ def rollout_batch(config):
             for agent_id in checkpoints:
                 rollout_results[key][problem.__str__()][agent_name+f'-{agent_id}'] = []  # 51 np.arrays
                 meta_data_results[problem.__str__()][agent_name+f'-{agent_id}'] = []
+
+    rollout_results['config'] = copy.deepcopy(config)
 
     pbar_len = int(np.ceil(test_set.N * n_checkpoint / test_set.batch_size))
     seed_list = list(range(1, config.rollout_run + 1))
@@ -884,6 +893,9 @@ def rollout_batch(config):
                     
     else:
         raise NotImplementedError
+
+    rollout_results['steps'] = steps
+
     log_dir=config.rollout_log_dir
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)

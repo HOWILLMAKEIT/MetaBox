@@ -169,6 +169,9 @@ class B2OPT(Basic_Agent):
     def __str__(self):
         return 'B2OPT'
 
+    def get_step(self):
+        return self.learning_time
+
     def train_episode(self,
                       envs,
                       seeds: Optional[Union[int, List[int], np.ndarray]],

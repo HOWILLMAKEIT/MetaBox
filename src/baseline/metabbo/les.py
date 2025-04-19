@@ -40,6 +40,9 @@ class LES(Basic_Agent):
     def __str__(self):
         return "LES"
 
+    def get_step(self):
+        return self.__learning_step
+
     def update_setting(self, config):
         self.__config.max_learning_step = config.max_learning_step
         self.__config.agent_save_dir = config.agent_save_dir
