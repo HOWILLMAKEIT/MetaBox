@@ -173,8 +173,10 @@ class SYMBOL(PPO_Agent):
                 # expr = construct_action(seq = seq, const_seq = const_seq, tokenizer = self.tokenizer)
                 # action = {'expr': expr, 'skip_step': self.config.skip_step}
                 state, reward, is_done, info = env.step(action)
+
+                reward = torch.Tensor(reward).to(self.device)
+                _R += reward.clone().detach().cpu()
                 memory.rewards.append(reward)
-                _R += reward
 
                 t = t + 1
 
@@ -288,7 +290,7 @@ class SYMBOL(PPO_Agent):
                                          grad_norms,
                                          reinforce_loss, baseline_loss,
                                          _R, Reward, memory.rewards,
-                                         critic_output, logprobs, entropy, approx_kl_divergence)
+                                         critic_output, logprobs, torch.Tensor([0.]), approx_kl_divergence)
 
                 if self.learning_time >= self.config.max_learning_step:
                     memory.clear_memory()
@@ -384,13 +386,13 @@ class SYMBOL(PPO_Agent):
                     state = torch.Tensor(state).to(self.device)
                 except:
                     state = [state]
-                seq, const_seq, log_prob = self.actor(state, save_data = False)
+                seq, const_seq, log_prob = self.actor(state[None, :], save_data = False)
                 action = []
                 for s, cs in zip(seq, const_seq):
                     expr = construct_action(seq = s, const_seq = cs, tokenizer = self.tokenizer)
                     action.append({'expr': expr, 'skip_step': self.config.skip_step})
 
-                state, reward, is_done, info = env.step(action)
+                state, reward, is_done, info = env.step(action[0])
                 R += reward
             env_cost = env.get_env_attr('cost')
             env_fes = env.get_env_attr('fes')

@@ -98,7 +98,7 @@ def get_config(args=None):
     parser.add_argument('--epoch_seed', type = int, default = 100)
     parser.add_argument('--id_seed', type = int, default = 5)
     parser.add_argument('--train_mode', default='single', type = str, choices = ['single', 'multi'])
-    parser.add_argument('--end_mode', type = str, choices = ['step', 'epoch'])
+    parser.add_argument('--end_mode', type = str, default = 'epoch', choices = ['step', 'epoch'])
 
     parser.add_argument('--test_run', type = int, default = 51)
     parser.add_argument('--rollout_run', type = int, default = 10)

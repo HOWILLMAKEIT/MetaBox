@@ -292,7 +292,7 @@ class GLEET(PPO_Agent):
                 bl_val.append(baseline_val)
 
                 # state transient
-                state, rewards, is_end, info = env.step(action.cpu().numpy().squeeze())
+                state, rewards, is_end, info = env.step(action.cpu().numpy()[:, :, 0])
                 memory.rewards.append(torch.Tensor(rewards).to(self.device))
                 # print('step:{},max_reward:{}'.format(t,torch.max(rewards)))
                 _R += rewards

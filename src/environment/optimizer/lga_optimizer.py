@@ -178,7 +178,7 @@ class LGA_Optimizer(Learnable_Optimizer):
     def update(self, action, problem):
         # action 是 网络
 
-        self.policy = vector2nn(action['net'], self.policy)
+        self.policy = vector2nn(action['net'], self.policy).to(self.config.device)
 
         skip_step = action['skip_step']
 

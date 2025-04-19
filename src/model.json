@@ -2,17 +2,27 @@
   "GLEET": {
     "Agent": "GLEET",
     "Optimizer": "GLEET_Optimizer",
-    "dir": "agent_model/train/GLEET_Agent/20250404T222651_bbob_easy_10D/checkpoint0.pkl"
+    "dir": ""
   },
   "RLEPSO": {
     "Agent": "RLEPSO",
     "Optimizer": "RLEPSO_Optimizer",
-    "dir": "agent_model/test/bbob_easy/RLEPSO_Agent.pkl"
+    "dir": ""
   },
-  "RLDE_AFL": {
+  "RLDEAFL": {
     "Agent": "RLDEAF",
     "Optimizer": "RLDEAFL_Optimizer",
-    "dir": "agent_model/train/RLDEAFL_Agent/20250321T132206_bbob_easy_10D/checkpoint0.pkl"
+    "dir": ""
+  },
+  "RLDAS": {
+    "Agent": "RLDAS",
+    "Optimizer": "RLDAS_Optimizer",
+    "dir": ""
+  },
+  "SYMBOL": {
+    "Agent": "SYMBOL",
+    "Optimizer": "SYMBOL_Optimizer",
+    "dir": ""
   },
   "Key you want to identify test metabbo": {
     "Agent": "Your method",
