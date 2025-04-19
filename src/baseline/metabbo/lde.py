@@ -5,12 +5,14 @@ from rl.utils import *
 from typing import Optional, Union, Literal, List
 import numpy as np
 import torch
+
+
 class PolicyNet(nn.Module):
     def __init__(self, config):
         super(PolicyNet, self).__init__()
-        self.__lstm = nn.LSTM(input_size=config.node_dim,
-                              hidden_size=config.CELL_SIZE,
-                              num_layers=config.LAYERS_NUM).to(config.device)
+        self.__lstm = nn.LSTM(input_size = config.node_dim,
+                              hidden_size = config.CELL_SIZE,
+                              num_layers = config.LAYERS_NUM).to(config.device)
         self.__mu = nn.Linear(config.CELL_SIZE, config.output_dim_actor).to(config.device)
         self.__sigma = nn.Linear(config.CELL_SIZE, config.output_dim_actor).to(config.device)
         self.__distribution = torch.distributions.Normal
@@ -31,7 +33,7 @@ class PolicyNet(nn.Module):
 
 class LDE(REINFORCE_Agent):
     def __init__(self, config):
-        
+
         self.config = config
         self.__BATCH_SIZE = self.config.train_batch_size
         self.config.NP = 50
@@ -50,11 +52,11 @@ class LDE(REINFORCE_Agent):
 
         model = PolicyNet(self.config)
         self.config.optimizer = 'Adam'
-        # origin LDE doesn't have clip 
+        # origin LDE doesn't have clip
         self.config.max_grad_norm = math.inf
-        self.device = self.config.device   
+        self.device = self.config.device
 
-        super().__init__(self.config,{'model':model},[self.config.lr_model])
+        super().__init__(self.config, {'model': model}, [self.config.lr_model])
 
     def __str__(self):
         return "LDE"
@@ -75,13 +77,13 @@ class LDE(REINFORCE_Agent):
                 all_disc_norm_rs = np.hstack((all_disc_norm_rs, discounted_rs))
         return all_disc_norm_rs
 
-    def train_episode(self, 
+    def train_episode(self,
                       envs,
                       seeds: Optional[Union[int, List[int], np.ndarray]],
-                      para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc']='dummy',
-                    #   asynchronous: Literal[None, 'idle', 'restart', 'continue']=None,
-                    #   num_cpus: Optional[Union[int, None]]=1,
-                    #   num_gpus: int=0,
+                      para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc'] = 'dummy',
+                      #   asynchronous: Literal[None, 'idle', 'restart', 'continue']=None,
+                      #   num_cpus: Optional[Union[int, None]]=1,
+                      #   num_gpus: int=0,
                       compute_resource = {},
                       tb_logger = None,
                       required_info = {}):
@@ -91,7 +93,7 @@ class LDE(REINFORCE_Agent):
             num_cpus = compute_resource['num_cpus']
         if 'num_gpus' in compute_resource.keys():
             num_gpus = compute_resource['num_gpus']
-        env = ParallelEnv(envs, para_mode, num_cpus=num_cpus, num_gpus=num_gpus)
+        env = ParallelEnv(envs, para_mode, num_cpus = num_cpus, num_gpus = num_gpus)
 
         self.optimizer.zero_grad()
         inputs_batch = []
@@ -105,11 +107,7 @@ class LDE(REINFORCE_Agent):
         _reward = []
         for l in range(self.config.TRAJECTORY_NUM):
             input_net = env.reset()
-            try:
-                input_net = torch.Tensor(input_net).to(self.device)
-                # print(input_net.shape)
-            except:
-                pass
+
             # raise
             h0 = torch.zeros(self.config.LAYERS_NUM, self.__BATCH_SIZE, self.config.CELL_SIZE).to(self.config.device)
             c0 = torch.zeros(self.config.LAYERS_NUM, self.__BATCH_SIZE, self.config.CELL_SIZE).to(self.config.device)
@@ -117,33 +115,34 @@ class LDE(REINFORCE_Agent):
                 input_net = input_net.reshape(self.__feature_shape)
                 # [bs, NP+BINS*2]
                 action, h_, c_ = self.model.sampler(torch.Tensor(input_net[None, :]).to(self.config.device), h0, c0)  # parameter controller
-                action = action.reshape(self.__BATCH_SIZE, 1,-1).cpu().numpy()
+                action = action.reshape(self.__BATCH_SIZE, 1, -1).cpu().numpy()
                 # action = np.squeeze(action.cpu().numpy(), axis=1)
 
                 inputs_batch.append(input_net)
                 action_batch.append(action.squeeze(axis = 1))
-                next_input, reward, is_done,_ = env.step(action)
-                
-                hs_batch.append(torch.squeeze(h0, axis=0))
-                cs_batch.append(torch.squeeze(c0, axis=0))
+                next_input, reward, is_done, _ = env.step(action)
+
+                hs_batch.append(torch.squeeze(h0, axis = 0))
+                cs_batch.append(torch.squeeze(c0, axis = 0))
                 rewards_batch.append(reward.reshape(self.__BATCH_SIZE))
                 _R += reward.reshape(-1)
-                _reward.append(reward)
+                _reward.append(torch.Tensor(reward))
                 h0 = h_
                 c0 = c_
                 input_net = next_input.copy()
                 if env.all_done():
                     break
-        inputs = [np.stack(inputs_batch, axis=0).transpose((1, 0, 2)).reshape(-1, self.config.node_dim)]
-        actions = [np.stack(action_batch, axis=0).transpose((1, 0, 2)).reshape(-1, self.config.output_dim_actor)]
-        hs = [torch.stack(hs_batch, axis=0).permute(1, 0, 2).reshape(-1, self.config.CELL_SIZE)]
-        cs = [torch.stack(cs_batch, axis=0).permute(1, 0, 2).reshape(-1, self.config.CELL_SIZE)]
-        rewards = [np.stack(rewards_batch, axis=0).transpose((1, 0)).flatten()]
+
+        inputs = [np.stack(inputs_batch, axis = 0).transpose((1, 0, 2)).reshape(-1, self.config.node_dim)]
+        actions = [np.stack(action_batch, axis = 0).transpose((1, 0, 2)).reshape(-1, self.config.output_dim_actor)]
+        hs = [torch.stack(hs_batch, axis = 0).permute(1, 0, 2).reshape(-1, self.config.CELL_SIZE)]
+        cs = [torch.stack(cs_batch, axis = 0).permute(1, 0, 2).reshape(-1, self.config.CELL_SIZE)]
+        rewards = [np.stack(rewards_batch, axis = 0).transpose((1, 0)).flatten()]
 
         # update network parameters
         all_eps_mean, all_eps_std, all_eps_h, all_eps_c = self.model.forward(torch.Tensor(np.vstack(inputs)[None, :]).to(self.device),
-                                                                    torch.vstack(hs)[None, :],
-                                                                    torch.vstack(cs)[None, :])
+                                                                             torch.vstack(hs)[None, :],
+                                                                             torch.vstack(cs)[None, :])
         actions = torch.Tensor(np.vstack(actions)).to(self.device)
         all_eps_mean = torch.squeeze(all_eps_mean, 0).to(self.device)
         all_eps_std = torch.squeeze(all_eps_std, 0).to(self.device)
@@ -170,33 +169,34 @@ class LDE(REINFORCE_Agent):
 
         is_train_ended = self.learning_time >= self.config.max_learning_step
         _Rs = _R.detach().numpy().tolist()
-        return_info = {'return': _Rs,'loss':[loss.item()], 'learn_steps': self.learning_time, }
+        return_info = {'return': _Rs, 'loss': [loss.item()], 'learn_steps': self.learning_time, }
         env_cost = env.get_env_attr('cost')
         return_info['gbest'] = env_cost[-1]
         for key in required_info.keys():
             return_info[key] = env.get_env_attr(required_info[key])
         env.close()
-        
+
         return is_train_ended, return_info
 
-    def rollout_episode(self, 
+    def rollout_episode(self,
                         env,
-                        seed=None,
-                        required_info={}):
+                        seed = None,
+                        required_info = {}):
         with torch.no_grad():
             env.seed(seed)
             is_done = False
             input_net = env.reset()
+
             h0 = torch.zeros(self.config.LAYERS_NUM, self.__BATCH_SIZE, self.config.CELL_SIZE).to(self.config.device)
             c0 = torch.zeros(self.config.LAYERS_NUM, self.__BATCH_SIZE, self.config.CELL_SIZE).to(self.config.device)
-            R=0
+            R = 0
             while not is_done:
                 # [bs, NP+BINS*2]
                 action, h_, c_ = self.model.sampler(torch.Tensor(input_net[None, :]).to(self.device), h0, c0)  # parameter controller
-                action = action.reshape(1,self.__BATCH_SIZE, -1)
-                action = np.squeeze(action.cpu().numpy(), axis=0)
-                next_input, reward, is_done,_ = env.step(action)
-                R+=np.mean(reward)
+                action = action.reshape(1, self.__BATCH_SIZE, -1)
+                action = np.squeeze(action.cpu().numpy(), axis = 0)
+                next_input, reward, is_done, _ = env.step(action)
+                R += np.mean(reward)
                 h0 = h_
                 c0 = c_
                 input_net = next_input.copy()
@@ -212,15 +212,14 @@ class LDE(REINFORCE_Agent):
             for key in required_info.keys():
                 results[key] = getattr(env, required_info[key])
             return results
-    
-    
-    def rollout_batch_episode(self, 
-                              envs, 
-                              seeds=None,
-                              para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc']='dummy',
-                            #   asynchronous: Literal[None, 'idle', 'restart', 'continue']=None,
-                            #   num_cpus: Optional[Union[int, None]]=1,
-                            #   num_gpus: int=0,
+
+    def rollout_batch_episode(self,
+                              envs,
+                              seeds = None,
+                              para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc'] = 'dummy',
+                              #   asynchronous: Literal[None, 'idle', 'restart', 'continue']=None,
+                              #   num_cpus: Optional[Union[int, None]]=1,
+                              #   num_gpus: int=0,
                               compute_resource = {},
                               required_info = {}):
         num_cpus = None
@@ -229,7 +228,7 @@ class LDE(REINFORCE_Agent):
             num_cpus = compute_resource['num_cpus']
         if 'num_gpus' in compute_resource.keys():
             num_gpus = compute_resource['num_gpus']
-        env = ParallelEnv(envs, para_mode, num_cpus=num_cpus, num_gpus=num_gpus)
+        env = ParallelEnv(envs, para_mode, num_cpus = num_cpus, num_gpus = num_gpus)
 
         env.seed(seeds)
         input_net = env.reset()
@@ -244,8 +243,8 @@ class LDE(REINFORCE_Agent):
         while not env.all_done():
             # [bs, NP+BINS*2]
             action, h_, c_ = self.model.sampler(torch.Tensor(input_net[None, :]).to(self.devicee), h0, c0)  # parameter controller
-            action = action.reshape(self.__BATCH_SIZE, 1,-1).cpu().numpy()
-            next_input, reward, is_done,_ = env.step(action)
+            action = action.reshape(self.__BATCH_SIZE, 1, -1).cpu().numpy()
+            next_input, reward, is_done, _ = env.step(action)
             R += reward.reshape(-1)
             h0 = h_
             c0 = c_
@@ -260,7 +259,7 @@ class LDE(REINFORCE_Agent):
             meta_Cost = env.get_env_attr('meta_Cost')
             metadata = {'X': meta_X, 'Cost': meta_Cost}
             results['metadata'] = metadata
-            
+
         for key in required_info.keys():
             results[key] = env.get_env_attr(required_info[key])
         return results
