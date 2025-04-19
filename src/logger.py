@@ -1193,7 +1193,7 @@ class MMO_Logger(Basic_Logger):
     def data_wrapper_prsr_rollout(self, data, ):
         res = []
         for key in data.keys():
-            res.append(np.array(data[key][:, -1, 3]))
+            res.append(np.array(data[key])[:, -1, 3])
         return np.array(res)
 
     def data_wrapper_prsr_hist(self,data,):
@@ -1202,7 +1202,7 @@ class MMO_Logger(Basic_Logger):
     def data_wrapper_cost_rollout(self,data, ):
         res = []
         for key in data.keys():
-            res.append(np.array(data[key][:, -1]))
+            res.append(np.array(data[key])[:, -1])
         return np.array(res)
 
     def data_wrapper_return_rollout(self,data, ):

@@ -35,7 +35,8 @@ class LDE(REINFORCE_Agent):
     def __init__(self, config):
 
         self.config = config
-        self.__BATCH_SIZE = self.config.train_batch_size
+        # self.__BATCH_SIZE = self.config.train_batch_size
+        self.__BATCH_SIZE = None
         self.config.NP = 50
         self.config.TRAJECTORY_NUM = 20
         self.config.TRAJECTORY_LENGTH = 50
@@ -46,9 +47,11 @@ class LDE(REINFORCE_Agent):
         self.config.lr_decay = 1
         self.config.gamma = 0.99
         self.config.output_dim_actor = self.config.NP * 2
-        self.config.action_shape = (1, self.__BATCH_SIZE, self.config.NP * 2,)
+        # self.config.action_shape = (1, self.__BATCH_SIZE, self.config.NP * 2,)
+        self.config.action_shape = None
         self.config.node_dim = self.config.NP + 2 * self.config.BINS
-        self.__feature_shape = (self.__BATCH_SIZE, self.config.node_dim,)
+        # self.__feature_shape = (self.__BATCH_SIZE, self.config.node_dim,)
+        self.__feature_shape = None
 
         model = PolicyNet(self.config)
         self.config.optimizer = 'Adam'
@@ -94,6 +97,10 @@ class LDE(REINFORCE_Agent):
         if 'num_gpus' in compute_resource.keys():
             num_gpus = compute_resource['num_gpus']
         env = ParallelEnv(envs, para_mode, num_cpus = num_cpus, num_gpus = num_gpus)
+
+        self.__BATCH_SIZE = self.config.train_batch_size
+        self.config.action_shape = (1, self.__BATCH_SIZE, self.config.NP * 2,)
+        self.__feature_shape = (self.__BATCH_SIZE, self.config.node_dim,)
 
         self.optimizer.zero_grad()
         inputs_batch = []
@@ -183,6 +190,10 @@ class LDE(REINFORCE_Agent):
                         seed = None,
                         required_info = {}):
         with torch.no_grad():
+            self.__BATCH_SIZE = 1
+            self.config.action_shape = (1, self.__BATCH_SIZE, self.config.NP * 2,)
+            self.__feature_shape = (self.__BATCH_SIZE, self.config.node_dim,)
+
             env.seed(seed)
             is_done = False
             input_net = env.reset()
@@ -193,7 +204,7 @@ class LDE(REINFORCE_Agent):
             while not is_done:
                 # [bs, NP+BINS*2]
                 action, h_, c_ = self.model.sampler(torch.Tensor(input_net[None, :]).to(self.device), h0, c0)  # parameter controller
-                action = action.reshape(1, self.__BATCH_SIZE, -1)
+                action = action.reshape(1, self.__BATCH_SIZE, -1) # 测试的写法，但我觉得应该用reshape(self.__BATCH_SIZE, 1, -1)，虽然结果是一样的
                 action = np.squeeze(action.cpu().numpy(), axis = 0)
                 next_input, reward, is_done, _ = env.step(action)
                 R += np.mean(reward)
