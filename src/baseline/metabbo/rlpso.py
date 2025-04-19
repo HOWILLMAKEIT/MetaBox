@@ -48,10 +48,10 @@ class PolicyNetwork(nn.Module):
 
 class RLPSO(REINFORCE_Agent):
     def __init__(self, config):
-        
+
         # add specified config
         self.config = config
-        self.config.feature_dim = 2*config.dim
+        self.config.feature_dim = 2 * config.dim
         self.config.action_dim = 1
         self.config.action_shape = (1,)
         self.config.max_sigma = 0.7
@@ -67,19 +67,19 @@ class RLPSO(REINFORCE_Agent):
         # origin RLPSO doesn't have clip
         self.config.max_grad_norm = math.inf
 
-        super().__init__(self.config,{'model':model},[self.config.lr_model])
+        super().__init__(self.config, {'model': model}, [self.config.lr_model])
 
     def __str__(self):
-        return "RL_PSO"
+        return "RLPSO"
 
-    def train_episode(self, 
+    def train_episode(self,
                       envs,
                       seeds: Optional[Union[int, List[int], np.ndarray]],
-                      para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc']='dummy',
-                      asynchronous: Literal[None, 'idle', 'restart', 'continue']=None,
-                      num_cpus: Optional[Union[int, None]]=1,
-                      num_gpus: int=0,
-                      tb_logger = None,
+                      para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc'] = 'dummy',
+                      asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
+                      num_cpus: Optional[Union[int, None]] = 1,
+                      num_gpus: int = 0,
+                      tb_logger=None,
                       required_info={}):
         if self.device != 'cpu':
             num_gpus = max(num_gpus, 1)
@@ -92,8 +92,8 @@ class RLPSO(REINFORCE_Agent):
             state = torch.Tensor(state).to(self.device)
         except:
             pass
-        
-        _R = torch.zeros(len(env))
+
+        _R = torch.zeros(len(env)).to(self.device)
         _loss = []
         _reward = []
         # sample trajectory
@@ -102,13 +102,13 @@ class RLPSO(REINFORCE_Agent):
             action = action.reshape(len(env))
             action = action.cpu().numpy()
             log_prob = log_prob.reshape(len(env))
-            
-            next_state, reward, is_done,_ = env.step(action)
+
+            next_state, reward, is_done, _ = env.step(action)
             reward = torch.Tensor(reward).to(self.device)
             _R += reward
             _reward.append(reward)
             state = torch.Tensor(next_state).to(self.device)
-            policy_gradient = -log_prob*reward
+            policy_gradient = -log_prob * reward
             loss = policy_gradient.mean()
             self.optimizer.zero_grad()
             loss.mean().backward()
@@ -116,7 +116,8 @@ class RLPSO(REINFORCE_Agent):
             _loss.append(loss.item())
             self.optimizer.step()
             self.learning_time += 1
-            if self.learning_time >= (self.config.save_interval * self.cur_checkpoint) and self.config.end_mode == "step":
+            if self.learning_time >= (
+                    self.config.save_interval * self.cur_checkpoint) and self.config.end_mode == "step":
                 save_class(self.config.agent_save_dir, 'checkpoint-' + str(self.cur_checkpoint), self)
                 self.cur_checkpoint += 1
 
@@ -128,25 +129,24 @@ class RLPSO(REINFORCE_Agent):
                                      log_prob)
 
         is_train_ended = self.learning_time >= self.config.max_learning_step
-        return_info = {'return': _R.numpy(), 'loss' : _loss,'learn_steps': self.learning_time, }
+        return_info = {'return': _R.detach().cpu().numpy(), 'loss': _loss, 'learn_steps': self.learning_time, }
         env_cost = env.get_env_attr('cost')
         return_info['normalizer'] = env_cost[0]
         return_info['gbest'] = env_cost[-1]
         for key in required_info.keys():
             return_info[key] = env.get_env_attr(required_info[key])
         env.close()
-        
+
         return is_train_ended, return_info
 
-
-    def rollout_batch_episode(self, 
-                              envs, 
+    def rollout_batch_episode(self,
+                              envs,
                               seeds=None,
-                              para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc']='dummy',
-                              asynchronous: Literal[None, 'idle', 'restart', 'continue']=None,
-                              num_cpus: Optional[Union[int, None]]=1,
-                              num_gpus: int=0,
-                            required_info={}):
+                              para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc'] = 'dummy',
+                              asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
+                              num_cpus: Optional[Union[int, None]] = 1,
+                              num_gpus: int = 0,
+                              required_info={}):
         if self.device != 'cpu':
             num_gpus = max(num_gpus, 1)
         env = ParallelEnv(envs, para_mode, asynchronous, num_cpus, num_gpus)
@@ -157,12 +157,12 @@ class RLPSO(REINFORCE_Agent):
             state = torch.Tensor(state).to(self.device)
         except:
             pass
-        
+
         R = torch.zeros(len(env))
         # sample trajectory
         while not env.all_done():
             with torch.no_grad():
-                action, _  = self.model(state)
+                action, _ = self.model(state)
             action = action.reshape(len(env))
             action = action.cpu().numpy()
             # state transient

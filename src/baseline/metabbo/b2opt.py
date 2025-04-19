@@ -169,9 +169,6 @@ class B2OPT(Basic_Agent):
     def __str__(self):
         return 'B2OPT'
 
-    def get_step(self):
-        return self.learning_time
-
     def train_episode(self,
                       envs,
                       seeds: Optional[Union[int, List[int], np.ndarray]],
@@ -335,8 +332,8 @@ class B2OPT(Basic_Agent):
 
         # grad and clipped grad
         grad_norms, grad_norms_clipped = grad_norms
-        tb_logger.add_scalar('grad/OPT', grad_norms, mini_step)
-        tb_logger.add_scalar('grad_clipped/OPT', grad_norms_clipped, mini_step)
+        tb_logger.add_scalar('grad/OPT', grad_norms[0], mini_step)
+        tb_logger.add_scalar('grad_clipped/OPT', grad_norms_clipped[0], mini_step)
 
         # loss
         tb_logger.add_scalar('loss/Loss', loss.item(), mini_step)

@@ -21,7 +21,7 @@ class QLPSO(QLearning_Agent):
         self.__alpha_max = self.config.lr_model
         # self.lr_model = self.config.lr_model
         self.__alpha_decay = self.config.alpha_decay
-        self.__max_learning_step =  self.config.max_learning_step
+        self.__max_learning_step = self.config.max_learning_step
         # self.__global_ls = 0  # a counter of accumulated learned steps
         self.device = self.config.device
         # self.__cur_checkpoint = 0
@@ -35,22 +35,22 @@ class QLPSO(QLearning_Agent):
         q_values = self.q_table[state]  # shape: (bs, n_actions)
 
         # Compute the action probabilities for each state
-        prob = torch.softmax(q_values, dim = 0)  # shape: (bs, n_actions)
+        prob = torch.softmax(q_values, dim=0)  # shape: (bs, n_actions)
 
         # Choose an action based on the probabilities
         action = torch.multinomial(prob, 1)  # shape: (bs, 1)
 
         # Return the action
-        return action.squeeze().numpy()  # Return the action and remove unnecessary dimensions
+        return action.squeeze().detach().cpu().numpy()  # Return the action and remove unnecessary dimensions
 
-    def train_episode(self, 
+    def train_episode(self,
                       envs,
                       seeds: Optional[Union[int, List[int], np.ndarray]],
-                      para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc']='dummy',
-                      asynchronous: Literal[None, 'idle', 'restart', 'continue']=None,
-                      num_cpus: Optional[Union[int, None]]=1,
-                      num_gpus: int=0,
-                      tb_logger = None,
+                      para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc'] = 'dummy',
+                      asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
+                      num_cpus: Optional[Union[int, None]] = 1,
+                      num_gpus: int = 0,
+                      tb_logger=None,
                       required_info={}):
         if self.device != 'cpu':
             num_gpus = max(num_gpus, 1)
@@ -58,10 +58,10 @@ class QLPSO(QLearning_Agent):
         env.seed(seeds)
         # params for training
         gamma = self.gamma
-        
+
         state = env.reset()
-        state = torch.tensor(state,dtype=torch.int64)
-        
+        state = torch.tensor(state, dtype=torch.int64)
+
         _R = torch.zeros(len(env))
         _loss = []
         _reward = []
@@ -74,15 +74,15 @@ class QLPSO(QLearning_Agent):
 
             reward = torch.Tensor(reward).to(self.device)
             _reward.append(reward)
-            TD_error = reward + gamma * torch.max(self.q_table[next_state], dim = 1)[0] - self.q_table[state, action]
+            TD_error = reward + gamma * torch.max(self.q_table[next_state], dim=1)[0] - self.q_table[state, action]
 
             _loss.append(TD_error.mean().item())
             self.q_table[state, action] += self.lr_model * TD_error
 
-            
             self.learning_time += 1
 
-            if self.learning_time >= (self.config.save_interval * self.cur_checkpoint) and self.config.end_mode == "step":
+            if self.learning_time >= (
+                    self.config.save_interval * self.cur_checkpoint) and self.config.end_mode == "step":
                 save_class(self.config.agent_save_dir, 'checkpoint-' + str(self.cur_checkpoint), self)
                 self.cur_checkpoint += 1
 
@@ -102,13 +102,14 @@ class QLPSO(QLearning_Agent):
                     return_info[key] = env.get_env_attr(required_info[key])
                 env.close()
                 return self.learning_time >= self.config.max_learning_step, return_info
-        
+
             if self.__alpha_decay:
-                self.lr_model = self.__alpha_max - (self.__alpha_max - 0.1) * self.learning_time / self.__max_learning_step
-            
+                self.lr_model = self.__alpha_max - (
+                            self.__alpha_max - 0.1) * self.learning_time / self.__max_learning_step
+
             # store info
-            state = torch.tensor(next_state, dtype = torch.int64)
-            
+            state = torch.tensor(next_state, dtype=torch.int64)
+
         is_train_ended = self.learning_time >= self.config.max_learning_step
         _Rs = _R.detach().numpy().tolist()
         return_info = {'return': _Rs, 'loss': _loss, 'learn_steps': self.learning_time, }
@@ -120,5 +121,5 @@ class QLPSO(QLearning_Agent):
         env.close()
 
         return is_train_ended, return_info
-        
+
 

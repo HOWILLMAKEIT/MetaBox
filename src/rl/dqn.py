@@ -72,7 +72,7 @@ class DQN_Agent(Basic_Agent):
         self.cur_checkpoint = 0
 
         # save init agent
-        save_class(self.config.agent_save_dir,'checkpoint-'+str(self.cur_checkpoint),self)
+        save_class(self.config.agent_save_dir, 'checkpoint-' + str(self.cur_checkpoint), self)
         self.cur_checkpoint += 1
 
     def set_network(self, networks: dict, learning_rates: float):
@@ -104,9 +104,6 @@ class DQN_Agent(Basic_Agent):
         for network_name in networks:
             getattr(self, network_name).to(self.device)
 
-    def get_step(self):
-        return self.learning_time
-
     def update_setting(self, config):
         self.config.max_learning_step = config.max_learning_step
         self.config.agent_save_dir = config.agent_save_dir
@@ -114,7 +111,7 @@ class DQN_Agent(Basic_Agent):
         save_class(self.config.agent_save_dir, 'checkpoint0', self)
         self.config.save_interval = config.save_interval
         self.cur_checkpoint = 1
-        
+
     def get_action(self, state, epsilon_greedy=False):
         state = torch.Tensor(state).to(self.device)
         with torch.no_grad():
@@ -125,16 +122,16 @@ class DQN_Agent(Basic_Agent):
             action = torch.argmax(Q_list, -1).detach().cpu().numpy()
         return action
 
-    def train_episode(self, 
+    def train_episode(self,
                       envs,
                       seeds: Optional[Union[int, List[int], np.ndarray]],
-                      para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc']='dummy',
+                      para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc'] = 'dummy',
                       # todo: asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
                       # num_cpus: Optional[Union[int, None]] = 1,
                       # num_gpus: int = 0,
-                      compute_resource = {},
-                      tb_logger = None,
-                      required_info = {}):
+                      compute_resource={},
+                      tb_logger=None,
+                      required_info={}):
         num_cpus = None
         num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
         if 'num_cpus' in compute_resource.keys():
@@ -145,20 +142,20 @@ class DQN_Agent(Basic_Agent):
         env.seed(seeds)
         # params for training
         gamma = self.gamma
-        
+
         state = env.reset()
         try:
-            state = torch.Tensor(state)
+            state = torch.Tensor(state).to(self.device)
         except:
             pass
-        
+
         _R = torch.zeros(len(env))
         _loss = []
         _reward = []
         # sample trajectory
         while not env.all_done():
             action = self.get_action(state=state, epsilon_greedy=True)
-                        
+
             # state transient
             next_state, reward, is_end, info = env.step(action)
             _R += reward
@@ -175,21 +172,25 @@ class DQN_Agent(Basic_Agent):
                 state = torch.Tensor(next_state).to(self.device)
             except:
                 state = copy.deepcopy(next_state)
-            
+
             # begin update
             if len(self.replay_buffer) >= self.warm_up_size:
-                batch_obs, batch_action, batch_reward, batch_next_obs, batch_done = self.replay_buffer.sample(self.batch_size)
+                batch_obs, batch_action, batch_reward, batch_next_obs, batch_done = self.replay_buffer.sample(
+                    self.batch_size)
                 pred_Vs = self.model(batch_obs.to(self.device))  # [batch_size, n_act]
-                action_onehot = torch.nn.functional.one_hot(batch_action.to(self.device), self.n_act)  # [batch_size, n_act]
+                action_onehot = torch.nn.functional.one_hot(batch_action.to(self.device),
+                                                            self.n_act)  # [batch_size, n_act]
 
-                _avg_predict_Q = (pred_Vs * action_onehot).mean(0) # [n_act]
+                _avg_predict_Q = (pred_Vs * action_onehot).mean(0)  # [n_act]
                 predict_Q = (pred_Vs * action_onehot).sum(1)  # [batch_size]
 
                 target_output = self.model(batch_next_obs.to(self.device))
-                _avg_target_Q = batch_reward.to(self.device)[:, None] + (1 - batch_done.to(self.device))[:, None] * gamma * target_output
-                target_Q = batch_reward.to(self.device) + (1 - batch_done.to(self.device)) * gamma * target_output.max(1)[0]
-                _avg_target_Q = _avg_target_Q.mean(0) # [n_act]
-                
+                _avg_target_Q = batch_reward.to(self.device)[:, None] + (1 - batch_done.to(self.device))[:,
+                                                                        None] * gamma * target_output
+                target_Q = batch_reward.to(self.device) + (1 - batch_done.to(self.device)) * gamma * \
+                           target_output.max(1)[0]
+                _avg_target_Q = _avg_target_Q.mean(0)  # [n_act]
+
                 self.optimizer.zero_grad()
                 loss = self.criterion(predict_Q, target_Q)
                 loss.backward()
@@ -199,7 +200,8 @@ class DQN_Agent(Basic_Agent):
                 _loss.append(loss.item())
 
                 self.learning_time += 1
-                if self.learning_time >= (self.config.save_interval * self.cur_checkpoint) and self.config.end_mode == "step":
+                if self.learning_time >= (
+                        self.config.save_interval * self.cur_checkpoint) and self.config.end_mode == "step":
                     save_class(self.config.agent_save_dir, 'checkpoint-' + str(self.cur_checkpoint), self)
                     self.cur_checkpoint += 1
 
@@ -220,7 +222,6 @@ class DQN_Agent(Basic_Agent):
                         return_info[key] = env.get_env_attr(key)
                     env.close()
                     return self.learning_time >= self.config.max_learning_step, return_info
-        
 
         is_train_ended = self.learning_time >= self.config.max_learning_step
         _Rs = _R.detach().numpy().tolist()
@@ -232,10 +233,10 @@ class DQN_Agent(Basic_Agent):
             return_info[key] = env.get_env_attr(key)
             # print(f"{key} : {return_info[key]}")
         env.close()
-        
+
         return is_train_ended, return_info
-    
-    def rollout_episode(self, 
+
+    def rollout_episode(self,
                         env,
                         seed=None,
                         required_info=['normalizer', 'gbest']):
@@ -251,10 +252,10 @@ class DQN_Agent(Basic_Agent):
                 except:
                     st = [state]
                 action = self.get_action(state)[0]
-                action = action.cpu().numpy().squeeze()
-                state, reward, is_done = env.step(action)
+                action = action.squeeze()
+                state, reward, is_done, info = env.step(action)
                 R += reward
-            _Rs = R.detach().numpy().tolist()
+            _Rs = R
             env_cost = env.get_env_attr('cost')
             env_fes = env.get_env_attr('fes')
             results = {'cost': env_cost, 'fes': env_fes, 'return': _Rs}
@@ -267,16 +268,16 @@ class DQN_Agent(Basic_Agent):
             for key in required_info:
                 results[key] = getattr(env, key)
             return results
-    
-    def rollout_batch_episode(self, 
-                              envs, 
+
+    def rollout_batch_episode(self,
+                              envs,
                               seeds=None,
-                              para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc']='dummy',
+                              para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc'] = 'dummy',
                               # todo: asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
                               # num_cpus: Optional[Union[int, None]] = 1,
                               # num_gpus: int = 0,
-                              compute_resource = {},
-                              required_info = {}):
+                              compute_resource={},
+                              required_info={}):
         num_cpus = None
         num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
         if 'num_cpus' in compute_resource.keys():
@@ -290,13 +291,12 @@ class DQN_Agent(Basic_Agent):
             state = torch.Tensor(state).to(self.device)
         except:
             pass
-        
+
         R = torch.zeros(len(env))
         # sample trajectory
         while not env.all_done():
             with torch.no_grad():
                 action = self.get_action(state)
-            
 
             # state transient
             state, rewards, is_end, info = env.step(action)
@@ -315,13 +315,13 @@ class DQN_Agent(Basic_Agent):
             results[key] = env.get_env_attr(key)
         return results
 
-# todo add metric
+    # todo add metric
     def log_to_tb_train(self, tb_logger, mini_step,
                         grad_norms,
                         loss,
                         Return, Reward,
                         predict_Q, target_Q,
-                        extra_info = {}):
+                        extra_info={}):
         # Iterate over the extra_info dictionary and log data to tb_logger
         # extra_info: Dict[str, Dict[str, Union[List[str], List[Union[int, float]]]]] = {
         #     "loss": {"name": [], "data": [0.5]},  # No "name", logs under "loss"

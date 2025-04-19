@@ -3,7 +3,7 @@ from environment.problem.basic_problem import Basic_Problem
 from environment.problem.SOO.COCO_BBOB.bbob_numpy import *
 from os import path
 from torch.utils.data import Dataset
-
+import time
 import torch.nn as nn
 
 # MLP
@@ -99,7 +99,7 @@ class bbob_surrogate_model(Basic_Problem):
 
             return y.flatten().cpu().numpy()
 
-        elif isinstance(x, torch.tensor):
+        elif isinstance(x, torch.Tensor):
             input_x = (x - self.lb) / (self.ub - self.lb)
             input_x = input_x.to(torch.float64)
             with torch.no_grad():
@@ -107,7 +107,27 @@ class bbob_surrogate_model(Basic_Problem):
             return y
 
     # return y
+    def eval(self, x):
+        """
+        A general version of func() with adaptation to evaluate both individual and population.
+        """
+        start=time.perf_counter()
 
+        if x.ndim == 1:  # x is a single individual
+            y=self.func(x.reshape(1, -1))[0]
+            end=time.perf_counter()
+            self.T1+=(end-start)*1000
+            return y
+        elif x.ndim == 2:  # x is a whole population
+            y=self.func(x)
+            end=time.perf_counter()
+            self.T1+=(end-start)*1000
+            return y
+        else:
+            y=self.func(x.reshape(-1, x.shape[-1]))
+            end=time.perf_counter()
+            self.T1+=(end-start)*1000
+            return y
     def __str__(self):
         return f'Surrogate_{self.instance}'
 

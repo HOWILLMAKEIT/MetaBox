@@ -364,9 +364,9 @@ class RLEPSO(PPO_Agent):
                     state = torch.Tensor(state).to(self.device)
                 except:
                     state = [state]
-                action = self.actor(state)[0]
+                action = self.actor(state.unsqueeze(0))[0]
                 action = action.detach().cpu().numpy()
-                state, reward, is_done, info = env.step(action)
+                state, reward, is_done, info = env.step(action[0])
                 R += reward
             env_cost = env.get_env_attr('cost')
             env_fes = env.get_env_attr('fes')

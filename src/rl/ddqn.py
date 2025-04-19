@@ -327,7 +327,7 @@ class DDQN_Agent(Basic_Agent):
         tb_logger.add_scalar('loss', loss.item(), mini_step)
 
         # Q
-        for id, p_q, t_q in enumerate(zip(predict_Q, target_Q)):
+        for id, (p_q, t_q) in enumerate(zip(predict_Q, target_Q)):
             tb_logger.add_scalar(f"Predict_Q/action_{id}", p_q.item(), mini_step)
             tb_logger.add_scalar(f"Target_Q/action_{id}", t_q.item(), mini_step)
 
