@@ -68,8 +68,18 @@ ok 按照[autodoc2 官方文档](https://sphinx-autodoc2.readthedocs.io/en/stabl
 
 也就是说对于每种函数的 docstring，他都会将它解析成 markdown 格式，实测过后确实如此。
 对于使用 gpt 4o 的 copilot 来进行生成时，直接/doc 是无法生成 markdown 格式的，
+
 那最简单的方法就是 prompt engineering，也就是调整我们的提示词。
 我的方法是/doc 然后后面写上本文件夹下的 template.py 中的内容，实测下来确实按照要求写了，写的也很美观，供参考
+
+0419：
+
+和师兄约定好了：
+
+- 外层的基类所有接口都要写
+- 内层的算法（包括baseline什么的）先要讲清楚出处然后写好
+- 可以生成成后问对应的人 但是写作工作是我们写
+- template基本上是params（注意，params也要写道具体的内容，不只是type），return，里面的实现细节不用写
 
 ## markdown 与 readthedocs 的一些使用问题
 
@@ -181,3 +191,7 @@ sphinx-build 将把 po 文件构建为 mo 文件，并且你可以在 build 里�
 但是似乎不能用 autobuild 自动映射了（因为他会重新根据默认语言构建一遍，然后你就看不到了），不过应该是小问题，最终效果还是有的。
 
 ![中文版](docs/docs_for_docs/image/legendary_docs/image.png)
+
+# 记录
+
+RL 用 ppo 为例子，算法来源，函数接口，函数的全称
