@@ -1,3 +1,11 @@
 .idea
 *.pyc
 ./docs/build
+*.pkl
+*.err
+*.log
+*.out
+*.txt
+src/output/
+src/ray_tmp/
+src/agent_model

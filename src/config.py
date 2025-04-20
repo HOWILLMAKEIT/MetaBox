@@ -5,15 +5,22 @@ import time
 def get_config(args=None):
     parser = argparse.ArgumentParser()
     # Common config
-    parser.add_argument('--problem', default = 'bbob', choices = ['bbob', 'bbob-torch', 'bbob-noisy', 'bbob-noisy-torch',
-                                                                                'bbob-surrogate', 'Symbolic_bench','Symbolic_bench-torch',
-                                                                                'lsgo', 'lsgo-torch', 'protein', 'protein-torch', 'uav', 'uav-torch',
-                                                                                'mmo', 'mmo-torch'],
-                        help='specify the problem suite')
-    parser.add_argument('--dim', type=int, default=10, help='dimension of search space')
+    parser.add_argument('--train_problem', default = 'bbob', choices = ['bbob-10D', 'bbob-30D', 'bbob-torch-10D', 'bbob-torch-30D', 'bbob-noisy-10D', 
+                                                                        'bbob-noisy-30D', 'bbob-noisy-torch-10D', 'bbob-noisy-torch-30D', 'bbob-surrogate-2D','bbob-surrogate-5D','bbob-surrogate-10D',
+                                                                         'hpo-b', 'lsgo', 'lsgo-torch', 'protein', 'protein-torch', 'uav', 'uav-torch',
+                                                                                'mmo', 'mmo-torch', 'wcci2020', 'cec2017mto', 'moo-synthetic'],
+                        help='specify the problem suite for training')
+    parser.add_argument('--test_problem', default = None, choices = [None, 'bbob-10D', 'bbob-30D', 'bbob-torch-10D', 'bbob-torch-30D', 'bbob-noisy-10D', 
+                                                                        'bbob-noisy-30D', 'bbob-noisy-torch-10D', 'bbob-noisy-torch-30D', 'bbob-surrogate-2D','bbob-surrogate-5D','bbob-surrogate-10D', 'hpo-b',
+                                                                                'lsgo', 'lsgo-torch', 'protein', 'protein-torch', 'uav', 'uav-torch', 'ne', 
+                                                                                'mmo', 'mmo-torch', 'wcci2020', 'cec2017mto', 'moo-synthetic'],
+                        help='specify the problem suite for testing, default to be consistent with training')
+    parser.add_argument('--train_difficulty', default='easy', choices=['all', 'easy', 'difficult', 'user-define'], help='difficulty level for training problems')
+    parser.add_argument('--test_difficulty', default=None, choices=['all', 'easy', 'difficult', 'user-define'], help='difficulty level for testing problems, default to be consistent with training')
+    # parser.add_argument('--dim', type=int, default=10, help='dimension of search space')
     parser.add_argument('--upperbound', type=float, default=5, help='upperbound of search space')
-    parser.add_argument('--difficulty', default='easy', choices=['easy', 'difficult', 'user-define'], help='difficulty level')
-    parser.add_argument('--user_train_list', nargs='+', help = 'user define training list')
+    parser.add_argument('--user_train_problem_list', nargs='+', default=None, help = 'user define training problem list')
+    parser.add_argument('--user_test_problem_list', nargs='+', default=None, help = 'user define testing problem list')
     parser.add_argument('--device', default='cpu', help='device to use')
     parser.add_argument('--train', default=None, action='store_true', help='switch to train mode')
     parser.add_argument('--test', default=None, action='store_true', help='switch to inference mode')
@@ -22,6 +29,10 @@ def get_config(args=None):
     parser.add_argument('--mgd_test', default=None, action='store_true', help='switch to mgd_test mode')
     parser.add_argument('--mte_test', default=None, action='store_true', help='switch to mte_test mode')
 
+    parser.add_argument('--task_cnt', type=int, default=10, help='number of tasks in multitask') #for multitask
+    parser.add_argument('--generation', type=int, default=250, help='total generations for L2O') #for multitask
+
+    parser.add_argument('--full_meta_data', type=bool, default=True, help='store the metadata')
     # Training parameters
     parser.add_argument('--max_learning_step', type=int, default=1500000, help='the maximum learning step for training')
     parser.add_argument('--train_batch_size', type=int, default=1, help='batch size of train set')
@@ -36,6 +47,7 @@ def get_config(args=None):
                         help='learnable optimizer to compare')
     parser.add_argument('--n_checkpoint', type=int, default=20, help='number of training checkpoints')
     parser.add_argument('--resume_dir', type=str, help='directory to load previous checkpoint model')
+    parser.add_argument('--train_parallel_mode', type=str, default='dummy', choices=['dummy', 'subproc', 'ray'], help='the parellel processing method for batch env step in training')
 
     # Testing parameters
     parser.add_argument('--agent', type = str, nargs = '+', default = [], help = 'Key written in key.json')
@@ -52,10 +64,12 @@ def get_config(args=None):
     # parser.add_argument('--t_optimizer_for_cp', type=str, nargs='+', default=[],
     #                     help='traditional optimizer to compare')
     parser.add_argument('--test_batch_size', type=int, default=1, help='batch size of test set')
+    parser.add_argument('--parallel_batch', type=str, default='Batch', choices=['Full', 'Baseline_Problem', 'Problem_Testrun', 'Batch'], help='the parellel processing mode for testing')
+    
 
     # Rollout parameters
-    parser.add_argument('--agent_for_rollout', type=str, nargs='+', help='learnable agent for rollout')
-    parser.add_argument('--optimizer_for_rollout', type=str, nargs='+', help='learnabel optimizer for rollout')
+    parser.add_argument('--agent_for_rollout', type=str, help='learnable agent for rollout')
+    parser.add_argument('--checkpoints_for_rollout', default=None, type=int, nargs='+', help='the index of checkpoints for rollout')
     parser.add_argument('--plot_smooth', type=float, default=0.8,
                         help='a float between 0 and 1 to control the smoothness of figure curves')
 
@@ -74,8 +88,8 @@ def get_config(args=None):
     parser.add_argument('--model_to', type=str, help='the model trained on target problem set')
 
     # mte_test(transfer_learning) parameters
-    parser.add_argument('--pre_train_rollout', type=str, help='path of pre-train models rollout result .pkl file')
-    parser.add_argument('--scratch_rollout', type=str, help='path of scratch models rollout result .pkl file')
+    parser.add_argument('--pre_train_rollout', type=str, help='key of pre-train models rollout in model.json')
+    parser.add_argument('--scratch_rollout', type=str, help='key of scratch models rollout result in model.json')
 
     # todo add new config
 
@@ -83,10 +97,11 @@ def get_config(args=None):
     parser.add_argument('--seed', type = int, default = 3849)
     parser.add_argument('--epoch_seed', type = int, default = 100)
     parser.add_argument('--id_seed', type = int, default = 5)
-    parser.add_argument('--train_mode', type = str, choices = ['single', 'multi'])
-    parser.add_argument('--end_mode', type = str, choices = ['step', 'epoch'])
+    parser.add_argument('--train_mode', default='single', type = str, choices = ['single', 'multi'])
+    parser.add_argument('--end_mode', type = str, default = 'epoch', choices = ['step', 'epoch'])
 
     parser.add_argument('--test_run', type = int, default = 51)
+    parser.add_argument('--rollout_run', type = int, default = 10)
 
     parser.add_argument('--no_tb', action='store_true', default = False, help = 'disable tensorboard logging')
     parser.add_argument('--log_step', type = int, default = 50, help = 'log every log_step steps')
@@ -94,32 +109,33 @@ def get_config(args=None):
 
     config = parser.parse_args(args)
 
-
-
-
-    config.maxFEs = 2500
+    config.maxFEs = 20000
     # for bo, maxFEs is relatively smaller due to time limit
-    config.bo_maxFEs = 10 * config.dim
     config.n_logpoint = 50
-
-    if config.run_experiment and len(config.agent_for_cp) >= 1:
-        assert config.agent_load_dir is not None, "Option --agent_load_dir must be given since you specified option --agent_for_cp."
+    
+    if config.test_problem is None:
+        config.test_problem = config.train_problem
+    if config.test_difficulty is None:
+        config.test_difficulty = config.train_difficulty
+    if config.end_mode == 'epoch':
+        config.max_learning_step = 1e9
+    # if config.run_experiment and len(config.agent_for_cp) >= 1:
+    #     assert config.agent_load_dir is not None, "Option --agent_load_dir must be given since you specified option --agent_for_cp."
 
     if config.mgd_test or config.mte_test:
-        config.problem = config.problem_to
-        config.difficulty = config.difficulty_to
+        config.train_problem = config.problem_to
+        config.train_difficulty = config.difficulty_to
 
-    if config.problem in ['protein', 'protein-torch']:
+    if config.train_problem in ['protein', 'protein-torch']:
         config.dim = 12
         config.maxFEs = 1000
-        config.bo_maxFEs = 10
         config.n_logpoint = 5
 
-    config.run_time = f'{time.strftime("%Y%m%dT%H%M%S")}_{config.problem}_{config.difficulty}'
-    config.test_log_dir = config.log_dir + '/test/' + config.run_time + '/'
-    config.rollout_log_dir = config.log_dir + '/rollout/' + config.run_time + '/'
-    config.mgd_test_log_dir = config.log_dir + '/mgd_test/' + config.run_time + '/'
-    config.mte_test_log_dir = config.log_dir + '/mte_test/' + config.run_time + '/'
+    config.run_time = f'{time.strftime("%Y%m%dT%H%M%S")}_{config.train_problem}_{config.train_difficulty}'
+    config.test_log_dir = config.log_dir + 'test/' + config.run_time + '/'
+    config.rollout_log_dir = config.log_dir + 'rollout/' + config.run_time + '/'
+    config.mgd_test_log_dir = config.log_dir + 'mgd_test/' + config.run_time + '/'
+    config.mte_test_log_dir = config.log_dir + 'mte_test/' + config.run_time + '/'
 
     if config.train or config.run_experiment:
         config.agent_save_dir = config.agent_save_dir + config.train_agent + '/' + config.run_time + '/'
@@ -130,8 +146,8 @@ def get_config(args=None):
         config.save_interval = config.max_epoch // config.n_checkpoint
     config.log_interval = config.maxFEs // config.n_logpoint
 
-    if 'DEAP_CMAES' not in config.t_optimizer:
-        config.t_optimizer.append('DEAP_CMAES')
+    if 'CMAES' not in config.t_optimizer:
+        config.t_optimizer.append('CMAES')
     if 'Random_search' not in config.t_optimizer:
         config.t_optimizer.append('Random_search') # todo
 

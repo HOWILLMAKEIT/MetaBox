@@ -2,9 +2,10 @@ import torch
 from trainer import Trainer
 from tester import *
 from config import get_config
-from mmo_logger import *
+from logger import *
 import shutil
 import warnings
+import json
 warnings.filterwarnings("ignore")
 
 if __name__ == '__main__':
@@ -16,32 +17,41 @@ if __name__ == '__main__':
             (config.mgd_test is not None) +
             (config.mte_test is not None)) == 1, \
         'Among train, rollout, test, run_experiment, mgd_test & mte_test, only one mode can be given at one time.'
-
+    torch.set_default_dtype(torch.float64)
+    if config.train_problem in ['mmo', 'mmo-torch']:
+        logger = MMO_Logger(config)
+    elif config.train_problem in  ['wcci2020', 'cec2017mto']:
+        logger = MTO_Logger(config)
+    elif config.train_problem in  ['moo-synthetic']:
+        logger = MOO_Logger(config)
+    else:
+        logger = Basic_Logger(config)
+        
     # train
     if config.train:
         torch.set_grad_enabled(True)
         trainer = Trainer(config)
-        trainer.train_new()
+        trainer.train()
 
     # rollout
     if config.rollout:
         torch.set_grad_enabled(False)
         rollout_batch(config)
-        post_processing_rollout_statics(config.rollout_log_dir, MMO_Logger(config))
+        logger.post_processing_rollout_statics(config.rollout_log_dir)
 
     # test
     if config.test:
         torch.set_grad_enabled(False)
         tester = Tester(config)
-        tester.test_1()
-        post_processing_test_statics(config.test_log_dir, MMO_Logger(config))
+        tester.test()
+        logger.post_processing_test_statics(config.test_log_dir)
 
     # run_experiment
     if config.run_experiment:
         # train
         torch.set_grad_enabled(True)
         trainer = Trainer(config)
-        trainer.train_new()
+        trainer.train()
 
         # rollout
         agent_save_dir = config.agent_save_dir  # user defined agent_save_dir + agent name + run_time
@@ -52,39 +62,37 @@ if __name__ == '__main__':
         for filename in os.listdir(agent_save_dir):
             if os.path.isfile(os.path.join(agent_save_dir, filename)):
                 shutil.copy(os.path.join(agent_save_dir, filename), rollout_save_dir)
-        test_agent_load_dir = None
-        if config.agent_load_dir is not None:
-            test_agent_load_dir = config.agent_load_dir
-        config.agent_load_dir = agent_save_dir  # let config.agent_load_dir = config.agent_save_dir to load model
+        # test_agent_load_dir = None
+        # if config.agent_load_dir is not None:
+        #     test_agent_load_dir = config.agent_load_dir
+        # config.agent_load_dir = agent_save_dir  # let config.agent_load_dir = config.agent_save_dir to load model
         config.agent_for_rollout = [config.train_agent]
         config.optimizer_for_rollout = [config.train_optimizer]
         torch.set_grad_enabled(False)
         rollout_batch(config)
         shutil.rmtree(rollout_save_dir)  # remove rollout model files after rollout
-        post_processing_rollout_statics(config.rollout_log_dir, MMO_Logger(config))
+        logger.post_processing_rollout_statics(config.rollout_log_dir)
 
         # test
-        config.optimizer = None
-        if test_agent_load_dir is not None:
-            config.agent_load_dir = test_agent_load_dir
-        test_model_file = os.path.join(config.agent_load_dir, f'{config.train_agent}.pkl')
-        shutil.copy(os.path.join(agent_save_dir, 'checkpoint20.pkl'), test_model_file)  # copy checkpoint20.pkl to agent_name.pkl
-        if (config.train_agent != config.agent) and (config.train_agent not in config.agent_for_cp):
-            config.agent_for_cp.append(config.train_agent)
-        if (config.train_optimizer != config.optimizer) and (config.train_optimizer not in config.l_optimizer_for_cp):
-            config.l_optimizer_for_cp.append(config.train_optimizer)
+        # if test_agent_load_dir is not None:
+        #     config.agent_load_dir = test_agent_load_dir
+        with open('model.json', 'r', encoding = 'utf-8') as f:
+            json_data = json.load(f)
+        json_data[config.train_agent] = {'Agent': config.train_agent, 'Optimizer': config.train_optimizer, 'dir': os.path.join(agent_save_dir, 'checkpoint20.pkl')}
+        with open('model.json', 'w', encoding = 'utf-8') as f:
+            json.dump(json_data, f)
+        if (config.train_agent != config.agent) and (config.train_agent not in config.agent):
+            config.agent.append(config.train_agent)
         torch.set_grad_enabled(False)
         tester = Tester(config)
-        tester.test_1()
-        if test_agent_load_dir is None:
-            os.remove(test_model_file)  # remove test model files after test
-        post_processing_test_statics(config.test_log_dir, MMO_Logger(config))
+        tester.test()
+        logger.post_processing_test_statics(config.test_log_dir)
 
     # mgd_test
     if config.mgd_test:
         torch.set_grad_enabled(False)
-        mgd_test(config)
+        tester.mgd_test()
 
     # mte_test
     if config.mte_test:
-        mte_test(config)
+        tester.mte_test()
