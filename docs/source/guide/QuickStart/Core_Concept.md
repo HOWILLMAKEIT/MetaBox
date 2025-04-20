@@ -1,31 +1,4 @@
-# Quickstart
-
-```{toctree}
-
-:maxdepth: 1
-
-Common_Usage
-Core_Concept
-
-```
-
-Hi！Here is the fastest way to begin your journey of Metabox.
-
-## Installation
-
-### Linux
-
-```bash
-bash_to_install_metabox_linux
-```
-
-### Windows
-
-```bash
-bash_to_install_metabox_windows
-```
-
-## MetaBBO's Core Concept
+# MetaBBO's Core Concept
 
 > 💡 **MetaBox is an all-in-one platform for using and developing the algorithms in Meta-Black-Box Optimization (MetaBBO)**. 💡
 
@@ -38,11 +11,3 @@ Through meta-learning on target problem distribution, MetaBBO shifts from human-
 exceeds that of traditional BBO.
 
 For further exploration, we recommend reading the comprehensive survey : "[Toward Automated Algorithm Design: A Survey and Practical Guide to Meta-Black-Box-Optimization](https://arxiv.org/abs/2411.00625)" and exploring the curated repository [Awesome-MetaBBO](https://github.com/GMC-DRL/Awesome-MetaBBO), which aggregates MetaBBO-related research papers and code implementations.
-
-## Common Usage
-
-### 1. Train one algorithm on MetaBox's one Dataset
-
-### 2. Test one algorithm on MetaBox's one Dataset
-
-### 3. Bash Builder
