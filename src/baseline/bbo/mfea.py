@@ -59,16 +59,16 @@ class Individual():
     def update_evaluate(self):
         task = self.tasks[self.skill_factor]
         task_genes = self.genes[:task.dim]
-        x = task.decode(task_genes)
-        fitness = task.func(x)
+        x = task.decode(task_genes).reshape(1,-1)
+        fitness = task.func(x).reshape(-1)
         return self.skill_factor, fitness
 
     def first_evaluate(self):
         factorial_cost_list_j = []
         for j in range(self.tasks_count):
             task_j_genes = self.genes[:self.tasks[j].dim]
-            x =  self.tasks[j].decode(task_j_genes)
-            fitness = self.tasks[j].func(x)
+            x =  self.tasks[j].decode(task_j_genes).reshape(1,-1)
+            fitness = self.tasks[j].func(x).reshape(-1)
             factorial_cost_list_j.append(fitness)
 
         return factorial_cost_list_j
@@ -90,7 +90,7 @@ class MFEA(Basic_Optimizer):
         return "MFEA"
     
     
-    def run_episode(self, tasks):
+    def run_episode(self, mto_tasks):
         rmp = 0.3
         population_cnt = 50
         generation = 0
@@ -102,6 +102,7 @@ class MFEA(Basic_Optimizer):
             self.meta_Cost = []
             self.meta_X = []
 
+        tasks = mto_tasks.tasks
         task_count = len(tasks)
         D = np.zeros(shape=task_count)
         for i in range(task_count):
@@ -115,7 +116,7 @@ class MFEA(Basic_Optimizer):
         
         for i, individual in enumerate(population[:population_cnt]):
             factorial_all_cost = individual.first_evaluate()
-            factorial_costs[i] = factorial_all_cost
+            factorial_costs[i] = np.array(factorial_all_cost).reshape(-1)
 
         for j in range(task_count):
             factorial_cost_j = factorial_costs[:, j]
@@ -199,8 +200,8 @@ class MFEA(Basic_Optimizer):
 
             self._fes += population_cnt
             generation += 1
-            if self._fes >= log_index * self.log_interval:
-                log_index += 1
+            if self._fes >= self.log_index * self.log_interval:
+                self.log_index += 1
                 self.cost.append(best_fitness)
 
             done = self._fes >= self.__config.maxFEs or generation >= self.__config.generation
@@ -223,4 +224,6 @@ class MFEA(Basic_Optimizer):
             metadata = {'X':self.meta_X, 'Cost':self.meta_Cost}
             results['metadata'] = metadata
 
+        mto_tasks.update_T1()
+        
         return results 

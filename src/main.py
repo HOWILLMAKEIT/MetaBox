@@ -37,7 +37,7 @@ if __name__ == '__main__':
     if config.rollout:
         torch.set_grad_enabled(False)
         rollout_batch(config)
-        logger.post_processing_rollout_statics(config.rollout_log_dir)
+        #logger.post_processing_rollout_statics(config.rollout_log_dir)
 
     # test
     if config.test:

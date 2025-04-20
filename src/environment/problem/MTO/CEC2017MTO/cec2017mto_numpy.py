@@ -73,6 +73,9 @@ class Sphere(CEC2017MTO_Numpy_Problem):
     def func(self, x):
         z = self.sr_func(x, self.shift, self.rotate)
         return np.sum(z ** 2, -1)
+    
+    def __str__(self):
+        return 'Sphere'
 
 class Ackley(CEC2017MTO_Numpy_Problem):
     def __init__(self, dim, shift=None, rotate=None, bias=0):
@@ -85,6 +88,10 @@ class Ackley(CEC2017MTO_Numpy_Problem):
         sum1 = -0.2 * np.sqrt(np.sum(z ** 2, -1) / self.dim)
         sum2 = np.sum(np.cos(2 * np.pi * z), -1) / self.dim
         return np.round(np.e + 20 - 20 * np.exp(sum1) - np.exp(sum2), 15) + self.bias
+
+     
+    def __str__(self):
+        return 'Ackley'
     
 class Griewank(CEC2017MTO_Numpy_Problem):
     def __init__(self, dim, shift=None, rotate=None, bias=0):
@@ -100,6 +107,9 @@ class Griewank(CEC2017MTO_Numpy_Problem):
             p *= np.cos(z[:, i] / np.sqrt(1 + i))
         return 1 + s / 4000 - p + self.bias
 
+    def __str__(self):
+        return 'Griewank'
+
 class Rastrigin(CEC2017MTO_Numpy_Problem):
     def __init__(self, dim, shift=None, rotate=None, bias=0):
         super().__init__(dim, shift, rotate, bias)
@@ -109,6 +119,9 @@ class Rastrigin(CEC2017MTO_Numpy_Problem):
     def func(self, x):
         z = self.sr_func(x, self.shift, self.rotate)
         return np.sum(z ** 2 - 10 * np.cos(2 * np.pi * z) + 10, -1) + self.bias
+    
+    def __str__(self):
+        return 'Rastrigin'
     
 class Rosenbrock(CEC2017MTO_Numpy_Problem):
     def __init__(self, dim, shift=None, rotate=None, bias=0):
@@ -123,6 +136,9 @@ class Rosenbrock(CEC2017MTO_Numpy_Problem):
         z = z[:, :-1]
         tmp1 = z ** 2 - z_
         return np.sum(100 * tmp1 * tmp1 + (z - 1) ** 2, -1) + self.bias
+
+    def __str__(self):
+        return 'Rosenbrock'
 
 class Weierstrass(CEC2017MTO_Numpy_Problem):
     def __init__(self, dim, shift=None, rotate=None, bias=0):
@@ -139,6 +155,9 @@ class Weierstrass(CEC2017MTO_Numpy_Problem):
             sum2 += np.power(a, k) * np.cos(2 * np.pi * np.power(b, k) * 0.5)
         return sum1 - self.dim * sum2 + self.bias
     
+    def __str__(self):
+        return 'Weierstrass'
+    
 class Schwefel(CEC2017MTO_Numpy_Problem):
     def __init__(self, dim, shift=None, rotate=None, bias=0):
         super().__init__(dim, shift, rotate, bias)
@@ -152,3 +171,6 @@ class Schwefel(CEC2017MTO_Numpy_Problem):
         z += a
         g = z * np.sin(np.sqrt(np.abs(z)))
         return b * self.dim - np.sum(g,-1)
+    
+    def __str__(self):
+        return 'Schwefel'

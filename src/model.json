@@ -14,6 +14,11 @@
     "Optimizer": "RLDEAFL_Optimizer",
     "dir": "agent_model/train/RLDEAFL_Agent/20250321T132206_bbob_easy_10D/checkpoint0.pkl"
   },
+  "L2T": {
+    "Agent": "L2T",
+    "Optimizer": "L2T_Optimizer",
+    "dir": "agent_model/train/L2T/20250417T231429_cec2017mto_easy/checkpoint0.pkl"
+  },
   "Key you want to identify test metabbo": {
     "Agent": "Your method",
     "Optimizer": "Your method's optimizer",

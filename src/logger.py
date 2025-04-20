@@ -1561,3 +1561,41 @@ class MTO_Logger(Basic_Logger):
             plt.grid()
         plt.savefig(output_dir + f'mto_env_task_{task+1}_cost.png', bbox_inches='tight')
         plt.close()
+    
+    def post_processing_test_statics(self, log_dir: str) -> None:
+        print('Post processing & drawing')
+        with open(log_dir + 'test_results.pkl', 'rb') as f:
+            results = pickle.load(f)
+            
+        metabbo = self.config.agent
+        bbo = self.config.t_optimizer
+        
+        if not os.path.exists(log_dir + 'tables/'):
+            os.makedirs(log_dir + 'tables/')
+
+        if not os.path.exists(log_dir + 'pics/'):
+            os.makedirs(log_dir + 'pics/')
+
+        # 如果需要，可以为不同的算法绘制图形（例如 cost 图）
+        if 'cost' in results:
+            #print(results['cost'].keys())
+            for key in results['cost'].keys():
+                print(results['cost'][key])
+            # self.draw_test_data(results['cost'], 'cost', log_dir + 'pics/', logged=True, categorized=True, pdf_fig=pdf_fig, data_wrapper=np.array)
+            # self.draw_named_average_test_costs(results['cost'], log_dir + 'pics/',
+            #                                     {'MetaBBO-RL': metabbo,
+            #                                     'Classic Optimizer': bbo},
+            #                                     logged=False, pdf_fig=pdf_fig)
+            # self.draw_ECDF(results, log_dir + 'pics/', pdf_fig=pdf_fig)
+            # self.draw_boxplot(results, log_dir + 'pics/', pdf_fig=pdf_fig)
+            # with open(log_dir + 'aei.pkl', 'wb') as f:
+            #     pickle.dump(self.aei_metric(results, self.config.maxFEs), f)
+
+    def post_processing_rollout_statics(self, log_dir: str, pdf_fig: bool = True) -> None:
+        print('Post processing & drawing')
+        with open(log_dir+'rollout.pkl', 'rb') as f:
+            results = pickle.load(f)
+        if not os.path.exists(log_dir + 'pics/'):
+            os.makedirs(log_dir + 'pics/')
+        self.draw_train_logger('return', results['return'], log_dir + 'pics/', pdf_fig=pdf_fig)
+        self.draw_train_logger('cost', results['cost'], log_dir + 'pics/', pdf_fig=pdf_fig)

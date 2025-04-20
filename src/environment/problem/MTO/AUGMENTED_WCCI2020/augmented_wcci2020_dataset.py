@@ -36,6 +36,29 @@ def get_combinations():
     return combinations_list
 
 
+class AugmentedWCCI2020_MTO_Tasks():
+    def __init__(self, tasks):
+        self.tasks = tasks
+        self.T1 = None
+    
+    def reset(self):
+        for _ in range(len(self.tasks)):
+            self.tasks[_].reset()
+        self.T1 = 0
+    
+    def __str__(self):
+        name = ''
+        for i in range(len(self.tasks)):
+            task = self.tasks[i]
+            name += task.__str__()
+        return name
+
+    def update_T1(self):
+        eval_time = 0
+        for _ in range(len(self.tasks)):
+            eval_time += self.tasks[_].T1
+        self.T1 = eval_time
+
 class Augmented_WCCI2020_Dataset(Dataset):
     def __init__(self,
                  data,
@@ -50,9 +73,6 @@ class Augmented_WCCI2020_Dataset(Dataset):
         self.N = len(self.data)
         self.ptr = [i for i in range(0, self.N, batch_size)]
         self.index = np.arange(self.N)
-        self.maxdim = 0
-        for item in self.data:
-            self.maxdim = max(self.maxdim, item.dim)
 
 
     @staticmethod
@@ -173,8 +193,8 @@ class Augmented_WCCI2020_Dataset(Dataset):
             train_select_list = user_train_list
             test_select_list = user_test_list
 
-        train_set = [task_set[i] for i in train_select_list]
-        test_set = [task_set[i] for i in test_select_list]
+        train_set = [AugmentedWCCI2020_MTO_Tasks(task_set[i]) for i in train_select_list]
+        test_set = [AugmentedWCCI2020_MTO_Tasks(task_set[i]) for i in test_select_list]
 
         return Augmented_WCCI2020_Dataset(train_set, train_batch_size), Augmented_WCCI2020_Dataset(test_set, test_batch_size)
 

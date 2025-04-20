@@ -3,6 +3,7 @@ import torch
 import copy
 from typing import Any, Tuple
 import time
+from environment.optimizer.learnable_optimizer import Learnable_Optimizer
 
 def DE_mutation(populations):
     # input: pupulations [population_cnt, dim]
@@ -82,51 +83,6 @@ def mixed_DE(populations, source_pupulations, KT_index, action_2, action_3):
 
     return U
 
-
-
-"""
-This is a basic class for learnable backbone optimizer.
-Your own backbone optimizer should inherit from this class and have the following methods:
-    1. __init__(self, config) : to initialize the backbone optimizer.
-    2. init_population(self, problem) : to initialize the population, calculate costs using problem.eval()
-       and record some information such as pbest and gbest if needed. It's expected to return a state for
-       agent to make decisions.
-    3. update(self, action, problem) : to update the population or one individual in population as you wish
-       using the action given by agent, calculate new costs using problem.eval() and update some records
-       if needed. It's expected to return a tuple of [next_state, reward, is_done] for agent to learn.
-"""
-class Learnable_Optimizer:
-    """
-    Abstract super class for learnable backbone optimizers.
-    """
-    def __init__(self, config):
-        self.__config = config
-
-    def init_population(self,
-                        tasks:Any) -> Any:
-        raise NotImplementedError
-
-    def update(self,
-               action: Any,
-               tasks:Any) -> Tuple[Any]:
-        raise NotImplementedError
-
-    def seed(self, seed = None):
-        rng_seed = int(time.time()) if seed is None else seed
-
-        self.rng = np.random.default_rng(rng_seed)
-
-        self.rng_cpu = torch.Generator().manual_seed(rng_seed)
-
-        self.rng_gpu = None
-        # if self.__config.device.type == 'cuda':
-        #     self.rng_gpu = torch.Generator(device = self.__config.device).manual_seed(rng_seed)
-        if self.__config.device == 'cuda':
-            self.rng_gpu = torch.Generator(device = self.__config.device).manual_seed(rng_seed)
-        # GPU: torch.rand(4, generator = rng_gpu, device = 'self.__config.device')
-        # CPU: torch.rand(4, generator = rng_cpu)
-
-
 class L2T_Optimizer(Learnable_Optimizer):
     def __init__(self, config):
         super().__init__(config)
@@ -202,8 +158,8 @@ class L2T_Optimizer(Learnable_Optimizer):
 
     def init_population(self, tasks):
         self.fes = 0
-        self.task = tasks
-        self.parent_population = np.array([[np.random.rand(self.dim) for i in range(self.pop_cnt)] for _ in range(self.task_cnt)])
+        self.task = tasks.tasks
+        self.parent_population = np.array([[self.rng.rand(self.dim) for i in range(self.pop_cnt)] for _ in range(self.task_cnt)])
         self.log_index = 1
         
 
@@ -237,9 +193,9 @@ class L2T_Optimizer(Learnable_Optimizer):
             action_2 = actions[1]
             action_3 = actions[2]
 
-            rand_source_index = np.random.randint(low=0,high=self.task_cnt)
+            rand_source_index = self.rng.randint(low=0,high=self.task_cnt)
             while rand_source_index == i:
-                rand_source_index = np.random.randint(low=0, high=self.task_cnt)
+                rand_source_index = self.rng.randint(low=0, high=self.task_cnt)
 
             source_population = self.parent_population[rand_source_index]
 
@@ -247,7 +203,7 @@ class L2T_Optimizer(Learnable_Optimizer):
             self.KT_count = int(np.ceil(self.N_kt[i] * self.pop_cnt))
             if self.KT_count == 0:
                 self.KT_count = 1
-            self.KT_index[i] = np.random.choice(np.arange(self.pop_cnt), size=self.KT_count, replace=False)
+            self.KT_index[i] = self.rng.choice(np.arange(self.pop_cnt), size=self.KT_count, replace=False)
 
             self.KT_offsprings[i] = mixed_DE(self.parent_population[i], source_population, self.KT_index[i], action_2, action_3)
             self.offsprings[i] = copy.deepcopy(self.noKT_offsprings[i])
@@ -327,6 +283,9 @@ class L2T_Optimizer(Learnable_Optimizer):
                 self.cost[-1] = self.gbest
             else:
                 self.cost.append(self.gbest)
+        
+        if is_end:
+            tasks.update_T1()
 
         info = {}
         return next_state, self.total_reward, is_end, info

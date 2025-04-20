@@ -173,14 +173,21 @@ class Trainer(object):
                                                                               seeds = seed_list,
                                                                               tb_logger = tb_logger,
                                                                               para_mode = self.config.train_parallel_mode,
-                                                                              )
+                                                         )
                     # train_meta_data {'return': list[], 'loss': list[], 'learn_steps': int}
 
                     # exceed_max_ls, pbar_info_train = self.agent.train_episode(env)  # pbar_info -> dict
+                    # postfix_str = (
+                    #     f"loss={np.mean(train_meta_data['loss']):.2e}, "
+                    #     f"learn_steps={train_meta_data['learn_steps']}, "
+                    #     f"return={np.mean(train_meta_data['return']):.2e}"
+                    # )
+
+                    meanR = torch.mean(train_meta_data['return'])
                     postfix_str = (
-                        f"loss={np.mean(train_meta_data['loss']):.2e}, "
+                        f"loss={train_meta_data['loss']:.2e}, "
                         f"learn_steps={train_meta_data['learn_steps']}, "
-                        f"return={np.mean(train_meta_data['return']):.2e}"
+                        f"return={f'{meanR:.2e}'}"
                     )
                     train_log['loss'].append(train_meta_data['loss'])
                     train_log['learn_steps'].append(train_meta_data['learn_steps'])
@@ -218,9 +225,13 @@ class Trainer(object):
             epoch += 1
 
             if not self.config.no_tb:
+                # tb_logger.add_scalar("epoch-step", learn_step, epoch)
+                # tb_logger.add_scalar("epoch-avg-return", np.mean(return_record), epoch)
+                # tb_logger.add_scalar("epoch-avg-loss", np.mean(loss_record), epoch)
+
                 tb_logger.add_scalar("epoch-step", learn_step, epoch)
-                tb_logger.add_scalar("epoch-avg-return", np.mean(return_record), epoch)
-                tb_logger.add_scalar("epoch-avg-loss", np.mean(loss_record), epoch)
+                tb_logger.add_scalar("epoch-avg-return", return_record/(self.train_set.N / self.train_set.batch_size * bs), epoch)
+                tb_logger.add_scalar("epoch-avg-loss", loss_record/(self.train_set.N / self.train_set.batch_size * bs), epoch)
 
             if epoch >= (self.config.save_interval * self.agent.cur_checkpoint) and self.config.end_mode == "epoch":
                 save_class(self.config.agent_save_dir, 'checkpoint' + str(self.agent.cur_checkpoint), self.agent)

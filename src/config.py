@@ -100,7 +100,8 @@ def get_config(args=None):
     parser.add_argument('--train_mode', default='single', type = str, choices = ['single', 'multi'])
     parser.add_argument('--end_mode', type = str, choices = ['step', 'epoch'])
 
-    parser.add_argument('--test_run', type = int, default = 51)
+    #parser.add_argument('--test_run', type = int, default = 51)
+    parser.add_argument('--test_run', type = int, default = 1)
     parser.add_argument('--rollout_run', type = int, default = 10)
 
     parser.add_argument('--no_tb', action='store_true', default = False, help = 'disable tensorboard logging')
@@ -146,9 +147,11 @@ def get_config(args=None):
         config.save_interval = config.max_epoch // config.n_checkpoint
     config.log_interval = config.maxFEs // config.n_logpoint
 
-    if 'CMAES' not in config.t_optimizer:
-        config.t_optimizer.append('CMAES')
-    if 'Random_search' not in config.t_optimizer:
-        config.t_optimizer.append('Random_search') # todo
-
+    # if 'CMAES' not in config.t_optimizer:
+    #     config.t_optimizer.append('CMAES')
+    # if 'Random_search' not in config.t_optimizer:
+    #     config.t_optimizer.append('Random_search') # todo
+    
+    if 'MFEA' not in config.t_optimizer:
+        config.t_optimizer.append('MFEA')
     return config

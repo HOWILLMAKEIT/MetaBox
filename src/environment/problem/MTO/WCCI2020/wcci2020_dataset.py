@@ -4,6 +4,29 @@ import numpy as np
 from torch.utils.data import Dataset
 import os
 
+class WCCI2020MTO_Tasks():
+    def __init__(self, tasks):
+        self.tasks = tasks
+        self.T1 = None
+    
+    def reset(self):
+        for _ in range(len(self.tasks)):
+            self.tasks[_].reset()
+        self.T1 = 0
+    
+    def __str__(self):
+        name = ''
+        for i in range(len(self.tasks)):
+            task = self.tasks[i]
+            name += task.__str__()
+        return name
+
+    def update_T1(self):
+        eval_time = 0
+        for _ in range(len(self.tasks)):
+            eval_time += self.tasks[_].T1
+        self.T1 = eval_time
+
 class WCCI2020_Dataset(Dataset):
     def __init__(self,
                  data,
@@ -18,10 +41,6 @@ class WCCI2020_Dataset(Dataset):
         self.N = len(self.data)
         self.ptr = [i for i in range(0, self.N, batch_size)]
         self.index = np.arange(self.N)
-        self.maxdim = 0
-        for item in self.data:
-            self.maxdim = max(self.maxdim, item.dim)
-
 
     def __getitem__(self, item):
         
@@ -157,8 +176,8 @@ class WCCI2020_Dataset(Dataset):
                     Tasks.append(task)
             
             if task_ID in train_id:
-                train_set.append(Tasks)
+                train_set.append(WCCI2020MTO_Tasks(Tasks))
             if task_ID in test_id:
-                test_set.append(Tasks)
+                test_set.append(WCCI2020MTO_Tasks(Tasks))
 
         return WCCI2020_Dataset(train_set, train_batch_size), WCCI2020_Dataset(test_set, test_batch_size)

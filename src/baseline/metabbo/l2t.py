@@ -128,11 +128,11 @@ class L2T(PPO_Agent):
         
         # figure out the actor network
         # self.actor = None
-        actor = Actor(self.config.n_state, self.config.n_action).float()
+        actor = Actor(self.config.n_state, self.config.n_action)
         
         # figure out the critic network
         # self.critic = None
-        critic = Critic(self.config.n_state).float()
+        critic = Critic(self.config.n_state)
 
         super().__init__(self.config, {'actor': actor, 'critic': critic}, [self.config.lr_actor, self.config.lr_critic])
 
@@ -169,7 +169,7 @@ class L2T(PPO_Agent):
         state = env.reset()
 
         try:
-            state = torch.Tensor(state).to(self.device)
+            state = torch.DoubleTensor(state).to(self.device)
         except:
             pass
         
@@ -327,7 +327,7 @@ class L2T(PPO_Agent):
 
                 if self.learning_time >= self.config.max_learning_step:
                     memory.clear_memory()
-                    return_info = {'return': _R, 'learn_steps': self.learning_time, 'loss':_loss}
+                    return_info = {'return': _R, 'learn_steps': self.learning_time, 'loss':np.mean(_loss)}
                     return_info['gbest'] = env.get_env_attr('gbest')
                     for key in required_info.keys():
                         return_info[key] = env.get_env_attr(required_info[key])
@@ -337,7 +337,7 @@ class L2T(PPO_Agent):
             memory.clear_memory()
         
         is_train_ended = self.learning_time >= self.config.max_learning_step
-        return_info = {'return': _R, 'learn_steps': self.learning_time, 'loss':_loss}
+        return_info = {'return': _R, 'learn_steps': self.learning_time, 'loss':np.mean(_loss)}
         return_info['gbest'] = env.get_env_attr('gbest')
         for key in required_info.keys():
             return_info[key] = env.get_env_attr(required_info[key])
@@ -356,7 +356,7 @@ class L2T(PPO_Agent):
             R = 0
             while not is_done:
                 try:
-                    state = torch.Tensor(state).to(self.device)
+                    state = torch.DoubleTensor(state).to(self.device)
                 except:
                     state = [state]
                 action = self.actor(state)[0]

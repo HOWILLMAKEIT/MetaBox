@@ -18,6 +18,9 @@ from environment.optimizer.basic_optimizer import Basic_Optimizer
 from rl import Basic_Agent
 from environment.problem.basic_problem import Basic_Problem
 from dill import dumps, loads
+from environment.optimizer.l2t_optimizer import L2T_Optimizer
+from baseline.metabbo.l2t import L2T
+from baseline.bbo.mfea import MFEA
 from environment.optimizer import (
     DEDDQN_Optimizer,
     DEDQN_Optimizer,
@@ -108,12 +111,13 @@ def record_data(data, test_set, agent_for_rollout, checkpoints, results, meta_re
                 meta_results[item['problem_name']][item['agent_name']].append(item[key])
                 continue
             if key not in ['agent_name', 'problem_name'] and key not in results.keys():
-                results[key] = {}
-                for problem in test_set.data:
-                    results[key][problem.__str__()] = {}
-                    for agent_id in checkpoints:
-                        results[key][problem.__str__()][agent_for_rollout+f'-{agent_id}'] = []  # 51 np.arrays
-            results[key][item['problem_name']][item['agent_name']].append(item[key])
+                if key not in results.keys():
+                    results[key] = {}
+                    for problem in test_set.data:
+                        results[key][problem.__str__()] = {}
+                        for agent_id in checkpoints:
+                            results[key][problem.__str__()][agent_for_rollout+f'-{agent_id}'] = []  # 51 np.arrays
+                results[key][item['problem_name']][item['agent_name']].append(item[key])
     return results, meta_results
 
 
@@ -287,7 +291,7 @@ class Tester(object):
                     self.meta_data_results[problem.__str__()][agent_name] = []  # test_run x fes
                 for optimizer in self.t_optimizer_for_cp:
                     self.meta_data_results[problem.__str__()][type(optimizer).__name__] = []
-            
+
         torch.manual_seed(self.config.seed)
         torch.cuda.manual_seed(self.config.seed)
         np.random.seed(self.config.seed)
@@ -795,13 +799,13 @@ def rollout_batch(config):
 
     # get agent
     for agent_id in checkpoints:
-        with open(os.path.join(upper_dir, f'checkpoint-{agent_id}.pkl'), 'rb') as f:
+        with open(os.path.join(upper_dir, f'checkpoint{agent_id}.pkl'), 'rb') as f:
             agents.append(pickle.load(f))
             optimizer_for_rollout.append(eval(l_optimizer)(copy.deepcopy(config)))
 
     rollout_results = {'cost': {},
                         'return':{},
-                        'config': copy.deepcopy(config)}
+                        'config': vars(copy.deepcopy(config))}
     meta_data_results = {}
     for key in rollout_results.keys():
         if key not in rollout_results.keys():
@@ -822,7 +826,7 @@ def rollout_batch(config):
                                                                                                                             for seed in seed_list]
         MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray', num_gpus=num_gpus)
         meta_test_data = MetaBBO_test.rollout()
-        rollout_results, meta_data_results = record_data(meta_test_data, test_set, agents, checkpoints, rollout_results, meta_data_results, config)
+        rollout_results, meta_data_results = record_data(meta_test_data, test_set, agent_for_rollout, checkpoints, rollout_results, meta_data_results, config)
         meta_data_results = store_meta_data(config.rollout_log_dir, meta_data_results)
             
     elif parallel_batch == 'Baseline_Problem':
@@ -833,7 +837,7 @@ def rollout_batch(config):
                                                                                                                             ]
             MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray', num_gpus=num_gpus)
             meta_test_data = MetaBBO_test.rollout()
-            rollout_results, meta_data_results = record_data(meta_test_data, test_set, agents, checkpoints, rollout_results, meta_data_results, config)
+            rollout_results, meta_data_results = record_data(meta_test_data, test_set, agent_for_rollout, checkpoints, rollout_results, meta_data_results, config)
             meta_data_results = store_meta_data(config.rollout_log_dir, meta_data_results)
             pbar.update()
         pbar.close()
@@ -847,7 +851,7 @@ def rollout_batch(config):
                                                                                                                             for seed in seed_list]
             MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray', num_gpus=num_gpus)
             meta_test_data = MetaBBO_test.rollout()
-            rollout_results, meta_data_results = record_data(meta_test_data, test_set, agents, checkpoints, rollout_results, meta_data_results, config)
+            rollout_results, meta_data_results = record_data(meta_test_data, test_set, agent_for_rollout, checkpoints, rollout_results, meta_data_results, config)
             meta_data_results = store_meta_data(config.rollout_log_dir, meta_data_results)
             pbar.update()
         pbar.close()
@@ -862,11 +866,11 @@ def rollout_batch(config):
                     testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent), PBO_Env(copy.deepcopy(p), copy.deepcopy(optimizer)), seed, ckp) for p in problem]
                     MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray', num_gpus=num_gpus)
                     meta_test_data = MetaBBO_test.rollout()
-                    rollout_results, meta_data_results = record_data(meta_test_data, test_set, agents, checkpoints, rollout_results, meta_data_results, config)
+                    rollout_results, meta_data_results = record_data(meta_test_data, test_set, agent_for_rollout, checkpoints, rollout_results, meta_data_results, config)
                     pbar.update()
             meta_data_results = store_meta_data(config.rollout_log_dir, meta_data_results)
         pbar.close()
-                    
+    
     else:
         raise NotImplementedError
     log_dir=config.rollout_log_dir
