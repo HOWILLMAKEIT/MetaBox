@@ -290,7 +290,7 @@ class RLHPSDE_Optimizer(Learnable_Optimizer):
         if problem.optimum is None:
             done = self.fes >= self.__maxFEs
         else:
-            done = (self.fes >= self.__maxFEs or population.gbest <= 1e-8)
+            done = self.fes >= self.__maxFEs 
 
         if self.__config.full_meta_data:
             self.meta_X.append(population.group.copy())
@@ -300,7 +300,8 @@ class RLHPSDE_Optimizer(Learnable_Optimizer):
             if len(self.cost) >= self.__config.n_logpoint + 1:
                 self.cost[-1] = population.gbest
             else:
-                self.cost.append(population.gbest)
+                while len(self.cost) < self.__config.n_logpoint + 1:
+                    self.cost.append(population.gbest)
                 
         info = {}        
         

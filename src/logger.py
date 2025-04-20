@@ -82,6 +82,10 @@ class Basic_Logger:
             std_data[agent] = np.mean(std_data[agent], 0)
         return avg_data, std_data
 
+    def data_wrapper_cost_rollout(self, data):
+        res = np.array(data)
+        return res[:, -1]
+
     def cal_scores1(self, D: dict, maxf: float):
         """
         Tool function for CEC metric
@@ -100,11 +104,13 @@ class Basic_Logger:
         Get the results of Random Search for further usage, i.e., for normalization
         """
         baseline = {}
-        complexity = []
+        T1 = []
+        T2 = []
         for pname in results['T1'].keys():
-            complexity.append(np.log10(1. / (results['T2'][pname]['Random_search'] - results['T1'][pname]['Random_search']) / results['T0']))
-        baseline['complexity_std'] = np.mean(complexity)
-        # baseline['complexity_std'] = 0.005
+            T1.append(results['T1'][pname]['Random_search'])
+            T2.append(results['T2'][pname]['Random_search'])
+        baseline['complexity_avg'] = np.mean(np.log10(1. / (np.array(T2) - np.array(T1)) / results['T0']))
+        baseline['complexity_std'] = np.std(np.log10(1. / (np.array(T2) - np.array(T1)) / results['T0']))
         avg = []
         std = []
         for problem in results['fes'].keys():
@@ -129,31 +135,26 @@ class Basic_Logger:
         """
         save_list=[]
         t0=results['T0']
-        t1=results['T1']
-        is_dict=False
-        if type(t1) is dict:
-            is_dict=True
-        t2s=results['T2']
         ratios=[]
-        t2_list=[]
-        indexs=[]
+        t1_list = {}
+        t2_list = {}
+        indexs=list(results['T1'][list(results['T1'].keys())[0]].keys())
         columns=['T0','T1','T2','(T2-T1)/T0']
-        for key,value in t2s.items():
-            indexs.append(key)
-            t2_list.append(value)
-            if is_dict:
-                ratios.append((value-t1[key])/t0)
-            else:
-                ratios.append((value-t1)/t0)
-        n=len(t2_list)
+        for agent in indexs:
+            t1_list[agent] = []
+            t2_list[agent] = []
+            for pname in results['T1'].keys():
+                t1_list[agent].append(results['T1'][pname][agent])
+                t2_list[agent].append(results['T1'][pname][agent])
+            t1_list[agent] = np.mean(t1_list[agent])
+            t2_list[agent] = np.mean(t2_list[agent])
+            ratios.append((t2_list[agent] - t1_list[agent])/t0)
+
+        n=len(indexs)
         data=np.zeros((n,4))
         data[:,0]=t0
-        if is_dict:
-            for i,(key,value) in enumerate(t1.items()):
-                data[i,1]=value
-        else:
-            data[:,1]=t1
-        data[:,2]=t2_list
+        data[:,1]=list(t1_list.values())
+        data[:,2]=list(t2_list.values())
         data[:,3]=ratios
         table=pd.DataFrame(data=np.round(data,2),index=indexs,columns=columns)
         table.to_excel(os.path.join(out_dir,'algorithm_complexity.xlsx'))
@@ -289,20 +290,18 @@ class Basic_Logger:
     def aei_complexity(self, complexity_data: dict, baseline: dict, ignore: Optional[list]=None):
         avg = baseline['complexity_avg']
         std = baseline['complexity_std']
-        problems = complexity_data.keys()
-        agents = complexity_data[list(problems)[0]].keys()
+        problems = complexity_data['T1'].keys()
+        agents = complexity_data['T1'][list(problems)[0]].keys()
         results_complex = {}
+        complexity_data['complexity'] = {}
         for key in agents:
             if (ignore is not None) and (key in ignore):
                 continue
             if key not in complexity_data['complexity'].keys():
                 t0 = complexity_data['T0']
-                if isinstance(complexity_data['T1'], dict):
-                    t1 = complexity_data['T1'][key]
-                else:
-                    t1 = complexity_data['T1']
-                t2 = complexity_data['T2'][key]
-                complexity_data['complexity'][key] = ((t2 - t1) / t0)
+                t1 = np.array([complexity_data['T1'][pname][key] for pname in problems])
+                t2 = np.array([complexity_data['T2'][pname][key] for pname in problems])
+                complexity_data['complexity'][key] = np.mean((t2 - t1) / t0)
             results_complex[key] = np.exp((np.log10(1/complexity_data['complexity'][key]) - avg)/std/1000 * 1)
         aei_mean, aei_std = self.cal_aei(results_complex, agents, ignore)
         return results_complex, aei_mean, aei_std
@@ -333,7 +332,7 @@ class Basic_Logger:
         
         results_cost, aei_cost_mean, aei_cost_std = self.aei_cost(data['cost'], baseline, ignore)
         results_fes, aei_fes_mean, aei_fes_std = self.aei_fes(data['fes'], baseline, maxFEs, ignore)
-        results_complex, aei_clx_mean, aei_clx_std = self.aei_fes(data['complexity'], baseline, ignore)
+        results_complex, aei_clx_mean, aei_clx_std = self.aei_complexity(data, baseline, ignore)
         
         mean = {}
         std = {}
@@ -400,7 +399,7 @@ class Basic_Logger:
                 if agent not in self.color_arrangement.keys():
                     self.color_arrangement[agent] = colors[self.arrange_index]
                     self.arrange_index += 1
-                values = np.array(data[name][agent])
+                values = np.array(data[name][agent])[:, -1]
                 plt.ecdf(values, label=to_label(agent), marker='*', markevery=8, markersize=13, c=self.color_arrangement[agent])
             plt.grid()
             plt.xlabel('costs')
@@ -622,6 +621,7 @@ class Basic_Logger:
 
     def draw_boxplot(self, data: dict, output_dir: str, Name: Optional[Union[str, list]]=None, ignore: Optional[list]=None, pdf_fig: bool = True) -> None:
         fig_type = 'pdf' if pdf_fig else 'png'
+        data = data['cost']
         for problem in list(data.keys()):
             if Name is not None and (isinstance(Name, str) and problem != Name) or (isinstance(Name, list) and problem not in Name):
                 continue
@@ -703,37 +703,68 @@ class Basic_Logger:
         plt.ylabel('AEI', fontsize=60)
         plt.savefig(output_dir + f'rank_hist.{fig_type}', bbox_inches='tight')
         
-    def draw_train_logger(self, data_type: str, data: dict, output_dir: str, ylabel: str = None, norm: bool = False, pdf_fig: bool = True, data_wrapper: Callable = None) -> None:
+    def draw_train_logger(self, data_type: str, steps: list, data: dict, output_dir: str, ylabel: str = None, norm: bool = False, pdf_fig: bool = True, data_wrapper: Callable = None) -> None:
         means, stds = self.get_average_data(data, norm=norm, data_wrapper=data_wrapper)
         plt.figure()
-        for agent in means.keys():
-            x = np.arange(len(means[agent]), dtype=np.float64)
-            x = (self.config.max_learning_step / x[-1]) * x
-            y = means[agent]
-            s = np.zeros(y.shape[0])
-            a = s[0] = y[0]
-            norm = self.config.plot_smooth + 1
-            for i in range(1, y.shape[0]):
-                a = a * self.config.plot_smooth + y[i]
-                s[i] = a / norm if norm > 0 else a
-                norm *= self.config.plot_smooth
-                norm += 1
-            if agent not in self.color_arrangement.keys():
-                self.color_arrangement[agent] = colors[self.arrange_index]
-                self.arrange_index += 1
-            plt.plot(x, s, label=to_label(agent), marker='*', markersize=12, markevery=2, c=self.color_arrangement[agent])
-            plt.fill_between(x, (s - stds[agent]), (s + stds[agent]), alpha=0.2, facecolor=self.color_arrangement[agent])
-            # plt.plot(x, returns[agent], label=to_label(agent))
+
+        y = np.array([means[k] for k in means])
+        y_std = np.array([stds[k] for k in stds])
+        x = np.array(steps, dtype = np.float64)
+
+        s = np.zeros(y.shape[0])
+        a = s[0] = y[0]
+
+        agent_for_rollout = self.config.agent_for_rollout
+
+        norm = self.config.plot_smooth + 1
+        for i in range(1, y.shape[0]):
+            a = a * self.config.plot_smooth + y[i]
+            s[i] = a / norm if norm > 0 else a
+            norm *= self.config.plot_smooth
+            norm += 1
+        if agent_for_rollout not in self.color_arrangement.keys():
+            self.color_arrangement[agent_for_rollout] = colors[self.arrange_index]
+            self.arrange_index += 1
+
+        plt.plot(x, s, label = to_label(agent_for_rollout), marker = '*', markersize = 12, markevery = 2, c = self.color_arrangement[agent_for_rollout])
+        plt.fill_between(x, (s - y_std), (s + y_std), alpha = 0.2, facecolor = self.color_arrangement[agent_for_rollout])
+
         plt.legend()
         plt.grid()
-        plt.xlabel('Learning Steps')    
+        plt.xlabel('Learning Steps')
         if ylabel is None:
             ylabel = data_type
         plt.ylabel(ylabel)
         fig_type = 'pdf' if pdf_fig else 'png'
         plt.savefig(output_dir + f'avg_{data_type}_curve.{fig_type}', bbox_inches='tight')
         plt.close()
-        
+
+
+        # if agent not in self.color_arrangement.keys():
+        #     self.color_arrangement[agent] = colors[self.arrange_index]
+        #     self.arrange_index += 1
+        # plt.plot(x, s, label = to_label(agent), marker = '*', markersize = 12, markevery = 2, c = self.color_arrangement[agent])
+        # plt.fill_between(x, (s - stds[agent]), (s + stds[agent]), alpha = 0.2, facecolor = self.color_arrangement[agent])
+
+
+        # for agent in means.keys():
+        #     x = np.arange(len(means[agent]), dtype=np.float64)
+        #     x = (self.config.maxFEs / x[-1]) * x
+        #     y = means[agent]
+        #     s = np.zeros(y.shape[0])
+        #     a = s[0] = y[0]
+        #     norm = self.config.plot_smooth + 1
+        #     for i in range(1, y.shape[0]):
+        #         a = a * self.config.plot_smooth + y[i]
+        #         s[i] = a / norm if norm > 0 else a
+        #         norm *= self.config.plot_smooth
+        #         norm += 1
+        #     if agent not in self.color_arrangement.keys():
+        #         self.color_arrangement[agent] = colors[self.arrange_index]
+        #         self.arrange_index += 1
+        #     plt.plot(x, s, label=to_label(agent), marker='*', markersize=12, markevery=2, c=self.color_arrangement[agent])
+        #     plt.fill_between(x, (s - stds[agent]), (s + stds[agent]), alpha=0.2, facecolor=self.color_arrangement[agent])
+        #     # plt.plot(x, returns[agent], label=to_label(agent))
     def post_processing_test_statics(self, log_dir: str, include_random_baseline: bool = True, pdf_fig: bool = True) -> None:
         print('Post processing & drawing')
         with open(log_dir + 'test_results.pkl', 'rb') as f:
@@ -769,8 +800,8 @@ class Basic_Logger:
             results = pickle.load(f)
         if not os.path.exists(log_dir + 'pics/'):
             os.makedirs(log_dir + 'pics/')
-        self.draw_train_logger('return', results['return'], log_dir + 'pics/', pdf_fig=pdf_fig)
-        self.draw_train_logger('cost', results['cost'], log_dir + 'pics/', pdf_fig=pdf_fig)
+        self.draw_train_logger('return', results['steps'], results['return'], log_dir + 'pics/', pdf_fig=pdf_fig)
+        self.draw_train_logger('cost', results['steps'], results['cost'], log_dir + 'pics/', pdf_fig=pdf_fig, data_wrapper = Basic_Logger.data_wrapper_cost_rollout)
 
     
 class MOO_Logger(Basic_Logger):
@@ -1159,22 +1190,22 @@ class MMO_Logger(Basic_Logger):
     def __init__(self, config: argparse.Namespace) -> None:
         super().__init__(config)
 
-    def data_wrapper_prsr_rollout(data, ):
+    def data_wrapper_prsr_rollout(self, data, ):
         res = []
         for key in data.keys():
-            res.append(np.array(data[key][:, -1, 3]))
+            res.append(np.array(data[key])[:, -1, 3])
         return np.array(res)
 
-    def data_wrapper_prsr_hist(data,):
+    def data_wrapper_prsr_hist(self,data,):
         return np.array(data)[:, :, 3]
 
-    def data_wrapper_cost_rollout(data, ):
+    def data_wrapper_cost_rollout(self,data, ):
         res = []
         for key in data.keys():
-            res.append(np.array(data[key][:, -1]))
+            res.append(np.array(data[key])[:, -1])
         return np.array(res)
 
-    def data_wrapper_return_rollout(data, ):
+    def data_wrapper_return_rollout(self,data, ):
         res = []
         for key in data.keys():
             res.append(np.array(data[key]))
@@ -1290,7 +1321,7 @@ class MMO_Logger(Basic_Logger):
                 if agent not in D.keys():
                     D[agent] = []
                 values = np.array(data[name][agent])[:, :, 3]
-                D[agent].append(values[:, -1] / values[:, 0])
+                D[agent].append(values[:, -1])
 
         for agent in D.keys():
             plt.figure()
@@ -1406,7 +1437,7 @@ class MMO_Logger(Basic_Logger):
         plt.xticks(rotation=45, fontsize=60)
         plt.yticks(fontsize=60)
         plt.ylim(0, np.max(np.array(Y) + np.array(S)) * 1.1)
-        plt.title(f'The {data_type} for {self.config.problem}-{self.config.difficulty}', fontsize=70)
+        plt.title(f'The {data_type} for {self.config.test_problem}-{self.config.test_difficulty}', fontsize=70)
         plt.ylabel(f'{data_type}', fontsize=60)
         plt.savefig(output_dir + f'{data_type}_rank_hist.{fig_type}', bbox_inches='tight')
 
@@ -1423,7 +1454,7 @@ class MMO_Logger(Basic_Logger):
 
         self.gen_overall_tab(results, log_dir + 'tables/')
         self.gen_algorithm_complexity_table(results, log_dir + 'tables/')
-        self.gen_agent_performance_table(results['cost'], log_dir + 'tables/')
+        self.gen_agent_performance_table(results, log_dir + 'tables/')
         self.gen_agent_performance_prsr_table(results['pr'],'pr', log_dir+'tables/') 
         self.gen_agent_performance_prsr_table(results['sr'], 'sr',log_dir + 'tables/')
         
@@ -1434,16 +1465,16 @@ class MMO_Logger(Basic_Logger):
         self.draw_concrete_performance_hist(results['cost'], log_dir+'pics/',pdf_fig=pdf_fig)
         self.draw_concrete_performance_prsr_hist(results['pr'], 'pr', log_dir+'pics/', pdf_fig = pdf_fig)
         self.draw_concrete_performance_prsr_hist(results['sr'], 'sr', log_dir+'pics/', pdf_fig = pdf_fig)
-        self.draw_boxplot(results['cost'], log_dir+'pics/', pdf_fig=pdf_fig)
+        self.draw_boxplot(results, log_dir+'pics/', pdf_fig=pdf_fig)
         self.draw_boxplot_prsr(results['pr'], 'pr', log_dir+'pics/', pdf_fig=pdf_fig)
         self.draw_boxplot_prsr(results['sr'], 'sr', log_dir+'pics/', pdf_fig=pdf_fig)
         self.draw_overall_boxplot(results['cost'], log_dir+'pics/', pdf_fig=pdf_fig)
         self.draw_overall_boxplot_prsr(results['pr'], 'pr', log_dir+'pics/',pdf_fig=pdf_fig)
         self.draw_overall_boxplot_prsr(results['sr'], 'sr', log_dir+'pics/',pdf_fig=pdf_fig)
 
-        self.draw_test_data(results['cost'], 'cost', log_dir + 'pics/', logged=True, categorized=True, pdf_fig=pdf_fig, data_wrapper=np.array)
-        self.draw_test_data(results['pr'],'pr', log_dir + 'pics/', logged=False, categorized=True, pdf_fig=pdf_fig, data_wrapper=self.data_wrapper_prsr_hist)
-        self.draw_test_data(results['sr'],'sr', log_dir + 'pics/', logged=False, categorized=True, pdf_fig=pdf_fig, data_wrapper=self.data_wrapper_prsr_hist)
+        self.draw_test_data(results['cost'], 'cost', log_dir + 'pics/', logged=True, categorized=False, pdf_fig=pdf_fig, data_wrapper=np.array)
+        self.draw_test_data(results['pr'],'pr', log_dir + 'pics/', logged=False, categorized=False, pdf_fig=pdf_fig, data_wrapper=self.data_wrapper_prsr_hist)
+        self.draw_test_data(results['sr'],'sr', log_dir + 'pics/', logged=False, categorized=False, pdf_fig=pdf_fig, data_wrapper=self.data_wrapper_prsr_hist)
         self.draw_rank_hist_prsr(results['pr'], 'pr',log_dir + 'pics/', pdf_fig=pdf_fig) 
         self.draw_rank_hist_prsr(results['sr'], 'sr', log_dir + 'pics/',pdf_fig=pdf_fig)
 

@@ -83,32 +83,64 @@ class UAV_Dataset(Dataset):
             test_diff = list(rng.choice(remaining_diff, test_diff_count, replace = False))
 
             test_id = test_diff
-        elif difficulty == 'all':
-            train_id = list(range(num))
-            test_id = list(range(num))
         else:
             raise ValueError(f'difficulty must be either easy or difficult or all.')
+
+        instance_list = []
 
         if mode == "standard":
             pkl_file = 'environment/problem/SOO/UAV/datafile/Model56.pkl'
             with open(pkl_file, 'rb') as f:
                 model_data = pickle.load(f)
-            for id in range(56):
-                if id in train_id:
-                    if not user_train_list or id in user_train_list:
-                        terrain_data = model_data[id]
-                        terrain_data['n'] = dv
-                        terrain_data['J_pen'] = j_pen
-                        instance = eval(Terrain)(terrain_data, id + 1)
+            for id in range(num):
+                terrain_data = model_data[id]
+                terrain_data['n'] = dv
+                terrain_data['J_pen'] = j_pen
+                instance = eval(Terrain)(terrain_data, id + 1)
+
+                if difficulty == 'all':
+                    instance_list.append(instance)
+                    continue
+
+                if user_train_list == None and user_test_list == None:
+                    if id in train_id:
+                        train_set.append(instance)
+                    if id in test_id:
+                        test_set.append(instance)
+
+                elif user_train_list is not None and user_test_list is not None:
+                    if id in user_train_list:
+                        train_set.append(instance)
+                    elif id in user_test_list:
+                        test_set.append(instance)
+
+                elif user_train_list is not None:
+                    if id in user_train_list:
+                        train_set.append(instance)
+                    else:
+                        test_set.append(instance)
+
+                elif user_test_list is not None:
+                    if id in user_test_list:
+                        test_set.append(instance)
+                    else:
                         train_set.append(instance)
 
-                if id in test_id:
-                    if not user_test_list or id in user_test_list:
-                        terrain_data = model_data[id]
-                        terrain_data['n'] = dv
-                        terrain_data['J_pen'] = j_pen
-                        instance = eval(Terrain)(terrain_data, id + 1)
-                        test_set.append(instance)
+                # if id in train_id:
+                #     if not user_train_list or id in user_train_list:
+                #         terrain_data = model_data[id]
+                #         terrain_data['n'] = dv
+                #         terrain_data['J_pen'] = j_pen
+                #         instance = eval(Terrain)(terrain_data, id + 1)
+                #         train_set.append(instance)
+                #
+                # if id in test_id:
+                #     if not user_test_list or id in user_test_list:
+                #         terrain_data = model_data[id]
+                #         terrain_data['n'] = dv
+                #         terrain_data['J_pen'] = j_pen
+                #         instance = eval(Terrain)(terrain_data, id + 1)
+                #         test_set.append(instance)
 
         elif mode == "custom":
             for id in range(num):
@@ -125,13 +157,37 @@ class UAV_Dataset(Dataset):
                 terrain_data['J_pen'] = j_pen
                 instance = eval(Terrain)(terrain_data, id + 1)
 
-                if id in train_id:
-                    if not user_train_list or id in user_train_list:
+                if difficulty == 'all':
+                    instance_list.append(instance)
+                    continue
+
+                if user_train_list == None and user_test_list == None:
+                    if id in train_id:
+                        train_set.append(instance)
+                    if id in test_id:
+                        test_set.append(instance)
+
+                elif user_train_list is not None and user_test_list is not None:
+                    if id in user_train_list:
+                        train_set.append(instance)
+                    elif id in user_test_list:
+                        test_set.append(instance)
+
+                elif user_train_list is not None:
+                    if id in user_train_list:
+                        train_set.append(instance)
+                    else:
+                        test_set.append(instance)
+
+                elif user_test_list is not None:
+                    if id in user_test_list:
+                        test_set.append(instance)
+                    else:
                         train_set.append(instance)
 
-                if id in test_id:
-                    if not user_test_list or id in user_test_list:
-                        test_set.append(instance)
+        if difficulty == 'all':
+            train_set = instance_list.copy()
+            test_set = instance_list.copy()
 
         return UAV_Dataset(train_set, train_batch_size), \
                UAV_Dataset(test_set, test_batch_size)

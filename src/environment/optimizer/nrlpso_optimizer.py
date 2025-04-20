@@ -288,7 +288,7 @@ class NRLPSO_Optimizer(Learnable_Optimizer):
         if problem.optimum is None:
             is_done = self.fes >= self.__maxFEs
         else:
-            is_done = (self.fes >= self.__maxFEs or self.__gbest_cost <= 1e-8)
+            is_done = self.fes >= self.__maxFEs
 
         if self.__config.full_meta_data:
             self.meta_X.append(self.__population.copy())
@@ -297,7 +297,8 @@ class NRLPSO_Optimizer(Learnable_Optimizer):
             if len(self.cost) >= self.__config.n_logpoint + 1:
                 self.cost[-1] = self.__gbest_cost
             else:
-                self.cost.append(self.__gbest_cost)
+                while len(self.cost) < self.__config.n_logpoint + 1:
+                    self.cost.append(self.__gbest_cost)
 
         info = {}
         

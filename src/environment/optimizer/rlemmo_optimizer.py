@@ -389,10 +389,11 @@ class RLEMMO_Optimizer(Learnable_Optimizer):
                 self.pr[-1] = raw_pr.copy()
                 self.sr[-1] = raw_sr.copy()
             else:
-                self.cost.append(self.individuals['gbest_val'])
-                raw_pr, raw_sr = self.cal_pr_sr(problem)
-                self.pr.append(raw_pr.copy())
-                self.sr.append(raw_sr.copy())
+                while len(self.cost) < self.__config.n_logpoint + 1:
+                    self.cost.append(self.individuals['gbest_val'])
+                    raw_pr, raw_sr = self.cal_pr_sr(problem)
+                    self.pr.append(raw_pr.copy())
+                    self.sr.append(raw_sr.copy())
 
         info = {}
         return next_state, reward, is_end, info

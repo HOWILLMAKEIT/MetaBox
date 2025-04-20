@@ -3,7 +3,7 @@
 # from pypop7.optimizers.cem import *
 # from pypop7.optimizers.cem import *
 # from pypop7.optimizers.core import *
-from pypop7.optimizers.de import DE, CDE, TDE, JADE, CODE, SHADE
+from pypop7.optimizers.de import SHADE 
 # from pypop7.optimizers.ds import *
 # from pypop7.optimizers.eda import *
 # from pypop7.optimizers.es import *
@@ -29,7 +29,7 @@ class PYPOP7(Basic_Optimizer):
         self.full_meta_data = config.full_meta_data
 
     def __str__(self):
-        return "PYPOP7-SHADE"
+        return "PYPOP7"
 
     def run_episode(self, problem):
         cost = []
@@ -78,7 +78,8 @@ class PYPOP7(Basic_Optimizer):
         if len(cost) >= self.n_logpoint + 1:
             cost[-1] = gbest
         else:
-            cost.append(gbest)
+            while len(cost) < self.n_logpoint + 1:
+                cost.append(gbest)
         results = {'cost': cost, 'fes': opt.n_function_evaluations}
 
         if self.full_meta_data:

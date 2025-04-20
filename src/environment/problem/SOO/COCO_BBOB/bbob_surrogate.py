@@ -3,7 +3,7 @@ from environment.problem.basic_problem import Basic_Problem
 from environment.problem.SOO.COCO_BBOB.bbob_numpy import *
 from os import path
 from torch.utils.data import Dataset
-
+import time
 import torch.nn as nn
 
 # MLP
@@ -93,21 +93,41 @@ class bbob_surrogate_model(Basic_Problem):
         if isinstance(x, np.ndarray):
             x = torch.tensor(x).to(self.device)
             input_x = (x - self.lb) / (self.ub - self.lb)
-            input_x = input_x.to(torch.float32)
+            input_x = input_x.to(torch.float64)
             with torch.no_grad():
                 y = self.model(input_x)
 
             return y.flatten().cpu().numpy()
 
-        elif isinstance(x, torch.tensor):
+        elif isinstance(x, torch.Tensor):
             input_x = (x - self.lb) / (self.ub - self.lb)
-            input_x = input_x.to(torch.float32)
+            input_x = input_x.to(torch.float64)
             with torch.no_grad():
                 y = self.model(input_x)
             return y
 
     # return y
+    def eval(self, x):
+        """
+        A general version of func() with adaptation to evaluate both individual and population.
+        """
+        start=time.perf_counter()
 
+        if x.ndim == 1:  # x is a single individual
+            y=self.func(x.reshape(1, -1))[0]
+            end=time.perf_counter()
+            self.T1+=(end-start)*1000
+            return y
+        elif x.ndim == 2:  # x is a whole population
+            y=self.func(x)
+            end=time.perf_counter()
+            self.T1+=(end-start)*1000
+            return y
+        else:
+            y=self.func(x.reshape(-1, x.shape[-1]))
+            end=time.perf_counter()
+            self.T1+=(end-start)*1000
+            return y
     def __str__(self):
         return f'Surrogate_{self.instance}'
 
@@ -165,6 +185,10 @@ class bbob_surrogate_Dataset(Dataset):
         elif difficulty == None and user_train_list is not None and user_test_list is not None:
             train_id = user_train_list
             test_id = user_test_list
+
+        elif difficulty == 'all':
+            train_id = [i for i in range(1,25)]
+            test_id = [i for i in range(1, 25)]
         else:
             raise ValueError(f'{difficulty} difficulty is invalid.')
 
@@ -188,20 +212,27 @@ class bbob_surrogate_Dataset(Dataset):
                 bias = np.random.randint(1, 26) * 100
             else:
                 bias = 0
-            if id in train_id:
 
-                if is_train:
-                    train_instance = bbob_surrogate_model(dim, id, ub=ub, lb=lb, shift=shift, rotate=H, bias=bias,
-                                                          config=config)
-                else:
-                    train_instance = eval(f'F{id}')(dim=dim, shift=shift, rotate=H, bias=bias, lb=lb, ub=ub)
-
+            if difficulty == 'all':
+                train_instance = eval(f'F{id}')(dim = dim, shift = shift, rotate = H, bias = bias, lb = lb, ub = ub)
+                test_instance = eval(f'F{id}')(dim = dim, shift = shift, rotate = H, bias = bias, lb = lb, ub = ub)
                 train_set.append(train_instance)
-
-            # if id in test_id:
-            else:
-                test_instance = eval(f'F{id}')(dim=dim, shift=shift, rotate=H, bias=bias, lb=lb, ub=ub)
                 test_set.append(test_instance)
+            else:
+                if id in train_id:
+
+                    if is_train:
+                        train_instance = bbob_surrogate_model(dim, id, ub=ub, lb=lb, shift=shift, rotate=H, bias=bias,
+                                                              config=config)
+                    else:
+                        train_instance = eval(f'F{id}')(dim=dim, shift=shift, rotate=H, bias=bias, lb=lb, ub=ub)
+
+                    train_set.append(train_instance)
+
+                # if id in test_id:
+                else:
+                    test_instance = eval(f'F{id}')(dim=dim, shift=shift, rotate=H, bias=bias, lb=lb, ub=ub)
+                    test_set.append(test_instance)
 
         return bbob_surrogate_Dataset(train_set, train_batch_size), bbob_surrogate_Dataset(test_set, test_batch_size)
 

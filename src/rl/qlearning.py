@@ -40,14 +40,14 @@ class QLearning_Agent(Basic_Agent):
         self.epsilon = self.config.epsilon
         self.lr_model = self.config.lr_model
 
-        self.q_table = torch.zeros(self.n_state, self.n_act)
-        
+        self.q_table = torch.zeros(self.n_state, self.n_act).to(self.config.device)
+
         # init learning time
         self.learning_time = 0
         self.cur_checkpoint = 0
 
         # save init agent
-        save_class(self.config.agent_save_dir,'checkpoint-'+str(self.cur_checkpoint),self)
+        save_class(self.config.agent_save_dir, 'checkpoint-' + str(self.cur_checkpoint), self)
         self.cur_checkpoint += 1
 
     def update_setting(self, config):
@@ -57,7 +57,7 @@ class QLearning_Agent(Basic_Agent):
         save_class(self.config.agent_save_dir, 'checkpoint0', self)
         self.config.save_interval = config.save_interval
         self.cur_checkpoint = 1
-        
+
     # def get_action(self, state, epsilon_greedy=False):
     #     Q_list = self.q_table(state)
     #     if epsilon_greedy and np.random.rand() < self.epsilon:
@@ -65,26 +65,25 @@ class QLearning_Agent(Basic_Agent):
     #     else:
     #         action = torch.argmax(Q_list, -1).numpy()
     #     return action
-    
-    
+
     def get_action(self, state, epsilon_greedy=False):
-        Q_list = torch.stack([self.q_table[st] for st in state ])
+        Q_list = torch.stack([self.q_table[st] for st in state])
         if epsilon_greedy and np.random.rand() < self.epsilon:
             action = np.random.randint(low=0, high=self.n_act, size=len(state))
         else:
-            action = torch.argmax(Q_list, -1).numpy()
+            action = torch.argmax(Q_list, -1).detach().cpu().numpy()
         return action
 
-    def train_episode(self, 
+    def train_episode(self,
                       envs,
                       seeds: Optional[Union[int, List[int], np.ndarray]],
-                      para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc']='dummy',
+                      para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc'] = 'dummy',
                       # todo: asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
                       # num_cpus: Optional[Union[int, None]] = 1,
                       # num_gpus: int = 0,
-                      compute_resource = {},
-                      tb_logger = None,
-                      required_info = {}):
+                      compute_resource={},
+                      tb_logger=None,
+                      required_info={}):
         num_cpus = None
         num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
         if 'num_cpus' in compute_resource.keys():
@@ -95,33 +94,34 @@ class QLearning_Agent(Basic_Agent):
         env.seed(seeds)
         # params for training
         gamma = self.gamma
-        
+
         state = env.reset()
         state = torch.FloatTensor(state)
-        
+
         _R = torch.zeros(len(env))
         # sample trajectory
         while not env.all_done():
             action = self.get_action(state=state, epsilon_greedy=True)
-                        
+
             # state transient
             next_state, reward, is_end, info = env.step(action)
             _R += reward
-            
+
             # error = reward + gamma * self.q_table[next_state].max() - self.q_table[state][action]
-            
-            error = [reward[i] + gamma * self.q_table[next_state[i]].max() - self.q_table[state[i]][action[i]]\
-                for i in range(len(state)) ]
-            
+
+            error = [reward[i] + gamma * self.q_table[next_state[i]].max() - self.q_table[state[i]][action[i]] \
+                     for i in range(len(state))]
+
             for i in range(len(state)):
                 self.q_table[state[i]][action[i]] += self.lr_model * error[i]
-            
+
             # store info
             state = torch.FloatTensor(next_state)
-            
+
             self.learning_time += 1
-            if self.learning_time >= (self.config.save_interval * self.cur_checkpoint):
-                save_class(self.config.agent_save_dir, 'checkpoint-'+str(self.cur_checkpoint), self)
+            if self.learning_time >= (
+                    self.config.save_interval * self.cur_checkpoint) and self.config.end_mode == "step":
+                save_class(self.config.agent_save_dir, 'checkpoint-' + str(self.cur_checkpoint), self)
                 self.cur_checkpoint += 1
 
             if self.learning_time >= self.config.max_learning_step:
@@ -132,8 +132,7 @@ class QLearning_Agent(Basic_Agent):
                     return_info[key] = env.get_env_attr(required_info[key])
                 env.close()
                 return self.learning_time >= self.config.max_learning_step, return_info
-        
-            
+
         is_train_ended = self.learning_time >= self.config.max_learning_step
         return_info = {'return': _R, 'learn_steps': self.learning_time, }
         env_cost = env.get_env_attr('cost')
@@ -141,14 +140,14 @@ class QLearning_Agent(Basic_Agent):
         for key in required_info.keys():
             return_info[key] = env.get_env_attr(required_info[key])
         env.close()
-        
+
         # 返回：奖励_R, 学习步数_learning_time, 最优评估值：gbest
         return is_train_ended, return_info
-    
-    def rollout_episode(self, 
+
+    def rollout_episode(self,
                         env,
                         seed=None,
-                      required_info={}):
+                        required_info={}):
         with torch.no_grad():
             if seed is not None:
                 env.seed(seed)
@@ -157,9 +156,9 @@ class QLearning_Agent(Basic_Agent):
             R = 0
             while not is_done:
                 action = self.get_action([state])[0]
-                state, reward, is_done = env.step(action)
+                state, reward, is_done, info = env.step(action)
                 R += reward
-            env_cost = env.get_env_attr('cost') # 只是最优的评估值，还需要加每一代最优的解，所有评估值
+            env_cost = env.get_env_attr('cost')  # 只是最优的评估值，还需要加每一代最优的解，所有评估值
             env_fes = env.get_env_attr('fes')
             results = {'cost': env_cost, 'fes': env_fes, 'return': R}
             # 加metadata：每一代最优（解和值）, 所有评估值
@@ -173,16 +172,16 @@ class QLearning_Agent(Basic_Agent):
             for key in required_info.keys():
                 results[key] = getattr(env, required_info[key])
             return results
-    
-    def rollout_batch_episode(self, 
-                              envs, 
+
+    def rollout_batch_episode(self,
+                              envs,
                               seeds=None,
-                              para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc']='dummy',
+                              para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc'] = 'dummy',
                               # todo: asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
                               # num_cpus: Optional[Union[int, None]] = 1,
                               # num_gpus: int = 0,
-                              compute_resource = {},
-                              required_info = {}):
+                              compute_resource={},
+                              required_info={}):
         num_cpus = None
         num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
         if 'num_cpus' in compute_resource.keys():
@@ -193,7 +192,7 @@ class QLearning_Agent(Basic_Agent):
 
         env.seed(seeds)
         state = env.reset()
-        
+
         R = torch.zeros(len(env))
         # sample trajectory
         while not env.all_done():
@@ -208,20 +207,20 @@ class QLearning_Agent(Basic_Agent):
         env_fes = env.get_env_attr('fes')
         results = {'cost': env_cost, 'fes': env_fes, 'return': _Rs}
         if self.config.full_meta_data:
-                meta_X = env.get_env_attr('meta_X')
-                meta_Cost = env.get_env_attr('meta_Cost')
-                metadata = {'X': meta_X, 'Cost': meta_Cost}
-                results['metadata'] = metadata
+            meta_X = env.get_env_attr('meta_X')
+            meta_Cost = env.get_env_attr('meta_Cost')
+            metadata = {'X': meta_X, 'Cost': meta_Cost}
+            results['metadata'] = metadata
 
         for key in required_info.keys():
             results[key] = env.get_env_attr(required_info[key])
         return results
 
-# todo add metric
+    # todo add metric
     def log_to_tb_train(self, tb_logger, mini_step,
                         loss,
                         Return, Reward,
-                        extra_info = {}):
+                        extra_info={}):
         # Iterate over the extra_info dictionary and log data to tb_logger
         # extra_info: Dict[str, Dict[str, Union[List[str], List[Union[int, float]]]]] = {
         #     "loss": {"name": [], "data": [0.5]},  # No "name", logs under "loss"
@@ -236,7 +235,7 @@ class QLearning_Agent(Basic_Agent):
         tb_logger.add_scalar('loss', loss.item(), mini_step)
 
         # Q
-        Q = self.q_table.mean(0) # [n_act]
+        Q = self.q_table.mean(0)  # [n_act]
         for id, q in enumerate(Q):
             tb_logger.add_scalar("Q_values", q.item(), mini_step)
         # tb_logger.add_scalars("Q_values", {f"action_{id}": q.item() for id, q in enumerate(Q)}, mini_step)

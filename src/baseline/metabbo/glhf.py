@@ -301,7 +301,7 @@ class GLHF(Basic_Agent):
         self.cur_checkpoint = 0
         super().__init__(self.config)
 
-        save_class(self.config.agent_save_dir, 'checkpoint' + str(self.cur_checkpoint), self)
+        save_class(self.config.agent_save_dir, 'checkpoint-' + str(self.cur_checkpoint), self)
         self.cur_checkpoint += 1
 
     def __str__(self):
@@ -377,7 +377,7 @@ class GLHF(Basic_Agent):
             state = next_state.clone().detach()
 
             if self.learning_time >= (self.config.save_interval * self.cur_checkpoint) and self.config.end_mode == "step":
-                save_class(self.config.agent_save_dir, 'checkpoint' + str(self.cur_checkpoint), self)
+                save_class(self.config.agent_save_dir, 'checkpoint-' + str(self.cur_checkpoint), self)
                 self.cur_checkpoint += 1
 
             if not self.config.no_tb:
@@ -477,8 +477,8 @@ class GLHF(Basic_Agent):
 
         # grad and clipped grad
         grad_norms, grad_norms_clipped = grad_norms
-        tb_logger.add_scalar('grad/POM', grad_norms, mini_step)
-        tb_logger.add_scalar('grad_clipped/POM', grad_norms_clipped, mini_step)
+        tb_logger.add_scalar('grad/POM', grad_norms[0], mini_step)
+        tb_logger.add_scalar('grad_clipped/POM', grad_norms_clipped[0], mini_step)
 
         # loss
         tb_logger.add_scalar('loss/loss_1_avg', loss_1.mean().item(), mini_step)

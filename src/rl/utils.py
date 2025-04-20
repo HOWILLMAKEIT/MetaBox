@@ -62,17 +62,17 @@ class ReplayBuffer_torch:
     
         self.states = torch.zeros((capacity, state_dim), device=device)
         self.actions = torch.zeros(capacity, dtype=torch.long, device=device)
-        self.rewards = torch.zeros(capacity, device=device)
+        self.rewards = torch.zeros(capacity, device=device, dtype=torch.long)
         self.next_states = torch.zeros((capacity, state_dim), device=device)
-        self.dones = torch.zeros(capacity, dtype=torch.float, device=device)
+        self.dones = torch.zeros(capacity, dtype=torch.long, device=device)
 
     def append(self, state, action, reward, next_state, done):
 
         self.states[self.position] = state
         self.actions[self.position] = action
-        self.rewards[self.position] = reward
+        self.rewards[self.position] = int(reward)
         self.next_states[self.position] = next_state
-        self.dones[self.position] = done
+        self.dones[self.position] = int(done)
 
 
         self.position = (self.position + 1) % self.capacity

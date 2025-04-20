@@ -54,6 +54,7 @@ from baseline.bbo import (
     SAHLPSO,
     CMAES,
     Random_search,
+    PYPOP7
 )
 
 from baseline.metabbo import (
@@ -110,7 +111,7 @@ def record_data(data, test_set, agent_for_rollout, checkpoints, results, meta_re
             if key == 'metadata' and config.full_meta_data:
                 meta_results[item['problem_name']][item['agent_name']].append(item[key])
                 continue
-            if key not in ['agent_name', 'problem_name'] and key not in results.keys():
+            if key not in ['agent_name', 'problem_name']:
                 if key not in results.keys():
                     results[key] = {}
                     for problem in test_set.data:
@@ -159,6 +160,13 @@ class BBO_TestUnit():
         self.seed = seed
 
     def run_batch_episode(self):
+        torch.manual_seed(self.seed)
+        torch.cuda.manual_seed(self.seed)
+        np.random.seed(self.seed)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+
+        torch.set_default_dtype(torch.float64)
         self.optimizer.seed(self.seed)
         self.problem.reset()
         start_time = time.time()
@@ -188,6 +196,14 @@ class MetaBBO_TestUnit():
         self.checkpoint = checkpoint
 
     def run_batch_episode(self, required_info = {}):
+        torch.manual_seed(self.seed)
+        torch.cuda.manual_seed(self.seed)
+        np.random.seed(self.seed)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+
+        torch.set_default_dtype(torch.float64)
+
         start_time = time.time()
         res = self.agent.rollout_episode(self.env, self.seed, required_info)
         end_time = time.time()
@@ -212,7 +228,7 @@ class Tester(object):
         # if self.config.test_problem[-6:]=='-torch':
         #     self.config.test_problem=self.config.test_problem[:-6]
 
-        if config.test_problem =='bbob-surrogate':
+        if config.test_problem in ['bbob-surrogate-10D','bbob-surrogate-5D','bbob-surrogate-2D']:
             config.is_train = False
 
         self.train_set, self.test_set = construct_problem_set(self.config)
@@ -283,7 +299,7 @@ class Tester(object):
         for key in self.test_results.keys():
             self.initialize_record(key)
         self.test_results['config'] = copy.deepcopy(self.config)
-        self.test_results['T0'] = 0.
+        self.test_results['T0'] = np.mean([cal_t0(p.dim, config.maxFEs) for p in self.test_set.data])
         if config.full_meta_data:
             for problem in self.test_set.data:
                 self.meta_data_results[problem.__str__()] = {}
@@ -412,7 +428,7 @@ class Tester(object):
     def test_for_random_search(self):
         config = self.config
         # get entire problem set
-        if config.problem == 'bbob-surrogate':
+        if config.problem in ['bbob-surrogate-10D','bbob-surrogate-5D','bbob-surrogate-2D']:
             config.is_train = False
 
         train_set, test_set = construct_problem_set(config)
@@ -483,7 +499,7 @@ class Tester(object):
         print(f'start MGD_test: {config.run_time}')
         # get test set
         num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
-        if config.problem == 'bbob-surrogate':
+        if config.problem in ['bbob-surrogate-10D','bbob-surrogate-5D','bbob-surrogate-2D']:
             config.is_train = False
 
         _, test_set = construct_problem_set(config)
@@ -523,7 +539,7 @@ class Tester(object):
                     self.meta_data_results[problem.__str__()][type(optimizer).__name__] = []
 
         # calculate T0
-        self.test_results['T0'] = cal_t0(config.dim, config.maxFEs)
+        self.test_results['T0'] = np.mean([cal_t0(p.dim, config.maxFEs) for p in self.test_set.data])
         # begin mgd_test
 
         test_run = self.config.test_run
@@ -585,7 +601,7 @@ class Tester(object):
                     meta_test_data = MetaBBO_test.rollout()
                     self.record_test_data(meta_test_data)
                     pbar.update()
-            self.meta_data_results = store_meta_data(self.log_dir, self.meta_data_results)
+                self.meta_data_results = store_meta_data(self.log_dir, self.meta_data_results)
             for ip, problem in enumerate(test_set):
                 for i, seed in enumerate(seed_list):
                     pbar.set_description_str(f"Batch Testing To Agent {agent_to.__str__()} with Problem Batch {ip}, Run {i}")
@@ -594,7 +610,7 @@ class Tester(object):
                     meta_test_data = MetaBBO_test.rollout()
                     self.record_test_data(meta_test_data)
                     pbar.update()
-            self.meta_data_results = store_meta_data(self.log_dir, self.meta_data_results)
+                self.meta_data_results = store_meta_data(self.log_dir, self.meta_data_results)
             pbar.close()
 
         with open(config.mgd_test_log_dir + 'test_results.pkl', 'wb') as f:
@@ -770,7 +786,7 @@ class Tester(object):
 def rollout_batch(config):
     print(f'start rollout: {config.run_time}')
     num_gpus = 0 if config.device == 'cpu' else 1
-    if config.test_problem == 'bbob-surrogate':
+    if config.test_problem in ['bbob-surrogate-10D','bbob-surrogate-5D','bbob-surrogate-2D']:
         config.is_train = False
     train_set, test_set = construct_problem_set(config)
     agent_for_rollout=config.agent_for_rollout
@@ -798,14 +814,20 @@ def rollout_batch(config):
     n_checkpoint=len(checkpoints)
 
     # get agent
+    # learning_step
+    steps = []
     for agent_id in checkpoints:
-        with open(os.path.join(upper_dir, f'checkpoint{agent_id}.pkl'), 'rb') as f:
-            agents.append(pickle.load(f))
+        with open(os.path.join(upper_dir, f'checkpoint-{agent_id}.pkl'), 'rb') as f:
+            agent = pickle.load(f)
+            steps.append(agent.get_step())
+            if agent_id:
+                steps[-1] += 400
+            agents.append(agent)
             optimizer_for_rollout.append(eval(l_optimizer)(copy.deepcopy(config)))
 
     rollout_results = {'cost': {},
                         'return':{},
-                        'config': vars(copy.deepcopy(config))}
+                       }
     meta_data_results = {}
     for key in rollout_results.keys():
         if key not in rollout_results.keys():
@@ -816,6 +838,8 @@ def rollout_batch(config):
             for agent_id in checkpoints:
                 rollout_results[key][problem.__str__()][agent_name+f'-{agent_id}'] = []  # 51 np.arrays
                 meta_data_results[problem.__str__()][agent_name+f'-{agent_id}'] = []
+
+    rollout_results['config'] = copy.deepcopy(config)
 
     pbar_len = int(np.ceil(test_set.N * n_checkpoint / test_set.batch_size))
     seed_list = list(range(1, config.rollout_run + 1))
@@ -828,7 +852,6 @@ def rollout_batch(config):
         meta_test_data = MetaBBO_test.rollout()
         rollout_results, meta_data_results = record_data(meta_test_data, test_set, agent_for_rollout, checkpoints, rollout_results, meta_data_results, config)
         meta_data_results = store_meta_data(config.rollout_log_dir, meta_data_results)
-            
     elif parallel_batch == 'Baseline_Problem':
         pbar = tqdm(total=len(seed_list), desc="Baseline_Problem Rollouting")
         for seed in seed_list:
@@ -873,6 +896,9 @@ def rollout_batch(config):
     
     else:
         raise NotImplementedError
+
+    rollout_results['steps'] = steps
+
     log_dir=config.rollout_log_dir
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)

@@ -254,7 +254,7 @@ class RLEPSO_Optimizer(Learnable_Optimizer):
         if problem.optimum is None:
             is_end = self.fes >= self.__max_fes
         else:
-            is_end = self.fes >= self.__max_fes or self.__particles['gbest_val'] <= 1e-8
+            is_end = self.fes >= self.__max_fes 
 
         # cal the reward
         if self.__particles['gbest_val'] < pre_gbest:
@@ -267,7 +267,8 @@ class RLEPSO_Optimizer(Learnable_Optimizer):
             if len(self.cost) >= self.__config.n_logpoint + 1:
                 self.cost[-1] = self.__particles['gbest_val']
             else:
-                self.cost.append(self.__particles['gbest_val'])
+                while len(self.cost) < self.__config.n_logpoint + 1:
+                    self.cost.append(self.__particles['gbest_val'])
 
         info = {}
         return next_state, reward, is_end, info

@@ -56,7 +56,7 @@ class SAHLPSO(Basic_Optimizer):
         ns_ls = np.zeros(H_ls)
         remain_index = np.array(range(NP))
         selected_indiv_index = self.rng.permutation(remain_index)[:int(self.Lg * NP)]
-        while fes < self.maxFEs and NP >= 4:
+        while fes < self.maxFEs :
             
             for i in remain_index:
                 cr, ls = 0, 0 # start generate exemplar
@@ -123,24 +123,6 @@ class SAHLPSO(Basic_Optimizer):
                     log_index += 1
                     cost.append(gBest_cost)
 
-                if problem.optimum is None:
-                    done = fes >= self.maxFEs
-                else:
-                    done = fes >= self.maxFEs or gBest_cost <= 1e-8
-
-                if done:
-                    if len(cost) >= self.config.n_logpoint + 1:
-                        cost[-1] = gBest_cost
-                    else:
-                        cost.append(gBest_cost)
-                    results = {'cost': cost, 'fes': fes}
-
-                    if self.full_meta_data:
-                        metadata = {'X':self.meta_X, 'Cost':self.meta_Cost}
-                        results['metadata'] = metadata
-                    # 与agent一致，去除return，加上metadata
-                    return results
-                
             if self.full_meta_data:
                 self.meta_Cost.append(f_X)
                 self.meta_X.append(X)    
@@ -172,15 +154,18 @@ class SAHLPSO(Basic_Optimizer):
 
             # population size reduction
             NP_ = round((4 - self.NP) * fes / self.maxFEs + self.NP)
+            NP_ = max(NP_, 5) 
             if NP_ < NP:
                 remain_index = np.argsort(pBest_cost)[:NP_]
                 NP = NP_
+
             G += 1
 
         if len(cost) >= self.config.n_logpoint + 1:
             cost[-1] = gBest_cost
         else:
-            cost.append(gBest_cost)
+            while len(cost) < self.config.n_logpoint + 1:
+                cost.append(gBest_cost)
         results = {'cost': cost, 'fes': fes}
 
         if self.full_meta_data:

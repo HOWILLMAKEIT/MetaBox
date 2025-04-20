@@ -30,7 +30,8 @@ def construct_problem_set(config):
 
 
 def get_problem_set(config, problem, difficulty, train_list, test_list):
-    if problem in ['bbob-10D', 'bbob-30D', 'bbob-torch-10D', 'bbob-torch-30D']:
+    if problem in ['bbob-10D', 'bbob-30D', 'bbob-torch-10D', 'bbob-torch-30D',
+                   'bbob-noisy-10D', 'bbob-noisy-30D', 'bbob-noisy-torch-10D', 'bbob-noisy-torch-30D']:
         return BBOB_Dataset.get_datasets(suit=problem,
                                         upperbound=config.upperbound,
                                         train_batch_size=config.train_batch_size,
@@ -38,17 +39,18 @@ def get_problem_set(config, problem, difficulty, train_list, test_list):
                                         difficulty=difficulty,
                                         user_train_list=train_list,
                                         user_test_list=test_list,
-                                        version='torch' if 'torch' in problem else 'numpy')
+                                        version='torch' if 'torch' in problem else 'numpy',
+                                        device = config.device)
         
-    elif problem in ['bbob-noisy-10D', 'bbob-noisy-30D', 'bbob-noisy-torch-10D', 'bbob-noisy-torch-30D']:
-        return BBOB_Dataset.get_datasets(suit=problem,
-                                        upperbound=config.upperbound,
-                                        train_batch_size=config.train_batch_size,
-                                        test_batch_size=config.test_batch_size,
-                                        difficulty=difficulty,
-                                        user_train_list=train_list,
-                                        user_test_list=test_list,
-                                        version='torch' if 'torch' in problem else 'numpy')
+    # elif problem in ['bbob-noisy-10D', 'bbob-noisy-30D', 'bbob-noisy-torch-10D', 'bbob-noisy-torch-30D']:
+    #     return BBOB_Dataset.get_datasets(suit=problem,
+    #                                     upperbound=config.upperbound,
+    #                                     train_batch_size=config.train_batch_size,
+    #                                     test_batch_size=config.test_batch_size,
+    #                                     difficulty=difficulty,
+    #                                     user_train_list=train_list,
+    #                                     user_test_list=test_list,
+    #                                     version='torch' if 'torch' in problem else 'numpy')
 
     elif problem in ['protein', 'protein-torch']:
         return Protein_Docking_Dataset.get_datasets(version='torch' if 'torch' in problem else 'numpy',

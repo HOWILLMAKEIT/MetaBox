@@ -281,11 +281,13 @@ class L2T_Optimizer(Learnable_Optimizer):
         if is_end:
             if len(self.cost) >= self.__config.n_logpoint + 1:
                 self.cost[-1] = self.gbest
-            else:
-                self.cost.append(self.gbest)
+            else: 
+                while len(self.cost) < self.__config.n_logpoint + 1:
+                    self.cost.append(self.gbest)
         
         if is_end:
             tasks.update_T1()
+               
 
         info = {}
         return next_state, self.total_reward, is_end, info

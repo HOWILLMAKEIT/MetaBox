@@ -129,7 +129,7 @@ class RLDAS_Optimizer(Learnable_Optimizer):
         if problem.optimum is None:
             self.done = self.FEs >= self.MaxFEs
         else:
-            self.done = self.FEs >= self.MaxFEs or np.min(self.population.gbest) <= 1e-8
+            self.done = self.FEs >= self.MaxFEs 
         # self.done = (self.population.gbest <= self.terminal_error or self.FEs >= self.MaxFEs)
         reward = max((last_cost - self.population.gbest) / self.cost_scale_factor, 0)
 
@@ -146,7 +146,8 @@ class RLDAS_Optimizer(Learnable_Optimizer):
             if len(self.cost) >= self.__config.n_logpoint + 1:
                 self.cost[-1] = self.population.gbest
             else:
-                self.cost.append(self.population.gbest)
+                while len(self.cost) < self.__config.n_logpoint + 1:
+                    self.cost.append(self.population.gbest)
         return observe, reward, self.done, {}  # next state, reward, is done
 
 

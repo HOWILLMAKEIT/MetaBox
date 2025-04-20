@@ -40,7 +40,7 @@ def clip_grad_norms(param_groups, max_norm=math.inf):
 
 
 class REINFORCE_Agent(Basic_Agent):
-    def __init__(self, config,networks: dict, learning_rates: float):
+    def __init__(self, config, networks: dict, learning_rates: float):
         super().__init__(config)
         self.config = config
 
@@ -48,20 +48,19 @@ class REINFORCE_Agent(Basic_Agent):
         self.gamma = self.config.gamma
         self.max_grad_norm = self.config.max_grad_norm
         self.device = self.config.device
-        
-        self.set_network(networks,learning_rates)
-        
+
+        self.set_network(networks, learning_rates)
+
         # figure out the lr schedule
         # assert hasattr(torch.optim.lr_scheduler, self.config.lr_scheduler)
         # self.lr_scheduler = eval('torch.optim.lr_scheduler.' + self.config.lr_scheduler)(self.optimizer, self.config.lr_decay, last_epoch=-1,)
-
 
         # init learning time
         self.learning_time = 0
         self.cur_checkpoint = 0
 
         # save init agent
-        save_class(self.config.agent_save_dir,'checkpoint-'+str(self.cur_checkpoint),self)
+        save_class(self.config.agent_save_dir, 'checkpoint-' + str(self.cur_checkpoint), self)
         self.cur_checkpoint += 1
 
     def set_network(self, networks: dict, learning_rates: float):
@@ -69,7 +68,7 @@ class REINFORCE_Agent(Basic_Agent):
         if networks:
             for name, network in networks.items():
                 Network_name.append(name)
-                setattr(self, name, network)   # Assign each network in the dictionary to the class instance
+                setattr(self, name, network)  # Assign each network in the dictionary to the class instance
         self.network = Network_name
 
         # make sure has model or network
@@ -91,7 +90,6 @@ class REINFORCE_Agent(Basic_Agent):
         for network_name in networks:
             getattr(self, network_name).to(self.device)
 
-
     def update_setting(self, config):
         self.config.max_learning_step = config.max_learning_step
         self.config.agent_save_dir = config.agent_save_dir
@@ -100,16 +98,16 @@ class REINFORCE_Agent(Basic_Agent):
         self.config.save_interval = config.save_interval
         self.cur_checkpoint = 1
 
-    def train_episode(self, 
+    def train_episode(self,
                       envs,
                       seeds: Optional[Union[int, List[int], np.ndarray]],
-                      para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc']='dummy',
+                      para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc'] = 'dummy',
                       # todo: asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
                       # num_cpus: Optional[Union[int, None]] = 1,
                       # num_gpus: int = 0,
-                      compute_resource = {},
-                      tb_logger = None,
-                      required_info = {}):
+                      compute_resource={},
+                      tb_logger=None,
+                      required_info={}):
         num_cpus = None
         num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
         if 'num_cpus' in compute_resource.keys():
@@ -122,13 +120,13 @@ class REINFORCE_Agent(Basic_Agent):
 
         # params for training
         gamma = self.gamma
-        
+
         state = env.reset()
         try:
             state = torch.FloatTensor(state).to(self.device)
         except:
             pass
-        
+
         _R = torch.zeros(len(env))
         _loss = []
         # sample trajectory
@@ -136,10 +134,9 @@ class REINFORCE_Agent(Basic_Agent):
             entropy = []
 
             action, log_lh, entro_p = self.model(state)
-            
 
             memory.logprobs.append(log_lh)
-            
+
             entropy.append(entro_p.detach().cpu())
 
             # state transient
@@ -151,7 +148,7 @@ class REINFORCE_Agent(Basic_Agent):
                 state = torch.FloatTensor(state).to(self.device)
             except:
                 pass
-        
+
         # begin update
         logprobs = torch.stack(memory.logprobs).view(-1).to(self.device)
         Reward = []
@@ -168,14 +165,14 @@ class REINFORCE_Agent(Basic_Agent):
         loss.backward()
         grad_norms = clip_grad_norms(self.optimizer.param_groups, self.config.max_grad_norm)
         self.optimizer.step()
-        
+
         memory.clear_memory()
-        
+
         self.learning_time += 1
-        if self.learning_time >= (self.config.save_interval * self.cur_checkpoint):
-            save_class(self.config.agent_save_dir, 'checkpoint-'+str(self.cur_checkpoint), self)
+        if self.learning_time >= (self.config.save_interval * self.cur_checkpoint) and self.config.end_mode == "step":
+            save_class(self.config.agent_save_dir, 'checkpoint-' + str(self.cur_checkpoint), self)
             self.cur_checkpoint += 1
-            
+
         is_train_ended = self.learning_time >= self.config.max_learning_step
         return_info = {'return': _R, 'learn_steps': self.learning_time, }
         env_cost = env.get_env_attr('cost')
@@ -183,10 +180,10 @@ class REINFORCE_Agent(Basic_Agent):
         for key in required_info.keys():
             return_info[key] = env.get_env_attr(required_info[key])
         env.close()
-        
+
         return is_train_ended, return_info
-    
-    def rollout_episode(self, 
+
+    def rollout_episode(self,
                         env,
                         seed=None,
                         required_info={}):
@@ -201,9 +198,10 @@ class REINFORCE_Agent(Basic_Agent):
                     state = torch.FloatTensor(state).unsqueeze(0).to(self.device)
                 except:
                     state = [state]
-                action,_,_ = self.model(state)
+                self.model = self.model.float()
+                action, _ = self.model(state)
                 action = action.cpu().numpy().squeeze()
-                state, reward, is_done = env.step(action)
+                state, reward, is_done, info = env.step(action)
                 R += reward
             env_cost = env.get_env_attr('cost')
             env_fes = env.get_env_attr('fes')
@@ -217,16 +215,16 @@ class REINFORCE_Agent(Basic_Agent):
             for key in required_info.keys():
                 results[key] = getattr(env, required_info[key])
             return results
-    
-    def rollout_batch_episode(self, 
-                              envs, 
+
+    def rollout_batch_episode(self,
+                              envs,
                               seeds=None,
-                              para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc']='dummy',
+                              para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc'] = 'dummy',
                               # todo: asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
                               # num_cpus: Optional[Union[int, None]] = 1,
                               # num_gpus: int = 0,
-                              compute_resource = {},
-                              required_info = {}):
+                              compute_resource={},
+                              required_info={}):
         num_cpus = None
         num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
         if 'num_cpus' in compute_resource.keys():
@@ -241,14 +239,14 @@ class REINFORCE_Agent(Basic_Agent):
             state = torch.FloatTensor(state).to(self.device)
         except:
             pass
-        
+
         R = torch.zeros(len(env))
         entropy = []
         # sample trajectory
         while not env.all_done():
             with torch.no_grad():
-                action, log_lh, entro_p  = self.model(state)
-            
+                action, log_lh, entro_p = self.model(state)
+
             entropy.append(entro_p.detach().cpu())
 
             # state transient
@@ -274,7 +272,7 @@ class REINFORCE_Agent(Basic_Agent):
                         loss,
                         Return, Reward,
                         logprobs,
-                        extra_info = {}):
+                        extra_info={}):
         # Iterate over the extra_info dictionary and log data to tb_logger
         # extra_info: Dict[str, Dict[str, Union[List[str], List[Union[int, float]]]]] = {
         #     "loss": {"name": [], "data": [0.5]},  # No "name", logs under "loss"
@@ -291,7 +289,6 @@ class REINFORCE_Agent(Basic_Agent):
         for id, network_name in enumerate(self.network):
             tb_logger.add_scalar(f'grad/{network_name}', grad_norms[id], mini_step)
             tb_logger.add_scalar(f'grad_clipped/{network_name}', grad_norms_clipped[id], mini_step)
-
 
         # loss
         tb_logger.add_scalar('loss', loss.item(), mini_step)

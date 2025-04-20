@@ -14,26 +14,39 @@ class DE(Basic_Optimizer):
 
         self.__config = config
         self.__toolbox = base.Toolbox()
-        creator.create("Fitnessmin", base.Fitness, weights=(-1.0,))
-        creator.create("Individual", list, fitness=creator.Fitnessmin)
-        self.__toolbox.register("select", tools.selTournament, tournsize=3)
+        self.__creator = creator
         self.log_interval = config.log_interval
         self.full_meta_data = config.full_meta_data
         
     def __str__(self):
         return "DE"
+
+
     def run_episode(self, problem):
+        self.rng_gpu = None
+        self.rng_cpu = None
+        self.rng = None
+        np.random.seed(self.rng_seed)
+
+        self.__creator.create("Fitnessmin", base.Fitness, weights=(-1.0,))
+        self.__creator.create("Individual", list, fitness=creator.Fitnessmin)
+
         if self.full_meta_data:
             self.meta_Cost = []
             self.meta_X = []
+
         def problem_eval(x):
             if problem.optimum is None:
                 fitness = problem.eval(x)
             else:
                 fitness = problem.eval(x) - problem.optimum
+            if self.full_meta_data:
+                self.meta_Cost.append(fitness)
+                self.meta_X.append(x)
             return fitness,   # return a tuple
 
         self.__toolbox.register("evaluate", problem_eval)
+        self.__toolbox.register("select", tools.selTournament, tournsize=3)
         self.__toolbox.register("attr_float", np.random.uniform, problem.lb, problem.ub)
         self.__toolbox.register("individual", tools.initRepeat, creator.Individual, self.__toolbox.attr_float, n=problem.dim)
         self.__toolbox.register("population", tools.initRepeat, list, self.__toolbox.individual)
@@ -42,16 +55,14 @@ class DE(Basic_Optimizer):
 
         pop = self.__toolbox.population(n=self.__config.NP)
         fitnesses = self.__toolbox.map(self.__toolbox.evaluate, pop)
-        if self.full_meta_data:
-            self.meta_Cost.append(fitnesses)
-            self.meta_X.append(pop)
-        fes = self.__config.NP
+
+        self.__FEs = self.__config.NP
         for ind, fit in zip(pop, fitnesses):
             ind.fitness.values = fit
         hof.update(pop)
 
         log_index = 1
-        cost = [hof[0].fitness.values[0]]
+        self.cost = [hof[0].fitness.values[0]]
 
         done = False
         while not done:
@@ -71,31 +82,26 @@ class DE(Basic_Optimizer):
                     pop[k] = y
 
                 hof.update(pop)
-                fes += 1
+                self.__FEs += 1
 
-                if fes >= log_index * self.log_interval:
+                if self.__FEs >= log_index * self.log_interval:
                     log_index += 1
-                    cost.append(hof[0].fitness.values[0])
+                    self.cost.append(hof[0].fitness.values[0])
 
                 if problem.optimum is None:
-                    done = fes >= self.__config.maxFEs
+                    done = self.__FEs >= self.__config.maxFEs
                 else:
-                    done = fes >= self.__config.maxFEs or hof[0].fitness.values[0] <= 1e-8
+                    done = self.__FEs >= self.__config.maxFEs
 
                 if done:
-                    if len(cost) >= self.__config.n_logpoint + 1:
-                        cost[-1] = hof[0].fitness.values[0]
+                    if len(self.cost) >= self.__config.n_logpoint + 1:
+                        self.cost[-1] = hof[0].fitness.values[0]
                     else:
-                        cost.append(hof[0].fitness.values[0])
+                        while len(self.cost) < self.__config.n_logpoint + 1:
+                            self.cost.append(hof[0].fitness.values[0])
                     break
-            if self.full_meta_data:
-                gen_meta_cost = []
-                gen_meta_X = []
-                for i in range(len(pop)):
-                    gen_meta_cost.append(pop[i].fitness.values[0])
-                    gen_meta_X.append(pop[i])
-                self.meta_Cost.append(gen_meta_cost)
-                self.meta_X.append(gen_meta_X)
+    
+    
         results = {'cost': self.cost, 'fes': self.__FEs}
 
         if self.full_meta_data:

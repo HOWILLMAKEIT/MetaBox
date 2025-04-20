@@ -92,7 +92,7 @@ class SurrRLDE_Optimizer(Learnable_Optimizer):
 
 	def init_population(self, problem):
 		self.rng_torch = self.rng_cpu
-		if self.device.type == "cuda":
+		if self.device != "cpu":
 			self.rng_torch = self.rng_gpu
 
 		self.population = (torch.rand(self.pop_size, self.dim, generator = self.rng_torch, device = self.device)
@@ -100,8 +100,10 @@ class SurrRLDE_Optimizer(Learnable_Optimizer):
 		#(-5,5)
 		self.population = self.population.to(self.device)
 
-		if self.config.train_problem == 'bbob-surrogate' and self.config.is_train:
+		if self.config.train_problem in ['bbob-surrogate-10D','bbob-surrogate-5D','bbob-surrogate-2D'] and self.config.is_train:
+			# print(self.population.clone().to(self.device))
 			self.fitness = problem.eval(self.population.clone().to(self.device))
+
 		else:
 			if problem.optimum is None:
 				self.fitness = problem.eval(self.population.clone().cpu().numpy())
@@ -188,7 +190,7 @@ class SurrRLDE_Optimizer(Learnable_Optimizer):
 		mut_population = self.mutation(mut_way)
 		crossover_population = self.crossover(mut_population)
 
-		if self.config.train_problem == 'bbob-surrogate' and self.config.is_train:
+		if self.config.train_problem in ['bbob-surrogate-10D', 'bbob-surrogate-5D','bbob-surrogate-2D'] and self.config.is_train:
 			temp_fit = problem.eval(crossover_population.clone().to(self.device))
 		else:
 			if problem.optimum is None:
@@ -235,7 +237,8 @@ class SurrRLDE_Optimizer(Learnable_Optimizer):
 			if len(self.cost) >= self.config.n_logpoint + 1:
 				self.cost[-1] = self.fit_history_best.clone().cpu().item()
 			else:
-				self.cost.append(self.fit_history_best.clone().cpu().item())
+				while len(self.cost) < self.__config.n_logpoint + 1:
+					self.cost.append(self.fit_history_best.clone().cpu().item())
 
 		info = {}
 		return next_state, reward.item(), is_done, info

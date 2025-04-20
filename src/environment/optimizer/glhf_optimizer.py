@@ -81,7 +81,7 @@ class GLHF_Optimizer(Learnable_Optimizer):
         # self.population = new_population
         # self.c_cost = new_cost
 
-        new_gbest_val = torch.min(new_cost).detach().cpu()
+        new_gbest_val = torch.min(self.c_cost).detach().cpu()
 
         reward = (pre_gbest - new_gbest_val) / self.init_gbest
 
@@ -92,7 +92,7 @@ class GLHF_Optimizer(Learnable_Optimizer):
         if problem.optimum is None:
             is_end = self.fes >= self.MaxFEs
         else:
-            is_end = self.fes >= self.MaxFEs or self.gbest_val <= 1e-8
+            is_end = self.fes >= self.MaxFEs
 
         if self.config.full_meta_data:
             self.meta_X.append(self.population.detach().cpu().numpy())
@@ -108,7 +108,8 @@ class GLHF_Optimizer(Learnable_Optimizer):
             if len(self.cost) >= self.config.n_logpoint + 1:
                 self.cost[-1] = self.gbest_val
             else:
-                self.cost.append(self.gbest_val)
+                while len(self.cost) < self.config.n_logpoint + 1:
+                    self.cost.append(self.gbest_val)
 
         info = {}
 

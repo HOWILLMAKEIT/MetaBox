@@ -190,13 +190,14 @@ class SYMBOL_Optimizer(Learnable_Optimizer):
         if problem.optimum is None:
             is_end = self.population.cur_fes >= self.max_fes
         else:
-            is_end = self.population.cur_fes >= self.max_fes or self.population.gbest_cost <= 1e-8
+            is_end = self.population.cur_fes >= self.max_fes
 
         if is_end:
             if len(self.cost) >= self.__config.n_logpoint + 1:
                 self.cost[-1] = self.population.gbest_cost
             else:
-                self.cost.append(self.population.gbest_cost)
+                while len(self.cost) < self.__config.n_logpoint + 1:
+                    self.cost.append(self.population.gbest_cost)
             # print(f'problem: {self.problem.__str__()}')
 
         return self.observe(), reward, is_end, {}

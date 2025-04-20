@@ -84,7 +84,7 @@ class VDN_Agent(Basic_Agent):
         self.cur_checkpoint = 0
 
         # save init agent
-        save_class(self.config.agent_save_dir, 'checkpoint' + str(self.cur_checkpoint), self)
+        save_class(self.config.agent_save_dir, 'checkpoint-' + str(self.cur_checkpoint), self)
         self.cur_checkpoint += 1
     
     def set_network(self, networks: dict, learning_rates: float):
@@ -115,6 +115,9 @@ class VDN_Agent(Basic_Agent):
 
         for network_name in networks:
             getattr(self, network_name).to(self.device)
+
+    def get_step(self):
+        return self.learning_time
 
     def update_setting(self, config):
         self.config.max_learning_step = config.max_learning_step
@@ -216,8 +219,8 @@ class VDN_Agent(Basic_Agent):
                                             loss,
                                             _R, _reward,
                                             q_out, max_q_prime)
-                    if self.learning_time >= (self.config.save_interval * self.cur_checkpoint):
-                        save_class(self.config.agent_save_dir, 'checkpoint' + str(self.cur_checkpoint), self)
+                    if self.learning_time >= (self.config.save_interval * self.cur_checkpoint) and self.config.end_mode == "step":
+                        save_class(self.config.agent_save_dir, 'checkpoint-' + str(self.cur_checkpoint), self)
                         self.cur_checkpoint += 1
                     
                     if self.learning_time >= self.config.max_learning_step:

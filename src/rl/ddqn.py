@@ -55,7 +55,7 @@ class DDQN_Agent(Basic_Agent):
         self.cur_checkpoint = 0
 
         # save init agent
-        save_class(self.config.agent_save_dir, 'checkpoint' + str(self.cur_checkpoint), self)
+        save_class(self.config.agent_save_dir, 'checkpoint-' + str(self.cur_checkpoint), self)
         self.cur_checkpoint += 1
 
     def set_network(self, networks: dict, learning_rates: float):
@@ -89,6 +89,8 @@ class DDQN_Agent(Basic_Agent):
         for network_name in networks:
             getattr(self, network_name).to(self.device)
 
+    def get_step(self):
+        return self.learning_time
 
     def update_setting(self, config):
         self.config.max_learning_step = config.max_learning_step
@@ -181,8 +183,8 @@ class DDQN_Agent(Basic_Agent):
 
                 _loss.append(loss.item())
                 self.learning_time += 1
-                if self.learning_time >= (self.config.save_interval * self.cur_checkpoint):
-                    save_class(self.config.agent_save_dir, 'checkpoint' + str(self.cur_checkpoint), self)
+                if self.learning_time >= (self.config.save_interval * self.cur_checkpoint) and self.config.end_mode == "step":
+                    save_class(self.config.agent_save_dir, 'checkpoint-' + str(self.cur_checkpoint), self)
                     self.cur_checkpoint += 1
 
                 if self.learning_time % self.target_update_interval == 0:
@@ -325,7 +327,7 @@ class DDQN_Agent(Basic_Agent):
         tb_logger.add_scalar('loss', loss.item(), mini_step)
 
         # Q
-        for id, p_q, t_q in enumerate(zip(predict_Q, target_Q)):
+        for id, (p_q, t_q) in enumerate(zip(predict_Q, target_Q)):
             tb_logger.add_scalar(f"Predict_Q/action_{id}", p_q.item(), mini_step)
             tb_logger.add_scalar(f"Target_Q/action_{id}", t_q.item(), mini_step)
 

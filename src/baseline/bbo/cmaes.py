@@ -11,6 +11,7 @@ class CMAES(Basic_Optimizer):
     def __init__(self, config):
         super().__init__(config)
         config.NP = 50
+
         self.__config = config
         self.__toolbox = base.Toolbox()
         self.__creator = creator
@@ -20,12 +21,19 @@ class CMAES(Basic_Optimizer):
 
     def __str__(self):
         return "CMAES"
+    
     def run_episode(self, problem):
+        self.rng_gpu = None
+        self.rng_cpu = None
+        self.rng = None
+        np.random.seed(self.rng_seed)
+
         self.__creator.create("Fitnessmin", base.Fitness, weights=(-1.0,))
         self.__creator.create("Individual", list, fitness=creator.Fitnessmin)
         if self.full_meta_data:
             self.meta_Cost = []
             self.meta_X = []
+            
         def problem_eval(x):
             if problem.optimum is None:
                 fitness = problem.eval(x)
@@ -53,18 +61,19 @@ class CMAES(Basic_Optimizer):
         while True:
             _, logbook = self.__algorithm.eaGenerateUpdate(self.__toolbox, ngen=1, stats=stats, halloffame=hof, verbose=False)
             fes += len(logbook) * self.__config.NP
-            if fes >= log_index * self.log_interval:
+            while fes >= log_index * self.log_interval:
                 log_index += 1
                 cost.append(hof[0].fitness.values[0])
             if problem.optimum is None:
                 done = fes >= self.__config.maxFEs
             else:
-                done = fes >= self.__config.maxFEs or hof[0].fitness.values[0] <= 1e-8
+                done = fes >= self.__config.maxFEs
             if done:
                 if len(cost) >= self.__config.n_logpoint + 1:
                     cost[-1] = hof[0].fitness.values[0]
                 else:
-                    cost.append(hof[0].fitness.values[0])
+                    while len(cost) < self.__config.n_logpoint + 1:
+                        cost.append(hof[0].fitness.values[0])
                 break
         results = {'cost': cost, 'fes': fes}
 

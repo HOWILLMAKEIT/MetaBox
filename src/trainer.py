@@ -83,17 +83,18 @@ class Trainer(object):
     def __init__(self, config):
         self.config = config
 
+        if self.config.train_problem in ['bbob-surrogate-10D','bbob-surrogate-5D','bbob-surrogate-2D']:
+            self.config.is_train = True
+        self.train_set, self.test_set = construct_problem_set(config)
+        self.config.dim = max(self.train_set.maxdim, self.test_set.maxdim)
+
         torch.manual_seed(self.config.seed)
         torch.cuda.manual_seed_all(self.config.seed)
         np.random.seed(self.config.seed)
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
 
-        self.train_set, self.test_set = construct_problem_set(config)
-        self.config.dim = max(self.train_set.maxdim, self.test_set.maxdim)
-        
-        if self.config.train_problem == 'bbob-surrogate':
-            self.config.is_train = True
+
             
         if self.config.resume_dir is None:
             self.agent = eval(self.config.train_agent)(self.config)
@@ -152,6 +153,7 @@ class Trainer(object):
         id_seed = self.config.id_seed
         seed = self.config.seed
 
+        checkpoint_time0 = time.time()
         while not is_end:
             learn_step = 0
             self.train_set.shuffle()
@@ -222,6 +224,7 @@ class Trainer(object):
                         break
                 # self.agent.train_epoch()
             # epoch_steps.append(learn_step)
+            checkpoint_time_epoch = time.time() - checkpoint_time0
             epoch += 1
 
             if not self.config.no_tb:
@@ -234,10 +237,10 @@ class Trainer(object):
                 tb_logger.add_scalar("epoch-avg-loss", loss_record/(self.train_set.N / self.train_set.batch_size * bs), epoch)
 
             if epoch >= (self.config.save_interval * self.agent.cur_checkpoint) and self.config.end_mode == "epoch":
-                save_class(self.config.agent_save_dir, 'checkpoint' + str(self.agent.cur_checkpoint), self.agent)
+                save_class(self.config.agent_save_dir, 'checkpoint-' + str(self.agent.cur_checkpoint), self.agent)
                 # 记录 checkpoint 和 total_step
                 with open(self.config.agent_save_dir + "/checkpoint_log.txt", "a") as f:
-                    f.write(f"Checkpoint {self.agent.cur_checkpoint}: {learn_step}\n")
+                    f.write(f"Checkpoint {self.agent.cur_checkpoint}: {learn_step}; Time: {checkpoint_time_epoch} s\n")
 
                 # todo rollout
                 # 保存状态

@@ -178,7 +178,7 @@ class LGA_Optimizer(Learnable_Optimizer):
     def update(self, action, problem):
         # action 是 网络
 
-        self.policy = vector2nn(action['net'], self.policy)
+        self.policy = vector2nn(action['net'], self.policy).to(self.config.device)
 
         skip_step = action['skip_step']
 
@@ -319,7 +319,7 @@ class LGA_Optimizer(Learnable_Optimizer):
         if problem.optimum is None:
             is_end = self.fes >= self.MaxFEs
         else:
-            is_end = self.fes >= self.MaxFEs or self.gbest_val <= 1e-8
+            is_end = self.fes >= self.MaxFEs
 
         if self.config.full_meta_data:
             self.meta_X.append(self.population.copy())
@@ -335,7 +335,8 @@ class LGA_Optimizer(Learnable_Optimizer):
             if len(self.cost) >= self.config.n_logpoint + 1:
                 self.cost[-1] = self.gbest_val
             else:
-                self.cost.append(self.gbest_val)
+                while len(self.cost) < self.__config.n_logpoint + 1:
+                    self.cost.append(self.gbest_val)
 
         info = {}
 

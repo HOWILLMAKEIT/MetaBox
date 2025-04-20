@@ -20,6 +20,8 @@ class SurrRLDE(DDQN_Agent):
 							 {'in': 64, 'out': 32, 'drop_out': 0, 'activation': 'ReLU'},
 							 {'in': 32, 'out': config.n_act, 'drop_out': 0, 'activation': 'None'}]
 		self.device = config.device
+		self.memory_size = self.config.memory_size = 100000
+
 
 		self.config.max_grad_norm = math.inf
 		# self.pred_Qnet = MLP(config.net_config).to(self.device)
@@ -45,7 +47,7 @@ class SurrRLDE(DDQN_Agent):
 		model = MLP(self.config.net_config).to(self.config.device)
 
 		super().__init__(self.config, {'model': model}, self.config.lr_model)
-
+		self.replay_buffer = ReplayBuffer_torch(self.memory_size, 9, self.device)
 
 	def __str__(self):
 		return "Surr_RLDE"
@@ -64,3 +66,116 @@ class SurrRLDE(DDQN_Agent):
 		else:
 			action = torch.argmax(Q_list, -1).detach().cpu().numpy()
 		return action
+
+
+	def train_episode(self,
+					  envs,
+					  seeds: Optional[Union[int, List[int], np.ndarray]],
+					  para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc'] = 'dummy',
+					  # todo: asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
+					  # num_cpus: Optional[Union[int, None]] = 1,
+					  # num_gpus: int = 0,
+					  compute_resource = {},
+					  tb_logger = None,
+					  required_info = {}):
+		num_cpus = None
+		num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
+		if 'num_cpus' in compute_resource.keys():
+			num_cpus = compute_resource['num_cpus']
+		if 'num_gpus' in compute_resource.keys():
+			num_gpus = compute_resource['num_gpus']
+		env = ParallelEnv(envs, para_mode, num_cpus = num_cpus, num_gpus = num_gpus)
+		env.seed(seeds)
+		# params for training
+		gamma = self.gamma
+
+		state = env.reset()
+		try:
+			state = torch.Tensor(state)
+		except:
+			pass
+
+		_R = torch.zeros(len(env))
+		_loss = []
+		_reward = []
+		# sample trajectory
+		while not env.all_done():
+			action = self.get_action(state = state, epsilon_greedy = True)
+
+			# state transient
+			next_state, reward, is_end, info = env.step(action)
+			_R += reward
+			_reward.append(torch.Tensor(reward))
+			# store info
+			# convert next_state into tensor
+			try:
+				next_state = torch.Tensor(next_state).to(self.device)
+			except:
+				pass
+			for s, a, r, ns, d in zip(state, action, reward, next_state, is_end):
+
+				self.replay_buffer.append(s, a, r, ns, d)
+			try:
+				state = next_state
+			except:
+				state = copy.deepcopy(next_state)
+
+			# begin update
+			if len(self.replay_buffer) >= self.warm_up_size:
+				batch_obs, batch_action, batch_reward, batch_next_obs, batch_done = self.replay_buffer.sample(self.batch_size)
+				pred_Vs = self.model(batch_obs.to(self.device))  # [batch_size, n_act]
+				action_onehot = torch.nn.functional.one_hot(batch_action.to(self.device), self.n_act)  # [batch_size, n_act]
+
+				_avg_predict_Q = (pred_Vs * action_onehot).mean(0)  # [n_act]
+				predict_Q = (pred_Vs * action_onehot).sum(1)  # [batch_size]
+
+				target_output = self.target_model(batch_next_obs.to(self.device))
+				_avg_target_Q = batch_reward.to(self.device)[:, None] + (1 - batch_done.to(self.device))[:, None] * gamma * target_output
+				target_Q = batch_reward.to(self.device) + (1 - batch_done.to(self.device)) * gamma * target_output.max(1)[0].detach()
+				_avg_target_Q = _avg_target_Q.mean(0)  # [n_act]
+
+				self.optimizer.zero_grad()
+				loss = self.criterion(predict_Q, target_Q)
+				loss.backward()
+				grad_norms = clip_grad_norms(self.optimizer.param_groups, self.config.max_grad_norm)
+				self.optimizer.step()
+
+				_loss.append(loss.item())
+				self.learning_time += 1
+				if self.learning_time >= (self.config.save_interval * self.cur_checkpoint) and self.config.end_mode == "step":
+					save_class(self.config.agent_save_dir, 'checkpoint-' + str(self.cur_checkpoint), self)
+					self.cur_checkpoint += 1
+
+				if self.learning_time % self.target_update_interval == 0:
+					for target_parma, parma in zip(self.target_model.parameters(), self.model.parameters()):
+						target_parma.data.copy_(parma.data)
+
+				if not self.config.no_tb:
+					self.log_to_tb_train(tb_logger, self.learning_time,
+										 grad_norms,
+										 loss,
+										 _R, _reward,
+										 _avg_predict_Q, _avg_target_Q)
+
+				if self.learning_time >= self.config.max_learning_step:
+					_Rs = _R.detach().numpy().tolist()
+					return_info = {'return': _Rs, 'loss': _loss, 'learn_steps': self.learning_time, }
+					env_cost = env.get_env_attr('cost')
+					return_info['normalizer'] = env_cost[0]
+					return_info['gbest'] = env_cost[-1]
+					for key in required_info.keys():
+						return_info[key] = env.get_env_attr(required_info[key])
+					env.close()
+					return self.learning_time >= self.config.max_learning_step, return_info
+
+		is_train_ended = self.learning_time >= self.config.max_learning_step
+		_Rs = _R.detach().numpy().tolist()
+		return_info = {'return': _Rs, 'loss': _loss, 'learn_steps': self.learning_time, }
+		env_cost = env.get_env_attr('cost')
+		return_info['normalizer'] = env_cost[0]
+		return_info['gbest'] = env_cost[-1]
+		for key in required_info.keys():
+			return_info[key] = env.get_env_attr(required_info[key])
+		env.close()
+
+		return is_train_ended, return_info

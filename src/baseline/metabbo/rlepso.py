@@ -266,8 +266,8 @@ class RLEPSO(PPO_Agent):
                 # perform gradient descent
                 self.optimizer.step()
                 self.learning_time += 1
-                if self.learning_time >= (self.config.save_interval * self.cur_checkpoint):
-                    save_class(self.config.agent_save_dir, 'checkpoint' + str(self.cur_checkpoint), self)
+                if self.learning_time >= (self.config.save_interval * self.cur_checkpoint) and self.config.end_mode == "step":
+                    save_class(self.config.agent_save_dir, 'checkpoint-' + str(self.cur_checkpoint), self)
                     self.cur_checkpoint += 1
 
                 if not self.config.no_tb:
@@ -364,9 +364,9 @@ class RLEPSO(PPO_Agent):
                     state = torch.Tensor(state).to(self.device)
                 except:
                     state = [state]
-                action = self.actor(state)[0]
+                action = self.actor(state.unsqueeze(0))[0]
                 action = action.detach().cpu().numpy()
-                state, reward, is_done, info = env.step(action)
+                state, reward, is_done, info = env.step(action[0])
                 R += reward
             env_cost = env.get_env_attr('cost')
             env_fes = env.get_env_attr('fes')

@@ -11,7 +11,7 @@ def get_config(args=None):
                                                                                 'mmo', 'mmo-torch', 'wcci2020', 'cec2017mto', 'moo-synthetic'],
                         help='specify the problem suite for training')
     parser.add_argument('--test_problem', default = None, choices = [None, 'bbob-10D', 'bbob-30D', 'bbob-torch-10D', 'bbob-torch-30D', 'bbob-noisy-10D', 
-                                                                        'bbob-noisy-30D', 'bbob-noisy-torch-10D', 'bbob-noisy-torch-30D', 'bbob-surrogate', 'hpo-b',
+                                                                        'bbob-noisy-30D', 'bbob-noisy-torch-10D', 'bbob-noisy-torch-30D', 'bbob-surrogate-2D','bbob-surrogate-5D','bbob-surrogate-10D', 'hpo-b',
                                                                                 'lsgo', 'lsgo-torch', 'protein', 'protein-torch', 'uav', 'uav-torch', 'ne', 
                                                                                 'mmo', 'mmo-torch', 'wcci2020', 'cec2017mto', 'moo-synthetic'],
                         help='specify the problem suite for testing, default to be consistent with training')
@@ -98,7 +98,7 @@ def get_config(args=None):
     parser.add_argument('--epoch_seed', type = int, default = 100)
     parser.add_argument('--id_seed', type = int, default = 5)
     parser.add_argument('--train_mode', default='single', type = str, choices = ['single', 'multi'])
-    parser.add_argument('--end_mode', type = str, choices = ['step', 'epoch'])
+    parser.add_argument('--end_mode', type = str, default = 'epoch', choices = ['step', 'epoch'])
 
     #parser.add_argument('--test_run', type = int, default = 51)
     parser.add_argument('--test_run', type = int, default = 1)
