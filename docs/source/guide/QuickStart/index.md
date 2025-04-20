@@ -14,6 +14,11 @@ Core_Concept
 Hi！Here is the fastest way to begin your journey of Metabox.
 
 ## Installation
+
+conda 3.11.5
+pip install requirement.txt
+pip install metabox
+
 ### Linux
     bash bash_to_install_metabox_linux
 ### Windows
@@ -45,17 +50,15 @@ For further exploration, we recommend reading the comprehensive survey : "[Towar
     python MetaBox/src/main.py --train 
         --train_problem xxx 
         --train_difficulty xxx 
-        --train_agent xxx 
-        --train_optimizer xxx
+        --baseline xxx
 
 🎯 Example: Train GLEET on COCO's BBOB (10D, easy)
 
     python MetaBox/src/main.py --train 
     --train_problem bbob-10D 
     --train_difficulty easy 
-    --train_agent GLEET 
-    --train_optimizer GLEET_Optimizer
+    --baseline GLEET 
 
 ### 2. Test one algorithm on MetaBox's one Dataset
-
+        结果展示
 ### 3. Bash Builder
