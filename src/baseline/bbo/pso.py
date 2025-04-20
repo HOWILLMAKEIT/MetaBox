@@ -98,8 +98,8 @@ class PSO(Basic_Optimizer):
             for i in range(len(pop)):
                 gen_meta_cost.append(pop[i].fitness.values[0])
                 gen_meta_X.append(pop[i])
-            self.meta_Cost.append(gen_meta_cost)
-            self.meta_X.append(gen_meta_X)
+            self.meta_Cost.append(gen_meta_cost.copy())
+            self.meta_X.append(gen_meta_X.copy())
         
         
         fes = self.__config.population_size

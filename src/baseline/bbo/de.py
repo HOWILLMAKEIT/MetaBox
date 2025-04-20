@@ -41,8 +41,8 @@ class DE(Basic_Optimizer):
             else:
                 fitness = problem.eval(x) - problem.optimum
             if self.full_meta_data:
-                self.meta_Cost.append(fitness)
-                self.meta_X.append(x)
+                self.meta_Cost.append(fitness.copy())
+                self.meta_X.append(x.copy())
             return fitness,   # return a tuple
 
         self.__toolbox.register("evaluate", problem_eval)

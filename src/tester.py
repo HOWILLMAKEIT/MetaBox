@@ -786,6 +786,9 @@ def rollout_batch(config):
     if config.test_problem in ['bbob-surrogate-10D','bbob-surrogate-5D','bbob-surrogate-2D']:
         config.is_train = False
     train_set, test_set = construct_problem_set(config)
+
+    config.dim = max(train_set.maxdim, test_set.maxdim)
+
     agent_for_rollout=config.agent_for_rollout
     parallel_batch = config.parallel_batch
 
@@ -806,7 +809,7 @@ def rollout_batch(config):
         
     checkpoints = config.checkpoints_for_rollout
     if checkpoints is None:
-        epoch_list = os.listdir(upper_dir)
+        epoch_list = [f for f in os.listdir(upper_dir) if f.endswith('.pkl')]
         checkpoints = np.arange(len(epoch_list))
     n_checkpoint=len(checkpoints)
 

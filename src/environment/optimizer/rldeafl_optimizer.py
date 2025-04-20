@@ -154,8 +154,8 @@ class RLDEAFL_Optimizer(Learnable_Optimizer):
             v[indexs] = updated_sub_vector
 
         # bound
-        v = np.where(v < 0, (v + 0) / 2, v)
-        v = np.where(v > 1, (v + 1) / 2, v)
+        v = np.where(v < 0, (origin_vector + 0) / 2, v)
+        v = np.where(v > 1, (origin_vector + 1) / 2, v)
 
         # apply crossover
         u = np.zeros_like(v)

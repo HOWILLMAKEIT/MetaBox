@@ -124,8 +124,8 @@ class SAHLPSO(Basic_Optimizer):
                     cost.append(gBest_cost)
 
             if self.full_meta_data:
-                self.meta_Cost.append(f_X)
-                self.meta_X.append(X)    
+                self.meta_Cost.append(f_X.copy())
+                self.meta_X.append(X.copy())
             
             # after a generation update related statics
             if G % self.LP == 0:

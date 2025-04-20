@@ -145,7 +145,7 @@ class Basic_Logger:
             t2_list[agent] = []
             for pname in results['T1'].keys():
                 t1_list[agent].append(results['T1'][pname][agent])
-                t2_list[agent].append(results['T1'][pname][agent])
+                t2_list[agent].append(results['T2'][pname][agent])
             t1_list[agent] = np.mean(t1_list[agent])
             t2_list[agent] = np.mean(t2_list[agent])
             ratios.append((t2_list[agent] - t1_list[agent])/t0)

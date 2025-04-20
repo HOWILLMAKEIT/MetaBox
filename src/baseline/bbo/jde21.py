@@ -57,8 +57,8 @@ class JDE21(Basic_Optimizer):
             cost = problem.eval(Xs) - problem.optimum
             
         if self.full_meta_data:
-            self.meta_Cost.append(cost)
-            self.meta_X.append(Xs)
+            self.meta_Cost.append(cost.copy())
+            self.meta_X.append(Xs.copy())
         # cost[cost < self.__terminateErrorValue] = 0.0
         return cost
 

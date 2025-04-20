@@ -221,8 +221,10 @@ class MADDE(Basic_Optimizer):
         v[mu == 0] = v1
         v[mu == 1] = v2
         v[mu == 2] = v3
-        v[v < problem.lb] = (v[v < problem.lb] + problem.lb) / 2
-        v[v > problem.ub] = (v[v > problem.ub] + problem.ub) / 2
+
+        v = np.where(v < problem.lb, (self.__population + problem.lb) / 2, v)
+        v = np.where(v > problem.ub, (self.__population + problem.ub) / 2, v)
+
         rvs = self.rng.rand(NP)
         Crs = Cr.repeat(dim).reshape(NP, dim)
         u = np.zeros((NP, dim))
@@ -268,8 +270,8 @@ class MADDE(Basic_Optimizer):
         self.__archive = self.__archive[:self.__NA]
 
         if self.full_meta_data:
-            self.meta_Cost.append( self.__cost)
-            self.meta_X.append(self.__population)
+            self.meta_Cost.append(self.__cost.copy())
+            self.meta_X.append(self.__population.copy())
         
         if np.min(self.__cost) < self.gbest:
             self.gbest = np.min(self.__cost)
