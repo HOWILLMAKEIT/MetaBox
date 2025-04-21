@@ -133,25 +133,22 @@ class Trainer(object):
 
     def save_log(self, epochs, steps, cost, returns, normalizer):
         """
-        Saves training logs including steps, returns, costs, and normalizers for each problem in the training set.
-
-        Args:
-            epochs (list or np.ndarray): The list of epoch numbers.
-            steps (list or np.ndarray): The list of steps taken during training.
-            cost (dict): A dictionary where keys are problem names and values are lists of costs for each epoch.
-            returns (list or np.ndarray): The list of returns achieved during training.
-            normalizer (dict): A dictionary where keys are problem names and values are lists of normalizer values for each epoch.
-
-        Behavior:
-            - Creates a directory for saving logs if it does not already exist.
-            - Saves the steps and returns as a NumPy array in the log directory.
-            - For each problem in the training set:
-                - Ensures the cost and normalizer lists are the same length as the epochs by appending the last value.
-                - Saves the epochs, costs, and normalizer values as a NumPy array in the log directory.
-
-        Note:
-            The log directory path is constructed using the configuration settings and the agent's class name.
+        # Introduction
+        Saves training logs including epochs, steps, costs, returns, and normalizer values for each problem in the training set. The logs are saved as NumPy arrays in a structured directory based on agent class and runtime.
+        # Args:
+        - epochs (list or np.ndarray): List or array of epoch indices.
+        - steps (list or np.ndarray): List or array of step counts corresponding to each epoch.
+        - cost (dict): Dictionary mapping problem names to lists of cost values per epoch.
+        - returns (list or np.ndarray): List or array of return values per step.
+        - normalizer (dict): Dictionary mapping problem names to lists of normalizer values per epoch.
+        # Returns:
+        - None
+        # Notes:
+        - Creates the log directory if it does not exist.
+        - Pads cost and normalizer lists with their last value if they are shorter than the number of epochs.
+        - Saves logs as `.npy` files for later analysis.
         """
+        
         log_dir = self.config.log_dir + f'/train/{self.agent.__class__.__name__}/{self.config.run_time}/log/'
         if not os.path.exists(log_dir):
             os.makedirs(log_dir)

@@ -51,11 +51,9 @@ class Basic_Agent:
         # Introduction
         Executes a single rollout (episode) in the provided environment using the agent's policy.
         # Args:
-        todo:写一下env的数据结构/组织
-        - env: The environment in which the episode will be executed. Must follow the OpenAI Gym interface or similar.
+        - env: The ParallelEnv object environment in which the episode will be executed. 
         # Returns:
-        todo:写清楚返回
-        - dict: A dictionary containing episode statistics such as total reward, steps taken, and any additional information collected during the rollout.
+        - dict: A dictionary containing episode statistics such as 'cost', 'fes','return',and other required info.
         # Raises:
         - NotImplementedError: This method should be implemented by subclasses.
         """
@@ -63,7 +61,7 @@ class Basic_Agent:
 
     def train_epoch(self):
         """
-        todo:写清楚
+        todo:写清楚,问一下，是不是只有les用了这个
         # Introduction
         Executes a single epoch of training for the reinforcement learning agent.
         # Args:
@@ -79,8 +77,7 @@ class Basic_Agent:
     def set_network(self, networks: dict, learning_rates: int):
         """
         # Introduction
-        todo:这个我完全不清楚，得问问
-        Configures the agent's neural network(s) and associated learning rates.
+        Configures the agent's neural network(s), initialize the network and set learning rates.
         # Args:
         - networks (dict): A dictionary containing the neural network architectures or instances to be used by the agent.
         - learning_rates (int): The learning rate(s) to be applied to the corresponding networks.
@@ -95,12 +92,11 @@ class Basic_Agent:
     def get_step(self):
         """
         # Introduction
-        todo:问
-        Retrieves the current step or action to be taken by the agent in the reinforcement learning environment.
+        get the current learning_time/learning_step of the agent.
         # Args:
         None
         # Returns:
-        - Any: The current step or action, depending on the agent's implementation.
+        - int: The current learning time/learning step of the agent.
         # Raises:
         NotImplementedError: If the method is not implemented by a subclass.
         """

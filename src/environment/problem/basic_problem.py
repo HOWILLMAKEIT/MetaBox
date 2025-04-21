@@ -118,7 +118,7 @@ class Basic_Problem_Torch(Basic_Problem):
     def func(self, x):
         """
         # Introduction
-        todo:写清楚这个function的用法，x也是
+        Abstract method to be implemented by subclasses, defining the specific evaluation function for the problem.
         # Args:
         - x: Input parameter to be processed by the function. The type and purpose should be defined in the subclass implementation.
         # Returns:
