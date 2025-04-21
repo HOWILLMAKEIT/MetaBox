@@ -1045,9 +1045,9 @@ class Basic_Logger:
         Plots and saves the training curve for a given data type, applying smoothing and displaying mean and standard deviation shading. Supports normalization and custom data processing.
         # Args:
         todo:data写清楚数据结构
-        - data_type (str): The type of data being plotted.
+        - data_type (str): The type of data being plotted. e.g. cost
         - steps (list): List of step values (x-axis) corresponding to the data points.
-        - data (dict): Dictionary containing the data to be averaged and plotted.
+        - data (dict): Part of the result dictionary,mapping the data type mentioned above. e.g. result["cost"]
         - output_dir (str): Directory path where the output figure will be saved.
         - ylabel (str, optional): Label for the y-axis. If None, uses `data_type` as the label. Defaults to None.
         - norm (bool, optional): Whether to normalize the data before plotting. Defaults to False.
@@ -1227,7 +1227,6 @@ class MOO_Logger(Basic_Logger):
         # Introduction
         Plots and saves the Pareto fronts for multiple algorithms on one or more optimization problems, supporting both 2D and 3D objective spaces. The function visualizes the final generation's Pareto-efficient solutions for each algorithm and problem, and saves the resulting plots as PNG files.
         # Args:
-        todo:data写清楚数据结构
         - data (dict): Nested dictionary containing optimization results structured as `dict[problem][algo][run][generation][objective]`.
         - output_dir (str): Directory path where the generated Pareto front plots will be saved.
         - Name (Optional[Union[str, list]]): Specific problem name or list of problem names to plot. If `None`, all problems in `data` are plotted.
@@ -1316,8 +1315,8 @@ class MOO_Logger(Basic_Logger):
         # Introduction
         Plots and saves performance indicator curves for different agents based on the provided experimental data. Supports both categorized and non-categorized plotting, and can output figures in PDF or PNG format.
         # Args:
-        todo:data写清楚数据结构
-        - data (dict): Nested dictionary containing experimental results. The outer keys are problem names, and the inner keys are agent names mapping to their respective performance arrays.
+        todo:写清楚indicator的定义
+        - data (dict): Part of the result dictionary,mapping the indicator. Also a nested dictionary containing experimental results. The outer keys are problem names, and the inner keys are agent names mapping to their respective performance arrays.
         - output_dir (str): Directory path where the generated plots will be saved.
         - indicator (str): Name of the performance indicator to be plotted (e.g., accuracy, loss).
         - Name (Optional[Union[str, list]], optional): Specific problem name(s) to plot. If None, plots for all problems in `data`. Defaults to None.
@@ -1408,8 +1407,8 @@ class MOO_Logger(Basic_Logger):
         # Introduction
         Plots the normalized average and standard deviation curves for a specified indicator across multiple agents and problems, grouping agents by provided names, and saves the resulting figure.
         # Args:
-        todo:data写清楚数据结构，indicator是否可指定（有范围？）？
-        - data (dict): A nested dictionary containing indicator values for each agent and problem. Structure: {problem: {agent: {indicator: values}}}.
+        todo:data写清楚数据结构，indicator是否可指定（有范围？）？indicator在哪定义的？
+        - data (dict): Part of the result dictionary,mapping the indicator. Also a nested dictionary containing experimental results. The outer keys are problem names, and the inner keys are agent names mapping to their respective performance arrays.
         - output_dir (str): Directory path where the output figure will be saved.
         - named_agents (dict): Dictionary mapping group names (titles) to lists of agent names to be plotted together.
         - indicator (str): The key for the indicator to be plotted (e.g., 'reward', 'cost').
@@ -1483,7 +1482,7 @@ class MOO_Logger(Basic_Logger):
         Generates and saves bar charts visualizing the concrete performance of different agents on various problems, based on the provided data. Each chart represents the mean performance of an agent across selected problems, with the option to filter by specific problem names and customize the output format.
         # Args:
         todo:data写清楚数据结构，indicator同上
-        - data (dict): A nested dictionary where the first-level keys are problem names, the second-level keys are agent names, and the values are lists or arrays of performance metrics.
+        - data (dict) Part of the result dictionary,mapping the indicator. Also a nested dictionary containing experimental results. The outer keys are problem names, and the inner keys are agent names mapping to their respective performance arrays.
         - output_dir (str): The directory path where the generated figures will be saved.
         - indicator (Optional[str], default=None): The label for the y-axis, typically representing the performance metric being visualized.
         - Name (Optional[Union[str, list]], default=None): Specific problem name(s) to include in the visualization. If None, all problems are included.
@@ -1534,8 +1533,8 @@ class MOO_Logger(Basic_Logger):
         # Introduction
         Generates and saves boxplot visualizations for the provided data, comparing the performance of different agents on specified problems.
         # Args:
-        todo:data写清楚数据结构 indicator
-        - data (dict): A nested dictionary where the first-level keys are problem names, and the second-level keys are agent names. Each agent maps to a list or array of results.
+        todo:data写清楚数据结构 
+        - data (dict): The test result.Also a nested dictionary where the first-level keys are problem names, and the second-level keys are agent names. Each agent maps to a list or array of results.
         - output_dir (str): The directory path where the generated boxplot figures will be saved.
         - indicator (str): The name of the indicator or metric to be displayed in the boxplot's ylabel and filename.
         - Name (Optional[Union[str, list]], optional): Specific problem name(s) to plot. If None, plots all problems in `data`. Defaults to None.
