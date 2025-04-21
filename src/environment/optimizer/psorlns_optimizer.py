@@ -11,8 +11,8 @@ class PSORLNS_Optimizer(Learnable_Optimizer):
         self.w = 1
         self.c1 = 1.49445
         self.c2 = 1.49445
-        self.ps = 1000
-        self.eps =  0.1  # todo: 邻域个数判断阈值
+        self.ps = 100
+        
         self.TT2 = 0.8 # 选择worse better的随机数阈值
         self.neighbor_num = [5,10,20,30,40]
         
@@ -78,7 +78,7 @@ class PSORLNS_Optimizer(Learnable_Optimizer):
         self.w = 1
 
         self.max_dist = np.sqrt(np.sum((problem.ub - problem.lb) ** 2))
-
+        self.eps =  0.1 * self.max_dist # todo: 邻域个数判断阈值
         # initialize the population
         self.initialize_particles(problem)
 
@@ -115,13 +115,13 @@ class PSORLNS_Optimizer(Learnable_Optimizer):
 
     # feature encoding
     def observe(self):
-        state = np.zeros(self.ps, 1)
+        state = np.zeros((self.ps, 1))
         pop_dist = self.particles['pop_dist'].copy()
         pop_dist[range(self.ps), range(self.ps)] = np.inf
         neighbor_matrix = np.zeros((self.ps, self.ps))
         neighbor_matrix[pop_dist < self.eps] = 1
-        sum_neighbors = np.sum(neighbor_matrix, axis = -1)
-        xtate = sum_neighbors / 100
+        sum_neighbors = np.sum(neighbor_matrix, axis = -1, keepdims=True)
+        state = sum_neighbors / 100
         
         return state
 
@@ -134,36 +134,37 @@ class PSORLNS_Optimizer(Learnable_Optimizer):
         return reward
 
     def update(self, action, problem):
-        is_end = False
+        is_end = [False] * self.ps
 
         # record the gbest_val in the begining
-        parent_cost = self.particles['c_cost']
+        parent_cost = self.particles['c_cost'].copy()
 
 
         # generate two set of random val for pso velocity update
-        new_position = np.zeros(self.ps, self.dim)
-        new_velocity = np.zeros(self.ps, self.dim)
+        new_position = np.zeros((self.ps, self.dim))
+        new_velocity = np.zeros((self.ps, self.dim))
         
         pop_dist = self.particles['pop_dist'].copy()
         pop_dist[range(self.ps), range(self.ps)] = np.inf
         rank_dist = np.argsort(pop_dist, axis = -1)
+        c_pos = self.particles['current_position'].copy()
         for i in range(self.ps):
-            neighbors = rank_dist[i][:neighbor_num[action[i]]]
+            neighbors = rank_dist[i][:self.neighbor_num[action[i]]]
             # neighbors = np.append(neighbors, i)
             neighbors = neighbors[np.argsort(self.particles['c_cost'][neighbors])[::-1]]
             k = len(neighbors)
-            c_pos = self.particles['current_position'].copy()
+            
             rand1 = self.rng.rand()
             rand2 = self.rng.rand()
             if self.rng.rand() <= self.TT2:
                 worse = neighbors[0]
             else:
-                worse = neighbors[self.rng.randint(0, 0.05*k)]
+                worse = neighbors[self.rng.randint(0, 0.05*k + 1)]
 
             if self.rng.rand() <= self.TT2:
                 better = neighbors[-1]
             else:
-                better = neighbors[self.rng.randint(0.95*k, k)]
+                better = neighbors[self.rng.randint(0.95*k - 1, k)]
             if self.rng.rand() < 0.5:
                 # update velocity
                 new_velocity[i] = self.w * self.particles['velocity'][i] + self.c1 * rand1 * (self.particles['pbest_position'][i] - self.particles['current_position'][i]) + \

@@ -3,13 +3,13 @@ import torch
 from environment.optimizer.learnable_optimizer import Learnable_Optimizer
 import torch.nn as nn
 
-def vector2nn(x,net):
+def vector2nn(x,net,device):
     assert len(x) == sum([param.nelement() for param in net.parameters()]), 'dim of x and net not match!'
     params = net.parameters()
     ptr = 0
     for v in params:
         num_of_params = v.nelement()
-        temp = torch.FloatTensor(x[ptr: ptr+num_of_params])
+        temp = torch.tensor(x[ptr: ptr+num_of_params]).to(device)
         v.data = temp.reshape(v.shape)
         ptr += num_of_params
     return net
@@ -43,10 +43,11 @@ class LES_Optimizer(Learnable_Optimizer):
     def __init__(self, config):
         super().__init__(config)
         self.__config = config
+        self.device = self.__config.device
         self.max_fes = config.maxFEs
 
-        self.attn = SelfAttn()
-        self.mlp = LrNet()
+        self.attn = SelfAttn().to(self.device)
+        self.mlp = LrNet().to(self.device)
         self.alpha = [0.1,0.5,0.9] # alpha time-scale
         self.timestamp = np.array([1,3,10,30,50,100,250,500,750,1000,1250,1500,2000])
         self.save_time=0
@@ -124,8 +125,8 @@ class LES_Optimizer(Learnable_Optimizer):
     def update(self,action, problem):
 
         # get new model parameters 
-        self.attn=vector2nn(action['attn'],self.attn)
-        self.mlp=vector2nn(action['mlp'],self.mlp)
+        self.attn=vector2nn(action['attn'],self.attn,self.device)
+        self.mlp=vector2nn(action['mlp'],self.mlp,self.device)
         skip_step = None
         if action.get('skip_step') is not None:
             skip_step = action['skip_step']
@@ -137,11 +138,11 @@ class LES_Optimizer(Learnable_Optimizer):
             # get features of present population
             fitness_feature = self.cal_attn_feature()
             # get w_{i} for each individual
-            W = self.attn(fitness_feature).detach().numpy() 
+            W = self.attn(fitness_feature.to(self.device)).detach().cpu().numpy() 
             # get features for mlp
             alpha_feature, Pc, Ps = self.cal_mlp_feature(W)
             # get learning rates
-            alpha = self.mlp(alpha_feature).detach().numpy() # self.dim * 2
+            alpha = self.mlp(alpha_feature.to(self.device)).detach().cpu().numpy() # self.dim * 2
             alpha_mu = alpha[:,0]
             alpha_sigma = alpha[:,1]
             # update mu and sigma for next generation
@@ -172,10 +173,8 @@ class LES_Optimizer(Learnable_Optimizer):
                 self.meta_X.append(self.evolution_info['parents'].copy())
                 self.meta_Cost.append(self.evolution_info['parents_cost'].copy())
 
-            if problem.optimum is None:
-                is_end = (self.fes >= self.max_fes)
-            else:
-                is_end = self.fes >= self.max_fes or gbest <= 1e-8
+            is_end = (self.fes >= self.max_fes)
+
             step += 1
             if skip_step is not None:
                 is_end = (step >= skip_step)
