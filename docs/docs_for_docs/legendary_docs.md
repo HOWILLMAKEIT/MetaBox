@@ -85,7 +85,7 @@ ok 按照[autodoc2 官方文档](https://sphinx-autodoc2.readthedocs.io/en/stabl
 使用到的一些说法：
 
 - config (object): Configuration object containing all necessary parameters for experiment.For details you can visit config.py.
-- data (dict): The test result.Also a nested dictionary where the first-level keys are problem names, and the second-level keys are agent names. Each agent maps to a list or array of results.(主要是可以参考这种写法，使用first-level keys……这样的语句来表达数据结构)
+- data (dict): The test result.Also a nested dictionary where the first-level keys are problem names, and the second-level keys are agent names. Each agent maps to a list or array of results.或者是：structured as `dict[problem][algo][run][generation][objective]`.(主要是可以参考这种写法，使用first-level keys……这样的语句来表达数据结构,或者直接写第二种，好像第二种挺直观的)
 
 ## markdown 与 readthedocs 的一些使用问题
 

@@ -37,6 +37,16 @@ def data_wrapper_cost(data, ):
 
 
 def to_label(agent_name: str) -> str:
+    """
+    # Introduction
+    Converts an agent's name to a simplified label for display or logging purposes.
+    # Args:
+    - agent_name (str): The name of the agent to be converted.
+    # Returns:
+    - str: The simplified label. If the agent name is 'L2L_Agent', returns 'RNN-OI'. 
+        If the agent name ends with '_Agent' or '_agent', removes this suffix. Otherwise, returns the original name.
+    """
+    
     label = agent_name
     if label == 'L2L_Agent':
         return 'RNN-OI'
@@ -106,8 +116,7 @@ class Basic_Logger:
         # Introduction
         Calculates a custom score for each agent based on the provided dictionary of values and a normalization factor, intended as a tool function for the CEC metric.
         # Args:
-        todo: D里是啥，maxf的意义是啥？
-        - D (dict): A dictionary where each key represents an agent and the value is an array-like structure containing numerical values associated with that agent.
+        - D (dict): A dictionary where each key represents an agent and the value is an array-like structure representing the results in all test problems.
         - maxf (float): A normalization factor used to scale the minimum values for each agent.
         # Returns:
         - np.ndarray: An array of computed scores for each agent.
@@ -131,7 +140,7 @@ class Basic_Logger:
         # Introduction
         Calculates baseline statistics from Random Search results for normalization and comparison purposes in optimization experiments.
         # Args:
-        - results (dict): A dictionary containing experiment results, including 'T1', 'T2', 'T0', 'fes', and 'cost' for different problems and methods.
+        - results (dict): The results data. Also a nested dictionary containing experimental results structured as `dict[metric][problem][algo][run]`.
         - fes (Optional[Union[int, float]]): The maximum number of function evaluations used for normalization in the 'fes' baseline calculation.
         # Returns:
         - dict: A dictionary containing the following baseline statistics:
@@ -179,8 +188,7 @@ class Basic_Logger:
         # Introduction
         Generates and saves an Excel table summarizing algorithm complexity metrics for different agents.
         # Args:
-        todo:这个result应该不只是t0t1t2的值吧，讲清晰点可能好一些
-        - results (dict): A dictionary containing timing results for different phases ('T0', 'T1', 'T2') and agents.
+        - results (dict): The result data.Also a nested dictionary containing experimental results structured as `dict[metric][problem][algo][run]`.
         - out_dir (str): The output directory where the Excel file will be saved.
         # Returns:
         - None
@@ -222,8 +230,7 @@ class Basic_Logger:
         Generates and saves Excel tables summarizing the performance statistics of different agents on various problems.
         For each agent and problem, the function computes the Worst, Best, Median, Mean, and Standard Deviation (Std) of the final cost values across multiple runs, and stores these statistics in an Excel file.
         # Args:
-        todo:跟上面的一样，这个result写清楚点可能好一些
-        - results (dict): A dictionary containing the cost results for each problem and agent. The expected structure is:
+        - results (dict): The result data.Also a nested dictionary containing experimental results structured as `dict[metric][problem][algo][run]`.
         - out_dir (str): The directory path where the generated Excel files will be saved.
         # Returns:
         - None
@@ -275,10 +282,7 @@ class Basic_Logger:
         # Introduction
         Generates and stores an Excel table summarizing the overall results of optimization experiments, including objective values (costs), performance gap with CMAES, and consumed function evaluations (FEs) for each optimizer and problem.
         # Args:
-        todo: result 的讲解，同上
-        - results (dict): A nested dictionary containing experiment results. Expected structure:
-            - results['cost'][problem][optimizer]: List of lists with objective values per run.
-            - results['fes'][problem][optimizer]: List of function evaluations per run.
+        - results (dict): The result data.Also a nested dictionary containing experimental results structured as `dict[metric][problem][algo][run]`.
         - out_dir (str): Directory path where the resulting Excel file ('overall_table.xlsx') will be saved.
         # Returns:
         - None
@@ -347,12 +351,11 @@ class Basic_Logger:
     def aei_cost(self, cost_data: dict, baseline: dict, ignore: Optional[list]=None):
         """
         # Introduction
-        todo:aei是这个意思吗？
-        Calculates the Adjusted Expected Improvement (AEI) cost for different agents based on provided cost data and a baseline. Optionally ignores specified agents.
+        Calculates the Aggregated Evaluation Indicator (AEI) cost for different agents based on provided cost data and a baseline. Optionally ignores specified agents.
         # Args:
-        todo:cost_data 的具体含义
-        - cost_data (dict): A nested dictionary containing cost values for each problem and agent. Structure: {problem: {agent: list of costs}}.
-        - baseline (dict): A dictionary containing baseline statistics, specifically 'cost_avg' for normalization.
+        - cost_data (dict): Part of the result data,the results['cost']. Also a nested dictionary containing experimental results structured as `dict[problem][algorithm][run]`.
+        - baseline (dict): A dictionary containing baseline statistics, structured as 'dict[metric]'.The metric includes 'complexity_avg', 'complexity_std', 'fes_avg', 'fes_std', 'cost_avg', and 'cost_std'.
+        - dict: A dictionary containing the following baseline statistics:
         - ignore (Optional[list]): A list of agent names to ignore during calculation. Defaults to None.
         # Returns:
         - results_cost (dict): A dictionary mapping each agent to their computed AEI cost values.
@@ -378,11 +381,10 @@ class Basic_Logger:
     def aei_fes(self, fes_data: dict, baseline: dict, maxFEs: Optional[Union[int, float]]=20000, ignore: Optional[list]=None):
         """
         # Introduction
-        todo:同上 这aei是这个意思吗，fesdata又是从哪里拿出来的值，baseline这个字典的组成是否要说明？ 
-        Computes the Adjusted Expected Improvement (AEI) for function evaluation steps (FEs) across multiple agents and problems, comparing them to a baseline. The method processes FEs data, applies logarithmic scaling, and calculates AEI statistics, optionally ignoring specified agents.
+        Computes the Aggregated Evaluation Indicator (AEI) for function evaluation steps (FEs) across multiple agents and problems, comparing them to a baseline. The method processes FEs data, applies logarithmic scaling, and calculates AEI statistics, optionally ignoring specified agents.
         # Args:
-        - fes_data (dict): Nested dictionary containing FEs data for each problem and agent. Structure: {problem: {agent: list/array of FEs}}.
-        - baseline (dict): Dictionary containing baseline statistics, must include the key 'fes_avg' for average FEs.
+        - fes_data (dict):Part of the result data,the results['fes'].Also a nested dictionary containing experimental results structured as `dict[problem][algorithm][run]`.
+        - baseline (dict): A dictionary containing baseline statistics, structured as 'dict[metric]'.The metric includes 'complexity_avg', 'complexity_std', 'fes_avg', 'fes_std', 'cost_avg', and 'cost_std'.
         - maxFEs (Optional[Union[int, float]], default=20000): The maximum number of function evaluations allowed, used for normalization.
         - ignore (Optional[list], default=None): List of agent names to ignore during computation.
         # Returns:
@@ -412,12 +414,9 @@ class Basic_Logger:
     def aei_complexity(self, complexity_data: dict, baseline: dict, ignore: Optional[list]=None):
         """
         # Introduction
-        todo:aei什么意思来着
-        Calculates the AEI (Agent Efficiency Index) complexity for a set of agents based on provided complexity data and a baseline. The function computes a normalized complexity score for each agent, optionally ignoring specified agents, and returns the results along with the mean and standard deviation of the AEI.
+        Calculates the AEI (Aggregated Evaluation Indicator) complexity for a set of agents based on provided complexity data and a baseline. The function computes a normalized complexity score for each agent, optionally ignoring specified agents, and returns the results along with the mean and standard deviation of the AEI.
         # Args:
-        todo:complexity_data写清楚，baseline也是
-        - complexity_data (dict): A dictionary containing complexity measurements for different time points ('T0', 'T1', 'T2') and agents.
-        - baseline (dict): A dictionary containing baseline statistics, specifically 'complexity_avg' and 'complexity_std'.
+        - complexity_data (dict):The result data,the results['fes'].Also a nested dictionary containing experimental results structured as `dict[problem][algorithm][run]`.
         - ignore (Optional[list]): A list of agent keys to ignore during computation. Defaults to None.
         # Returns:
         - results_complex (dict): A dictionary mapping each agent to its computed complexity score.
@@ -449,12 +448,10 @@ class Basic_Logger:
     def cal_aei(self, results: dict, agents: dict, ignore: Optional[list]=None):
         """
         # Introduction
-        todo:aei写清楚是什么，
-        Calculates the mean and standard deviation of AEI (presumably "Average Expected Improvement") values for a set of agents, with options to ignore certain agents and apply problem-specific scaling to the standard deviation.
+        Calculates the mean and standard deviation of AEI (Aggregated Evaluation Indicator) values for a set of agents, with options to ignore certain agents and apply problem-specific scaling to the standard deviation.
         # Args:
-        todo:同上，results/agents等数据结构是什么写清楚
-        - results (dict): A dictionary mapping agent names to their corresponding AEI values (iterable or array-like).
-        - agents (dict): A dictionary of agent names to agent objects or identifiers.
+        - results (dict): A dictionary mapping agent names to their corresponding AEI values (iterable or array-like), the value here is generated in aei_fes, aei_cost, or aei_complexity.
+        - agents (dict): A dictionary of algorithm agent names.
         - ignore (Optional[list]): A list of agent names to be excluded from the calculation. Defaults to None.
         # Returns:
         - tuple: A tuple containing two dictionaries:
@@ -483,11 +480,9 @@ class Basic_Logger:
     def aei_metric(self, data: dict, maxFEs: Optional[Union[int, float]]=20000, ignore: Optional[list]=None):
         """
         # Introduction
-        todo:aei写清楚，
-        Calculates the AEI (Aggregated Evaluation Index) metric for a set of agents across multiple problems, based on cost, function evaluations, and complexity. The AEI metric is computed by combining normalized cost, function evaluation, and complexity metrics for each agent, excluding specified agents if required.
+        Calculates the AEI (Aggregated Evaluation Indicator) metric for a set of agents across multiple problems, based on cost, function evaluations, and complexity. The AEI metric is computed by combining normalized cost, function evaluation, and complexity metrics for each agent, excluding specified agents if required.
         # Args:
-        todo:data数据结构的写作
-        - data (dict): A dictionary containing the experimental results, with keys such as 'cost', 'fes', and other relevant metrics for each problem and agent.
+        - results (dict): The result data.Also a nested dictionary containing experimental results structured as `dict[metric][problem][algo][run]`.
         - maxFEs (Optional[Union[int, float]], default=20000): The maximum number of function evaluations to consider for normalization.
         - ignore (Optional[list], default=None): A list of agent names to ignore in the AEI calculation.
         # Returns:
@@ -531,8 +526,7 @@ class Basic_Logger:
         # Introduction
         Calculates the CEC metric for a set of optimization results, aggregating scores for different agents across multiple problems. The metric combines ranking and performance-based scores, optionally ignoring specified agents.
         # Args:
-        todo:data写清楚数据结构
-        - data (dict): A dictionary containing optimization results. Must include keys 'cost' (agent performance data) and 'fes' (function evaluation statistics).
+        - results (dict): The result data.Also a nested dictionary containing experimental results structured as `dict[metric][problem][algo][run]`.
         - ignore (Optional[list]): A list of agent names to exclude from the metric calculation. Defaults to None.
         # Returns:
         - dict: A dictionary mapping agent labels to their computed CEC metric scores.
@@ -583,8 +577,7 @@ class Basic_Logger:
         # Introduction
         Plots Empirical Cumulative Distribution Functions (ECDF) for cost data of different agents across problems, and saves the figures to the specified output directory.
         # Args:
-        todo:把data写清楚
-        - data (dict): A dictionary containing cost data structured as `data['cost'][problem][agent]`, where each entry is a list of cost values.
+        - results (dict): The result data.Also a nested dictionary containing experimental results structured as `dict[metric][problem][algo][run]`.
         - output_dir (str): The directory path where the ECDF plots will be saved.
         - Name (Optional[Union[str, list]], optional): The name(s) of the problem(s) to plot. If `None`, plots for all problems. Defaults to `None`.
         - pdf_fig (bool, optional): If `True`, saves figures as PDF; otherwise, saves as PNG. Defaults to `True`.
@@ -666,8 +659,7 @@ class Basic_Logger:
         # Introduction
         Plots and saves performance curves for test data of different agents on various problems, supporting both categorized and uncategorized visualizations, with options for logarithmic scaling and output format.
         # Args:
-        todo:data写清楚
-        - data (dict): Dictionary containing performance data for each problem and agent. Structure: {problem: {agent: np.ndarray}}.
+        - results (dict): Part of the result data,the result[data_type]. Also a nested dictionary containing experimental results structured as `dict[problem][algo][run]`.
         - data_type (str): Label for the type of data being plotted (e.g., 'cost', 'accuracy').
         - output_dir (str): Directory path where the generated figures will be saved.
         - Name (Optional[Union[str, list]], optional): Specific problem name(s) to plot. If None, plots all problems. Defaults to None.
@@ -789,8 +781,7 @@ class Basic_Logger:
         # Introduction
         Plots and saves the average normalized test costs for multiple named agent groups across different problems. Each subplot corresponds to a group of agents, showing the mean and standard deviation of their normalized costs over function evaluations.
         # Args:
-        todo:data数据结构写清楚
-        - data (dict): Nested dictionary containing cost data structured as `data[problem][agent] = np.ndarray` of shape (runs, steps).
+        - results (dict): Part of the result data.Also a nested dictionary containing experimental results structured as `dict[problem][algo][run]`.
         - output_dir (str): Directory path where the resulting plot will be saved.
         - named_agents (dict): Dictionary mapping subplot titles to lists of agent names to be plotted in each subplot.
         - logged (bool, optional): If True, applies logarithmic scaling to the normalized costs. Defaults to False.
@@ -859,8 +850,7 @@ class Basic_Logger:
         # Introduction
         Generates and saves bar plots representing the normalized performance (final cost divided by initial cost) of different agents on various problems. The plots are saved as either PDF or PNG files in the specified output directory.
         # Args:
-        todo:data数据结构写清楚
-        - data (dict): A dictionary where keys are problem names and values are dictionaries mapping agent names to arrays of performance values (2D arrays, where the last and first columns are used for normalization).
+        - results (dict): Part of the result data.Also a nested dictionary containing experimental results structured as `dict[problem][algo][run]`.
         - output_dir (str): The directory path where the generated plots will be saved.
         - Name (Optional[Union[str, list]], optional): Specific problem name(s) to include in the plots. If None, all problems are included. Defaults to None.
         - pdf_fig (bool, optional): If True, saves plots as PDF files; otherwise, saves as PNG files. Defaults to True.
@@ -907,8 +897,7 @@ class Basic_Logger:
         Generates and saves boxplot visualizations of cost data for different agents and problems.
 
         # Args:
-        todo:data写清楚
-        - data (dict): A dictionary containing cost data structured as `data['cost'][problem][agent]`, where each value is a list or array of cost values.
+        - results (dict): The result data.Also a nested dictionary containing experimental results structured as `dict[metric][problem][algo][run]`.
         - output_dir (str): The directory path where the generated boxplot figures will be saved.
         - Name (Optional[Union[str, list]], optional): Specific problem name(s) to plot. If `None`, all problems in the data are plotted. Defaults to `None`.
         - ignore (Optional[list], optional): List of agent names to ignore when plotting. If `None`, no agents are ignored. Defaults to `None`.
@@ -960,8 +949,7 @@ class Basic_Logger:
         # Introduction
         Generates and saves a boxplot comparing the performance of different agents across multiple problems, using the final cost values from the provided data. The boxplot is normalized per problem and can be saved as either a PDF or PNG file.
         # Args:
-        todo:data写清楚数据结构
-        - data (dict): Nested dictionary containing results structured as `data[problem][agent]`, where each entry is a list of runs (each run is a list or array, with the last element being the cost).
+        - results (dict): Part of the result data.Also a nested dictionary containing experimental results structured as `dict[problem][algo][run]`.
         - output_dir (str): Directory path where the resulting boxplot image will be saved.
         - ignore (Optional[list], optional): List of agent names to exclude from the plot. Defaults to None.
         - pdf_fig (bool, optional): If True, saves the figure as a PDF; otherwise, saves as a PNG. Defaults to True.
@@ -1007,10 +995,9 @@ class Basic_Logger:
     def draw_rank_hist(self, data: dict, random: dict, output_dir: str, ignore: Optional[list]=None, pdf_fig: bool = True) -> None:
         """
         # Introduction
-        Plots a bar chart with error bars representing the AEI (Average Evaluation Index) metric for different agents, and saves the figure to the specified output directory.
+        Plots a bar chart with error bars representing the AEI (Aggregated Evaluation Indicator) metric for different agents, and saves the figure to the specified output directory.
         # Args:
-        todo:data写清楚数据结构
-        - data (dict): Dictionary containing the evaluation data for each agent.
+        - results (dict): The result data.Also a nested dictionary containing experimental results structured as `dict[metric][problem][algo][run]`.
         - random (dict): Dictionary containing the random baseline data for comparison.
         - output_dir (str): Path to the directory where the output figure will be saved.
         - ignore (Optional[list], optional): List of agent names to ignore in the plot. Defaults to None.
@@ -1044,10 +1031,9 @@ class Basic_Logger:
         # Introduction
         Plots and saves the training curve for a given data type, applying smoothing and displaying mean and standard deviation shading. Supports normalization and custom data processing.
         # Args:
-        todo:data写清楚数据结构
         - data_type (str): The type of data being plotted. e.g. cost
         - steps (list): List of step values (x-axis) corresponding to the data points.
-        - data (dict): Part of the result dictionary,mapping the data type mentioned above. e.g. result["cost"]
+        - results (dict): Part of the result data,the result[data_type]. Also a nested dictionary containing experimental results structured as `dict[problem][algo][run]`.
         - output_dir (str): Directory path where the output figure will be saved.
         - ylabel (str, optional): Label for the y-axis. If None, uses `data_type` as the label. Defaults to None.
         - norm (bool, optional): Whether to normalize the data before plotting. Defaults to False.
@@ -1227,7 +1213,7 @@ class MOO_Logger(Basic_Logger):
         # Introduction
         Plots and saves the Pareto fronts for multiple algorithms on one or more optimization problems, supporting both 2D and 3D objective spaces. The function visualizes the final generation's Pareto-efficient solutions for each algorithm and problem, and saves the resulting plots as PNG files.
         # Args:
-        - data (dict): Nested dictionary containing optimization results structured as `dict[problem][algo][run][generation][objective]`.
+        - data (dict): Nested dictionary containing optimization results structured as `dict[problem][algorithm][run]`.
         - output_dir (str): Directory path where the generated Pareto front plots will be saved.
         - Name (Optional[Union[str, list]]): Specific problem name or list of problem names to plot. If `None`, all problems in `data` are plotted.
         # Returns:
@@ -1315,8 +1301,7 @@ class MOO_Logger(Basic_Logger):
         # Introduction
         Plots and saves performance indicator curves for different agents based on the provided experimental data. Supports both categorized and non-categorized plotting, and can output figures in PDF or PNG format.
         # Args:
-        todo:写清楚indicator的定义
-        - data (dict): Part of the result dictionary,mapping the indicator. Also a nested dictionary containing experimental results. The outer keys are problem names, and the inner keys are agent names mapping to their respective performance arrays.
+        - data (dict): Part of the result dictionary,mapping the indicator. Also a nested dictionary containing experimental results structured as `dict[problem][algorithm][run][generation][objective]`.
         - output_dir (str): Directory path where the generated plots will be saved.
         - indicator (str): Name of the performance indicator to be plotted (e.g., accuracy, loss).
         - Name (Optional[Union[str, list]], optional): Specific problem name(s) to plot. If None, plots for all problems in `data`. Defaults to None.
@@ -1407,8 +1392,7 @@ class MOO_Logger(Basic_Logger):
         # Introduction
         Plots the normalized average and standard deviation curves for a specified indicator across multiple agents and problems, grouping agents by provided names, and saves the resulting figure.
         # Args:
-        todo:data写清楚数据结构，indicator是否可指定（有范围？）？indicator在哪定义的？
-        - data (dict): Part of the result dictionary,mapping the indicator. Also a nested dictionary containing experimental results. The outer keys are problem names, and the inner keys are agent names mapping to their respective performance arrays.
+        - data (dict): Part of the result dictionary,mapping the indicator. Also a nested dictionary,structured as `dict[problem][algorithm][run][generation][objective]`,stores the test result data.
         - output_dir (str): Directory path where the output figure will be saved.
         - named_agents (dict): Dictionary mapping group names (titles) to lists of agent names to be plotted together.
         - indicator (str): The key for the indicator to be plotted (e.g., 'reward', 'cost').
@@ -1481,8 +1465,7 @@ class MOO_Logger(Basic_Logger):
         # Introduction
         Generates and saves bar charts visualizing the concrete performance of different agents on various problems, based on the provided data. Each chart represents the mean performance of an agent across selected problems, with the option to filter by specific problem names and customize the output format.
         # Args:
-        todo:data写清楚数据结构，indicator同上
-        - data (dict) Part of the result dictionary,mapping the indicator. Also a nested dictionary containing experimental results. The outer keys are problem names, and the inner keys are agent names mapping to their respective performance arrays.
+        - data (dict) Part of the result dictionary,the results[indicator]. Also a nested dictionary,structured as `dict[problem][algorithm][run][generation][objective]`,stores the test result data.
         - output_dir (str): The directory path where the generated figures will be saved.
         - indicator (Optional[str], default=None): The label for the y-axis, typically representing the performance metric being visualized.
         - Name (Optional[Union[str, list]], default=None): Specific problem name(s) to include in the visualization. If None, all problems are included.
@@ -1533,8 +1516,7 @@ class MOO_Logger(Basic_Logger):
         # Introduction
         Generates and saves boxplot visualizations for the provided data, comparing the performance of different agents on specified problems.
         # Args:
-        todo:data写清楚数据结构 
-        - data (dict): The test result.Also a nested dictionary where the first-level keys are problem names, and the second-level keys are agent names. Each agent maps to a list or array of results.
+        - data (dict):Part of the test result,that is, result[indicator].Also a nested dictionary,structured as `dict[problem][algorithm][run][generation][objective]`,stores the test result data.
         - output_dir (str): The directory path where the generated boxplot figures will be saved.
         - indicator (str): The name of the indicator or metric to be displayed in the boxplot's ylabel and filename.
         - Name (Optional[Union[str, list]], optional): Specific problem name(s) to plot. If None, plots all problems in `data`. Defaults to None.
@@ -1581,8 +1563,7 @@ class MOO_Logger(Basic_Logger):
         # Introduction
         Generates and saves a normalized boxplot comparing the performance of different agents across multiple problems for a specified indicator.
         # Args:
-        todo:data写清楚数据结构
-        - data (dict): Nested dictionary containing results structured as `data[problem][agent]`, where each entry is a list of runs (each run is a list or array).
+        - data (dict): Part of the test result,that is, result[indicator].Also a nested dictionary,structured as `dict[problem][algorithm][run][generation][objective]`,stores the test result data.
         - output_dir (str): Directory path where the resulting boxplot image will be saved.
         - indicator (str): Name of the performance indicator to display on the plot's y-axis and in the filename.
         - ignore (Optional[list], optional): List of agent names to exclude from the plot. Defaults to None.
@@ -1631,9 +1612,8 @@ class MOO_Logger(Basic_Logger):
         # Introduction
         Plots and saves the training progress curve for different agents, showing the average and standard deviation of a specified metric over learning steps. The plot can be smoothed, normalized, and saved as either a PDF or PNG.
         # Args:
-        todo:data写清楚数据结构
         - data_type (str): The type of data to plot (e.g., 'reward', 'loss').
-        - data (dict): Dictionary containing the training data for each agent.
+        - data (dict):Part of the test result,the result[data_type].Also a nested dictionary,structured as `dict[problem][algorithm][run][generation][objective]`,stores the test result data.
         - output_dir (str): Directory path where the plot image will be saved.
         - ylabel (str, optional): Label for the y-axis. If None, uses `data_type` as the label. Defaults to None.
         - norm (bool, optional): Whether to normalize the data before plotting. Defaults to False.
@@ -1757,8 +1737,7 @@ class MMO_Logger(Basic_Logger):
         # Introduction
         Generates and saves Excel tables summarizing the performance statistics (`Worst`, `Best`, `Median`, `Mean`, `Std`) of different agents on various problems, based on the provided results.
         # Args:
-        todo:results数据结构写清楚
-        - results (dict): A nested dictionary containing performance data for each problem and agent. The structure is expected to be `{problem_name: {agent_name: list_of_runs}}`, where each run contains cost values.
+        - results (dict): Part of the result data,the result[data_type]. Also a nested dictionary,structured as `dict[problem][algorithm][run][generation][objective]`,stores the test result data.
         - data_type (str): A string indicating the type of data being processed (used in the output filename).
         - out_dir (str): The directory path where the resulting Excel files will be saved.
         # Returns:
@@ -1808,8 +1787,7 @@ class MMO_Logger(Basic_Logger):
         # Introduction
         Generates and saves an Excel table summarizing the overall results of optimization experiments, including objective values (costs), precision (pr), and success rate (sr) for each optimizer and problem.
         # Args:
-        todo:results数据结构写清楚
-        - results (dict): A nested dictionary containing the results of the optimization experiments. It should have keys 'cost', 'pr', and 'sr', each mapping to dictionaries structured by problem and optimizer.
+        - results (dict): The result data. Also a nested dictionary,structured as `dict[metric][problem][algo][run]`,stores the test result data.
         - out_dir (str): The output directory path where the resulting Excel file ('overall_table.xlsx') will be saved.
         # Returns:
         - None: This method saves the results to an Excel file and does not return a value.
@@ -1882,8 +1860,7 @@ class MMO_Logger(Basic_Logger):
         # Introduction
         Generates and saves bar plots representing the normalized performance of different agents on various problems, based on the provided data. The function supports filtering by specific problem names and allows saving the figures in either PDF or PNG format.
         # Args:
-        todo:data写清楚数据结构
-        - data (dict): Nested dictionary containing performance data structured as `data[problem][agent]`, where each value is a NumPy array of shape (N, M, 4).
+        - data (dict):Part of the nested dictionary,the results[data_type].Also a nested dictionary,structured as `dict[problem][algorithm][run][generation][objective]`,stores the test result data.
         - data_type (str): A string indicating the type of data being visualized (used for labeling the y-axis).
         - output_dir (str): Directory path where the generated figures will be saved.
         - Name (Optional[Union[str, list]], optional): Specific problem name or list of problem names to include in the plot. If None, all problems are included. Defaults to None.
@@ -1929,8 +1906,7 @@ class MMO_Logger(Basic_Logger):
         # Introduction
         Generates and saves boxplot visualizations for parsed result data of multiple agents on different problems. The function supports filtering by problem name, ignoring specific agents, and saving figures in PDF or PNG format.
         # Args:
-        todo:data写清楚数据结构
-        - data (dict): A nested dictionary where the first-level keys are problem names, and the second-level keys are agent names. The values are numpy arrays containing result data.
+        - data (dict): Part of the result data, the results[data_type].A nested dictionary where the first-level keys are problem names, and the second-level keys are agent names. The values are numpy arrays containing result data.
         - data_type (str): A string indicating the type of data being visualized (used in plot labels and filenames).
         - output_dir (str): The directory path where the generated boxplot figures will be saved.
         - Name (Optional[Union[str, list]], optional): A specific problem name or a list of problem names to plot. If None, all problems in `data` are plotted. Defaults to None.
@@ -1978,9 +1954,8 @@ class MMO_Logger(Basic_Logger):
         # Introduction
         Generates and saves a boxplot comparing the performance of different agents across multiple problems using the provided data. The boxplot visualizes the distribution of the last metric (index 3) for each agent and problem, normalized per problem.
         # Args:
-        todo:data写清楚数据结构
-        - data (dict): Nested dictionary containing performance data structured as `data[problem][agent]`, where each value is a list of runs (assumed to be 3D arrays).
-        - data_type (str): The label for the y-axis, indicating the type of data being plotted.
+        - data (dict): Part of the result data, the results[data_type].Also a nested dictionary,structured as `dict[problem][algorithm][run][generation][objective]`,stores the test result data.
+        - data_type (str): A string indicating the type of data being visualized (used in plot labels and filenames).
         - output_dir (str): Directory path where the resulting boxplot figure will be saved.
         - ignore (Optional[list]): List of agent names to exclude from the plot. Defaults to None.
         - pdf_fig (bool): If True, saves the figure as a PDF; otherwise, saves as a PNG. Defaults to True.
@@ -2028,8 +2003,7 @@ class MMO_Logger(Basic_Logger):
         # Introduction
         Computes the average and standard deviation of the PRSR rank for each agent across multiple problems.
         # Args:
-        todo:results写清楚数据结构
-        - results (dict): A nested dictionary where the first-level keys are problem identifiers, the second-level keys are agent identifiers, and the values are lists or arrays containing PRSR rank data. The expected shape of the innermost array is such that indexing with `[:, -1, 3]` is valid.
+        - data (dict): Part of the result data, the results[data_type].Also a nested dictionary,structured as `dict[problem][algorithm][run][generation][objective]`,stores the test result data.
         # Returns:
         - tuple: A tuple containing two dictionaries:
             - avg_data (dict): Maps each agent to the mean PRSR rank averaged across all problems.
@@ -2063,8 +2037,7 @@ class MMO_Logger(Basic_Logger):
         # Introduction
         Generates and saves a bar plot with error bars representing the average PRSR (or similar metric) ranks for different agents, based on the provided data. The plot includes metric values, standard deviations, and agent labels, and is saved as either a PDF or PNG file.
         # Args:
-        todo:data写清楚数据结构
-        - data (dict): Dictionary containing the metric data for each agent.
+        - data (dict): Part of the result data, the results[data_type].Also a nested dictionary,structured as `dict[problem][algorithm][run][generation][objective]`,stores the test result data.
         - data_type (str): The type or name of the metric being visualized (e.g., 'PRSR').
         - output_dir (str): Directory path where the generated plot will be saved.
         - pdf_fig (bool, optional): If True, saves the figure as a PDF; otherwise, saves as a PNG. Defaults to True.
@@ -2172,7 +2145,7 @@ class MTO_Logger(Basic_Logger):
         Plots and saves the average training return over learning steps using the provided data.
 
         # Args:
-        todo:data写清楚数据结构
+
         - data (list): A list of lists or arrays containing return values for each epoch and environment.
         - output_dir (str): The directory path where the output plot image will be saved.
 
@@ -2205,7 +2178,6 @@ class MTO_Logger(Basic_Logger):
         # Introduction
         Plots and saves the average training cost over learning steps using the provided cost data.
         # Args:
-        todo:data写清楚数据结构
         - data (list): A list representing cost data with shape [epochs, env_cnt, task_cnt].
         - output_dir (str): The directory path where the output plot image will be saved.
         # Returns:
@@ -2235,7 +2207,6 @@ class MTO_Logger(Basic_Logger):
         # Introduction
         Plots and saves the cost (or value) curves for each task over epochs, given a dataset of per-task values.
         # Args:
-        todo:data写清楚数据结构
         - data (list): A list or nested list containing per-task values for each epoch. Can be a 2D or 3D structure.
         - output_dir (str): The directory path where the output plot image will be saved.
         # Returns:
@@ -2273,7 +2244,6 @@ class MTO_Logger(Basic_Logger):
         # Introduction
         Saves multi-task optimization (MTO) cost data to a CSV file, optionally averaging over a specific axis if the input data is 3-dimensional.
         # Args:
-        todo:data写清楚数据结构
         - data (list): A list (or nested list) containing cost values for each task and epoch. Can be 2D or 3D (in which case it is averaged over axis 1).
         - output_dir (str): The directory path where the CSV file will be saved.
         # Returns:
@@ -2297,7 +2267,6 @@ class MTO_Logger(Basic_Logger):
         # Introduction
         Saves the mean of multi-task optimization (MTO) reward data to a CSV file. The function processes the input data, computes the mean across the last axis if the data is 2-dimensional, and writes the results to a CSV file with epoch indices.
         # Args:
-        todo:data写清楚数据结构
         - data (list): A list (or nested list) of reward values, where each element represents reward data for an epoch or task.
         - output_dir (str): The directory path where the output CSV file will be saved.
         # Returns:
@@ -2323,7 +2292,6 @@ class MTO_Logger(Basic_Logger):
         # Introduction
         Plots and saves the performance metrics of multiple tasks across different environments over epochs.
         # Args:
-        todo:data写清楚数据结构
         - data (list): A 3D list or array-like structure with shape (epochs, env_cnt, task_cnt), containing metric values.
         - output_dir (str): The directory path where the generated plot images will be saved.
         # Returns:
