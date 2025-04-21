@@ -77,9 +77,14 @@ ok 按照[autodoc2 官方文档](https://sphinx-autodoc2.readthedocs.io/en/stabl
 和师兄约定好了：
 
 - 外层的基类所有接口都要写
-- 内层的算法（包括baseline什么的）先要讲清楚出处然后写好
+- 内层的算法（包括 baseline 什么的）先要讲清楚出处然后写好
 - 可以生成成后问对应的人 但是写作工作是我们写
-- template基本上是params（注意，params也要写道具体的内容，不只是type），return，里面的实现细节不用写
+- template 基本上是 params（注意，params 也要写道具体的内容，不只是 type），return，里面的实现细节不用写
+
+一些笔记：
+使用到的一些说法：
+
+- config (object): Configuration object containing all necessary parameters for experiment.For details you can visit config.py.
 
 ## markdown 与 readthedocs 的一些使用问题
 

@@ -135,14 +135,13 @@ def record_data(data, test_set, agent_for_rollout, checkpoints, results, meta_re
     # Introduction
     Processes a list of data items, updating results and meta_results dictionaries with information extracted from each item. Handles both standard result keys and metadata, organizing results by problem and agent.
     # Args:
-    todo:what is the difference between the 
-    - data(dict):Metadata, a dict contain the test result.  
-    - test_set (object): An object containing the test set data, expected to have a `data` attribute iterable over problems.
-    todo:这里testset是什么类型？
+    todo:这里写完了，有个问题，这个metadata具体的结构写在哪比较好
+    - data(dict): Metadata, a dict contain the rollout test result,similar to test result but has more details.
+    - test_set (object): The problem dataset for the test process.
     - agent_for_rollout (str): The base name or identifier for the agent used during rollout.
     - checkpoints (list): List of checkpoint identifiers for agents.
-    - results (dict): Dictionary to store or update results for each key, problem, and agent.
-    - meta_results (dict): Dictionary to store or update metadata results, organized by problem and agent.
+    - results (dict): A dictionary to store or update results initialized only with the config information.
+    - meta_results (dict): An empty dictionary to store or update metadata results.
     - config (object): Configuration object with attributes such as `full_meta_data` to control metadata processing.
     # Returns:
     - tuple: A tuple containing the updated `results` and `meta_results` dictionaries.
@@ -309,7 +308,7 @@ class MetaBBO_TestUnit():
         Runs a single batch episode using the agent and environment, ensuring reproducibility by setting random seeds and configuring PyTorch settings.
 
         # Args:
-
+        todo:需不需要example
         - required_info (dict, optional): Additional information required for the episode rollout. Defaults to an empty dictionary.
 
         # Returns:
@@ -466,10 +465,7 @@ class Tester(object):
 
         # Args:
 
-        - data (list): A list of dictionaries, each containing test result information with keys such as
-          'problem_name', 'agent_name', 'metadata', and other test result metrics.
-        todo:这个data的list中包含什么要不全部列出来
-        todo:出现了这种sideeffect的词条，是否要好好选择一个好的名称，还是不写？
+        - data (list): Metadata, a dict contain the rollout test result,similar to test result but has more details.
         # Side Effects:
 
         - Updates `self.meta_data_results` with metadata if `self.config.full_meta_data` is True.
@@ -497,12 +493,6 @@ class Tester(object):
         Runs tests on agents and optimizers using different parallelization strategies and records the results.
         # Args:
         None
-        # Parallelization Modes:
-        todo: 现在并行模式是怎么样的？问msj。以及具体的行动方式是什么？
-        - 'Full': Tests all agent-problem-seed and optimizer-problem-seed combinations in parallel.
-        - 'Baseline_Problem': Tests each seed sequentially, running all agent/optimizer-problem combinations per seed.
-        - 'Problem_Testrun': Tests each agent/optimizer across all problems and seeds, updating progress for each.
-        - 'Batch': Tests agents/optimizers in batches over problems and seeds, supporting batch-wise parallelization.
         # Side Effects:
         - Records test data and stores meta data results after each test run.
         - Saves the final test results to a pickle file in the log directory.
@@ -606,8 +596,8 @@ class Tester(object):
         # Args:
         None (uses self.config for configuration).
         # Returns:
-        todo:确认字典内容
-        - dict: A dictionary `test_results` containing:
+        todo: 这里就是test_result,同样的问题，它的具体结构是否写在这？感觉应该写在这，毕竟是在这里构建的,要放图在这里吗？
+        - dict: A dictionary `test_results` containing the metrics list:
             - 'cost': Nested dict mapping problem names to optimizer names to lists of cost arrays (one per run).
             - 'fes': Nested dict mapping problem names to optimizer names to lists of function evaluation counts (one per run).
             - 'T0': Baseline timing value computed from problem dimension and max function evaluations.
