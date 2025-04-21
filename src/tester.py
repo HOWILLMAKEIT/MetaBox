@@ -135,8 +135,8 @@ def record_data(data, test_set, agent_for_rollout, checkpoints, results, meta_re
     # Introduction
     Processes a list of data items, updating results and meta_results dictionaries with information extracted from each item. Handles both standard result keys and metadata, organizing results by problem and agent.
     # Args:
-    - data (list): List of dictionaries, each representing a data item with keys such as 'agent_name', 'problem_name', and other result or metadata fields.
-    todo: 这里总共有哪些，用other可以吗
+    todo:what is the difference between the 
+    - data(dict):Metadata, a dict contain the test result.  
     - test_set (object): An object containing the test set data, expected to have a `data` attribute iterable over problems.
     todo:这里testset是什么类型？
     - agent_for_rollout (str): The base name or identifier for the agent used during rollout.
@@ -1026,8 +1026,7 @@ def rollout_batch(config):
     # Introduction
     Executes a batch rollout of agents on a test set of problems using various parallelization strategies. The function loads agent checkpoints, sets up environments, and evaluates agent performance across multiple seeds and problems, storing the results for further analysis.
     # Args:
-    todo:这个config包含了啥，是哪个？config.py里的吗
-    - config (object): Configuration object containing all necessary parameters for the rollout, such as device type, test problem, agent and optimizer information, parallelization mode, batch sizes, checkpoint list, and logging directories.
+    - config (object): Configuration object containing all necessary parameters for experiment.For details you can visit config.py.
     # Returns:
     - None: The function saves the rollout results and metadata to disk but does not return any value.
     # Raises:

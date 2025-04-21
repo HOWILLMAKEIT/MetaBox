@@ -32,21 +32,92 @@ class Basic_Agent:
     def train_episode(self,
                       env,
                       seeds: int) -> Tuple[bool, dict]:
+        """
+        # Introduction
+        Executes a single training episode for the agent within the provided environment using the specified random seed.
+        # Args:
+        - env: The environment in which the agent will be trained. Must support standard reinforcement learning environment interfaces.
+        - seeds (int): The random seed to ensure reproducibility of the episode.
+        # Returns:
+        - Tuple[bool, dict]: A tuple where the first element indicates whether the episode was successful, and the second element is a dictionary containing episode statistics or additional information.
+        # Raises:
+        - NotImplementedError: This method must be implemented by subclasses.
+        """
         raise NotImplementedError
 
     def rollout_episode(self,
                         env) -> dict:
+        """
+        # Introduction
+        Executes a single rollout (episode) in the provided environment using the agent's policy.
+        # Args:
+        todo:写一下env的数据结构/组织
+        - env: The environment in which the episode will be executed. Must follow the OpenAI Gym interface or similar.
+        # Returns:
+        todo:写清楚返回
+        - dict: A dictionary containing episode statistics such as total reward, steps taken, and any additional information collected during the rollout.
+        # Raises:
+        - NotImplementedError: This method should be implemented by subclasses.
+        """
         raise NotImplementedError
 
     def train_epoch(self):
+        """
+        todo:写清楚
+        # Introduction
+        Executes a single epoch of training for the reinforcement learning agent.
+        # Args:
+        None
+        # Returns:
+        None
+        # Raises:
+        This method does not explicitly raise any exceptions.
+        """
+        
         pass
 
     def set_network(self, networks: dict, learning_rates: int):
+        """
+        # Introduction
+        todo:这个我完全不清楚，得问问
+        Configures the agent's neural network(s) and associated learning rates.
+        # Args:
+        - networks (dict): A dictionary containing the neural network architectures or instances to be used by the agent.
+        - learning_rates (int): The learning rate(s) to be applied to the corresponding networks.
+        # Returns:
+        - None
+        # Raises:
+        - TypeError: If the input types do not match the expected types.
+        """
+        
         pass
 
     def get_step(self):
+        """
+        # Introduction
+        todo:问
+        Retrieves the current step or action to be taken by the agent in the reinforcement learning environment.
+        # Args:
+        None
+        # Returns:
+        - Any: The current step or action, depending on the agent's implementation.
+        # Raises:
+        NotImplementedError: If the method is not implemented by a subclass.
+        """
+        
         pass
 
     @classmethod
     def log_to_tb_train(self):
+        """
+        # Introduction
+        Logs training metrics and statistics to TensorBoard for visualization and monitoring.
+        # Args:
+        None
+        # Returns:
+        None
+        # Raises:
+        This method does not raise any exceptions.
+        """
+        
         pass

@@ -29,4 +29,16 @@ class Basic_Optimizer:
         # CPU: torch.rand(4, generator = rng_cpu)
 
     def run_episode(self, problem: Basic_Problem):
+        """
+        # Introduction
+        todo:写清楚introduction 和problem的数据结构
+        Executes a single episode of the optimization process for the given problem instance.
+        # Args:
+        - problem (Basic_Problem): An instance of the optimization problem to be solved.
+        # Returns:
+        - None
+        # Raises:
+        - NotImplementedError: This method must be implemented by subclasses.
+        """
+        
         raise NotImplementedError
