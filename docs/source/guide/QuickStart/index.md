@@ -11,7 +11,7 @@ Core_Concept
 
 # Quickstart
 
-Hi！Here is the fastest way to begin your journey of Metabox.
+🚀 Hi！Here is **the fastest way to begin your journey of MetaBox**. 🚀
 
 ## Installation
 
@@ -24,7 +24,14 @@ Hi！Here is the fastest way to begin your journey of Metabox.
 
 > 💡  **MetaBox is an all-in-one platform for using and developing the algorithms in Meta-Black-Box Optimization (MetaBBO)**.  💡
 
-MetaBBO, an emerging research direction in recent years, aims to automate the design of BBO algorithms by constructing intelligent agents as replacements for human experts. Its dual-layer architecture synergizes:
+MetaBBO, an emerging research direction in recent years, aims to automate the design of BBO algorithms by constructing intelligent agents as replacements for human experts. 
+
+<p align="center">
+  <img src="https://github.com/GMC-DRL/MetaBox/blob/v2.0.0-docs/docs/pic/metabbo.png" width="400"/>
+</p>
+
+
+Its dual-layer architecture synergizes:
 
 - Low-level​​: Standard BBO algorithms for solving optimization problems.
 - Meta-level​​: A parameterized AI agent that adjusts low-level algorithms in real-time based on their optimization status info.
