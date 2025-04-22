@@ -59,6 +59,8 @@ class WFG_Torch(Basic_Problem_Torch):
         suffix = th.full((len(K), self.l), 0.35)
         X = th.column_stack([K, suffix])
         return X * self.ub
+    def __str__(self):
+        return  self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 
 class WFG1_Torch(WFG_Torch):
