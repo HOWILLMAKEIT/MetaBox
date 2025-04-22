@@ -4,6 +4,59 @@ import numpy as np
 
 
 class GLEET_Optimizer(Learnable_Optimizer):
+    """
+    # Introduction
+    todo: check the function doc
+    GLEET_Optimizer is a learnable optimizer based on Particle Swarm Optimization (PSO) principles, designed for meta-optimization tasks. It manages a population of particles, updates their positions and velocities, and incorporates various reward functions and boundary handling strategies. The optimizer is capable of encoding population features for meta-learning and supports logging and meta-data collection.
+    
+    # original paper:
+    todo:add the original paper link
+        
+    # Args:
+    - config (object): Configuration object containing optimizer hyperparameters such as dimension (`dim`), maximum function evaluations (`maxFEs`), logging interval (`log_interval`), and meta-data options (`full_meta_data`).
+    # Attributes:
+    - dim (int): Dimensionality of the optimization problem.
+    - w_decay (bool): Whether to use inertia weight decay.
+    - w (float): Inertia weight for velocity update.
+    - c (float): Acceleration coefficient.
+    - reward_scale (float): Scaling factor for reward calculation.
+    - ps (int): Population size (number of particles).
+    - no_improve (int): Counter for stagnation steps without improvement.
+    - max_fes (int): Maximum number of function evaluations.
+    - boarder_method (str): Method for handling boundary violations ('clipping', 'random', 'periodic', 'reflect').
+    - reward_func (str): Reward function type ('direct', '11', 'relative', 'triangle').
+    - fes (int): Current number of function evaluations.
+    - cost (list): Log of global best costs.
+    - log_index (int): Index for logging.
+    - log_interval (int): Interval for logging progress.
+    - particles (dict): Dictionary storing current state of all particles.
+    - per_no_improve (np.ndarray): Array tracking stagnation steps for each particle.
+    - max_velocity (float): Maximum allowed velocity for particles.
+    - max_cost (float): Maximum (worst) cost observed.
+    - max_dist (float): Maximum distance in the search space.
+    - pbest_feature (np.ndarray): Encoded features for personal bests.
+    - gbest_feature (np.ndarray): Encoded features for global best.
+    - meta_X (list): List of particle positions for meta-data (if enabled).
+    - meta_Cost (list): List of particle costs for meta-data (if enabled).
+    # Methods:
+    - __str__(): Returns the string representation of the optimizer.
+    - initialize_particles(problem): Initializes particle positions, velocities, and costs.
+    - get_cat_xy(): Concatenates and returns current, personal best, and global best positions and costs.
+    - init_population(problem): Resets the optimizer state and initializes the population.
+    - get_costs(position, problem): Evaluates the cost of given positions.
+    - observe(): Encodes and returns population features for meta-learning.
+    - gp_cat(): Concatenates exploration and exploitation features for each particle.
+    - cal_reward_direct(new_gbest, pre_gbest): Computes direct reward based on improvement.
+    - cal_reward_11(new_gbest, pre_gbest): Computes binary reward (+1/-1) based on improvement.
+    - cal_reward_relative(new_gbest, pre_gbest): Computes relative improvement reward.
+    - cal_reward_triangle(new_gbest, pre_gbest): Computes triangle-shaped reward based on improvement.
+    - update(action, problem): Updates the population based on actions, computes rewards, and returns the next state.
+    # Returns:
+    - Various methods return numpy arrays, floats, or tuples depending on their purpose (e.g., next state, reward, termination flag, and info dictionary in `update`).
+    # Raises:
+    - AssertionError: If calculated rewards are negative in certain reward functions.
+    """
+    
     def __init__(self, config):
         super().__init__(config)
         self.__config = config
@@ -37,6 +90,18 @@ class GLEET_Optimizer(Learnable_Optimizer):
 
     # initialize GPSO environment
     def initialize_particles(self, problem):
+        """
+        # Introduction
+        Initializes the particles for a particle swarm optimization (PSO) algorithm by generating random positions and velocities, evaluating initial costs, and setting up personal and global bests.
+        # Args:
+        - problem (object): An object representing the optimization problem, which must have attributes `lb` (lower bounds), `ub` (upper bounds), and be compatible with the `get_costs` method.
+        # Returns:
+        - None: This method updates the internal state of the optimizer by initializing the `particles` attribute with positions, velocities, costs, and bests.
+        # Notes:
+        - The method uses the optimizer's random number generator (`self.rng`) and assumes the existence of attributes such as `ps` (particle size), `dim` (problem dimensionality), and `max_velocity`.
+        - The `particles` dictionary stores all relevant information for each particle, including current and best positions, costs, velocities, and the global best.
+        """
+        
         # randomly generate the position and velocity
         rand_pos = self.rng.uniform(low = problem.lb, high = problem.ub, size = (self.ps, self.dim))
         rand_vel = self.rng.uniform(low = -self.max_velocity, high = self.max_velocity, size = (self.ps, self.dim))

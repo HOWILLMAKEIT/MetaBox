@@ -6,6 +6,54 @@ import numpy as np
 
 # torch
 class B2OPT_Optimizer(Learnable_Optimizer):
+    class B2OPT_Optimizer:
+        """
+        # Introduction
+        The `B2OPT_Optimizer` class is a learnable optimizer designed for optimization problems. 
+        It inherits from the `Learnable_Optimizer` base class and implements methods for initializing 
+        a population, updating it based on actions, and tracking optimization progress.
+        
+        # Original Paper:
+        todo: add paper link
+        
+        # Args:
+        - config (object): Configuration object containing parameters such as `maxFEs`, `log_interval`, 
+          `device`, and `full_meta_data`.
+        # Attributes:
+        - NP (int): Population size, default is 100.
+        - MaxFEs (int): Maximum number of function evaluations allowed.
+        - ems (int): Number of evaluations per step.
+        - fes (int): Current number of function evaluations.
+        - cost (list): List of best costs logged at intervals.
+        - log_index (int): Index for logging progress.
+        - log_interval (int): Interval for logging optimization progress.
+        - ems_index (int): Index for tracking optimization steps.
+        - population (torch.Tensor): Current population of solutions.
+        - c_cost (torch.Tensor): Current costs of the population.
+        - gbest_val (float): Global best value found so far.
+        - init_gbest (torch.Tensor): Initial global best value.
+        - meta_X (list): List of population states (if `full_meta_data` is enabled).
+        - meta_Cost (list): List of cost states (if `full_meta_data` is enabled).
+        # Methods:
+        - `__str__() -> str`: Returns the string representation of the optimizer.
+        - `get_costs(position, problem) -> torch.Tensor`: Evaluates the cost of a given position 
+          in the problem space.
+        - `init_population(problem) -> torch.Tensor`: Initializes the population and evaluates 
+          their costs.
+        - `get_state() -> torch.Tensor`: Returns the current state of the optimizer (costs).
+        - `update(action, problem) -> Tuple[torch.Tensor, float, bool, dict]`: Updates the population 
+          based on the provided action, evaluates new costs, and returns the next state, reward, 
+          termination flag, and additional info.
+        # Returns:
+        - The optimizer tracks the progress of optimization and provides the current state, 
+          reward, and termination status after each update.
+        # Notes:
+        - The optimizer assumes that the problem object has attributes `dim`, `ub`, `lb`, and 
+          a method `eval(position)` for evaluating solutions.
+        - The `action` parameter in the `update` method is expected to be a policy network 
+          that generates new candidate solutions.
+        """
+    
     def __init__(self, config):
         super().__init__(config)
         self.config = config
@@ -39,6 +87,34 @@ class B2OPT_Optimizer(Learnable_Optimizer):
         self.c_cost = self.c_cost[index]
 
     def init_population(self, problem):
+        """
+        # Introduction
+        Initializes the population for an optimization problem and computes initial costs.
+        # Args:
+        todo: 把problem的数据结构写清楚
+        - problem (object): An object representing the optimization problem. It must have the following attributes:
+            - `dim` (int): Dimensionality of the problem.
+            - `lb` (torch.Tensor): Lower bounds of the search space.
+            - `ub` (torch.Tensor): Upper bounds of the search space.
+        # Returns:
+        - dict: The initial state of the optimizer, including population, costs, and other metadata.
+        # Attributes:
+        - `self.rng_torch` (torch.Generator): Random number generator for the specified device.
+        - `self.fes` (int): Function evaluation counter, initialized to the population size.
+        - `self.population` (torch.Tensor): The initialized population within the problem's bounds.
+        - `self.c_cost` (torch.Tensor): Costs of the initial population.
+        - `self.gbest_val` (float): The best cost value in the initial population.
+        - `self.init_gbest` (torch.Tensor): The best cost value as a tensor.
+        - `self.cost` (list): A list to track the best cost values over iterations.
+        - `self.log_index` (int): Index for logging purposes.
+        - `self.meta_X` (list, optional): Metadata for population positions, if `full_meta_data` is enabled.
+        - `self.meta_Cost` (list, optional): Metadata for population costs, if `full_meta_data` is enabled.
+        # Notes:
+        - The method uses PyTorch for tensor operations and supports GPU acceleration if configured.
+        - The population is initialized uniformly within the bounds defined by `problem.lb` and `problem.ub`.
+        - Metadata logging is optional and controlled by the `full_meta_data` configuration.
+        """
+        
         dim = problem.dim
         self.rng_torch = self.rng_cpu
         if self.config.device != "cpu":
@@ -71,6 +147,27 @@ class B2OPT_Optimizer(Learnable_Optimizer):
         return Y
 
     def update(self, action, problem):
+        """
+        # Introduction
+        Updates the state of the optimizer based on the given action and problem, and calculates the reward, next state, and termination condition.
+        # Args:
+        todo: 把problem的数据结构写清楚
+        - action (callable): A policy network function that takes the current population, costs, and EMS index as input and returns updated positions.
+        - problem (object): The optimization problem instance containing problem-specific details.
+        # Returns:
+        - tuple: A tuple containing:
+            - next_state (torch.Tensor): The updated state of the optimizer.
+            - reward (float): The reward calculated based on the improvement in the global best value.
+            - is_end (bool): A flag indicating whether the optimization process has reached its termination condition.
+            - info (dict): Additional information (currently empty).
+        # Notes:
+        - The method updates the population and costs based on the optimization process.
+        - It calculates the reward as the relative improvement in the global best value compared to the initial best value.
+        - The termination condition is determined by the maximum number of function evaluations (`MaxFEs`).
+        - If `full_meta_data` is enabled in the configuration, the population and costs are logged for each step.
+        - The global best value (`gbest_val`) is updated and logged at specified intervals.
+        """
+
         # 这里的action 是policy 网络
         pre_gbest = torch.min(self.c_cost.detach().cpu())
 
