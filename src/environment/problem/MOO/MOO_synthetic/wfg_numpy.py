@@ -64,6 +64,8 @@ class WFG(Basic_Problem):
         suffix = np.full((len(K), self.l), 0.35)
         X = np.column_stack([K, suffix])
         return X * self.ub
+    def __str__(self):
+        return  self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 
 class WFG1(WFG):
