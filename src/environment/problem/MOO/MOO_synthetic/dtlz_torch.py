@@ -40,6 +40,8 @@ class DTLZ_Torch(Basic_Problem_Torch):
 
         f = th.column_stack(f)
         return f
+    def __str__(self):
+        return  self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 
 class DTLZ1_Torch(DTLZ_Torch):
