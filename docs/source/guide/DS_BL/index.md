@@ -92,5 +92,7 @@ Baseline
 - **License**：View
 - **Problem Suite Composition**：\
   CEC2013MMO includes 20 functions covering different dimensions and the number of global optima. Among them, F1 to F5 are simple functions, F6 to F10 are scalable functions with many global optima, and F11 to F20 are composition functions with challenging landscapes.
+
+### Multi-Modal Optimization
   
 ## Baseline
