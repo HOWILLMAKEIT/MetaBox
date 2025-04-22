@@ -1289,19 +1289,19 @@ class MMO_Logger(Basic_Logger):
             for optimizer in optimizers:
                 obj_problem_optimizer = results['cost'][problem][optimizer]
                 objs_ = np.array(obj_problem_optimizer)[:, -1]
-                avg_obj = sum(objs_)/self.config.test_run
+                avg_obj = np.mean(objs_)
                 std_obj = np.std(objs_)
                 df_results.loc[optimizer, (problem, 'Obj')] = np.format_float_scientific(avg_obj, precision=3, exp_digits=1) + "(" + np.format_float_scientific(std_obj, precision=3, exp_digits=1) + ")"
 
                 pr_problem_optimizer = results['pr'][problem][optimizer]
                 prs_ = np.array(pr_problem_optimizer)[:, -1, 3]
-                avg_pr = sum(prs_)/self.config.test_run
+                avg_pr = np.mean(prs_)
                 std_pr = np.std(prs_)
                 df_results.loc[optimizer, (problem, 'Pr')] = np.format_float_scientific(avg_pr, precision=3, exp_digits=1) + "(" + np.format_float_scientific(std_pr, precision=3, exp_digits=1) + ")"
 
                 sr_problem_optimizer = results['sr'][problem][optimizer]
                 srs_ = np.array(sr_problem_optimizer)[:, -1, 3]
-                avg_sr = sum(srs_)/self.config.test_run
+                avg_sr = np.mean(srs_)
                 std_sr = np.std(srs_)
                 df_results.loc[optimizer, (problem, 'Sr')] = np.format_float_scientific(avg_sr, precision=3, exp_digits=1) + "(" + np.format_float_scientific(std_sr, precision=3, exp_digits=1) + ")"
 
@@ -1383,7 +1383,7 @@ class MMO_Logger(Basic_Logger):
         for ip, problem in enumerate(problems):
             for ia, agent in enumerate(agents):
                 values[ia][ip] = np.array(data[problem][agent])[:, -1, 3]
-            values[:, ip, :] = (values[:, ip, :] - np.min(values[:, ip, :])) / (np.max(values[:, ip, :]) - np.min(values[:, ip, :]))
+            # values[:, ip, :] = (values[:, ip, :] - np.min(values[:, ip, :])) / (np.max(values[:, ip, :]) - np.min(values[:, ip, :]))
         values = values.reshape(len(agents), -1).transpose()
         
         plt.boxplot(values, labels=agents, showmeans=True, patch_artist=True, showfliers=False,
@@ -1442,11 +1442,12 @@ class MMO_Logger(Basic_Logger):
         plt.savefig(output_dir + f'{data_type}_rank_hist.{fig_type}', bbox_inches='tight')
 
     def post_processing_test_statics(self, log_dir: str, pdf_fig: bool = True) -> None:
-        with open(log_dir + 'test.pkl', 'rb') as f:
+        print('Post processing & drawing')
+        with open(log_dir + 'test_results.pkl', 'rb') as f:
             results = pickle.load(f)
             
         metabbo = self.config.agent
-        bbo = self.config.t_optimizer
+        # bbo = self.config.t_optimizer
         
 
         if not os.path.exists(log_dir + 'tables/'):
@@ -1480,6 +1481,7 @@ class MMO_Logger(Basic_Logger):
 
 
     def post_processing_rollout_statics(self, log_dir: str, pdf_fig: bool = True) -> None:
+        print('Post processing & drawing')
         with open(log_dir+'rollout.pkl', 'rb') as f:
             results = pickle.load(f)
         if not os.path.exists(log_dir + 'pics/'):

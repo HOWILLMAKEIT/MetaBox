@@ -78,7 +78,7 @@ class PSORLNS_Optimizer(Learnable_Optimizer):
         self.w = 1
 
         self.max_dist = np.sqrt(np.sum((problem.ub - problem.lb) ** 2))
-        self.eps =  0.1 * self.max_dist # todo: 邻域个数判断阈值
+        self.eps =  0.1 # todo: 邻域个数判断阈值
         # initialize the population
         self.initialize_particles(problem)
 

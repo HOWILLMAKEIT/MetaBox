@@ -16,8 +16,8 @@ class PSORLNS(DQN_Agent):
         self.config.lr_decay = 1
         self.config.epsilon = 0.1
         self.config.gamma = 0.8
-        self.config.memory_size = 1000 # todo
-        self.config.batch_size = 256 # todo
+        self.config.memory_size = 10000 # todo
+        self.config.batch_size = 512 # todo
         self.config.warm_up_size = config.batch_size
 
         self.config.device = config.device
