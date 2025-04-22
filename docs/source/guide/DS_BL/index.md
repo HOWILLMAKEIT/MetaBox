@@ -27,7 +27,6 @@ Baseline
 #### COCO-BBOB
 
 #### BBOB-Surrogate
-<a name="bbob-surrogate"></a>
 
 - **Introduction**：\
   BBOB-Surrogate investigates the integration of surrogate modeling techniques into MetaBBO , enabling data-driven approximation of expensive objective functions while maintaining optimization fidelity.
