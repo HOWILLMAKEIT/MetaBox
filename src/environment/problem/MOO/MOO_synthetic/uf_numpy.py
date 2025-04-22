@@ -30,6 +30,8 @@ class UF1(Basic_Problem):
         ObjV2 = 1 - np.sqrt(ObjV1)
         referenceObjV = np.array([ObjV1, ObjV2]).T
         return referenceObjV
+    def __str__(self):
+        return  self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 
 
@@ -67,6 +69,8 @@ class UF2(Basic_Problem):
         ObjV2 = 1 - np.sqrt(ObjV1)
         referenceObjV = np.array([ObjV1, ObjV2]).T
         return referenceObjV
+    def __str__(self):
+        return  self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 
 class UF3(Basic_Problem):  # 继承Problem的父类
@@ -101,6 +105,8 @@ class UF3(Basic_Problem):  # 继承Problem的父类
         ObjV2 = 1 - np.sqrt(ObjV1)
         referenceObjV = np.array([ObjV1, ObjV2]).T
         return referenceObjV
+    def __str__(self):
+        return  self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 
 class UF4(Basic_Problem):
@@ -135,6 +141,8 @@ class UF4(Basic_Problem):
         ObjV2 = 1 - ObjV1 ** 2
         referenceObjV = np.array([ObjV1, ObjV2]).T
         return referenceObjV
+    def __str__(self):
+        return  self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 
 class UF5(Basic_Problem):
@@ -169,6 +177,8 @@ class UF5(Basic_Problem):
         ObjV2 = 1 - ObjV1
         referenceObjV = np.array([ObjV1, ObjV2]).T
         return referenceObjV
+    def __str__(self):
+        return  self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 
 class UF6(Basic_Problem):  # 继承Problem父类
@@ -212,6 +222,8 @@ class UF6(Basic_Problem):  # 继承Problem父类
         ObjV2 = 1 - ObjV1
         referenceObjV = np.array([ObjV1, ObjV2]).T
         return referenceObjV
+    def __str__(self):
+        return  self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 
 class UF7(Basic_Problem):  # 继承Problem父类
@@ -245,6 +257,8 @@ class UF7(Basic_Problem):  # 继承Problem父类
         ObjV2 = 1 - ObjV1
         referenceObjV = np.array([ObjV1, ObjV2]).T
         return referenceObjV
+    def __str__(self):
+        return  self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 
 class UF8(Basic_Problem):  # 继承Problem父类
@@ -280,6 +294,8 @@ class UF8(Basic_Problem):  # 继承Problem父类
         ObjV = ObjV / np.sqrt(np.sum(ObjV ** 2, 1, keepdims=True))
         referenceObjV = ObjV
         return referenceObjV
+    def __str__(self):
+        return  self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 
 class UF9(Basic_Problem):  # 继承Problem父类
@@ -316,6 +332,8 @@ class UF9(Basic_Problem):  # 继承Problem父类
         idx = (ObjV[:, 0] > (1 - ObjV[:, 2]) / 4) & (ObjV[:, 0] < (1 - ObjV[:, 2]) * 3 / 4)
         referenceObjV = ObjV[~idx]
         return referenceObjV
+    def __str__(self):
+        return  self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 class UF10(Basic_Problem):  # 继承Problem父类
     def __init__(self):
@@ -348,6 +366,8 @@ class UF10(Basic_Problem):  # 继承Problem父类
         ObjV = ObjV / np.sqrt(np.sum(ObjV ** 2, 1, keepdims=True))
         referenceObjV = ObjV
         return referenceObjV
+    def __str__(self):
+        return  self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 if __name__ == '__main__':
     uf1= UF1()
