@@ -66,9 +66,6 @@ class MADAC_Agent(VDN_Agent):
         config.n_agent = 4
         config.available_action = [4, 4, 4, 2]
         config.optimizer = 'Adam'       
-        # config.lr_model = 1e-3           
-        # config.lr_scheduler = 'StepLR'
-        # config.lr_decay = 0.99
         config.criterion = 'MSELoss'  
         config.agent_save_dir = 'model'  
         config.max_learning_step = 10000  
