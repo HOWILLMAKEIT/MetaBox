@@ -37,9 +37,19 @@ You can use the following module to generate a bash command with options. This i
     </select>
   </div>
 
+  <div class="control-group">
+    <label>测试算法:</label>
+    <div class="checkbox-group">
+      <label><input type="checkbox" name="options" value="pso"> pso</label>
+      <label><input type="checkbox" name="options" value="de"> de</label>
+      <label><input type="checkbox" name="options" value="ga"> ga</label>
+      <label><input type="checkbox" name="options" value="es"> es</label>
+    </div>
+  </div>
+
   <div class="generated-command">
     <strong>生成的命令:</strong>
-    <code id="bash-command">$ ./script.sh --difficulty   --problem   --action  </code>
+    <code id="bash-command">$ ./script.sh --difficulty   --problem   --action --t_optimizer </code>
     <button id="copy-btn" class="btn-copy">复制</button>
   </div>
 </div>
@@ -68,6 +78,19 @@ You can use the following module to generate a bash command with options. This i
   border: 1px solid #d1d5da;
   border-radius: 3px;
   width: 200px;
+}
+
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.checkbox-group label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
 }
 
 .generated-command {
@@ -102,20 +125,33 @@ You can use the following module to generate a bash command with options. This i
 const difficultySelect = document.getElementById('difficulty');
 const problemSetSelect = document.getElementById('problem-set');
 const actionSelect = document.getElementById('action');
+const optionCheckboxes = document.querySelectorAll('input[name="options"]');
 const bashCommand = document.getElementById('bash-command');
 const copyBtn = document.getElementById('copy-btn');
 
 // 命令模板
 const commandTemplate = (level, set, action) =>
-  `$ ./script.sh --difficulty ${level} --problem ${set} --action ${action}`;
+  `$ python main.py --${action} --difficulty ${level} --problem ${set} `;
 
 // 更新命令函数
 function updateCommand() {
   const difficulty = difficultySelect.value;
   const problem = problemSetSelect.value;
   const action = actionSelect.value;
+  // 获取选中的多选项测试算法
+  const selectedOptions = Array.from(optionCheckboxes)
+    .filter(checkbox => checkbox.checked)
+    .map(checkbox => checkbox.value)
+    .join(' ');
+  
   bashCommand.textContent = commandTemplate(difficulty, problem, action);
+  if (selectedOptions) {
+    bashCommand.textContent += ` --t_optimizer ${selectedOptions}`;
+  }
+  bashCommand.textContent = bashCommand.textContent.trim();
 }
+
+
 
 // 复制命令函数
 function copyToClipboard() {
@@ -132,6 +168,9 @@ function copyToClipboard() {
 // 添加事件监听
 [difficultySelect, problemSetSelect, actionSelect].forEach(select => {
   select.addEventListener('change', updateCommand);
+});
+optionCheckboxes.forEach(checkbox => {
+  checkbox.addEventListener('change', updateCommand);
 });
 
 copyBtn.addEventListener('click', copyToClipboard);
