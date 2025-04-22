@@ -128,6 +128,16 @@ class GLEET_Optimizer(Learnable_Optimizer):
                           }
 
     def get_cat_xy(self):
+        """
+        # Introduction
+        Concatenates the current, personal best, and global best positions and their corresponding cost/fitness values for all particles in the optimizer.
+        # Returns:
+        - np.ndarray: A concatenated NumPy array containing the current positions and costs, personal best positions and values, and global best positions and values for all particles.
+        # Notes:
+        - The method assumes that the `self.particles` dictionary contains the keys: 'current_position', 'c_cost', 'pbest_position', 'pbest', 'gbest_position', and 'gbest_val'.
+        - The concatenation is performed along the last axis for position-value pairs and along the first axis to combine all groups.
+        """
+        
         cur_x = self.particles['current_position']
         cur_y = self.particles['c_cost']
         cur_xy = np.concatenate((cur_x, cur_y), axis = -1)
@@ -142,6 +152,20 @@ class GLEET_Optimizer(Learnable_Optimizer):
 
     # the interface for environment reseting
     def init_population(self, problem):
+        """
+        # Introduction
+        Initializes the population and related state variables for the optimizer, preparing it for a new optimization run.
+        # Args:
+        - problem (object): An object representing the optimization problem, expected to have attributes `ub` (upper bounds) and `lb` (lower bounds) for the search space.
+        # Returns:
+        - np.ndarray: The concatenated state of the population, including both the population state and additional features, with shape (ps, 27).
+        # Notes:
+        - Resets various counters and state variables to their initial values.
+        - Initializes particle positions and velocities.
+        - Optionally stores meta-data if configured.
+        - Prepares features for exploration and exploitation tracking.
+        """
+        
         self.fes = 0
         self.per_no_improve = np.zeros((self.ps,))
         self.max_velocity = 0.1 * (problem.ub - problem.lb)
@@ -183,6 +207,20 @@ class GLEET_Optimizer(Learnable_Optimizer):
 
     # calculate costs of solutions
     def get_costs(self, position, problem):
+        """
+        # Introduction
+        Calculates the cost(s) for a given position or set of positions in the search space, updating the function evaluation count.
+        # Args:
+        todo:这里应该是part of the population ，我想知道particular的结构，然后写清楚
+        todo:problem的结构要不要写清楚
+        - position (np.ndarray): The position(s) in the search space for which the cost is to be evaluated. Shape is typically (n_samples, n_dimensions).
+        - problem (object): The optimization problem instance, which must provide an `eval` method and an optional `optimum` attribute.
+        # Returns:
+        - np.ndarray or float: The evaluated cost(s) for the given position(s). If `problem.optimum` is defined, returns the difference between the evaluated value and the optimum.
+        # Notes:
+        - Increments the `fes` (function evaluation steps) counter by the number of positions evaluated.
+        """
+        
         ps = position.shape[0]
         self.fes += ps
         if problem.optimum is None:
@@ -193,6 +231,25 @@ class GLEET_Optimizer(Learnable_Optimizer):
 
     # feature encoding
     def observe(self):
+        """
+        # Introduction
+        Computes and returns a set of normalized features representing the current state of the particle swarm optimizer. These features are used for monitoring or as input to learning-based optimization strategies.
+        # Returns:
+        - np.ndarray: A 2D array of shape (ps, 9), where each row contains the following normalized features for each particle:
+            - fea0: Current cost normalized by maximum cost.
+            - fea1: Difference between current cost and global best value, normalized by maximum cost.
+            - fea2: Difference between current cost and personal best, normalized by maximum cost.
+            - fea3: Remaining function evaluations normalized by maximum evaluations.
+            - fea4: Number of iterations without improvement for each particle, normalized by maximum steps.
+            - fea5: Number of iterations without improvement for the whole swarm, normalized by maximum steps.
+            - fea6: Euclidean distance between current position and global best position, normalized by maximum distance.
+            - fea7: Euclidean distance between current position and personal best position, normalized by maximum distance.
+            - fea8: Cosine similarity between the vectors from current to personal best and from current to global best.
+        # Notes:
+        - Handles division by zero and NaN values in cosine similarity calculation.
+        - Assumes all required attributes (such as `self.particles`, `self.max_cost`, etc.) are properly initialized.
+        """
+        
         max_step = self.max_fes // self.ps
         # cost cur
         fea0 = self.particles['c_cost'] / self.max_cost
@@ -220,16 +277,49 @@ class GLEET_Optimizer(Learnable_Optimizer):
         return np.concatenate((fea0[:, None], fea1[:, None], fea2[:, None], fea3[:, None], fea4[:, None], fea5[:, None], fea6[:, None], fea7[:, None], fea8[:, None]), axis = -1)
 
     def gp_cat(self):
+        """
+        # Introduction
+        Concatenates the personal best features and the repeated global best feature for all particles.
+        # Returns:
+        - np.ndarray: A concatenated array of shape (ps, 18), where `ps` is the number of particles. The array consists of each particle's personal best features and the global best feature repeated for each particle.
+        # Notes:
+        - Assumes `self.pbest_feature` is an array of shape (ps, n_features).
+        - Assumes `self.gbest_feature` is an array of shape (n_features,).
+        - The concatenation is performed along the last axis.
+        """
+        
         return np.concatenate((self.pbest_feature, self.gbest_feature[None, :].repeat(self.ps, axis = 0)), axis = -1)  # ps, 18
 
     # direct reward function
     def cal_reward_direct(self, new_gbest, pre_gbest):
+        """
+        # Introduction
+        Calculates the direct reward based on the improvement of the global best cost in an optimization process.
+        # Args:
+        - new_gbest (float or np.ndarray): The new global best cost(s) after an optimization step.
+        - pre_gbest (float or np.ndarray): The previous global best cost(s) before the optimization step.
+        # Returns:
+        - float or np.ndarray: The normalized bonus reward(s) computed as the improvement in global best cost divided by `self.max_cost`.
+        # Raises:
+        - AssertionError: If any computed reward is less than 0, indicating that the new global best is not better than the previous one.
+        """
+        
         bonus_reward = (pre_gbest - new_gbest) / self.max_cost
         assert np.min(bonus_reward) >= 0, 'reward should be bigger than 0!'
         return bonus_reward
 
     # 1 -1 reward function
     def cal_reward_11(self, new_gbest, pre_gbest):
+        """
+        # Introduction
+        Calculates a reward based on the comparison between the new global best value and the previous global best value.
+        # Args:
+        - new_gbest (float): The new global best value obtained.
+        - pre_gbest (float): The previous global best value.
+        # Returns:
+        - int: Returns 1 if the new global best is better (i.e., less than) the previous global best, otherwise returns -1.
+        """
+        
         if new_gbest < pre_gbest:
             reward = 1
         else:
@@ -238,10 +328,34 @@ class GLEET_Optimizer(Learnable_Optimizer):
 
     # relative reward function
     def cal_reward_relative(self, new_gbest, pre_gbest):
+        """
+        # Introduction
+        Calculates the relative reward based on the change in global best values.
+        # Args:
+        - new_gbest (float): The new global best value after an optimization step.
+        - pre_gbest (float): The previous global best value before the optimization step.
+        # Returns:
+        - float: The relative improvement in the global best value, computed as (pre_gbest - new_gbest) / pre_gbest.
+        # Raises:
+        - ZeroDivisionError: If `pre_gbest` is zero, as division by zero is not allowed.
+        """
+        
         return (pre_gbest - new_gbest) / pre_gbest
 
     # triangle reward function
     def cal_reward_triangle(self, new_gbest, pre_gbest):
+        """
+        # Introduction
+        Calculates the reward based on the improvement of the global best cost (gbest) using a triangular reward function.
+        # Args:
+        - new_gbest (float): The new global best cost after an optimization step.
+        - pre_gbest (float): The previous global best cost before the optimization step.
+        # Returns:
+        - float: The calculated reward, which is non-negative and reflects the improvement in gbest.
+        # Raises:
+        - AssertionError: If the computed reward is negative, indicating an unexpected calculation error.
+        """
+        
         reward = 0
         if new_gbest < pre_gbest:
             p_t = (self.max_cost - pre_gbest) / self.max_cost
@@ -253,6 +367,22 @@ class GLEET_Optimizer(Learnable_Optimizer):
         return reward
 
     def update(self, action, problem):
+        """
+        # Introduction
+        Updates the state of the particle swarm optimizer (PSO) for one iteration based on the given action and problem definition. This includes updating particle velocities and positions, handling boundary conditions, evaluating costs, updating personal and global bests, managing stagnation counters, calculating rewards, and preparing the next state for further optimization or reinforcement learning.
+        # Args:
+        todo:action 和 problem的结构写清楚
+        - action (np.ndarray): The action(s) to be applied to the particles, typically representing control parameters or decisions for the optimizer.
+        - problem (object): The optimization problem instance, which must provide lower and upper bounds (`lb`, `ub`), and optionally an `optimum` attribute.
+        # Returns:
+        - next_state (np.ndarray): The updated state representation of the particle population after the current iteration.
+        - reward (float): The reward signal calculated based on the improvement in global best value.
+        - is_end (bool): Flag indicating whether the optimization process has reached its termination condition.
+        - info (dict): Additional information (currently empty, but can be extended for logging or debugging).
+        # Raises:
+        - None explicitly, but may raise exceptions if input shapes are inconsistent or if required attributes are missing from `problem`.
+        """
+        
         is_end = False
 
         # record the gbest_val in the begining
