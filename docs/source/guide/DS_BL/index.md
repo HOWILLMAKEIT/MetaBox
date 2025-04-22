@@ -124,3 +124,113 @@ Baseline
   </p>
   For example, P1 is composed of a single base problem, which consists of 50 differently shifted and rotated Sphere functions. In contrast, composite problems like P4 formed by multiple base problems are constructed by cyclically incorporating differently shifted and rotated Sphere, Rosenbrock, and Ackley functions to form a multi-task optimization problem.
 ## Baseline
+
+
+|  | SOO                                                                                          | MOO    | MMO                    | MTO  |
+|---------|-----------------------------------------------------------------------------------------------|--------|------------------------|------|
+| [MetaBBO](#metabbo)  | [B2Opt](#b2opt)、[DEDDQN](#deddqn)、[DEDQN](#dedqn)、[GLEET](#gleet)、[GLHF](#glhf)、[LDE](#lde)、[LES](#les)、[LGA](#lga)、[NRLPSO](#nrlpso)、[QLPSO](#qlpso)、[RLDAS](#rldas)、[RLDEAFL](#rldeafl)、[RLEPSO](#rlepso)、[RLPSO](#rlpso)、[SurrRLDE](#surrrlde)、[SYMBOL](#symbol)、OPRO | MADAC  | RLEMMO、PSORLNS         | L2T  |
+| [BBO](#bbo)     | CMA-ES、DE、GLPSO、JDE21、MADDE、NL-SHADE-LBC、PSO、SHADE、SAHLPSO、SDMSPSO                    |        |                        | MFEA |
+
+### MetaBBO
+#### Single-Object Optimization
+##### B2OPT
+- **Introduction**：\
+  B2Opt: Learning to Optimize Black-box Optimization with Little Budget.
+- **Original paper**：
+  "[**B2Opt: Learning to Optimize Black-box Optimization with Little Budget**](https://arxiv.org/abs/2304.11787)". arXiv preprint arXiv:2304.11787, (2023).
+- **Official Implementation**：[B2Opt](https://github.com/ninja-wm/B2Opt)
+##### DEDDQN
+- **Introduction**：\
+  DE-DDQN is an adaptive operator selection method based on Double Deep Q-Learning (DDQN), a Deep Reinforcement Learning method, to control the mutation strategies of Differential Evolution (DE).
+- **Original paper**：
+  "[**Deep reinforcement learning based parameter control in differential evolution**](https://dl.acm.org/doi/abs/10.1145/3321707.3321813)." Proceedings of the Genetic and Evolutionary Computation Conference (2019).
+- **Official Implementation**：[DE-DDQN](https://github.com/mudita11/DE-DDQN)
+##### DEDQN
+- **Introduction**：\
+  DEDQN is a mixed mutation strategy Differential Evolution (DE) algorithm based on deep Q-network (DQN), in which a deep reinforcement learning approach realizes the adaptive selection of mutation strategy in the evolution process.
+- **Original paper**：
+  "[**Differential evolution with mixed mutation strategy based on deep reinforcement learning**](https://www.sciencedirect.com/science/article/abs/pii/S1568494621005998)." Applied Soft Computing (2021).
+- **Official Implementation**： None
+##### GLEET
+- **Introduction**：\
+  GLEET is a **G**eneralizable **L**earning-based **E**xploration-**E**xploitation **T**radeoff framework, which could explicitly control the exploration-exploitation tradeoff hyper-parameters of a given EC algorithm to solve a class of problems via reinforcement learning. 
+- **Original paper**：
+  "[**Auto-configuring Exploration-Exploitation Tradeoff in Evolutionary Computation via Deep Reinforcement Learning**](https://dl.acm.org/doi/abs/10.1145/3638529.3653996)." Proceedings of the Genetic and Evolutionary Computation Conference (2024).
+- **Official Implementation**：[GLEET](https://github.com/GMC-DRL/GLEET)
+##### GLHF
+- **Introduction**：\
+  GLHF: General Learned Evolutionary Algorithm Via Hyper Functions
+- **Original paper**：
+  "[**GLHF: General Learned Evolutionary Algorithm Via Hyper Functions**](https://arxiv.org/abs/2405.03728)." arXiv preprint arXiv:2405.03728 (2024).
+- **Official Implementation**：[GLHF](https://github.com/ninja-wm/POM/)
+##### LDE
+- **Introduction**：\
+  LDE：Learning Adaptive Differential Evolution Algorithm From Optimization Experiences by Policy Gradient
+- **Original paper**：
+  "[**Learning Adaptive Differential Evolution Algorithm from Optimization Experiences by Policy Gradient**](https://ieeexplore.ieee.org/abstract/document/9359652)." IEEE Transactions on Evolutionary Computation (2021).
+- **Official Implementation**：[LDE](https://github.com/yierh/LDE)
+##### LES
+- **Introduction**：\
+ ** L**earned **E**volution **S**trategy (LES) is a novel self-attention-based evolution strategies parametrization, and discover effective update rules for ES via meta-learning.
+- **Original paper**：
+  "[**Discovering evolution strategies via meta-black-box optimization**](https://iclr.cc/virtual/2023/poster/11005)." The Eleventh International Conference on Learning Representations. (2023).
+- **Official Implementation**：[LES](https://github.com/RobertTLange/evosax/blob/main/evosax/strategies/les.py)
+##### LGA
+- **Introduction**：\
+  **L**earned **G**enetic **A**lgorithm parametrizes selection and mutation rate adaptation as cross- and self-attention modules and use MetaBBO to evolve their parameters on a set of diverse optimization tasks.
+- **Original paper**：
+  "[**Discovering attention-based genetic algorithms via meta-black-box optimization**](https://dl.acm.org/doi/abs/10.1145/3583131.3590496)." Proceedings of the Genetic and Evolutionary Computation Conference. (2023).
+- **Official Implementation**：[LGA](https://github.com/RobertTLange/evosax/blob/main/evosax/strategies/lga.py)
+##### NRLPSO
+- **Introduction**：\
+  NRLPSO is a reinforcement learning-based particle swarm optimization with neighborhood differential mutation strategy.
+- **Original paper**：
+  "[**Reinforcement learning-based particle swarm optimization with neighborhood differential mutation strategy**](https://www.sciencedirect.com/science/article/pii/S2210650223000482)." Swarm and Evolutionary Computation (2023).
+- **Official Implementation**：None
+##### QLPSO
+- **Introduction**：\
+  QLPSO is a problem-free PSO which integrates a reinforcement learning method.
+- **Original paper**：
+  "[**A reinforcement learning-based communication topology in particle swarm optimization**](https://link.springer.com/article/10.1007/s00521-019-04527-9)." Neural Computing and Applications (2020).
+- **Official Implementation**：None
+##### RLDAS
+- **Introduction**：\
+  RLDAS is a deep reinforcement learning-based dynamic algorithm selection framework.
+- **Original paper**：
+  "[**Deep Reinforcement Learning for Dynamic Algorithm Selection: A Proof-of-Principle Study on Differential Evolution**](https://ieeexplore.ieee.org/abstract/document/10496708/)." IEEE Transactions on Systems, Man, and Cybernetics: Systems (2024).
+- **Official Implementation**：[RL-DAS](https://github.com/GMC-DRL/RL-DAS)
+##### RLDEAFL
+
+##### RLEPSO
+- **Introduction**：\
+   RLEPSO is a new particle swarm optimization algorithm that combines reinforcement learning.
+- **Original paper**：
+  "[**RLEPSO: Reinforcement learning based Ensemble particle swarm optimizer**](https://dl.acm.org/doi/abs/10.1145/3508546.3508599)." Proceedings of the 2021 4th International Conference on Algorithms, Computing and Artificial Intelligence. (2021).
+- **Official Implementation**：None
+
+##### RLPSO
+- **Introduction**：\
+   RLPSO develops a reinforcement learning strategy to enhance PSO in convergence by replacing the uniformly distributed random number in the updating function with a random number generated from a selected normal distribution.
+- **Original paper**：
+  "[**Employing reinforcement learning to enhance particle swarm optimization methods**](https://www.tandfonline.com/doi/abs/10.1080/0305215X.2020.1867120)." Engineering Optimization (2022).Intelligence. (2021).
+- **Official Implementation**：None
+##### SurrRLDE
+- **Introduction**：\
+   SurrRLDE is a novel MetaBBO framework which combines surrogate learning process and reinforcement learning-aided Differential Evolution (DE) algorithm.
+- **Original paper**：
+   "[Surrogate Learning in Meta-Black-Box Optimization: A Preliminary Study](https://arxiv.org/abs/2503.18060)." arXiv preprint arXiv:2503.18060 (2025).
+- **Official Implementation**：[SurrRLDE](https://github.com/GMC-DRL/Surr-RLDE)
+##### SYMBOL
+- **Introduction**：\
+   SYMBOL is a novel framework that promotes the automated discovery of black-box optimizers through symbolic equation learning.
+- **Original paper**：
+  "[**Symbol: Generating Flexible Black-Box Optimizers through Symbolic Equation Learning**](https://openreview.net/forum?id=vLJcd43U7a)." The Twelfth International Conference on Learning Representations. (2024).
+- **Official Implementation**：[SYMBOL](https://github.com/GMC-DRL/Symbol)
+
+#### Multi-Objective Optimization
+
+#### Multi-Modal Optimization
+
+#### Multi-Task Optimization
+
+
