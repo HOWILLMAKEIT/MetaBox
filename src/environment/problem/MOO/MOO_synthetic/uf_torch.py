@@ -32,6 +32,8 @@ class UF1_Torch(Basic_Problem_Torch):
         ObjV2 = 1 - th.sqrt(ObjV1)
         referenceObjV = th.stack([ObjV1, ObjV2]).T
         return referenceObjV
+    def __str__(self):
+        return  self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 
 
@@ -68,6 +70,8 @@ class UF2_Torch(Basic_Problem_Torch):
         ObjV2 = 1 - th.sqrt(ObjV1)
         referenceObjV = th.stack([ObjV1, ObjV2]).T
         return referenceObjV
+    def __str__(self):
+        return  self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 
 class UF3_Torch(Basic_Problem_Torch):  # 继承Problem的父类
@@ -102,6 +106,8 @@ class UF3_Torch(Basic_Problem_Torch):  # 继承Problem的父类
         ObjV2 = 1 - th.sqrt(ObjV1)
         referenceObjV = th.stack([ObjV1, ObjV2]).T
         return referenceObjV
+    def __str__(self):
+        return  self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 
 class UF4_Torch(Basic_Problem_Torch):
@@ -136,6 +142,8 @@ class UF4_Torch(Basic_Problem_Torch):
         ObjV2 = 1 - ObjV1 ** 2
         referenceObjV = th.stack([ObjV1, ObjV2]).T
         return referenceObjV
+    def __str__(self):
+        return  self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 
 class UF5_Torch(Basic_Problem_Torch):
@@ -170,6 +178,8 @@ class UF5_Torch(Basic_Problem_Torch):
         ObjV2 = 1 - ObjV1
         referenceObjV = th.stack([ObjV1, ObjV2]).T
         return referenceObjV
+    def __str__(self):
+        return  self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 
 class UF6_Torch(Basic_Problem_Torch):  # 继承Problem父类
@@ -213,6 +223,8 @@ class UF6_Torch(Basic_Problem_Torch):  # 继承Problem父类
         ObjV2 = 1 - ObjV1
         referenceObjV = th.stack([ObjV1, ObjV2]).T
         return referenceObjV
+    def __str__(self):
+        return  self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 
 class UF7_Torch(Basic_Problem_Torch):  # 继承Problem父类
@@ -246,6 +258,8 @@ class UF7_Torch(Basic_Problem_Torch):  # 继承Problem父类
         ObjV2 = 1 - ObjV1
         referenceObjV = th.stack([ObjV1, ObjV2]).T
         return referenceObjV
+    def __str__(self):
+        return  self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 
 class UF8_Torch(Basic_Problem_Torch):  # 继承Problem父类
@@ -282,6 +296,8 @@ class UF8_Torch(Basic_Problem_Torch):  # 继承Problem父类
         ObjV = ObjV / th.sqrt(th.sum(ObjV ** 2, 1, keepdims=True))
         referenceObjV = ObjV
         return referenceObjV
+    def __str__(self):
+        return  self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 
 class UF9_Torch(Basic_Problem_Torch):  # 继承Problem父类
@@ -319,6 +335,8 @@ class UF9_Torch(Basic_Problem_Torch):  # 继承Problem父类
         idx = (ObjV[:, 0] > (1 - ObjV[:, 2]) / 4) & (ObjV[:, 0] < (1 - ObjV[:, 2]) * 3 / 4)
         referenceObjV = ObjV[~idx]
         return referenceObjV
+    def __str__(self):
+        return  self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 class UF10_Torch(Basic_Problem_Torch):  # 继承Problem父类
     def __init__(self):
@@ -351,6 +369,8 @@ class UF10_Torch(Basic_Problem_Torch):  # 继承Problem父类
         ObjV = ObjV / th.sqrt(th.sum(ObjV ** 2, 1, keepdims=True))
         referenceObjV = ObjV
         return referenceObjV
+    def __str__(self):
+        return  self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 if __name__ == '__main__':
     uf1= UF1_Torch()
