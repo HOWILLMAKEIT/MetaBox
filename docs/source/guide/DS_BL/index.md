@@ -15,7 +15,7 @@ Baseline
 
 | 🚩 **Problem Category**         | 📚 **Problem set**                                                               |
 |-------------------------------|-------------------------------------------------------------------------------|
-| **Single-Objective Optimization** | COCO-BBOB、BBOB-Surrogate <!--#bbob-surrogate-->、HPO-B、NeuroEvolution、Protein-Docking、UAV、CEC2013LSGO |
+| **Single-Objective Optimization** | COCO-BBOB、[BBOB-Surrogate](bbob-surrogate)、HPO-B、NeuroEvolution、Protein-Docking、UAV、CEC2013LSGO |
 | **Multi-Objective Optimization**  | MOO-Synthetic（dtlz、uf、wfg、zdt）                                            |
 |  **Multi-Modal Optimization**      | CEC2013MMO                                                                    |
 |  **Multi-Task Optimization**       | CEC2017MTO、WCCI2020                                                          |
@@ -27,6 +27,7 @@ Baseline
 #### COCO-BBOB
 
 #### BBOB-Surrogate
+<a name="bbob-surrogate"></a>
 
 - **Introduction**：\
   BBOB-Surrogate investigates the integration of surrogate modeling techniques into MetaBBO , enabling data-driven approximation of expensive objective functions while maintaining optimization fidelity.
