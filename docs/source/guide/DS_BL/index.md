@@ -16,9 +16,9 @@ Baseline
 | 🚩 **Problem Category**         | 📚 **Problem set**                                                               |
 |-------------------------------|-------------------------------------------------------------------------------|
 | **Single-Objective Optimization** | COCO-BBOB、[BBOB-Surrogate](#bbob-surrogate)、HPO-B、NeuroEvolution、Protein-Docking、UAV、[CEC2013LSGO]((#cec2013lsgo)) |
-| **Multi-Objective Optimization**  | [MOO-Synthetic(dtlz、uf、wfg、zdt)](#moo-synthetic)                                   |
+| **Multi-Objective Optimization**  | [MOO-Synthetic (dtlz、uf、wfg、zdt)](#moo-synthetic)                                   |
 |  **Multi-Modal Optimization**      | [CEC2013MMO](#cec2013mmo)                                                                    |
-|  **Multi-Task Optimization**       | CEC2017MTO、WCCI2020                                                          |
+|  **Multi-Task Optimization**       | [CEC2017MTO](#cec2017mto)、[WCCI2020](#wcci2020)                                                          |
 
 
 
