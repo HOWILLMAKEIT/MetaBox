@@ -15,6 +15,8 @@ class ZDT(Basic_Problem):
         self.vtype = float
         self.lb = np.zeros(n_var)
         self.ub = np.ones(n_var)
+    def __str__(self):
+        return  self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 
 
