@@ -94,5 +94,33 @@ Baseline
   CEC2013MMO includes 20 functions covering different dimensions and the number of global optima. Among them, F1 to F5 are simple functions, F6 to F10 are scalable functions with many global optima, and F11 to F20 are composition functions with challenging landscapes.
 
 ### Multi-Modal Optimization
-  
+#### CEC2017MTO
+
+- **Introduction**：\
+  CEC2017MTO is a problem set for evaluating multi-task optimization algorithms.
+- **Original paper**：
+  "[Evolutionary multitasking for single-objective continuous optimization: Benchmark problems, performance metric, and baseline results](https://arxiv.org/abs/1706.03470)." arXiv preprint arXiv:1706.03470 (2017).
+- **Official Implementation**： [CEC2017MTO](http://www.bdsc.site/websites/MTO/index.html)
+- **License**：None
+- **Problem Suite Composition**：\
+  CEC2017MTO has 9 multi-task questions, each of which contains two basic questions.
+
+  <p align="center">
+  <img src="https://github.com/GMC-DRL/MetaBox/blob/v2.0.0-docs/docs/pic/CEC2017MTO.png" width="700"/>
+  </p>
+
+#### WCCI2020
+
+- **Introduction**：\
+  WCCI2020 is a problem set for evaluating multi-task optimization algorithms.
+- **Original paper**：
+  "[WCCI2020 competition on evolutionary multi-task optimization](http://www.bdsc.site/websites/MTO_competition_2020/MTO_Competition_WCCI_2020.html)." IEEE World Congress on Computational Intelligence 2020. 2020.
+- **Official Implementation**： [WCCI2020](http://www.bdsc.site/websites/MTO/index.html)
+- **License**：None
+- **Problem Suite Composition**：\
+  The benchmark comprises 10 multi-task problems, each integrating 50 uniformly 50-dimensional base tasks.
+  <p align="center">
+  <img src="https://github.com/GMC-DRL/MetaBox/blob/v2.0.0-docs/docs/pic/WCCI2020.png" width="600"/>
+  </p>
+  For example, P1 is composed of a single base problem, which consists of 50 differently shifted and rotated Sphere functions. In contrast, composite problems like P4 formed by multiple base problems are constructed by cyclically incorporating differently shifted and rotated Sphere, Rosenbrock, and Ackley functions to form a multi-task optimization problem.
 ## Baseline
