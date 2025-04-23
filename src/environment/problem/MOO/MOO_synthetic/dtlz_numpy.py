@@ -1,6 +1,8 @@
 
 from environment.problem.basic_problem import Basic_Problem
+import itertools
 import numpy as np
+from scipy.special import comb
 
 def crtup(n_obj, n_ref_points=1000):
     def find_H_for_closest_points(N, M):
