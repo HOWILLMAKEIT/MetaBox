@@ -17,9 +17,19 @@ Config
 ### MetaBBO
 
 #### 1. Create your own Agent
+##### 1.1. Create your own RL
+
+```{important}
+MetaBOX has pre-implemented various RL methods — refer to **Gallery > Config** for details. \
+You just need to inherit it and design your own Agent — Jump directly to **Gallery > Config** ！
+```
+
+1️⃣ Import Required Packages
 
      import torch
      from metaevobox.rl import basic_agent
+
+2️⃣ Initialize the RL Class
 
      class MyRL(basic_agent):
           
@@ -45,12 +55,21 @@ Config
                save_class(self.config.agent_save_dir, 'checkpoint' + str(self.cur_checkpoint), self)
                self.cur_checkpoint += 1
 
-          # If rl contains the network
-          # def set_network(self, networks: dict, learning_rates: float):
-          #    pass
-             
+3️⃣ Initialize the Network (Optional)
+
+```{note}
+This function is designed for rl methods that require networks and is not necessary.
+```
+
+         def set_network(self, networks: dict, learning_rates: float):
+             pass
+
+4️⃣ Set update rules
+
          def update_setting(self, config):
              pass
+
+5️⃣ The Main Function for Training 
 
          def train_episode(self, 
                            envs,
@@ -110,6 +129,8 @@ Config
              env.close()
              return is_train_ended, return_info
 
+6️⃣ The Main Function for Testing
+
          def rollout_episode(self, env, seed=None, required_info = {}):
              with torch.no_grad():
                  if seed is not None:
@@ -134,18 +155,26 @@ Config
                  for key in required_info.keys():
                      results[key] = getattr(env, required_info[key])
                  return results
+                 
+6️⃣ The Main Function to Record Data for Analysis
 
          def log_to_tb_train(self, tb_logger):
              # Record the training data to tensorboard
-             # Exp： 
+             # Exp：tb_logger.add_scalar('loss', loss.item(), mini_step)
              pass
 
-     class MyAgent(MyRL)
-       pass
+     ```{tips}
+     Not familiar with tensorboard? Click this [link](https://www.tensorflow.org/tensorboard/get_started).
+     ```
 
-> [!IMPORTANT]
-> MetaBOX has pre-implemented various RL methods — refer to **Gallery > Config** for details. \
-> You just need to inherit it and design your own Agent！
+
+##### 1.1. Create your own Agent
+
+```{important}
+MetaBOX has pre-implemented various RL methods — refer to **Gallery > Config** for details. \
+You just need to inherit it and design your own Agent ！\
+Here we take the rl method inherited from MetaBOX as an example.
+```
 
      from metabox.rl import xxx
      
