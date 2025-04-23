@@ -81,7 +81,8 @@ def get_problem_set(config, problem, difficulty, train_list, test_list):
                                         difficulty = difficulty, 
                                         user_train_list=train_list,
                                         user_test_list=test_list,
-                                        version='torch' if 'torch' in problem else 'numpy')
+                                        version='torch' if 'torch' in problem else 'numpy',
+                                        path = config.uav_path)
     elif problem in ['hpo-b']:
         return HPOB_Dataset.get_datasets(train_batch_size = config.train_batch_size,
                                         test_batch_size = config.test_batch_size,
@@ -89,6 +90,7 @@ def get_problem_set(config, problem, difficulty, train_list, test_list):
                                         difficulty = difficulty,
                                         user_train_list=train_list,
                                         user_test_list=test_list,
+                                        datapath = config.hpob_path
                                         )
     elif problem in ['ne']:
         from environment.problem.SOO.NE.ne_dataset import NE_Dataset
@@ -137,7 +139,8 @@ def get_problem_set(config, problem, difficulty, train_list, test_list):
                                             difficulty = difficulty,
                                             user_train_list=train_list,
                                             user_test_list=test_list,
-                                            version='torch' if 'torch' in problem else 'numpy')
+                                            version='torch' if 'torch' in problem else 'numpy',
+                                            path = config.uav_path)
 
     else:
         raise ValueError(problem + ' is not defined!')
