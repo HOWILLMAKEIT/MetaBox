@@ -421,7 +421,7 @@ class Tester(object):
                     self.meta_data_results = store_meta_data(self.log_dir, self.meta_data_results)
             pbar.close()
 
-        elif parallel_batch == "serial":
+        elif parallel_batch == "Serial":
             pbar_len = (len(self.agent_for_cp) + len(self.t_optimizer_for_cp)) * self.test_set.N * self.config.test_run
             pbar = tqdm(total = pbar_len, desc = "Serial Testing")
             for (agent, optimizer) in zip(self.agent_for_cp, self.l_optimizer_for_cp):

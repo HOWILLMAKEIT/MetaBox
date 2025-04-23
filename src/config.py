@@ -64,7 +64,7 @@ def get_config(args=None):
     # parser.add_argument('--t_optimizer_for_cp', type=str, nargs='+', default=[],
     #                     help='traditional optimizer to compare')
     parser.add_argument('--test_batch_size', type=int, default=1, help='batch size of test set')
-    parser.add_argument('--parallel_batch', type=str, default='Batch', choices=['Full', 'Baseline_Problem', 'Problem_Testrun', 'Batch'], help='the parellel processing mode for testing')
+    parser.add_argument('--parallel_batch', type=str, default='Batch', choices=['Full', 'Baseline_Problem', 'Problem_Testrun', 'Batch', 'Serial'], help='the parellel processing mode for testing')
     
 
     # Rollout parameters
