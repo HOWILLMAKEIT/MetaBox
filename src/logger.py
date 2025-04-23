@@ -1469,9 +1469,6 @@ class MMO_Logger(Basic_Logger):
         self.draw_boxplot(results, log_dir+'pics/', pdf_fig=pdf_fig)
         self.draw_boxplot_prsr(results['pr'], 'pr', log_dir+'pics/', pdf_fig=pdf_fig)
         self.draw_boxplot_prsr(results['sr'], 'sr', log_dir+'pics/', pdf_fig=pdf_fig)
-        self.draw_overall_boxplot(results['cost'], log_dir+'pics/', pdf_fig=pdf_fig)
-        self.draw_overall_boxplot_prsr(results['pr'], 'pr', log_dir+'pics/',pdf_fig=pdf_fig)
-        self.draw_overall_boxplot_prsr(results['sr'], 'sr', log_dir+'pics/',pdf_fig=pdf_fig)
 
         self.draw_test_data(results['cost'], 'cost', log_dir + 'pics/', logged=True, categorized=False, pdf_fig=pdf_fig, data_wrapper=np.array)
         self.draw_test_data(results['pr'],'pr', log_dir + 'pics/', logged=False, categorized=False, pdf_fig=pdf_fig, data_wrapper=self.data_wrapper_prsr_hist)
