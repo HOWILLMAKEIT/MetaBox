@@ -290,6 +290,51 @@ def chebyshev(solution_obj, ideal_point, weights, min_weight=0.0001):
 
 
 class MADAC_Optimizer(Learnable_Optimizer):
+    """
+    # Introduction
+    todo:MADAC是这个意思？
+    MADAC_Optimizer is a Multi-Agent Decomposition Algorithm for Cooperative (MADAC) multi-objective optimization
+    that extends the Learnable_Optimizer class. It implements a MOEA/D (Multi-Objective Evolutionary Algorithm Based
+    on Decomposition) variant with multi-agent reinforcement learning capabilities to adaptively select algorithm
+    parameters during the optimization process.
+    todo:写论文链接
+    # Attributes
+    ## Problem Related
+    - n_ref_points (int): Number of reference points for performance calculation.
+    - episode_limit (int): Maximum number of generations/episodes.
+    ## MDP Related
+    - reward_type (int): Type of reward function to use (0-3).
+    - n_agents (int): Number of agents in the multi-agent system.
+    - early_stop (bool): Flag to enable early stopping.
+    ## MOEA/D Algorithm Related
+    - moead_neighborhood_maxsize (int): Maximum neighborhood size.
+    - moead_delta (float): Probability of selecting mating pool from neighborhood.
+    - moead_eta (int): Maximum number of solutions replaced by each offspring.
+    - adaptive_open (bool): Flag to enable adaptive weight vector adjustment.
+    - max_fes (int): Maximum function evaluations.
+    # Methods
+    ## init_population(problem)
+    Initializes the population for the given problem.
+    ## get_neighborhoods()
+    Constructs neighborhoods for each subproblem based on weight vector distances.
+    ## get_weights(n_obj)
+    Generates weight vectors based on the number of objectives.
+    ## update(action, problem)
+    Performs one step update in MOEA/D including solution generation and selection.
+    - action: Contains neighborhood size, operator type, operator parameter, and weight adjustment decisions.
+    ## get_state()
+    Returns the current state observation for reinforcement learning agents.
+    ## get_hypervolume(n_samples=1e5)
+    Calculates or estimates the hypervolume indicator.
+    ## get_igd()
+    Calculates the Inverted Generational Distance.
+    ## get_reward(value)
+    Calculates the reward based on performance improvement.
+    # Usage
+    The optimizer is designed to be used within a reinforcement learning loop where agents make
+    decisions about algorithm parameters, receive rewards based on optimization performance,
+    and update their policies accordingly.
+    """
     def __init__(self, config):
         super.__init__()
         self.__config = config
@@ -309,6 +354,20 @@ class MADAC_Optimizer(Learnable_Optimizer):
         self.operators = Operators(self.rng)
 
     def init_population(self, problem):
+        """
+        # Introduction
+        Initializes the population and related parameters for the multi-objective optimizer based on the provided problem instance.
+        # Args:
+        todo:problem 写清楚数据结构
+        - problem: An object representing the optimization problem, which must define the number of objectives (`n_obj`), number of variables (`n_var`), lower bounds (`lb`), upper bounds (`ub`), and an evaluation method (`eval`). It should also provide a method `get_ref_set` for generating reference points.
+        # Returns:
+        - dict: The current state of the optimizer after initialization, as returned by `self.get_state()`.
+        # Notes:
+        - This method sets up the initial population, objective values, weights, neighborhoods, and various tracking variables such as the ideal point and IGD (Inverted Generational Distance) calculator.
+        - It also initializes adaptive weights and static parameters required for the optimizer's operation.
+        """
+
+        
         self.problem = problem
         self.n_obj = problem.n_obj
         self.n_var = problem.n_var
@@ -333,6 +392,16 @@ class MADAC_Optimizer(Learnable_Optimizer):
         return self.get_state()
 
     def get_neighborhoods(self):
+        """
+        # Introduction
+        Computes the neighborhoods for each weight vector in the optimizer by finding the closest weight vectors according to a sorting function.
+        # Returns:
+        - list[list[int]]: A list where each element contains the indices of the nearest neighbors for the corresponding weight vector.
+        # Notes:
+        - The number of neighbors is determined by `self.moead_neighborhood_maxsize`.
+        - The sorting of neighbors is performed using `self.moead_sort_weights`.
+        """
+        
         neighborhoods = []  # the i-th element save the index of the neighborhoods of it
         for i in range(len(self.weights)):
             sorted_weights = self.moead_sort_weights(
