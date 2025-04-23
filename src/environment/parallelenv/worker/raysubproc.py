@@ -3,7 +3,7 @@ from typing import Any, Callable, List, Optional, Tuple, Union
 import gym, os, platform
 import numpy as np
 
-from environment.parallelenv.worker import EnvWorker
+from .base import EnvWorker
 import ray, copy, warnings
 from dill import dumps, loads
 

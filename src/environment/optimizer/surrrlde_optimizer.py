@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 from collections import deque
-from environment.optimizer.learnable_optimizer import Learnable_Optimizer
+from .learnable_optimizer import Learnable_Optimizer
 
 
 class SurrRLDE_Optimizer(Learnable_Optimizer):

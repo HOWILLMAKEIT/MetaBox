@@ -1,5 +1,5 @@
 import numpy as np
-from environment.optimizer.basic_optimizer import Basic_Optimizer
+from ...environment.optimizer.basic_optimizer import Basic_Optimizer
 
 
 class Random_search(Basic_Optimizer):

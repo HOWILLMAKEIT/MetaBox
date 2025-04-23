@@ -4,7 +4,7 @@ from deap import creator
 from deap import tools
 from deap import algorithms
 from deap import cma
-from environment.optimizer.basic_optimizer import Basic_Optimizer
+from ...environment.optimizer.basic_optimizer import Basic_Optimizer
 
 
 class CMAES(Basic_Optimizer):

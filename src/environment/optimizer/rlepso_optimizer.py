@@ -1,5 +1,5 @@
 import numpy as np
-from environment.optimizer.learnable_optimizer import Learnable_Optimizer
+from .learnable_optimizer import Learnable_Optimizer
 
 
 class RLEPSO_Optimizer(Learnable_Optimizer):

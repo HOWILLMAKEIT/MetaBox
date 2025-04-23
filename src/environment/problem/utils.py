@@ -1,17 +1,17 @@
 import pickle
 import os
 
-from environment.problem.MMO.CEC2013MMO.cec2013mmo_dataset import CEC2013MMO_Dataset 
-from environment.problem.MOO.MOO_synthetic.moo_synthetic_dataset import MOO_Synthetic_Dataset
-from environment.problem.MTO.WCCI2020.wcci2020_dataset import WCCI2020_Dataset
-from environment.problem.MTO.CEC2017MTO.cec2017mto_dataset import CEC2017MTO_Dataset
-from environment.problem.SOO.COCO_BBOB.bbob_dataset import BBOB_Dataset
-from environment.problem.SOO.COCO_BBOB.bbob_surrogate import bbob_surrogate_Dataset
-from environment.problem.SOO.CEC2013LSGO.cec2013lsgo_dataset import CEC2013LSGO_Dataset
-from environment.problem.SOO.UAV.uav_dataset import UAV_Dataset
-from environment.problem.SOO.PROTEIN_DOCKING.protein_docking_dataset import Protein_Docking_Dataset
-from environment.problem.SOO.HPO_B.hpob_dataset import HPOB_Dataset
-from environment.problem.MOO.UAV.uav_dataset import UAV_Dataset as MMO_UAV_Dataset
+from .MMO.CEC2013MMO.cec2013mmo_dataset import CEC2013MMO_Dataset
+from .MOO.MOO_synthetic.moo_synthetic_dataset import MOO_Synthetic_Dataset
+from .MTO.WCCI2020.wcci2020_dataset import WCCI2020_Dataset
+from .MTO.CEC2017MTO.cec2017mto_dataset import CEC2017MTO_Dataset
+from .SOO.COCO_BBOB.bbob_dataset import BBOB_Dataset
+from .SOO.COCO_BBOB.bbob_surrogate import bbob_surrogate_Dataset
+from .SOO.CEC2013LSGO.cec2013lsgo_dataset import CEC2013LSGO_Dataset
+from .SOO.UAV.uav_dataset import UAV_Dataset
+from .SOO.PROTEIN_DOCKING.protein_docking_dataset import Protein_Docking_Dataset
+from .SOO.HPO_B.hpob_dataset import HPOB_Dataset
+from .MOO.UAV.uav_dataset import UAV_Dataset as MMO_UAV_Dataset
 #from environment.problem.SOO.NE.evox_ne import NE_Dataset
 
 def save_class(dir, file_name, saving_class):
@@ -27,7 +27,8 @@ def construct_problem_set(config):
     
     train_set = get_problem_set(config, config.train_problem, config.train_difficulty, config.user_train_problem_list, config.user_test_problem_list)[0]
     test_set = get_problem_set(config, config.test_problem, config.test_difficulty, config.user_train_problem_list, config.user_test_problem_list)[1]
-    return train_set, test_set
+    config.dim = max(train_set.maxdim, test_set.maxdim)
+    return config, train_set, test_set
 
 
 def get_problem_set(config, problem, difficulty, train_list, test_list):
@@ -70,7 +71,7 @@ def get_problem_set(config, problem, difficulty, train_list, test_list):
                                                  user_train_list=train_list,
                                                  user_test_list=test_list,
                                                  )
-    elif problem in ['uav', 'uav-torch']:
+    elif problem in ['uav']:
         return UAV_Dataset.get_datasets(train_batch_size = config.train_batch_size,
                                         test_batch_size = config.test_batch_size,
                                         dv = 10,

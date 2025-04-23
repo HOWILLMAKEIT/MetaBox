@@ -1,5 +1,5 @@
-from rl.ddqn import *
-from baseline.metabbo.networks import MLP
+from ...rl.ddqn import *
+from .networks import MLP
 
 class DEDDQN(DDQN_Agent):
     def __init__(self, config):

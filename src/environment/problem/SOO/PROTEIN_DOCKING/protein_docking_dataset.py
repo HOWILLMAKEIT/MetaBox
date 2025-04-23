@@ -2,7 +2,7 @@ from os import path
 import torch
 import numpy as np
 from torch.utils.data import Dataset
-from environment.problem.basic_problem import Basic_Problem
+from ....problem.basic_problem import Basic_Problem
 import time
 from .protein_docking import Protein_Docking_Torch_Problem, Protein_Docking_Numpy_Problem
 class Protein_Docking_Dataset(Dataset):

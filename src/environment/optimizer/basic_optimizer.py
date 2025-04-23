@@ -4,7 +4,7 @@ Your own traditional should have the following functions:
     1. __init__(self, config) : to initialize the optimizer
     2. run_episode(self, problem) : to run the optimizer for an episode
 """
-from environment.problem.basic_problem import Basic_Problem
+from ..problem.basic_problem import Basic_Problem
 import numpy as np
 import torch
 import time

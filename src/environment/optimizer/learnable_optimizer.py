@@ -10,7 +10,7 @@ Your own backbone optimizer should inherit from this class and have the followin
        if needed. It's expected to return a tuple of [next_state, reward, is_done] for agent to learn.
 """
 from typing import Any, Tuple
-from environment.problem.basic_problem import Basic_Problem
+from ..problem.basic_problem import Basic_Problem
 import numpy as np
 import torch
 import time

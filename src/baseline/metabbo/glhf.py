@@ -2,11 +2,11 @@ import copy
 
 import torch
 from torch import nn
-from rl.basic_agent import Basic_Agent
-from environment.parallelenv.parallelenv import ParallelEnv
+from ...rl.basic_agent import Basic_Agent
+from ...environment.parallelenv.parallelenv import ParallelEnv
 from typing import Optional, Union, Literal, List
 import numpy as np
-from rl.utils import clip_grad_norms, save_class
+from ...rl.utils import clip_grad_norms, save_class
 import math
 
 

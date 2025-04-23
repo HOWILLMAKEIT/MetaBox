@@ -24,8 +24,8 @@ class NE_Dataset(Dataset):
                      train_batch_size=1,
                      test_batch_size=1,
                      difficulty='easy',
-                     usr_train_list = None,
-                     usr_test_list = None,
+                     user_train_list = None,
+                     user_test_list = None,
                      instance_seed=3849):
         assert difficulty in ['all','easy','difficult','user-define']
         train_set = []
@@ -58,18 +58,18 @@ class NE_Dataset(Dataset):
         elif difficulty == 'user-define':
             for env in envs.keys():
                 for depth in model_depth:
-                    if usr_train_list is not None and usr_test_list is not None:
-                        if f'{env}-{depth}' in usr_train_list:
+                    if user_train_list is not None and user_test_list is not None:
+                        if f'{env}-{depth}' in user_train_list:
                             train_set.append(NE_Problem(env, depth, instance_seed))
-                        if f'{env}-{depth}' in usr_test_list:
+                        if f'{env}-{depth}' in user_test_list:
                             test_set.append(NE_Problem(env, depth, instance_seed))
-                    elif usr_train_list is not None:
-                        if f'{env}-{depth}' in usr_train_list:
+                    elif user_train_list is not None:
+                        if f'{env}-{depth}' in user_train_list:
                             train_set.append(NE_Problem(env, depth, instance_seed))
                         else:
                             test_set.append(NE_Problem(env, depth, instance_seed))
-                    elif usr_test_list is not None:
-                        if f'{env}-{depth}' in usr_test_list:
+                    elif user_test_list is not None:
+                        if f'{env}-{depth}' in user_test_list:
                             test_set.append(NE_Problem(env, depth, instance_seed))
                         else:
                             train_set.append(NE_Problem(env, depth, instance_seed))

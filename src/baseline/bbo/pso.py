@@ -2,7 +2,7 @@ import numpy as np
 from deap import base
 from deap import creator
 from deap import tools
-from environment.optimizer.basic_optimizer import Basic_Optimizer
+from ...environment.optimizer.basic_optimizer import Basic_Optimizer
 
 
 class PSO(Basic_Optimizer):

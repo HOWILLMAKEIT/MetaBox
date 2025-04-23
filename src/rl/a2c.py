@@ -1,5 +1,5 @@
 from typing import Tuple
-from rl.basic_agent import Basic_Agent
+from .basic_agent import Basic_Agent
 import torch
 import math, copy
 from typing import Any, Callable, List, Optional, Tuple, Union, Literal
@@ -8,8 +8,8 @@ from torch import nn
 import torch
 from torch.distributions import Normal
 import torch.nn.functional as F
-from rl.utils import *
-from environment.parallelenv.parallelenv import ParallelEnv
+from .utils import *
+from ..environment.parallelenv.parallelenv import ParallelEnv
 
 # memory for recording transition during training process
 class Memory:

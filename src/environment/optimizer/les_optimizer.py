@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-from environment.optimizer.learnable_optimizer import Learnable_Optimizer
+from .learnable_optimizer import Learnable_Optimizer
 import torch.nn as nn
 
 def vector2nn(x,net,device):

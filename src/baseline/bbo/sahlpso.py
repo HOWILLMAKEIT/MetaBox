@@ -1,4 +1,4 @@
-from environment.optimizer.basic_optimizer import Basic_Optimizer
+from ...environment.optimizer.basic_optimizer import Basic_Optimizer
 # from optimizer.operators import clipping
 import numpy as np
 

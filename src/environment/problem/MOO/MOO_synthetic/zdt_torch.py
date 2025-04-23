@@ -1,7 +1,6 @@
 
 import torch as th
-from environment.problem.basic_problem import Basic_Problem_Torch
-import geatpy as ea
+from ....problem.basic_problem import Basic_Problem_Torch
 import math
 
 
@@ -14,8 +13,6 @@ class ZDT_Torch(Basic_Problem_Torch):
         self.vtype = float
         self.lb = th.zeros(n_var)
         self.ub = th.ones(n_var)
-    def __str__(self):
-        return  self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 
 
@@ -267,4 +264,3 @@ if __name__ == '__main__':
     s4 = zdt4.get_ref_set()
     s5 = zdt5.get_ref_set()
     s6 = zdt6.get_ref_set()
-

@@ -2,7 +2,7 @@ import numpy as np
 import xgboost as xgb
 import pickle
 import os, time
-from environment.problem.basic_problem import Basic_Problem
+from ....problem.basic_problem import Basic_Problem
 
 
 class HPOB_Problem(Basic_Problem):

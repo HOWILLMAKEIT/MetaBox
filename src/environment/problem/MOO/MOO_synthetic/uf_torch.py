@@ -1,12 +1,12 @@
 
 import torch as th
 import math
-from environment.problem.basic_problem import Basic_Problem_Torch 
+from ....problem.basic_problem import Basic_Problem_Torch 
 import itertools
 import numpy as np
 from scipy.special import comb
 
-def crtup(n_obj,n_ref_points=1000):
+def crtup(n_obj, n_ref_points=1000):
     def find_H_for_closest_points(N, M):
         """
         根据目标点数 N 和维数 M，找到最接近的 H，使得生成的点数不超过 N。
@@ -19,42 +19,44 @@ def crtup(n_obj,n_ref_points=1000):
         # 搜索最接近 N 的 H
         for H in range(H_min, H_max + 1):
             generated_points = int(comb(H + M - 1, M - 1))  # 计算生成的点数
-            
+
             # 如果生成的点数超过目标 N，跳过此 H
             if generated_points > N:
                 break
-            
+
             diff = abs(generated_points - N)  # 计算与目标 N 的差异
-            
+
             # 如果当前差异更小，则更新最接近的 H 和差异
             if diff < closest_diff:
                 closest_H = H
                 closest_diff = diff
                 closest_N = generated_points
-        
+
         return closest_H, closest_N
+
     M = n_obj
-    H, closest_N= find_H_for_closest_points(n_ref_points, M)
+    H, closest_N = find_H_for_closest_points(n_ref_points, M)
     n_comb = int(comb(H + M - 1, M - 1))
-    combinations = list(itertools.combinations(range(1, H + M), M-1))
-    temp = np.array([np.arange(0, M-1)] * n_comb)
+    combinations = list(itertools.combinations(range(1, H + M), M - 1))
+    temp = np.array([np.arange(0, M - 1)] * n_comb)
     if len(combinations) == len(temp):
         result = []
         for combination, arr in zip(combinations, temp):
             # 元组元素与数组元素相减
-            sub_result = np.array(combination) -arr - 1
+            sub_result = np.array(combination) - arr - 1
             result.append(sub_result)
     else:
         print("两个列表长度不一致，无法相减。")
     result = np.array(result)
     W = np.zeros((n_comb, M))
     W[:, 0] = result[:, 0] - 0  # 第一列直接是 Temp 的第一列
-    for i in range(1, M-1):
-        W[:, i] = result[:, i] - result[:, i-1]  # 后续列是 Temp 当前列减去前一列
+    for i in range(1, M - 1):
+        W[:, i] = result[:, i] - result[:, i - 1]  # 后续列是 Temp 当前列减去前一列
     W[:, -1] = H - result[:, -1]  # 最后一列是 H - Temp 最后一列
 
     W = W / H
-    return W,n_comb
+    return W, n_comb
+
 
 class UF1_Torch(Basic_Problem_Torch):
     def __init__(self):
@@ -83,8 +85,6 @@ class UF1_Torch(Basic_Problem_Torch):
         ObjV2 = 1 - th.sqrt(ObjV1)
         referenceObjV = th.stack([ObjV1, ObjV2]).T
         return referenceObjV
-    def __str__(self):
-        return  self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 
 
@@ -121,8 +121,6 @@ class UF2_Torch(Basic_Problem_Torch):
         ObjV2 = 1 - th.sqrt(ObjV1)
         referenceObjV = th.stack([ObjV1, ObjV2]).T
         return referenceObjV
-    def __str__(self):
-        return  self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 
 class UF3_Torch(Basic_Problem_Torch):  # 继承Problem的父类
@@ -157,8 +155,6 @@ class UF3_Torch(Basic_Problem_Torch):  # 继承Problem的父类
         ObjV2 = 1 - th.sqrt(ObjV1)
         referenceObjV = th.stack([ObjV1, ObjV2]).T
         return referenceObjV
-    def __str__(self):
-        return  self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 
 class UF4_Torch(Basic_Problem_Torch):
@@ -193,8 +189,6 @@ class UF4_Torch(Basic_Problem_Torch):
         ObjV2 = 1 - ObjV1 ** 2
         referenceObjV = th.stack([ObjV1, ObjV2]).T
         return referenceObjV
-    def __str__(self):
-        return  self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 
 class UF5_Torch(Basic_Problem_Torch):
@@ -229,8 +223,6 @@ class UF5_Torch(Basic_Problem_Torch):
         ObjV2 = 1 - ObjV1
         referenceObjV = th.stack([ObjV1, ObjV2]).T
         return referenceObjV
-    def __str__(self):
-        return  self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 
 class UF6_Torch(Basic_Problem_Torch):  # 继承Problem父类
@@ -274,8 +266,6 @@ class UF6_Torch(Basic_Problem_Torch):  # 继承Problem父类
         ObjV2 = 1 - ObjV1
         referenceObjV = th.stack([ObjV1, ObjV2]).T
         return referenceObjV
-    def __str__(self):
-        return  self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 
 class UF7_Torch(Basic_Problem_Torch):  # 继承Problem父类
@@ -309,8 +299,6 @@ class UF7_Torch(Basic_Problem_Torch):  # 继承Problem父类
         ObjV2 = 1 - ObjV1
         referenceObjV = th.stack([ObjV1, ObjV2]).T
         return referenceObjV
-    def __str__(self):
-        return  self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 
 class UF8_Torch(Basic_Problem_Torch):  # 继承Problem父类
@@ -347,8 +335,6 @@ class UF8_Torch(Basic_Problem_Torch):  # 继承Problem父类
         ObjV = ObjV / th.sqrt(th.sum(ObjV ** 2, 1, keepdims=True))
         referenceObjV = ObjV
         return referenceObjV
-    def __str__(self):
-        return  self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 
 class UF9_Torch(Basic_Problem_Torch):  # 继承Problem父类
@@ -386,8 +372,6 @@ class UF9_Torch(Basic_Problem_Torch):  # 继承Problem父类
         idx = (ObjV[:, 0] > (1 - ObjV[:, 2]) / 4) & (ObjV[:, 0] < (1 - ObjV[:, 2]) * 3 / 4)
         referenceObjV = ObjV[~idx]
         return referenceObjV
-    def __str__(self):
-        return  self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 class UF10_Torch(Basic_Problem_Torch):  # 继承Problem父类
     def __init__(self):
@@ -415,13 +399,11 @@ class UF10_Torch(Basic_Problem_Torch):  # 继承Problem父类
         return ObjV
     def get_ref_set(self,n_ref_points=1000):  # 理论最优值
         N = n_ref_points  # 生成10000个参考点
-        ObjV, N = crtup(self.n_obj, N)  # ObjV.shape=N,3
+        ObjV, N = ea.crtup(self.n_obj, N)  # ObjV.shape=N,3
         ObjV = th.tensor(ObjV)
         ObjV = ObjV / th.sqrt(th.sum(ObjV ** 2, 1, keepdims=True))
         referenceObjV = ObjV
         return referenceObjV
-    def __str__(self):
-        return  self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 if __name__ == '__main__':
     uf1= UF1_Torch()

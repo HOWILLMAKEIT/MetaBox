@@ -1,4 +1,4 @@
-from environment.optimizer.learnable_optimizer import Learnable_Optimizer
+from .learnable_optimizer import Learnable_Optimizer
 import numpy as np
 from typing import Union, Iterable
 

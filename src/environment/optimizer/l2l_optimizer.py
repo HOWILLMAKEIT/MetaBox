@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-from environment.optimizer.learnable_optimizer import Learnable_Optimizer
+from .learnable_optimizer import Learnable_Optimizer
 
 def scale(x,lb,ub):
     x=torch.sigmoid(x)

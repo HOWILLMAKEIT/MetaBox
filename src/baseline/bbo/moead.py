@@ -6,7 +6,7 @@ import sys
 
 from operator import itemgetter
 from scipy.spatial.distance import cdist
-from environment.optimizer.basic_optimizer import Basic_Optimizer
+from ...environment.optimizer.basic_optimizer import Basic_Optimizer
 EPSILON = sys.float_info.epsilon
 
 

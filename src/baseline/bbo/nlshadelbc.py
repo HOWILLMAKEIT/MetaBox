@@ -1,7 +1,7 @@
 import numpy as np
 import copy
 import scipy.stats as stats
-from environment.optimizer.basic_optimizer import Basic_Optimizer
+from ...environment.optimizer.basic_optimizer import Basic_Optimizer
 
 
 def test(x):

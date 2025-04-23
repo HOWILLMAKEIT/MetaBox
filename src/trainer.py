@@ -1,23 +1,20 @@
-"""
-This file is used to train the agent.(for the kind of optimizer that is learnable)
-"""
 import pickle
 import time
 import torch
 from tqdm import tqdm
-from environment.basic_environment import PBO_Env
-from environment.parallelenv import *
-from logger import *
+from .environment.basic_environment import PBO_Env
+from .environment.parallelenv import *
+from .logger import *
 import copy
-from environment.problem.utils import *
+from .environment.problem.utils import *
 import numpy as np
 import os
 import matplotlib
 import matplotlib.pyplot as plt
-from rl.utils import save_class
+from .rl.utils import save_class
 from tensorboardX import SummaryWriter
 
-from environment.optimizer import (
+from .environment.optimizer import (
     DEDDQN_Optimizer,
     DEDQN_Optimizer,
     RLHPSDE_Optimizer,
@@ -42,7 +39,7 @@ from environment.optimizer import (
     L2T_Optimizer
 )
 
-from baseline.bbo import (
+from .baseline.bbo import (
     DE,
     JDE21,
     MADDE,
@@ -57,7 +54,7 @@ from baseline.bbo import (
     MOEAD,
     MFEA
 )
-from baseline.metabbo import (
+from .baseline.metabbo import (
     GLEET,
     DEDDQN,
     DEDQN,
@@ -85,12 +82,17 @@ matplotlib.use('Agg')
 
 
 class Trainer(object):
-    def __init__(self, config):
+    def __init__(self, config, user_agent = None, user_optimizer = None, user_datasets = None):
         self.config = config
 
         if self.config.train_problem in ['bbob-surrogate-10D','bbob-surrogate-5D','bbob-surrogate-2D']:
             self.config.is_train = True
-        self.train_set, self.test_set = construct_problem_set(config)
+
+        if user_datasets is None:
+            self.train_set, self.test_set = construct_problem_set(config)
+        else:
+            self.train_set, self.test_set = user_datasets
+
         self.config.dim = max(self.train_set.maxdim, self.test_set.maxdim)
 
         torch.manual_seed(self.config.seed)
@@ -99,16 +101,21 @@ class Trainer(object):
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
 
-
-            
-        if self.config.resume_dir is None:
-            self.agent = eval(self.config.train_agent)(self.config)
+        if user_agent is None:
+            if self.config.resume_dir is None:
+                self.agent = eval(self.config.train_agent)(self.config)
+            else:
+                file_path = self.config.resume_dir + self.config.train_agent + '.pkl'
+                with open(file_path, 'rb') as f:
+                    self.agent = pickle.load(f)
+                self.agent.update_setting(self.config)
         else:
-            file_path = self.config.resume_dir + self.config.train_agent + '.pkl'
-            with open(file_path, 'rb') as f:
-                self.agent = pickle.load(f)
-            self.agent.update_setting(self.config)
-        self.optimizer = eval(self.config.train_optimizer)(self.config)
+            self.agent = user_agent
+
+        if user_optimizer is None:
+            self.optimizer = eval(self.config.train_optimizer)(self.config)
+        else:
+            self.optimizer = user_optimizer
 
     def save_log(self, epochs, steps, cost, returns, normalizer):
         log_dir = self.config.log_dir + f'/train/{self.agent.__class__.__name__}/{self.config.run_time}/log/'

@@ -1,8 +1,8 @@
 from torch import nn
 from torch.distributions import Normal
 
-from baseline.metabbo.networks import MultiHeadEncoder, MLP, EmbeddingNet
-from rl.ppo import *
+from .networks import MultiHeadEncoder, MLP, EmbeddingNet
+from ...rl.ppo import *
 
 class mySequential(nn.Sequential):
     def forward(self, *inputs):

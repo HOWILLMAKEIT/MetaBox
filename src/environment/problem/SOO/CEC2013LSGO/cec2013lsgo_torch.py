@@ -1,4 +1,4 @@
-from environment.problem.basic_problem import Basic_Problem_Torch
+from ....problem.basic_problem import Basic_Problem_Torch
 import torch
 
 class CEC2013LSGO_Torch_Problem(Basic_Problem_Torch):

@@ -1,5 +1,5 @@
 import math
-from environment.problem.basic_problem import Basic_Problem_Torch
+from ....problem.basic_problem import Basic_Problem_Torch
 import numpy as np
 import torch
 import time

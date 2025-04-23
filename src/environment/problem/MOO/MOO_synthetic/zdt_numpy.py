@@ -1,7 +1,6 @@
 
 import numpy as np
-from environment.problem.basic_problem import Basic_Problem
-import geatpy as ea
+from ....problem.basic_problem import Basic_Problem
 # import pymoo.gradient.toolbox as anp
 # from pymoo.core.problem import Problem
 # from pymoo.util.normalization import normalize
@@ -15,8 +14,6 @@ class ZDT(Basic_Problem):
         self.vtype = float
         self.lb = np.zeros(n_var)
         self.ub = np.ones(n_var)
-    def __str__(self):
-        return  self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 
 

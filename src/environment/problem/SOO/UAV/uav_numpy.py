@@ -29,7 +29,7 @@ Version:
 
 =========================================================
 """
-from environment.problem.basic_problem import Basic_Problem
+from ....problem.basic_problem import Basic_Problem
 import numpy as np
 from scipy.interpolate import RegularGridInterpolator
 import pickle

@@ -1,6 +1,6 @@
 import numpy as np
 import copy
-from environment.optimizer.basic_optimizer import Basic_Optimizer
+from ...environment.optimizer.basic_optimizer import Basic_Optimizer
 
 def SBX(parent1,parent2,n):
     pop_cnt = parent1.shape[0]

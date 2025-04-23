@@ -1,5 +1,5 @@
 
-from environment.problem.basic_problem import Basic_Problem
+from ....problem.basic_problem import Basic_Problem
 import itertools
 import numpy as np
 from scipy.special import comb
@@ -54,6 +54,7 @@ def crtup(n_obj, n_ref_points=1000):
 
     W = W / H
     return W, n_comb
+
 
 class DTLZ(Basic_Problem):
     def __init__(self, n_var, n_obj, k=None, **kwargs):
@@ -151,7 +152,7 @@ class DTLZ3(DTLZ):
         return out
 
     def get_ref_set(self,n_ref_points=1000): # 设定目标数参考值（本问题目标函数参考值设定为理论最优值，即“真实帕累托前沿点”）
-        uniformPoint, ans = ea.crtup(self.n_obj, n_ref_points)
+        uniformPoint, ans = crtup(self.n_obj, n_ref_points)
         referenceObjV = uniformPoint / np.tile(np.sqrt(np.sum(uniformPoint ** 2, 1, keepdims=True)), (1, self.n_obj))
         return referenceObjV
 
@@ -247,7 +248,7 @@ class DTLZ7(DTLZ):
         a = 0.2514118360889171
         b = 0.6316265307000614
         c = 0.8594008566447239
-        Vars, Sizes = ea.crtgp(self.n_obj - 1, N)  # 生成单位超空间内均匀的网格点集
+        Vars, Sizes = crtup(self.n_obj - 1, N)  # 生成单位超空间内均匀的网格点集
         middle = 0.5
         left = Vars <= middle
         right = Vars > middle

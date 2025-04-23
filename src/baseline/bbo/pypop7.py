@@ -12,7 +12,7 @@ from pypop7.optimizers.de import SHADE
 # from pypop7.optimizers.pso import *
 # from pypop7.optimizers.rs import *
 # from pypop7.optimizers.sa import *
-from environment.optimizer.basic_optimizer import Basic_Optimizer
+from ...environment.optimizer.basic_optimizer import Basic_Optimizer
 import numpy as np
 import time
 

@@ -1,7 +1,7 @@
 import math
 from typing import Optional, Union, Literal, List
 
-from environment.parallelenv.parallelenv import ParallelEnv
+from ..environment.parallelenv.parallelenv import ParallelEnv
 from .basic_agent import Basic_Agent
 from .utils import *
 import torch

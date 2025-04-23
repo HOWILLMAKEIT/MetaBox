@@ -1,10 +1,10 @@
 import torch
 from torch import nn
-from rl.basic_agent import Basic_Agent
-from rl.utils import *
+from ...rl.basic_agent import Basic_Agent
+from ...rl.utils import *
 from cmaes import CMA
 import copy
-from environment.parallelenv.parallelenv import ParallelEnv
+from ...environment.parallelenv.parallelenv import ParallelEnv
 import numpy as np
 from dill import loads, dumps
 from typing import Optional, Union, Literal, List

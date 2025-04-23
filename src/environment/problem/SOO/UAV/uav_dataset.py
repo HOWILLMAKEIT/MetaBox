@@ -1,5 +1,4 @@
 from .uav_numpy import Terrain as Terrain_Numpy
-from .uav_torch import Terrain as Terrain_Torch
 from torch.utils.data import Dataset
 from .utils import createmodel
 import numpy as np

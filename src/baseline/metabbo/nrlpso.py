@@ -1,7 +1,7 @@
 from scipy.special import softmax
 from typing import Optional, Union, Literal, List
-from rl.qlearning import *
-from rl.utils import save_class
+from ...rl.qlearning import *
+from ...rl.utils import save_class
 
 
 class NRLPSO(QLearning_Agent):

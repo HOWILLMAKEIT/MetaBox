@@ -1,19 +1,102 @@
 import argparse
 import time
+import os
+import subprocess, sys
 
+def Config(user_config, datasets_dir = None):
+    default_config = get_config()
+    for key, value in user_config.items():
+        if hasattr(default_config, key):
+            setattr(default_config, key, value)
 
+    # 判断是不是 HPO-B 任务
+    is_hpo_b = 'hpo-b' in default_config.train_problem or 'hpo-b' in default_config.test_problem
+
+    if is_hpo_b:
+        print("Detected HPO-B Problem.")
+
+        # 数据集目录默认使用当前工作目录
+        if datasets_dir is None:
+            datasets_dir = os.path.join(os.getcwd(), "metabox_data")
+        os.makedirs(datasets_dir, exist_ok = True)
+
+        # 检查该目录下是否已有对应数据文件
+        data_dir = datasets_dir + "HPO-B-main/hpob-data/"
+        surrogates_dir = datasets_dir + "HPO-B-main/saved-surrogates/"
+        # expected_files = ['hpob-data/meta-train-dataset.json', 'hpob-data/meta-test-dataset.json', 'hpob-data/meta-validation-dataset.json']  # 你可以换成真实文件名
+        # missing_files = [f for f in expected_files if not os.path.exists(os.path.join(datasets_dir, f))]
+        missing_files = not os.path.exists(data_dir) or len(os.listdir(data_dir)) < 7 or not os.path.exists(surrogates_dir) or len(os.listdir(surrogates_dir)) < 1909
+
+        if missing_files:
+            print(f"[Warning] HPO-B dataset files not found")  # Too many files to display
+            print(f"Expected in directory: {datasets_dir}")
+            # 可以在这里加入自动下载逻辑 if you want
+            try:
+                from huggingface_hub import snapshot_download
+            except ImportError:
+                # check the required package, if not exists, pip install it
+                try:
+                    subprocess.check_call([sys.executable, '-m', "pip", "install", 'huggingface_hub'])
+                    # print("huggingface_hub has been installed successfully!")
+                    from huggingface_hub import snapshot_download
+                except subprocess.CalledProcessError as e:
+                    print(f"Install huggingface_hub leads to errors: {e}")
+
+            snapshot_download(repo_id = 'GMC-DRL/MetaBox-HPO-B', repo_type = "dataset", local_dir = datasets_dir)
+            print("Extract data...")
+            os.system(f'tar -xf {datasets_dir}/HPO-B-main.tar.gz -C {datasets_dir}')
+            os.remove(f'rm {datasets_dir}/HPO-B-main.tar.gz')
+            os.remove(f'rm {datasets_dir}/.gitattributes')
+        else:
+            print(f"HPO-B dataset is ready in: {datasets_dir}/HPO-B-main")
+        default_config.hpob_path = datasets_dir
+
+    # 判断是不是 uav 任务
+    is_uav = 'uav' in default_config.train_problem or 'uav' in default_config.test_problem
+    if is_uav:
+        print("Detected UAV Problem.")
+
+        # 数据集目录默认使用当前工作目录
+        if datasets_dir is None:
+            datasets_dir = os.path.join(os.getcwd(), "metabox_data", "uav")
+        os.makedirs(datasets_dir, exist_ok = True)
+
+        # 检查该目录下是否已有对应数据文件
+        expected_files = ['Model56.pkl']  # 你可以换成真实文件名
+        missing_files = [f for f in expected_files if not os.path.exists(os.path.join(datasets_dir, f))]
+
+        if missing_files:
+            print(f"[Warning] UAV dataset files not found: {missing_files}")
+            print(f"Expected in directory: {datasets_dir}")
+            # 可以在这里加入自动下载逻辑 if you want
+            try:
+                from huggingface_hub import snapshot_download
+            except ImportError:
+                # check the required package, if not exists, pip install it
+                try:
+                    subprocess.check_call([sys.executable, '-m', "pip", "install", 'huggingface_hub'])
+                    # print("huggingface_hub has been installed successfully!")
+                    from huggingface_hub import snapshot_download
+                except subprocess.CalledProcessError as e:
+                    print(f"Install huggingface_hub leads to errors: {e}")
+            snapshot_download(repo_id = 'GMC-DRL/MetaBox-uav', repo_type = "dataset", local_dir = datasets_dir)
+        else:
+            print(f"UAV dataset is ready in: {datasets_dir}")
+        default_config.uav_path = datasets_dir + '/Model56.pkl'
+
+    return default_config
 def get_config(args=None):
     parser = argparse.ArgumentParser()
     # Common config
     parser.add_argument('--train_problem', default = 'bbob-10D', choices = ['bbob-10D', 'bbob-30D', 'bbob-torch-10D', 'bbob-torch-30D', 'bbob-noisy-10D',
                                                                         'bbob-noisy-30D', 'bbob-noisy-torch-10D', 'bbob-noisy-torch-30D', 'bbob-surrogate-2D','bbob-surrogate-5D','bbob-surrogate-10D',
-                                                                         'hpo-b', 'lsgo', 'lsgo-torch', 'protein', 'protein-torch', 'uav', 'uav-torch',
+                                                                         'hpo-b', 'lsgo', 'lsgo-torch', 'protein', 'protein-torch', 'uav',
                                                                                 'mmo', 'mmo-torch', 'wcci2020', 'cec2017mto', 'moo-synthetic', 'moo-uav'],
                         help='specify the problem suite for training')
-    parser.add_argument('--test_problem', default = None, choices = [None, 'bbob-10D', 'bbob-30D', 'bbob-torch-10D', 'bbob-torch-30D', 'bbob-noisy-10D', 
-                                                                        'bbob-noisy-30D', 'bbob-noisy-torch-10D', 'bbob-noisy-torch-30D', 'bbob-surrogate-2D','bbob-surrogate-5D','bbob-surrogate-10D', 'hpo-b',
-                                                                                'lsgo', 'lsgo-torch', 'protein', 'protein-torch', 'uav', 'uav-torch', 'ne', 
-                                                                                'mmo', 'mmo-torch', 'wcci2020', 'cec2017mto', 'moo-synthetic'],
+    parser.add_argument('--test_problem', default = None, choices = [None, 'bbob-10D', 'bbob-30D', 'bbob-torch-10D', 'bbob-torch-30D', 'bbob-noisy-10D',
+                                                                        'bbob-noisy-30D', 'bbob-noisy-torch-10D', 'bbob-noisy-torch-30D', 'bbob-surrogate-2D','bbob-surrogate-5D','bbob-surrogate-10D',
+                                                                         'hpo-b', 'lsgo', 'lsgo-torch', 'protein', 'protein-torch', 'uav',
+                                                                                'mmo', 'mmo-torch', 'wcci2020', 'cec2017mto', 'moo-synthetic', 'moo-uav'],
                         help='specify the problem suite for testing, default to be consistent with training')
     parser.add_argument('--train_difficulty', default='easy', choices=['all', 'easy', 'difficult', 'user-define'], help='difficulty level for training problems')
     parser.add_argument('--test_difficulty', default=None, choices=['all', 'easy', 'difficult', 'user-define'], help='difficulty level for testing problems, default to be consistent with training')
@@ -151,6 +234,6 @@ def get_config(args=None):
     # if 'Random_search' not in config.t_optimizer:
     #     config.t_optimizer.append('Random_search') # todo
     
-    if 'MFEA' not in config.t_optimizer:
-        config.t_optimizer.append('MFEA')
+    # if 'MFEA' not in config.t_optimizer:
+    #     config.t_optimizer.append('MFEA')
     return config

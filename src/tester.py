@@ -1,5 +1,5 @@
 import copy
-from environment.problem.utils import construct_problem_set
+from .environment.problem.utils import construct_problem_set
 import numpy as np
 import pickle
 import matplotlib.pyplot as plt
@@ -7,19 +7,18 @@ from scipy.signal import savgol_filter
 import time
 from tqdm import tqdm
 import os, psutil
-from environment.basic_environment import PBO_Env
-from logger import *
-from environment.parallelenv.parallelenv import ParallelEnv
+from .environment.basic_environment import PBO_Env
+from .logger import *
+from .environment.parallelenv.parallelenv import ParallelEnv
 import json
 import torch
 import gym
 from typing import Optional, Union, Literal, List
-from environment.optimizer.basic_optimizer import Basic_Optimizer
-from rl import Basic_Agent
-from environment.problem.basic_problem import Basic_Problem
+from .environment.optimizer.basic_optimizer import Basic_Optimizer
+from .rl import Basic_Agent
+from .environment.problem.basic_problem import Basic_Problem
 from dill import dumps, loads
-from baseline.bbo.mfea import MFEA
-from environment.optimizer import (
+from .environment.optimizer import (
     DEDDQN_Optimizer,
     DEDQN_Optimizer,
     RLHPSDE_Optimizer,
@@ -45,7 +44,7 @@ from environment.optimizer import (
     LGA_Optimizer
 )
 
-from baseline.bbo import (
+from .baseline.bbo import (
     DE,
     JDE21,
     MADDE,
@@ -61,7 +60,7 @@ from baseline.bbo import (
     MFEA
 )
 
-from baseline.metabbo import (
+from .baseline.metabbo import (
     GLEET,
     DEDDQN,
     DEDQN,
@@ -227,30 +226,25 @@ class MetaBBO_TestUnit():
         res['problem_name'] = self.env.problem.__str__()
         return res
 
-
 class Tester(object):
-    def __init__(self, config):
+    def __init__(self, config, user_agents = None, user_optimizers = None, user_datasets = None):
         self.key_list = config.agent
         self.log_dir = config.test_log_dir
         if not os.path.exists(self.log_dir):
             os.makedirs(self.log_dir)
         self.config = config
-
         # if self.config.test_problem[-6:]=='-torch':
         #     self.config.test_problem=self.config.test_problem[:-6]
 
-        if config.test_problem in ['bbob-surrogate-10D','bbob-surrogate-5D','bbob-surrogate-2D']:
+        if config.test_problem in ['bbob-surrogate-10D', 'bbob-surrogate-5D', 'bbob-surrogate-2D']:
             config.is_train = False
 
-        self.train_set, self.test_set = construct_problem_set(self.config)
+        if user_datasets is None:
+            self.train_set, self.test_set = construct_problem_set(self.config)
+        else:
+            self.train_set, self.test_set = user_datasets(config)
         self.config.dim = max(self.train_set.maxdim, self.test_set.maxdim)
-        # if 'L2L_Agent' in config.agent_for_cp or 'L2L_Agent' == config.agent:
-        #     pre_problem=config.problem
-        #     config.problem=pre_problem+'-torch'
-        #     _,self.torch_test_set = construct_problem_set(config)
-        #     config.problem=pre_problem
-        
-        self.seed = range(51)
+
         # initialize the dataframe for logging
         self.test_results = {'cost': {},
                              'fes': {},
@@ -258,8 +252,8 @@ class Tester(object):
                              'T2': {},
                              }
         self.meta_data_results = {}
-        if not os.path.exists(self.log_dir+'/metadata/'):
-            os.makedirs(self.log_dir+'/metadata/')
+        if not os.path.exists(self.log_dir + '/metadata/'):
+            os.makedirs(self.log_dir + '/metadata/')
         with open(self.log_dir + f'/metadata/config.pkl', 'wb') as f:
             pickle.dump(self.config, f, -1)
         # prepare experimental optimizers and agents
@@ -268,27 +262,48 @@ class Tester(object):
         self.l_optimizer_for_cp = []
         self.t_optimizer_for_cp = []
 
-        with open('model.json', 'r', encoding = 'utf-8') as f:
-            json_data = json.load(f)
-        for key in self.key_list:
-            if key not in json_data.keys():
-                raise KeyError(f"Missing key '{key}' in model.json")
+        # 先append 用户的
+        id = 0
+        for agent in user_agents:
+            self.agent_for_cp.append(copy.deepcopy(agent))
+            self.l_optimizer_for_cp.append(copy.deepcopy(agent.optimizer))
+            self.agent_name_list.append(f"{id}_{agent.__str__()}")
+            id += 1
 
-            # get key
-            baseline = json_data[key]
-            if "Agent" in baseline.keys():
-                agent_name = baseline["Agent"]
-                l_optimizer = baseline['Optimizer']
-                dir = baseline['dir']
-                # get agent
-                self.agent_name_list.append(key)
-                with open(dir, 'rb') as f:
-                    self.agent_for_cp.append(pickle.load(f))
-                self.l_optimizer_for_cp.append(eval(l_optimizer)(copy.deepcopy(config)))
+        for opt in user_optimizers:
+            self.t_optimizer_for_cp.append(copy.deepcopy(opt))
 
-            else:
-                t_optimizer = baseline['Optimizer']
-                self.t_optimizer_for_cp.append(eval(t_optimizer)(copy.deepcopy(config)))
+
+
+        # 再append 我们的
+        # for baseline in self.config.baselines:
+        #     self.agent_name_list.append(f"{id}_{baseline}")
+        #
+        #     # todo 这里得补个hugging face上来
+        #
+        #     id += 1
+
+        # with open('model.json', 'r', encoding = 'utf-8') as f:
+        #     json_data = json.load(f)
+        # for key in self.key_list:
+        #     if key not in json_data.keys():
+        #         raise KeyError(f"Missing key '{key}' in model.json")
+        #
+        #     # get key
+        #     baseline = json_data[key]
+        #     if "Agent" in baseline.keys():
+        #         agent_name = baseline["Agent"]
+        #         l_optimizer = baseline['Optimizer']
+        #         dir = baseline['dir']
+        #         # get agent
+        #         self.agent_name_list.append(key)
+        #         with open(dir, 'rb') as f:
+        #             self.agent_for_cp.append(pickle.load(f))
+        #         self.l_optimizer_for_cp.append(eval(l_optimizer)(copy.deepcopy(config)))
+        #
+        #     else:
+        #         t_optimizer = baseline['Optimizer']
+        #         self.t_optimizer_for_cp.append(eval(t_optimizer)(copy.deepcopy(config)))
 
         for optimizer in config.t_optimizer:
             self.t_optimizer_for_cp.append(eval(optimizer)(copy.deepcopy(config)))
@@ -573,7 +588,7 @@ class Tester(object):
         else:
             raise ValueError(problem + ' is not defined!')
 
-    def mgd_test(self, ):
+    def mgd_test(self, user_from, user_to, user_opt):
         config = self.config
         print(f'start MGD_test: {config.run_time}')
         # get test set
@@ -583,21 +598,24 @@ class Tester(object):
 
         _, test_set = construct_problem_set(config)
         # get agents
-        with open('model.json', 'r', encoding = 'utf-8') as f:
-            json_data = json.load(f)
-        baseline = json_data[config.model_from]
-        agent_name = baseline["Agent"]
-        l_optimizer = baseline['Optimizer']
-        dir_from = baseline['dir']
-        dir_to = json_data[config.model_to]['dir']
-        # get agent
-        with open(dir_from, 'rb') as f:
-            agent_from = pickle.load(f)
-        with open(dir_to, 'rb') as f:
-            agent_to = pickle.load(f)
-        
-        # get optimizer
-        l_optimizer = eval(l_optimizer)(copy.deepcopy(config))
+        # with open('model.json', 'r', encoding = 'utf-8') as f:
+        #     json_data = json.load(f)
+        # baseline = json_data[config.model_from]
+        # agent_name = baseline["Agent"]
+        # l_optimizer = baseline['Optimizer']
+        # dir_from = baseline['dir']
+        # dir_to = json_data[config.model_to]['dir']
+        # # get agent
+        # with open(dir_from, 'rb') as f:
+        #     agent_from = pickle.load(f)
+        # with open(dir_to, 'rb') as f:
+        #     agent_to = pickle.load(f)
+
+        agent_name = user_from.__str__()
+        agent_from = user_from
+        agent_to = user_to
+        l_optimizer = copy.deepcopy(user_opt)
+
         # initialize the dataframe for logging
         self.test_results = {'cost': {},
                              'fes': {},
@@ -692,69 +710,75 @@ class Tester(object):
                 self.meta_data_results = store_meta_data(self.log_dir, self.meta_data_results)
             pbar.close()
 
+        elif parallel_batch == 'Serial':
+            pbar_len = 2 * test_set.N * self.config.test_run
+            pbar = tqdm(total = pbar_len, desc = "Serial Testing")
+            for ip, problem in enumerate(test_set.data):
+                for i, seed in enumerate(seed_list):
+                    pbar.set_description_str(f"Batch Testing From Agent {agent_from.__str__()} with Problem Batch {ip}, Run {i}")
+                    env = PBO_Env(copy.deepcopy(problem), copy.deepcopy(l_optimizer))
+
+                    torch.manual_seed(seed)
+                    torch.cuda.manual_seed(seed)
+                    np.random.seed(seed)
+                    torch.backends.cudnn.deterministic = True
+                    torch.backends.cudnn.benchmark = False
+
+                    torch.set_default_dtype(torch.float64)
+                    tmp_agent = copy.deepcopy(agent_from)
+
+                    start_time = time.perf_counter()
+                    res = tmp_agent.rollout_episode(env, seed, {})
+                    end_time = time.perf_counter()
+                    res['T1'] = env.problem.T1
+                    res['T2'] = (end_time - start_time) * 1000
+                    agent_name = tmp_agent.__str__() + "_From"
+                    res['agent_name'] = agent_name
+                    res['problem_name'] = problem.__str__()
+                    meta_test_data = [res]
+                    self.record_test_data(meta_test_data)
+                    pbar.update()
+                self.meta_data_results = store_meta_data(self.log_dir, self.meta_data_results)
+            for ip, problem in enumerate(test_set.data):
+                for i, seed in enumerate(seed_list):
+                    pbar.set_description_str(f"Batch Testing TO Agent {agent_to.__str__()} with Problem Batch {ip}, Run {i}")
+                    env = PBO_Env(copy.deepcopy(problem), copy.deepcopy(l_optimizer))
+
+                    torch.manual_seed(seed)
+                    torch.cuda.manual_seed(seed)
+                    np.random.seed(seed)
+                    torch.backends.cudnn.deterministic = True
+                    torch.backends.cudnn.benchmark = False
+
+                    torch.set_default_dtype(torch.float64)
+                    tmp_agent = copy.deepcopy(agent_to)
+
+                    start_time = time.perf_counter()
+                    res = tmp_agent.rollout_episode(env, seed, {})
+                    end_time = time.perf_counter()
+                    res['T1'] = env.problem.T1
+                    res['T2'] = (end_time - start_time) * 1000
+                    agent_name = tmp_agent.__str__() + "_To"
+                    res['agent_name'] = agent_name
+                    res['problem_name'] = problem.__str__()
+                    meta_test_data = [res]
+                    self.record_test_data(meta_test_data)
+                    pbar.update()
+                self.meta_data_results = store_meta_data(self.log_dir, self.meta_data_results)
+
         with open(config.mgd_test_log_dir + 'test_results.pkl', 'wb') as f:
             pickle.dump(self.test_results, f, -1)
 
-        # pbar_len = len(agent_name_list) * len(test_set) * 51
-        # with tqdm(range(pbar_len), desc='MGD_Test') as pbar:
-        #     for i, problem in enumerate(test_set):
-        #         # run model_from and model_to
-        #         for agent_id, agent in enumerate([agent_from, agent_to]):
-        #             T1 = 0
-        #             T2 = 0
-        #             for run in range(51):
-        #                 start = time.perf_counter()
-        #                 np.random.seed(seed[run])
-        #                 # construct an ENV for (problem,optimizer)
-        #                 env = PBO_Env(problem, l_optimizer)
-        #                 info = agent.rollout_episode(env)
-        #                 cost = info['cost']
-        #                 while len(cost) < 51:
-        #                     cost.append(cost[-1])
-        #                 fes = info['fes']
-        #                 end = time.perf_counter()
-        #                 if i == 0:
-        #                     T1 += env.problem.T1
-        #                     T2 += (end - start) * 1000  # ms
-        #                 test_results['cost'][problem.__str__()][agent_name_list[agent_id]].append(cost)
-        #                 test_results['fes'][problem.__str__()][agent_name_list[agent_id]].append(fes)
-        #                 pbar_info = {'problem': problem.__str__(),
-        #                             'optimizer': agent_name_list[agent_id],
-        #                             'run': run,
-        #                             'cost': cost[-1],
-        #                             'fes': fes}
-        #                 pbar.set_postfix(pbar_info)
-        #                 pbar.update(1)
-        #             if i == 0:
-        #                 test_results['T1'][agent_name_list[agent_id]] = T1 / 51
-        #                 test_results['T2'][agent_name_list[agent_id]] = T2 / 51
-        # if not os.path.exists(config.mgd_test_log_dir):
-        #     os.makedirs(config.mgd_test_log_dir)
-        # with open(config.mgd_test_log_dir + 'test.pkl', 'wb') as f:
-        #     pickle.dump(test_results, f, -1)
-        # random_search_results = test_for_random_search(config)
-        # with open(config.mgd_test_log_dir + 'random_search_baseline.pkl', 'wb') as f:
-        #     pickle.dump(random_search_results, f, -1)
-        # logger = Logger(config)
-        # aei, aei_std = logger.aei_metric(test_results, random_search_results, config.maxFEs)
-        # print(f'AEI: {aei}')
-        # print(f'AEI STD: {aei_std}')
-        # print(f'MGD({name_translate(config.problem_from)}_{config.difficulty_from}, {name_translate(config.problem_to)}_{config.difficulty_to}) of {config.agent}: '
-        #     f'{100 * (1 - aei[config.agent+"_from"] / aei[config.agent+"_to"])}%')
-
-
-    def mte_test(self, ):
+    def mte_test(self, pre_train_file, scratch_file, agent):
         config = self.config
         print(f'start MTE_test: {config.run_time}')
-        with open('model.json', 'r', encoding = 'utf-8') as f:
-            json_data = json.load(f)
-        pre_train = json_data[config.pre_train_rollout]
-        scratch_rollout = json_data[config.scratch_rollout]
-
-        pre_train_file = pre_train['dir']
-        scratch_file = scratch_rollout['dir']
-
-        agent = pre_train['Agent']
+        # with open('model.json', 'r', encoding = 'utf-8') as f:
+        #     json_data = json.load(f)
+        # pre_train = json_data[config.pre_train_rollout]
+        # scratch_rollout = json_data[config.scratch_rollout]
+        #
+        # pre_train_file = pre_train['dir']
+        # scratch_file = scratch_rollout['dir']
 
         min_max = False
 
@@ -862,7 +886,7 @@ class Tester(object):
         plt.savefig(f'{config.mte_test_log_dir}/MTE_{agent}.png', bbox_inches='tight')
 
 
-def rollout_batch(config):
+def rollout_batch(config, rollout_dir, rollout_opt):
     print(f'start rollout: {config.run_time}')
     num_gpus = 0 if config.device == 'cpu' else 1
     if config.test_problem in ['bbob-surrogate-10D','bbob-surrogate-5D','bbob-surrogate-2D']:
@@ -871,21 +895,19 @@ def rollout_batch(config):
 
     config.dim = max(train_set.maxdim, test_set.maxdim)
 
-    agent_for_rollout=config.agent_for_rollout
     parallel_batch = config.parallel_batch
 
     agents=[]
     optimizer_for_rollout = []
-    with open('model.json', 'r', encoding = 'utf-8') as f:
-        json_data = json.load(f)
-    if agent_for_rollout not in json_data.keys():
-        raise KeyError(f"Missing key '{agent_for_rollout}' in model.json")
-
-    # get key
-    baseline = json_data[agent_for_rollout]
-    agent_name = baseline["Agent"]
-    l_optimizer = baseline['Optimizer']
-    upper_dir = baseline['dir']
+    # with open('model.json', 'r', encoding = 'utf-8') as f:
+    #     json_data = json.load(f)
+    # if agent_for_rollout not in json_data.keys():
+    #     raise KeyError(f"Missing key '{agent_for_rollout}' in model.json")
+    #
+    # # get key
+    # baseline = json_data[agent_for_rollout]
+    l_optimizer = copy.deepcopy(rollout_opt)
+    upper_dir = rollout_dir
     if not os.path.isdir(upper_dir):  # path to .pkl files
         upper_dir = os.path.join(*tuple(str.split(upper_dir, '/')[:-1]))
 
@@ -893,19 +915,23 @@ def rollout_batch(config):
     if checkpoints is None:
         epoch_list = [f for f in os.listdir(upper_dir) if f.endswith('.pkl')]
         checkpoints = np.arange(len(epoch_list))
-    n_checkpoint=len(checkpoints)
+    n_checkpoint = len(checkpoints)
 
     # get agent
     # learning_step
     steps = []
+    agent_name = None
     for agent_id in checkpoints:
         with open(os.path.join(upper_dir, f'checkpoint-{agent_id}.pkl'), 'rb') as f:
             agent = pickle.load(f)
+            agent_name = agent.__str__()
             steps.append(agent.get_step())
             if agent_id:
                 steps[-1] += 400
             agents.append(agent)
             optimizer_for_rollout.append(eval(l_optimizer)(copy.deepcopy(config)))
+
+    agent_for_rollout = agent_name
 
     rollout_results = {'cost': {},
                         'return':{},

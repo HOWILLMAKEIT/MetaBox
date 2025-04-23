@@ -1,8 +1,8 @@
 from torch.distributions import Categorical
 
 from .networks import *
-from rl.ppo import *
-from rl.utils import *
+from ...rl.ppo import *
+from ...rl.utils import *
 
 
 class Actor(nn.Module):

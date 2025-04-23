@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 from scipy.optimize import minimize
-from environment.optimizer.basic_optimizer import Basic_Optimizer
+from ...environment.optimizer.basic_optimizer import Basic_Optimizer
 
 
 class SDMSPSO(Basic_Optimizer):

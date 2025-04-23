@@ -1,6 +1,6 @@
 import numpy as np
 
-from environment.optimizer.learnable_optimizer import Learnable_Optimizer
+from .learnable_optimizer import Learnable_Optimizer
 
 crossover_operators = ["CR1", "CR2", "CR3"]
 mutation_operators = ['DE1', 'DE2', 'DE3', 'DE4', 'DE5', 'DE6', 'DE7', 'DE8', 'DE9', 'DE10', 'DE11', 'DE12', 'DE13', 'DE14']

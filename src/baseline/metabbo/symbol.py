@@ -1,5 +1,5 @@
-from rl.ppo import *
-from baseline.metabbo.networks import MLP
+from ...rl.ppo import *
+from .networks import MLP
 from torch import nn
 import numpy as np
 from typing import List

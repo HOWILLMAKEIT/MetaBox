@@ -7,7 +7,7 @@ import torch.nn as nn
 from evox.problems.neuroevolution.brax import BraxProblem
 from evox.utils import ParamsAndVector
 
-from environment.problem.basic_problem import Basic_Problem
+from ....problem.basic_problem import Basic_Problem
 
 
 class MLP(nn.Module):
