@@ -16,16 +16,17 @@ Config
 
 ### MetaBBO
 
-#### 1. Create your own RL
+#### 1. Create your own Agent
 
-     from metabox.rl.basic_agent
+     from metabox.rl import basic_agent
 
      class MyRL(basic_agent)
        pass
 
-#### 1. Create your own Agent
+     class MyAgent(MyRL)
+       pass
 
-> [!TIP]
+> [!IMPORTANT]
 > MetaBOX has pre-implemented various RL methods — refer to **Gallery > Config** for details. \
 > You just need to inherit it and design your own Agent！
 
@@ -40,8 +41,6 @@ Config
      
      class MyOptimizer(xxx):
        pass
-
-    
 
 ## 2. Implement your own dataset in Metabox
 
