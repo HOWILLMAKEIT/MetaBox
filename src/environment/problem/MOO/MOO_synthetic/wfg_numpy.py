@@ -1,13 +1,57 @@
 import numpy as np
-import geatpy as ea
-
-
-# from pymoo.problems.many import generic_sphere, get_ref_dirs
-# from pymoo.util.function_loader import load_function
-# from pymoo.util.misc import powerset
-
 from environment.problem.basic_problem import Basic_Problem
+import itertools
+import numpy as np
+from scipy.special import comb
+def crtup(n_obj,n_ref_points=1000):
+    def find_H_for_closest_points(N, M):
+        """
+        根据目标点数 N 和维数 M，找到最接近的 H，使得生成的点数不超过 N。
+        """
+        # 设定初始搜索范围
+        H_min, H_max = 1, 100000  # 假设 H 的范围在 1 到 100 之间，具体可根据实际情况调整
+        closest_H = H_min
+        closest_diff = float('inf')
+        closest_N = 0
+        # 搜索最接近 N 的 H
+        for H in range(H_min, H_max + 1):
+            generated_points = int(comb(H + M - 1, M - 1))  # 计算生成的点数
+            
+            # 如果生成的点数超过目标 N，跳过此 H
+            if generated_points > N:
+                break
+            
+            diff = abs(generated_points - N)  # 计算与目标 N 的差异
+            
+            # 如果当前差异更小，则更新最接近的 H 和差异
+            if diff < closest_diff:
+                closest_H = H
+                closest_diff = diff
+                closest_N = generated_points
+        
+        return closest_H, closest_N
+    M = n_obj
+    H, closest_N= find_H_for_closest_points(n_ref_points, M)
+    n_comb = int(comb(H + M - 1, M - 1))
+    combinations = list(itertools.combinations(range(1, H + M), M-1))
+    temp = np.array([np.arange(0, M-1)] * n_comb)
+    if len(combinations) == len(temp):
+        result = []
+        for combination, arr in zip(combinations, temp):
+            # 元组元素与数组元素相减
+            sub_result = np.array(combination) -arr - 1
+            result.append(sub_result)
+    else:
+        print("两个列表长度不一致，无法相减。")
+    result = np.array(result)
+    W = np.zeros((n_comb, M))
+    W[:, 0] = result[:, 0] - 0  # 第一列直接是 Temp 的第一列
+    for i in range(1, M-1):
+        W[:, i] = result[:, i] - result[:, i-1]  # 后续列是 Temp 当前列减去前一列
+    W[:, -1] = H - result[:, -1]  # 最后一列是 H - Temp 最后一列
 
+    W = W / H
+    return W,n_comb
 
 class WFG(Basic_Problem):
 
@@ -114,7 +158,7 @@ class WFG1(WFG):
 
     def get_ref_set(self,n_ref_points=1000):  # 设定目标数参考值（本问题目标函数参考值设定为理论最优值，即“真实帕累托前沿点”）
         N = n_ref_points  # 设置所要生成的全局最优解的个数
-        Point, num = ea.crtup(self.n_obj, N)  # 生成N个在各目标的单位维度上均匀分布的参考点
+        Point, num = crtup(self.n_obj, N)  # 生成N个在各目标的单位维度上均匀分布的参考点
         M = self.n_obj
         c = np.ones((num, M))
         for i in range(num):
@@ -184,7 +228,7 @@ class WFG2(WFG):
 
     def get_ref_set(self,n_ref_points=1000):
         N = n_ref_points  # 设置所要生成的全局最优解的个数
-        Point, num = ea.crtup(self.n_obj, N)  # 生成N个在各目标的单位维度上均匀分布的参考点
+        Point, num = crtup(self.n_obj, N)  # 生成N个在各目标的单位维度上均匀分布的参考点
         M = self.n_obj
         c = np.ones((num, M))
         for i in range(num):
@@ -263,7 +307,7 @@ class WFG4(WFG):
 
     def get_ref_set(self,n_ref_points=1000):
         N = n_ref_points  # 设置所要生成的全局最优解的个数
-        Point, num = ea.crtup(self.n_obj, N)  # 生成N个在各目标的单位维度上均匀分布的参考点
+        Point, num = crtup(self.n_obj, N)  # 生成N个在各目标的单位维度上均匀分布的参考点
         Point = Point / np.tile(np.sqrt(np.array([np.sum(Point ** 2, 1)]).T), (1, self.n_obj))
         referenceObjV = np.tile(np.array([list(range(2, 2 * self.n_obj + 1, 2))]), (Point.shape[0], 1)) * Point
         return referenceObjV
@@ -293,7 +337,7 @@ class WFG5(WFG):
 
     def get_ref_set(self,n_ref_points=1000):
         N = n_ref_points  # 设置所要生成的全局最优解的个数
-        Point, num = ea.crtup(self.n_obj, N)  # 生成N个在各目标的单位维度上均匀分布的参考点
+        Point, num = crtup(self.n_obj, N)  # 生成N个在各目标的单位维度上均匀分布的参考点
         Point = Point / np.tile(np.sqrt(np.array([np.sum(Point ** 2, 1)]).T), (1, self.n_obj))
         referenceObjV = np.tile(np.array([list(range(2, 2 * self.n_obj + 1, 2))]), (Point.shape[0], 1)) * Point
         return referenceObjV
@@ -326,7 +370,7 @@ class WFG6(WFG):
 
     def get_ref_set(self,n_ref_points=1000):
         N = n_ref_points  # 设置所要生成的全局最优解的个数
-        Point, num = ea.crtup(self.n_obj, N)  # 生成N个在各目标的单位维度上均匀分布的参考点
+        Point, num = crtup(self.n_obj, N)  # 生成N个在各目标的单位维度上均匀分布的参考点
         Point = Point / np.tile(np.sqrt(np.array([np.sum(Point ** 2, 1)]).T), (1, self.n_obj))
         referenceObjV = np.tile(np.array([list(range(2, 2 * self.n_obj + 1, 2))]), (Point.shape[0], 1)) * Point
         return referenceObjV
@@ -356,7 +400,7 @@ class WFG7(WFG):
 
     def get_ref_set(self,n_ref_points=1000):
         N = n_ref_points  # 设置所要生成的全局最优解的个数
-        Point, num = ea.crtup(self.n_obj, N)  # 生成N个在各目标的单位维度上均匀分布的参考点
+        Point, num = crtup(self.n_obj, N)  # 生成N个在各目标的单位维度上均匀分布的参考点
         Point = Point / np.tile(np.sqrt(np.array([np.sum(Point ** 2, 1)]).T), (1, self.n_obj))
         referenceObjV = np.tile(np.array([list(range(2, 2 * self.n_obj + 1, 2))]), (Point.shape[0], 1)) * Point
         return referenceObjV
@@ -398,7 +442,7 @@ class WFG8(WFG):
 
     def get_ref_set(self,n_ref_points=1000):
         N = n_ref_points  # 设置所要生成的全局最优解的个数
-        Point, num = ea.crtup(self.n_obj, N)  # 生成N个在各目标的单位维度上均匀分布的参考点
+        Point, num = crtup(self.n_obj, N)  # 生成N个在各目标的单位维度上均匀分布的参考点
         Point = Point / np.tile(np.sqrt(np.array([np.sum(Point ** 2, 1)]).T), (1, self.n_obj))
         referenceObjV = np.tile(np.array([list(range(2, 2 * self.n_obj + 1, 2))]), (Point.shape[0], 1)) * Point
         return referenceObjV
@@ -454,7 +498,7 @@ class WFG9(WFG):
 
     def get_ref_set(self,n_ref_points=1000):
         N = n_ref_points  # 设置所要生成的全局最优解的个数
-        Point, num = ea.crtup(self.n_obj, N)  # 生成N个在各目标的单位维度上均匀分布的参考点
+        Point, num = crtup(self.n_obj, N)  # 生成N个在各目标的单位维度上均匀分布的参考点
         Point = Point / np.tile(np.sqrt(np.array([np.sum(Point ** 2, 1)]).T), (1, self.n_obj))
         referenceObjV = np.tile(np.array([list(range(2, 2 * self.n_obj + 1, 2))]), (Point.shape[0], 1)) * Point
         return referenceObjV
