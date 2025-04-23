@@ -33,21 +33,26 @@ class CMAES(Basic_Optimizer):
         if self.full_meta_data:
             self.meta_Cost = []
             self.meta_X = []
-            
         def problem_eval(x):
             if problem.optimum is None:
                 fitness = problem.eval(x)
             else:
                 fitness = problem.eval(x) - problem.optimum
-            if self.full_meta_data:
-                self.meta_Cost.append(fitness)
-                self.meta_X.append(x)
             return fitness,   # return a tuple
 
         self.__toolbox.register("evaluate", problem_eval)
         strategy = cma.Strategy(centroid=[problem.ub] * problem.dim, sigma=0.5, lambda_=self.__config.NP)
         self.__toolbox.register("generate", strategy.generate, creator.Individual)
         self.__toolbox.register("update", strategy.update)
+
+        initial_population = self.__toolbox.generate()
+        initial_fitnesses = self.__toolbox.map(self.__toolbox.evaluate, initial_population)
+        for ind, fit in zip(initial_population, initial_fitnesses):
+            ind.fitness.values = fit
+        if self.full_meta_data:
+            self.meta_X.append(np.array([ind.copy() for ind in initial_population]))  # (NP, dim)
+            self.meta_Cost.append(
+                np.array([ind.fitness.values[0] for ind in initial_population]))  # (NP, )
 
         hof = tools.HallOfFame(1)
         stats = tools.Statistics(lambda ind: ind.fitness.values)
@@ -59,8 +64,12 @@ class CMAES(Basic_Optimizer):
         log_index = 0
         cost = []
         while True:
-            _, logbook = self.__algorithm.eaGenerateUpdate(self.__toolbox, ngen=1, stats=stats, halloffame=hof, verbose=False)
+            pop, logbook = self.__algorithm.eaGenerateUpdate(self.__toolbox, ngen=1, stats=stats, halloffame=hof, verbose=False)
             fes += len(logbook) * self.__config.NP
+            if self.full_meta_data:
+                self.meta_X.append(np.array([ind.copy() for ind in pop]))
+                self.meta_Cost.append(np.array([ind.fitness.values[0] for ind in pop]))
+
             while fes >= log_index * self.log_interval:
                 log_index += 1
                 cost.append(hof[0].fitness.values[0])

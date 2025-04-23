@@ -93,13 +93,8 @@ class PSO(Basic_Optimizer):
                 best.fitness.values = part.fitness.values
         
         if self.full_meta_data:
-            gen_meta_cost = []
-            gen_meta_X = []
-            for i in range(len(pop)):
-                gen_meta_cost.append(pop[i].fitness.values[0])
-                gen_meta_X.append(pop[i])
-            self.meta_Cost.append(gen_meta_cost)
-            self.meta_X.append(gen_meta_X)
+            self.meta_X.append(np.array([ind.copy() for ind in pop]))
+            self.meta_Cost.append(np.array([ind.fitness.values[0] for ind in pop]))
         
         
         fes = self.__config.population_size
@@ -136,13 +131,8 @@ class PSO(Basic_Optimizer):
                             cost.append(best.fitness.values[0])
                     break
             if self.full_meta_data:
-                gen_meta_cost = []
-                gen_meta_X = []
-                for i in range(len(pop)):
-                    gen_meta_cost.append(pop[i].fitness.values[0])
-                    gen_meta_X.append(pop[i])
-                self.meta_Cost.append(gen_meta_cost)
-                self.meta_X.append(gen_meta_X)
+                self.meta_X.append(np.array([ind.copy() for ind in pop]))
+                self.meta_Cost.append(np.array([ind.fitness.values[0] for ind in pop]))
                 
         results = {'cost': cost, 'fes': fes}
 

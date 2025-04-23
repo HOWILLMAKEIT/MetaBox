@@ -61,8 +61,8 @@ class PYPOP7(Basic_Optimizer):
         index = 1
 
         if self.full_meta_data:
-            self.meta_X = [x]
-            self.meta_Cost = [y]
+            self.meta_X = [x.copy()]
+            self.meta_Cost = [y.copy()]
 
         while not opt._check_terminations():
             x, y, a = opt.iterate(x, y, a)
@@ -72,8 +72,8 @@ class PYPOP7(Basic_Optimizer):
                 cost.append(gbest)
 
             if self.full_meta_data:
-                self.meta_X.append(x)
-                self.meta_Cost.append(y)
+                self.meta_X.append(x.copy())
+                self.meta_Cost.append(y.copy())
 
         if len(cost) >= self.n_logpoint + 1:
             cost[-1] = gbest

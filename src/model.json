@@ -27,7 +27,7 @@
   "L2T": {
     "Agent": "L2T",
     "Optimizer": "L2T_Optimizer",
-    "dir": "agent_model/train/L2T/20250422T191634_cec2017mto_all/checkpoint-0.pkl"
+    "dir": "agent_model/train/L2T/20250423T142215_cec2017mto_easy/checkpoint-0.pkl"
   },
   "Key you want to identify test metabbo": {
     "Agent": "Your method",

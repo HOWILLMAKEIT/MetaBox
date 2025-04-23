@@ -64,7 +64,7 @@ def get_config(args=None):
     # parser.add_argument('--t_optimizer_for_cp', type=str, nargs='+', default=[],
     #                     help='traditional optimizer to compare')
     parser.add_argument('--test_batch_size', type=int, default=1, help='batch size of test set')
-    parser.add_argument('--parallel_batch', type=str, default='Batch', choices=['Full', 'Baseline_Problem', 'Problem_Testrun', 'Batch'], help='the parellel processing mode for testing')
+    parser.add_argument('--parallel_batch', type=str, default='Batch', choices=['Full', 'Baseline_Problem', 'Problem_Testrun', 'Batch', 'Serial'], help='the parellel processing mode for testing')
     
 
     # Rollout parameters
@@ -100,8 +100,7 @@ def get_config(args=None):
     parser.add_argument('--train_mode', default='single', type = str, choices = ['single', 'multi'])
     parser.add_argument('--end_mode', type = str, default = 'epoch', choices = ['step', 'epoch'])
 
-    #parser.add_argument('--test_run', type = int, default = 51)
-    parser.add_argument('--test_run', type = int, default = 1)
+    parser.add_argument('--test_run', type = int, default = 51)
     parser.add_argument('--rollout_run', type = int, default = 10)
 
     parser.add_argument('--no_tb', action='store_true', default = False, help = 'disable tensorboard logging')

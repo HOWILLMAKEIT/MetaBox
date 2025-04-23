@@ -32,8 +32,8 @@ class Random_search(Basic_Optimizer):
             cost=problem.eval(rand_pos)-problem.optimum
             
         if self.full_meta_data:
-            self.meta_Cost.append(cost)
-            self.meta_X.append(rand_pos)
+            self.meta_Cost.append(cost.copy())
+            self.meta_X.append(rand_pos.copy())
         self.__fes+=self.__NP
         if init:
             self.gbest=np.min(cost)

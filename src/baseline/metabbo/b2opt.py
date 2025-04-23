@@ -225,7 +225,7 @@ class B2OPT(Basic_Agent):
         loss = (init_ - torch.mean(memory_tensor[1:, :, :], dim = (0, 2))) / init_ # bs
 
         loss = -torch.mean(loss)
-
+        _loss.append(loss.item())
         self.optimizer.zero_grad()
         loss.backward()
         grad_norms = clip_grad_norms(self.optimizer.param_groups, self.config.max_grad_norm)

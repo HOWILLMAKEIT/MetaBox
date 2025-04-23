@@ -45,8 +45,8 @@ class SDMSPSO(Basic_Optimizer):
         else:
             cost=problem.eval(position) - problem.optimum
         if self.full_meta_data:
-            self.meta_Cost.append(cost)
-            self.meta_X.append(position)
+            self.meta_Cost.append(cost.copy())
+            self.meta_X.append(position.copy())
         
         return cost
 

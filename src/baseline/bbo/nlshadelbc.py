@@ -44,8 +44,8 @@ class NLSHADELBC(Basic_Optimizer):
         else:
             cost = problem.eval(u) - problem.optimum
         if self.full_meta_data:
-            self.meta_Cost.append(cost)
-            self.meta_X.append(u)
+            self.meta_Cost.append(cost.copy())
+            self.meta_X.append(u.copy())
         return cost
 
     # Binomial crossover

@@ -145,7 +145,7 @@ class Policy(nn.Module):
         # x=self.fln(x).view(b,-1,1)
         miu = torch.mean(x, dim = -1, keepdim = True)
         std = torch.std(x, dim = -1, keepdim = True)
-        x = (x - miu) / std
+        x = (x - miu) / (std + 1e-20)
         x = x.view(b, -1, 1)
         ranks = ranks.repeat(b, 1, 1)
         x = torch.cat((x, ranks[..., :n, :]), dim = -1)  # (b,w*h,2)
@@ -356,7 +356,10 @@ class GLHF(Basic_Agent):
 
             _R += rewards
 
-            loss_1 = (torch.mean(next_state[:, :, 0], dim = 1) - torch.mean(state[:, :, 0], dim = 1)) / (torch.mean(state[:, :, 0], dim = 1))  # bs
+            loss_1 = (torch.mean(next_state[:, :, 0], dim = 1) - torch.mean(state[:, :, 0], dim = 1)) / (torch.mean(state[:, :, 0], dim = 1) + 1e-20)  # bs
+
+            if torch.isnan(loss_1).any() or torch.isinf(loss_1).any():
+                break
 
             loss_2 = torch.mean((torch.std(next_state[:, :, 1:], dim = 1)), dim = 1)  # bs
 

@@ -40,9 +40,6 @@ class DE(Basic_Optimizer):
                 fitness = problem.eval(x)
             else:
                 fitness = problem.eval(x) - problem.optimum
-            if self.full_meta_data:
-                self.meta_Cost.append(fitness)
-                self.meta_X.append(x)
             return fitness,   # return a tuple
 
         self.__toolbox.register("evaluate", problem_eval)
@@ -59,6 +56,9 @@ class DE(Basic_Optimizer):
         self.__FEs = self.__config.NP
         for ind, fit in zip(pop, fitnesses):
             ind.fitness.values = fit
+        if self.full_meta_data:
+            self.meta_X.append(np.array([ind.copy() for ind in pop]))
+            self.meta_Cost.append(np.array([ind.fitness.values[0] for ind in pop]))
         hof.update(pop)
 
         log_index = 1
@@ -100,7 +100,10 @@ class DE(Basic_Optimizer):
                         while len(self.cost) < self.__config.n_logpoint + 1:
                             self.cost.append(hof[0].fitness.values[0])
                     break
-    
+
+            if self.full_meta_data:
+                self.meta_X.append(np.array([ind.copy() for ind in pop]))
+                self.meta_Cost.append(np.array([ind.fitness.values[0] for ind in pop]))
     
         results = {'cost': self.cost, 'fes': self.__FEs}
 

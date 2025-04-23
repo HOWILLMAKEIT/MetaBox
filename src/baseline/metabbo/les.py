@@ -7,11 +7,13 @@ import copy
 from environment.parallelenv.parallelenv import ParallelEnv
 import numpy as np
 from dill import loads, dumps
+from typing import Optional, Union, Literal, List
+import math
 
 class LES(Basic_Agent):
     def __init__(self, config):
         super().__init__(config)
-        self.__config = config
+        self.config = config
 
         self.meta_pop_size = 16
         self.skip_step = 50
@@ -29,27 +31,27 @@ class LES(Basic_Agent):
         self.best_les = None
         self.gbest = 1e10
 
-        self.__learning_step=0
+        self.learning_step=0
 
 
-        self.__cur_checkpoint=0
+        self.cur_checkpoint=0
         # save init agent
-        save_class(self.__config.agent_save_dir,'checkpoint-'+str(self.__cur_checkpoint),self)
-        self.__cur_checkpoint+=1
+        save_class(self.config.agent_save_dir,'checkpoint-'+str(self.cur_checkpoint),self)
+        self.cur_checkpoint+=1
 
     def __str__(self):
         return "LES"
 
     def get_step(self):
-        return self.__learning_step
+        return self.learning_step
 
     def update_setting(self, config):
-        self.__config.max_learning_step = config.max_learning_step
-        self.__config.agent_save_dir = config.agent_save_dir
-        self.__learning_step = 0
-        save_class(self.__config.agent_save_dir, 'checkpoint0', self)
-        self.__config.save_interval = config.save_interval
-        self.__cur_checkpoint = 1
+        self.config.max_learning_step = config.max_learning_step
+        self.config.agent_save_dir = config.agent_save_dir
+        self.learning_step = 0
+        save_class(self.config.agent_save_dir, 'checkpoint0', self)
+        self.config.save_interval = config.save_interval
+        self.cur_checkpoint = 1
 
     def optimizer_step(self):
         # inital sampling
@@ -81,7 +83,7 @@ class LES(Basic_Agent):
         env.seed(seeds)
 
         env.set_env_attr("rng_cpu", "None")
-        if self.__config.device != 'cpu':
+        if self.config.device != 'cpu':
             env.set_env_attr("rng_gpu", "None")
         env_population = [loads(dumps(env)) for _ in range(self.meta_pop_size)]
 
@@ -97,26 +99,25 @@ class LES(Basic_Agent):
             self.meta_performances[i].append(sub_best)
 
         # todo: modify threshold
-        self.__learning_step += 1
+        self.learning_step += 1
             
-        # todo: 10 need to change after batch envs?
-        if self.__learning_step % 10 == 0 and self.__config.problem in ['protein','protein-torch']:
+        if self.learning_step % 10 == 0 and self.config.train_problem in ['protein','protein-torch']:
             self.train_epoch()
             if not self.config.no_tb:
-                self.log_to_tb_train(tb_logger, self.learning_time, self.gbest)
+                self.log_to_tb_train(tb_logger, self.learning_step, self.gbest)
             
-        if self.__learning_step >= (self.__config.save_interval * self.__cur_checkpoint):
-            save_class(self.__config.agent_save_dir, 'checkpoint-'+str(self.__cur_checkpoint), self)
-            self.__cur_checkpoint += 1
+        if self.learning_step >= (self.config.save_interval * self.cur_checkpoint) and self.config.end_mode == 'step':
+            save_class(self.config.agent_save_dir, 'checkpoint-'+str(self.cur_checkpoint), self)
+            self.cur_checkpoint += 1
 
-        return_info = {'return': 0, 'loss': [0], 'learn_steps': self.__learning_step, }
+        return_info = {'return': [0] * len(env), 'loss': [0], 'learn_steps': self.learning_step, }
         return_info['gbest'] = env_population[0].get_env_attr('cost')[-1],
         for key in required_info.keys():
             return_info[key] =  env_population[0].get_env_attr(required_info[key])
         for i, e in enumerate(env_population):
             e.close()
         # return exceed_max_ls
-        return self.__learning_step >= self.__config.max_learning_step, return_info
+        return self.learning_step >= self.config.max_learning_step, return_info
 
     # meta train, update self.x_population
     def train_epoch(self):
@@ -151,7 +152,7 @@ class LES(Basic_Agent):
         env_fes = env.get_env_attr('fes')
         results = {'cost': env_cost, 'fes': env_fes, 'return': R}
 
-        if self.__config.full_meta_data:
+        if self.config.full_meta_data:
             meta_X = env.get_env_attr('meta_X')
             meta_Cost = env.get_env_attr('meta_Cost')
             metadata = {'X': meta_X, 'Cost': meta_Cost}
@@ -192,7 +193,7 @@ class LES(Basic_Agent):
         env_cost = env.get_env_attr('cost')
         env_fes = env.get_env_attr('fes')
         results = {'cost': env_cost, 'fes': env_fes, 'return': R}
-        if self.__config.full_meta_data:
+        if self.config.full_meta_data:
             meta_X = env.get_env_attr('meta_X')
             meta_Cost = env.get_env_attr('meta_Cost')
             metadata = {'X': meta_X, 'Cost': meta_Cost}

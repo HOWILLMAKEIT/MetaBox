@@ -204,7 +204,7 @@ class LDE(REINFORCE_Agent):
             while not is_done:
                 # [bs, NP+BINS*2]
                 action, h_, c_ = self.model.sampler(torch.Tensor(input_net[None, :]).to(self.device), h0, c0)  # parameter controller
-                action = action.reshape(1, self.__BATCH_SIZE, -1) # 测试的写法，但我觉得应该用reshape(self.__BATCH_SIZE, 1, -1)，虽然结果是一样的
+                action = action.reshape(1, self.__BATCH_SIZE, -1) 
                 action = np.squeeze(action.cpu().numpy(), axis = 0)
                 next_input, reward, is_done, _ = env.step(action)
                 R += np.mean(reward)
