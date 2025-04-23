@@ -58,17 +58,15 @@ class Individual():
 
     def update_evaluate(self):
         task = self.tasks[self.skill_factor]
-        task_genes = self.genes[:task.dim]
-        x = task.decode(task_genes).reshape(1,-1)
-        fitness = task.func(x).reshape(-1)
+        task_genes = self.genes[:task.dim].reshape(1,-1)
+        fitness = task.eval(task_genes).reshape(-1)
         return self.skill_factor, fitness
 
     def first_evaluate(self):
         factorial_cost_list_j = []
         for j in range(self.tasks_count):
-            task_j_genes = self.genes[:self.tasks[j].dim]
-            x =  self.tasks[j].decode(task_j_genes).reshape(1,-1)
-            fitness = self.tasks[j].func(x).reshape(-1)
+            task_j_genes = self.genes[:self.tasks[j].dim].reshape(1,-1)
+            fitness = self.tasks[j].eval(task_j_genes).reshape(-1)
             factorial_cost_list_j.append(fitness)
 
         return factorial_cost_list_j
@@ -84,7 +82,6 @@ class MFEA(Basic_Optimizer):
         self.cost = None
         self._fes = None
         self.log_index = None
-
 
     def __str__(self):
         return "MFEA"
@@ -133,11 +130,11 @@ class MFEA(Basic_Optimizer):
             self.meta_Cost.append(factorial_costs[:population_cnt])
             self.meta_X.append(list_pop)   
         
-        self.cost = [best_fitness]
+        self.cost = [copy.deepcopy(best_fitness)]
 
         done = False
         while not done:
-            order = np.random.permutation(population_cnt)
+            order = self.rng.permutation(population_cnt)
             count = population_cnt
             factorial_costs[population_cnt:,:] = np.inf
             for i in range(0,population_cnt,2):
@@ -146,11 +143,11 @@ class MFEA(Basic_Optimizer):
                 offspring1 = Individual(D_multitask, tasks)
                 offspring2 = Individual(D_multitask, tasks)
 
-                if(parent1.skill_factor == parent2.skill_factor or np.random.random()<rmp):
+                if(parent1.skill_factor == parent2.skill_factor or self.rng.random()<rmp):
                     offspring1.genes,offspring2.genes = SBX(parent1.genes,parent2.genes,mu)
 
-                    rand1 = np.random.random()
-                    rand2 = np.random.random()
+                    rand1 = self.rng.random()
+                    rand2 = self.rng.random()
                     if rand1 <0.5:
                         offspring1.skill_factor = parent1.skill_factor
                     else:
@@ -202,15 +199,15 @@ class MFEA(Basic_Optimizer):
             generation += 1
             if self._fes >= self.log_index * self.log_interval:
                 self.log_index += 1
-                self.cost.append(best_fitness)
+                self.cost.append(copy.deepcopy(best_fitness))
 
             done = self._fes >= self.__config.maxFEs or generation >= self.__config.generation
 
             if done:
                 if len(self.cost) >= self.__config.n_logpoint + 1:
-                    self.cost[-1] = best_fitness
+                    self.cost[-1] = copy.deepcopy(best_fitness)
                 else:
-                    self.cost.append(best_fitness)
+                    self.cost.append(copy.deepcopy(best_fitness))
                 break    
 
             if self.full_meta_data: 
@@ -225,5 +222,4 @@ class MFEA(Basic_Optimizer):
             results['metadata'] = metadata
 
         mto_tasks.update_T1()
-        
         return results 

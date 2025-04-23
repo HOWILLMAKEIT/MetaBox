@@ -85,7 +85,7 @@ class Basic_Logger:
     def data_wrapper_cost_rollout(self, data):
         res = np.array(data)
         return res[:, -1]
-
+    
     def cal_scores1(self, D: dict, maxf: float):
         """
         Tool function for CEC metric
@@ -145,7 +145,7 @@ class Basic_Logger:
             t2_list[agent] = []
             for pname in results['T1'].keys():
                 t1_list[agent].append(results['T1'][pname][agent])
-                t2_list[agent].append(results['T1'][pname][agent])
+                t2_list[agent].append(results['T2'][pname][agent])
             t1_list[agent] = np.mean(t1_list[agent])
             t2_list[agent] = np.mean(t2_list[agent])
             ratios.append((t2_list[agent] - t1_list[agent])/t0)
@@ -1593,6 +1593,20 @@ class MTO_Logger(Basic_Logger):
         plt.savefig(output_dir + f'mto_env_task_{task+1}_cost.png', bbox_inches='tight')
         plt.close()
     
+    def draw_test_cost(self, data: dict, output_dir: str):
+        for problem_name in data.keys():
+            for algorithm_name in data[problem_name].keys():
+                arr = np.array(data[problem_name][algorithm_name])          #(2,63,2) [test_run, log_points,tasks]
+                mean_result = np.mean(arr, axis=(0, 2))  # 形状 (63,)
+                plt.figure(figsize=(10, 5))
+                plt.plot(mean_result, marker='o', linestyle='-', color='b', label='Averaged Data')
+                plt.xlabel('log_points')
+                plt.ylabel('Averaged Value')
+                plt.title(f'{problem_name}_{algorithm_name}_Cost_Test_Curves')
+                plt.grid(True)
+                plt.legend()
+                plt.savefig(output_dir + f'mto_test_cost_{problem_name}_{algorithm_name}.png', bbox_inches='tight')
+
     def post_processing_test_statics(self, log_dir: str) -> None:
         print('Post processing & drawing')
         with open(log_dir + 'test_results.pkl', 'rb') as f:
@@ -1604,23 +1618,56 @@ class MTO_Logger(Basic_Logger):
         if not os.path.exists(log_dir + 'tables/'):
             os.makedirs(log_dir + 'tables/')
 
+        self.gen_algorithm_complexity_table(results, log_dir + 'tables/')
+
         if not os.path.exists(log_dir + 'pics/'):
             os.makedirs(log_dir + 'pics/')
 
         # 如果需要，可以为不同的算法绘制图形（例如 cost 图）
         if 'cost' in results:
-            #print(results['cost'].keys())
-            for key in results['cost'].keys():
-                print(results['cost'][key])
-            # self.draw_test_data(results['cost'], 'cost', log_dir + 'pics/', logged=True, categorized=True, pdf_fig=pdf_fig, data_wrapper=np.array)
-            # self.draw_named_average_test_costs(results['cost'], log_dir + 'pics/',
-            #                                     {'MetaBBO-RL': metabbo,
-            #                                     'Classic Optimizer': bbo},
-            #                                     logged=False, pdf_fig=pdf_fig)
-            # self.draw_ECDF(results, log_dir + 'pics/', pdf_fig=pdf_fig)
-            # self.draw_boxplot(results, log_dir + 'pics/', pdf_fig=pdf_fig)
-            # with open(log_dir + 'aei.pkl', 'wb') as f:
-            #     pickle.dump(self.aei_metric(results, self.config.maxFEs), f)
+            self.draw_test_cost(results['cost'], log_dir + 'pics/')
+    
+    @staticmethod
+    def data_wrapper_mto_cost_rollout(data):
+        res = np.array(data)
+        res = np.mean(res, axis=-1)
+        return res[:, -1]
+
+    def draw_train_logger(self, data_type: str, steps: list, data: dict, output_dir: str, ylabel: str = None, norm: bool = False, pdf_fig: bool = True, data_wrapper: Callable = None) -> None:
+        means, stds = self.get_average_data(data, norm=norm, data_wrapper=data_wrapper)
+        plt.figure()
+
+        y = np.array([means[k] for k in means])
+        y_std = np.array([stds[k] for k in stds])
+        x = np.array(steps, dtype = np.float64)
+
+        s = np.zeros(y.shape[0])
+        a = s[0] = y[0]
+
+        agent_for_rollout = self.config.agent_for_rollout
+
+        norm = self.config.plot_smooth + 1
+        for i in range(1, y.shape[0]):
+            a = a * self.config.plot_smooth + y[i]
+            s[i] = a / norm if norm > 0 else a
+            norm *= self.config.plot_smooth
+            norm += 1
+        if agent_for_rollout not in self.color_arrangement.keys():
+            self.color_arrangement[agent_for_rollout] = colors[self.arrange_index]
+            self.arrange_index += 1
+        
+        plt.plot(x, s, label = to_label(agent_for_rollout), marker = '*', markersize = 12, markevery = 2, c = self.color_arrangement[agent_for_rollout])
+        plt.fill_between(x, (s - y_std), (s + y_std), alpha = 0.2, facecolor = self.color_arrangement[agent_for_rollout])
+
+        plt.legend()
+        plt.grid()
+        plt.xlabel('Learning Steps')
+        if ylabel is None:
+            ylabel = data_type
+        plt.ylabel(ylabel)
+        fig_type = 'pdf' if pdf_fig else 'png'
+        plt.savefig(output_dir + f'avg_{data_type}_curve.{fig_type}', bbox_inches='tight')
+        plt.close()
 
     def post_processing_rollout_statics(self, log_dir: str, pdf_fig: bool = True) -> None:
         print('Post processing & drawing')
@@ -1628,5 +1675,5 @@ class MTO_Logger(Basic_Logger):
             results = pickle.load(f)
         if not os.path.exists(log_dir + 'pics/'):
             os.makedirs(log_dir + 'pics/')
-        self.draw_train_logger('return', results['return'], log_dir + 'pics/', pdf_fig=pdf_fig)
-        self.draw_train_logger('cost', results['cost'], log_dir + 'pics/', pdf_fig=pdf_fig)
+        self.draw_train_logger('return', results['steps'], results['return'], log_dir + 'pics/', pdf_fig=pdf_fig)
+        self.draw_train_logger('cost', results['steps'], results['cost'], log_dir + 'pics/', pdf_fig=pdf_fig, data_wrapper = MTO_Logger.data_wrapper_mto_cost_rollout)

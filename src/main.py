@@ -1,3 +1,11 @@
+import os
+# os.environ['OMP_NUM_THREADS'] = '1'
+# os.environ['OPENBLS_NUM_THREADS'] = '1'
+# os.environ['GOTO_NUM_THREADS'] = '1'
+# os.environ['MKL_NUM_THREADS'] = '1'
+# os.environ['TORCH_NUM_THREADS'] = '1'
+# os.environ['RAY_num_server_call_thread'] = '1'
+
 import torch
 from trainer import Trainer
 from tester import *
@@ -7,6 +15,8 @@ import shutil
 import warnings
 import json
 warnings.filterwarnings("ignore")
+
+
 
 if __name__ == '__main__':
     config = get_config()
@@ -37,7 +47,7 @@ if __name__ == '__main__':
     if config.rollout:
         torch.set_grad_enabled(False)
         rollout_batch(config)
-        #logger.post_processing_rollout_statics(config.rollout_log_dir)
+        logger.post_processing_rollout_statics(config.rollout_log_dir)
 
     # test
     if config.test:

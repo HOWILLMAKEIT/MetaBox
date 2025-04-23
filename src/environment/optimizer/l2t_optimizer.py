@@ -119,6 +119,11 @@ class L2T_Optimizer(Learnable_Optimizer):
         self.reward = [0 for _ in range(self.task_cnt)]
         self.total_reward = 0
 
+        self.begin_best = [1e+32 for _ in range(self.task_cnt)]
+        self.last_gen_best = [1e+32 for _ in range(self.task_cnt)]
+        self.this_gen_best = [1e+32 for _ in range(self.task_cnt)]
+        self.optimal_value = [1e+32 for _ in range(self.task_cnt)]
+
         self.fes = None
         self.cost = None
         self.log_index = None
@@ -168,11 +173,15 @@ class L2T_Optimizer(Learnable_Optimizer):
             fitnesses = self.task[i].eval(self.parent_population[i])
             self.gbest[i] = np.min(fitnesses, axis=-1)
             parent_fitnesses_list.append(fitnesses)
-        
+
+            self.begin_best[i] = self.gbest[i]
+            self.last_gen_best[i] = self.gbest[i]
+            self.this_gen_best[i] = self.gbest[i]
+            self.optimal_value[i] = self.task[i].optimum
+
         parent_fitnesses_np = np.array(parent_fitnesses_list, dtype=np.float32)
         
-        self.cost = [self.gbest]
-
+        self.cost = [copy.deepcopy(self.gbest)]
         state = self.get_state()
 
 
@@ -217,6 +226,7 @@ class L2T_Optimizer(Learnable_Optimizer):
     def seletion(self):
         parent_finesses_list = []
         for i in range(self.task_cnt):
+            self.last_gen_best[i] = self.this_gen_best[i]
             ps = self.parent_population[i].shape[0]
             self.fes += ps
             parent_population_fitness = self.task[i].eval(self.parent_population[i])
@@ -237,7 +247,9 @@ class L2T_Optimizer(Learnable_Optimizer):
                 else:
                     next_population[i][j] = self.parent_population[i][j]
 
-            self.reward[i] = (float)(S_update-S_KT) / self.pop_cnt
+            reward_kt = (float)(S_update-S_KT) / self.pop_cnt
+            reward_converge = (self.last_gen_best[i] - self.optimal_value[i]) / (self.begin_best[i] - self.optimal_value[i])
+            self.reward[i] = 1*reward_kt + 10*reward_converge
             self.Q_kt[i] = float(S_KT) / self.KT_count
 
             flag = 0
@@ -254,6 +266,7 @@ class L2T_Optimizer(Learnable_Optimizer):
                 self.flag_improved[i] = 0
                 self.stagnation[i] += 1
 
+            self.this_gen_best[i] = self.gbest[i]
             self.parent_population[i] = next_population[i]
 
         parent_finesses_np = np.array(parent_finesses_list, dtype=np.float32)
@@ -276,18 +289,17 @@ class L2T_Optimizer(Learnable_Optimizer):
         
         if self.fes >= self.log_index * self.log_interval:
             self.log_index += 1
-            self.cost.append(self.gbest)
+            self.cost.append(copy.deepcopy(self.gbest))
 
         if is_end:
             if len(self.cost) >= self.__config.n_logpoint + 1:
-                self.cost[-1] = self.gbest
+                self.cost[-1] = copy.deepcopy(self.gbest)
             else: 
                 while len(self.cost) < self.__config.n_logpoint + 1:
-                    self.cost.append(self.gbest)
+                    self.cost.append(copy.deepcopy(self.gbest))
         
         if is_end:
             tasks.update_T1()
-               
-
+        
         info = {}
         return next_state, self.total_reward, is_end, info

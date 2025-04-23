@@ -54,7 +54,7 @@ from baseline.bbo import (
     SAHLPSO,
     CMAES,
     Random_search,
-    PYPOP7
+    #PYPOP7
 )
 
 from baseline.metabbo import (
@@ -173,7 +173,7 @@ class BBO_TestUnit():
         res = self.optimizer.run_episode(self.problem)
         end_time = time.time()
         res['T1'] = self.problem.T1
-        res['T2'] = end_time - start_time
+        res['T2'] = (end_time - start_time)*1000
         res['agent_name'] = self.optimizer.__str__()
         res['problem_name'] = self.problem.__str__()
         return res
@@ -208,7 +208,7 @@ class MetaBBO_TestUnit():
         res = self.agent.rollout_episode(self.env, self.seed, required_info)
         end_time = time.time()
         res['T1'] = self.env.problem.T1
-        res['T2'] = end_time - start_time
+        res['T2'] = (end_time - start_time)*1000
         agent_name = self.agent.__str__()
         if self.checkpoint is not None:
             agent_name += f'-{self.checkpoint}'
@@ -806,7 +806,7 @@ def rollout_batch(config):
     upper_dir = baseline['dir']
     if not os.path.isdir(upper_dir):  # path to .pkl files
         upper_dir = os.path.join(*tuple(str.split(upper_dir, '/')[:-1]))
-        
+
     checkpoints = config.checkpoints_for_rollout
     if checkpoints is None:
         epoch_list = os.listdir(upper_dir)

@@ -67,6 +67,9 @@ class Sphere(AUGMENTED_WCCI2020_Numpy_Problem):
     def func(self, x):
         z = self.sr_func(x, self.shift, self.rotate)
         return np.sum(z ** 2, -1)
+    
+    def __str__(self):
+        return 'Sphere'
 
 class Ackley(AUGMENTED_WCCI2020_Numpy_Problem):
     LB = -50
@@ -81,6 +84,9 @@ class Ackley(AUGMENTED_WCCI2020_Numpy_Problem):
         sum1 = -0.2 * np.sqrt(np.sum(z ** 2, -1) / self.dim)
         sum2 = np.sum(np.cos(2 * np.pi * z), -1) / self.dim
         return np.round(np.e + 20 - 20 * np.exp(sum1) - np.exp(sum2), 15) + self.bias
+    
+    def __str__(self):
+        return 'Ackley'
     
 class Griewank(AUGMENTED_WCCI2020_Numpy_Problem):
     LB = -100
@@ -97,6 +103,9 @@ class Griewank(AUGMENTED_WCCI2020_Numpy_Problem):
         for i in range(self.dim):
             p *= np.cos(z[:, i] / np.sqrt(1 + i))
         return 1 + s / 4000 - p + self.bias
+    
+    def __str__(self):
+        return 'Griewank'
 
 class Rastrigin(AUGMENTED_WCCI2020_Numpy_Problem):
     LB = -50
@@ -109,6 +118,9 @@ class Rastrigin(AUGMENTED_WCCI2020_Numpy_Problem):
     def func(self, x):
         z = self.sr_func(x, self.shift, self.rotate)
         return np.sum(z ** 2 - 10 * np.cos(2 * np.pi * z) + 10, -1) + self.bias
+    
+    def __str__(self):
+        return 'Rastrigin'
     
 class Rosenbrock(AUGMENTED_WCCI2020_Numpy_Problem):
     LB = -50
@@ -125,6 +137,9 @@ class Rosenbrock(AUGMENTED_WCCI2020_Numpy_Problem):
         z = z[:, :-1]
         tmp1 = z ** 2 - z_
         return np.sum(100 * tmp1 * tmp1 + (z - 1) ** 2, -1) + self.bias
+    
+    def __str__(self):
+        return 'Rosenbrock'
 
 class Weierstrass(AUGMENTED_WCCI2020_Numpy_Problem):
     LB = -0.5
@@ -143,6 +158,9 @@ class Weierstrass(AUGMENTED_WCCI2020_Numpy_Problem):
             sum2 += np.power(a, k) * np.cos(2 * np.pi * np.power(b, k) * 0.5)
         return sum1 - self.dim * sum2 + self.bias
     
+    def __str__(self):
+        return 'Weierstrass'
+    
 class Schwefel(AUGMENTED_WCCI2020_Numpy_Problem):
     LB = -500
     UB = 500
@@ -158,3 +176,6 @@ class Schwefel(AUGMENTED_WCCI2020_Numpy_Problem):
         z += a
         g = z * np.sin(np.sqrt(np.abs(z)))
         return b * self.dim - np.sum(g,-1)
+    
+    def __str__(self):
+        return 'Schwefel'

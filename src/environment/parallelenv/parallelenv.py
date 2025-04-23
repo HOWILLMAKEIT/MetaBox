@@ -18,7 +18,7 @@ class ParallelEnv():
                  asynchronous: Literal[None, 'idle', 'restart', 'continue']=None,
                  num_cpus: Optional[Union[int, None]]=None,
                  num_gpus: int=0,
-                 no_warning=True,
+                 no_warning=False,
                  ) -> None:
         """An integrated parallel Environment.
         :param envs:           The list of the GYM style Envs to be processed in parallel.

@@ -8,8 +8,12 @@ class WCCI2020MTO_Tasks():
     def __init__(self, tasks):
         self.tasks = tasks
         self.T1 = None
+        self.dim = 0
     
     def reset(self):
+        for _ in range(len(self.tasks)):
+            self.dim = max(self.dim, self.tasks[_].dim)
+
         for _ in range(len(self.tasks)):
             self.tasks[_].reset()
         self.T1 = 0
@@ -36,7 +40,7 @@ class WCCI2020_Dataset(Dataset):
         self.batch_size = batch_size
         self.maxdim = 0
         for data_lis in self.data:
-            for item in data_lis:
+            for item in data_lis.tasks:
                 self.maxdim = max(self.maxdim, item.dim)
         self.N = len(self.data)
         self.ptr = [i for i in range(0, self.N, batch_size)]

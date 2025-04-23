@@ -40,8 +40,11 @@ class AugmentedWCCI2020_MTO_Tasks():
     def __init__(self, tasks):
         self.tasks = tasks
         self.T1 = None
+        self.dim = 0
     
     def reset(self):
+        for _ in range(len(self.tasks)):
+            self.dim = max(self.dim, self.tasks[_].dim)
         for _ in range(len(self.tasks)):
             self.tasks[_].reset()
         self.T1 = 0

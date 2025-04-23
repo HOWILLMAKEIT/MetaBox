@@ -327,7 +327,8 @@ class L2T(PPO_Agent):
 
                 if self.learning_time >= self.config.max_learning_step:
                     memory.clear_memory()
-                    return_info = {'return': _R, 'learn_steps': self.learning_time, 'loss':np.mean(_loss)}
+                    _Rs = _R.detach().numpy().tolist()
+                    return_info = {'return': _Rs, 'learn_steps': self.learning_time, 'loss':_loss}
                     return_info['gbest'] = env.get_env_attr('gbest')
                     for key in required_info.keys():
                         return_info[key] = env.get_env_attr(required_info[key])
@@ -337,7 +338,8 @@ class L2T(PPO_Agent):
             memory.clear_memory()
         
         is_train_ended = self.learning_time >= self.config.max_learning_step
-        return_info = {'return': _R, 'learn_steps': self.learning_time, 'loss':np.mean(_loss)}
+        _Rs = _R.detach().numpy().tolist()
+        return_info = {'return': _Rs, 'learn_steps': self.learning_time, 'loss':_loss}
         return_info['gbest'] = env.get_env_attr('gbest')
         for key in required_info.keys():
             return_info[key] = env.get_env_attr(required_info[key])
@@ -416,10 +418,10 @@ class L2T(PPO_Agent):
                 state = torch.Tensor(state).to(self.device)
             except:
                 pass
-
+        _Rs = _R.detach().numpy().tolist()
         env_cost = env.get_env_attr('cost')
         env_fes = env.get_env_attr('fes')
-        results = {'cost': env_cost, 'fes': env_fes, 'return': _R}
+        results = {'cost': env_cost, 'fes': env_fes, 'return': _Rs}
         for key in required_info.keys():
             results[key] = env.get_env_attr(required_info[key])
         return results
