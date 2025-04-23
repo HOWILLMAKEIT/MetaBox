@@ -40,7 +40,7 @@ class NRLPSO(QLearning_Agent):
         action = torch.multinomial(prob, 1)  # shape: (bs, 1)
 
         # Return the action
-        return action.squeeze().detach().cpu().numpy()  # Return the action and remove unnecessary dimensions
+        return action.view(-1).detach().cpu().numpy()  # Return the action and remove unnecessary dimensions
 
     def train_episode(self,
                       envs,

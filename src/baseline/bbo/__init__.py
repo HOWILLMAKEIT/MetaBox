@@ -8,4 +8,6 @@ from .nlshadelbc import *
 from .random_search import *
 from .sahlpso import *
 from .sdmspso import *
-#from .pypop7 import *
+from .pypop7 import *
+from .mfea import *
+from .moead import *

@@ -17,7 +17,6 @@ import matplotlib.pyplot as plt
 from rl.utils import save_class
 from tensorboardX import SummaryWriter
 
-from environment.optimizer.l2t_optimizer import L2T_Optimizer
 from environment.optimizer import (
     DEDDQN_Optimizer,
     DEDQN_Optimizer,
@@ -35,11 +34,12 @@ from environment.optimizer import (
     RLDEAFL_Optimizer,
     SurrRLDE_Optimizer,
     RLEMMO_Optimizer,
-    #madac_optimizer
+    MADAC_Optimizer,
     GLHF_Optimizer,
     B2OPT_Optimizer,
     LGA_Optimizer,
     PSORLNS_Optimizer,
+    L2T_Optimizer
 )
 
 from baseline.bbo import (
@@ -53,9 +53,10 @@ from baseline.bbo import (
     SAHLPSO,
     CMAES,
     Random_search,
+    PYPOP7,
+    MOEAD,
+    MFEA
 )
-
-from baseline.metabbo.l2t import L2T
 from baseline.metabbo import (
     GLEET,
     DEDDQN,
@@ -64,18 +65,19 @@ from baseline.metabbo import (
     NRLPSO,
     RLHPSDE,
     RLDEAFL,
+    LDE,
+    RLPSO,
     SYMBOL,
     RLDAS,
     SurrRLDE,
     RLEMMO,
-    #madac
     GLHF,
     B2OPT,
-    LDE,
-    RLEPSO,
-    RLPSO,
-    #LES,
-    PSORLNS
+    LGA,
+    PSORLNS,
+    LES,
+    L2T,
+    MADAC,
 )
 
 

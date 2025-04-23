@@ -26,3 +26,5 @@ from .l2l_optimizer import L2L_Optimizer
 from .les_optimizer import LES_Optimizer
 from .lga_optimizer import LGA_Optimizer
 from .psorlns_optimizer import PSORLNS_Optimizer
+from .l2t_optimizer import L2T_Optimizer
+from .madac_optimizer import MADAC_Optimizer

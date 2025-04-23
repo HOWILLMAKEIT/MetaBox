@@ -1,11 +1,4 @@
 import os
-# os.environ['OMP_NUM_THREADS'] = '1'
-# os.environ['OPENBLS_NUM_THREADS'] = '1'
-# os.environ['GOTO_NUM_THREADS'] = '1'
-# os.environ['MKL_NUM_THREADS'] = '1'
-# os.environ['TORCH_NUM_THREADS'] = '1'
-# os.environ['RAY_num_server_call_thread'] = '1'
-
 import torch
 from trainer import Trainer
 from tester import *

@@ -18,8 +18,6 @@ from environment.optimizer.basic_optimizer import Basic_Optimizer
 from rl import Basic_Agent
 from environment.problem.basic_problem import Basic_Problem
 from dill import dumps, loads
-from environment.optimizer.l2t_optimizer import L2T_Optimizer
-from baseline.metabbo.l2t import L2T
 from baseline.bbo.mfea import MFEA
 from environment.optimizer import (
     DEDDQN_Optimizer,
@@ -42,6 +40,9 @@ from environment.optimizer import (
     GLHF_Optimizer,
     B2OPT_Optimizer,
     PSORLNS_Optimizer,
+    L2T_Optimizer,
+    MADAC_Optimizer,
+    LGA_Optimizer
 )
 
 from baseline.bbo import (
@@ -55,7 +56,9 @@ from baseline.bbo import (
     SAHLPSO,
     CMAES,
     Random_search,
-    #PYPOP7
+    PYPOP7,
+    MOEAD,
+    MFEA
 )
 
 from baseline.metabbo import (
@@ -66,15 +69,19 @@ from baseline.metabbo import (
     NRLPSO,
     RLHPSDE,
     RLDEAFL,
+    LDE,
+    RLPSO,
     SYMBOL,
     RLDAS,
     SurrRLDE,
     RLEMMO,
     GLHF,
     B2OPT,
-    #LES,
+    LGA,
     PSORLNS,
-    LDE
+    LES,
+    L2T,
+    MADAC,
 )
 
 def cal_t0(dim, fes):

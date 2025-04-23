@@ -13,9 +13,10 @@ from .surrrlde import SurrRLDE
 from .rlepso import RLEPSO
 from .rlemmo import RLEMMO
 
-
 from .glhf import GLHF
 from .b2opt import B2OPT
-#from .lga import LGA
+from .lga import LGA
 from .psorlns import PSORLNS
-#from .les import LES
+from .les import LES
+from .l2t import L2T
+from .madac import MADAC

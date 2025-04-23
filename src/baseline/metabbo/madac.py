@@ -42,7 +42,7 @@ class MultiAgentQNet(nn.Module):
         return th.cat(q_values, dim=1)
 
 
-class MADAC_Agent(VDN_Agent):
+class MADAC(VDN_Agent):
     def __init__(self, config):
         
         agent_configs = [
@@ -52,7 +52,6 @@ class MADAC_Agent(VDN_Agent):
             {'name': 'weight_agent', 'n_actions': 4, 'n_valid_actions': 2}
         ]
         model = MultiAgentQNet(input_shape=22, agent_configs=agent_configs)
-        self.set_network({'model': model},0.001)
         config.gamma = 0.01
         config.n_act = 4
         config.epsilon = 0.1
@@ -72,8 +71,10 @@ class MADAC_Agent(VDN_Agent):
         config.target_update_interval = 10  
         config.save_interval = 1000 
 
-        super().__init__(config)
-        
+        super().__init__(config, {'model': model}, 0.001)
+
+    def __str__(self):
+        return "MADAC"
 
 class Config:
     def __init__(self):

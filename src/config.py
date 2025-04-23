@@ -5,7 +5,7 @@ import time
 def get_config(args=None):
     parser = argparse.ArgumentParser()
     # Common config
-    parser.add_argument('--train_problem', default = 'bbob', choices = ['bbob-10D', 'bbob-30D', 'bbob-torch-10D', 'bbob-torch-30D', 'bbob-noisy-10D', 
+    parser.add_argument('--train_problem', default = 'bbob-10D', choices = ['bbob-10D', 'bbob-30D', 'bbob-torch-10D', 'bbob-torch-30D', 'bbob-noisy-10D',
                                                                         'bbob-noisy-30D', 'bbob-noisy-torch-10D', 'bbob-noisy-torch-30D', 'bbob-surrogate-2D','bbob-surrogate-5D','bbob-surrogate-10D',
                                                                          'hpo-b', 'lsgo', 'lsgo-torch', 'protein', 'protein-torch', 'uav', 'uav-torch',
                                                                                 'mmo', 'mmo-torch', 'wcci2020', 'cec2017mto', 'moo-synthetic'],
