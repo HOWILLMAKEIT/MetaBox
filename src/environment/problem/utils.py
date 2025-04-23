@@ -11,6 +11,7 @@ from environment.problem.SOO.CEC2013LSGO.cec2013lsgo_dataset import CEC2013LSGO_
 from environment.problem.SOO.UAV.uav_dataset import UAV_Dataset
 from environment.problem.SOO.PROTEIN_DOCKING.protein_docking_dataset import Protein_Docking_Dataset
 from environment.problem.SOO.HPO_B.hpob_dataset import HPOB_Dataset
+from environment.problem.MOO.UAV.uav_dataset import UAV_Dataset as MMO_UAV_Dataset
 #from environment.problem.SOO.NE.evox_ne import NE_Dataset
 
 def save_class(dir, file_name, saving_class):
@@ -41,16 +42,6 @@ def get_problem_set(config, problem, difficulty, train_list, test_list):
                                         user_test_list=test_list,
                                         version='torch' if 'torch' in problem else 'numpy',
                                         device = config.device)
-        
-    # elif problem in ['bbob-noisy-10D', 'bbob-noisy-30D', 'bbob-noisy-torch-10D', 'bbob-noisy-torch-30D']:
-    #     return BBOB_Dataset.get_datasets(suit=problem,
-    #                                     upperbound=config.upperbound,
-    #                                     train_batch_size=config.train_batch_size,
-    #                                     test_batch_size=config.test_batch_size,
-    #                                     difficulty=difficulty,
-    #                                     user_train_list=train_list,
-    #                                     user_test_list=test_list,
-    #                                     version='torch' if 'torch' in problem else 'numpy')
 
     elif problem in ['protein', 'protein-torch']:
         return Protein_Docking_Dataset.get_datasets(version='torch' if 'torch' in problem else 'numpy',
@@ -135,6 +126,17 @@ def get_problem_set(config, problem, difficulty, train_list, test_list):
                                         user_train_list=train_list,
                                         user_test_list=test_list,
                                         version='torch' if 'torch' in problem else 'numpy')
+    elif problem in ['moo-uav']:
+        return MMO_UAV_Dataset.get_datasets(train_batch_size = config.train_batch_size,
+                                            test_batch_size = config.test_batch_size,
+                                            dv = 10,
+                                            j_pen = 1e4,
+                                            mode = "standard",
+                                            num = 56,
+                                            difficulty = difficulty,
+                                            user_train_list=train_list,
+                                            user_test_list=test_list,
+                                            version='torch' if 'torch' in problem else 'numpy')
 
     else:
         raise ValueError(problem + ' is not defined!')
