@@ -27,35 +27,35 @@ You just need to inherit it and design your own Agent — Jump directly to [Crea
 ```
 
 1️⃣ Import Required Packages
-
-     import torch
-     from metaevobox.rl import basic_agent
-
+```{code}
+import torch
+from metaevobox.rl import basic_agent
+```
 2️⃣ Initialize the RL Class
 
-     class MyRL(basic_agent):
+```{code}
+class MyRL(basic_agent):
+     
+     def __init__(self, config):
+    
+    # If rl contains the network
+    # def __init__(self, config, networks: dict, learning_rates: float):
+          super().__init___(config)
+          self.config = config
+          # Init parameters
+          # xxx
           
-          def __init__(self, config):
-         
-         # If rl contains the network
-         # def __init__(self, config, networks: dict, learning_rates: float):
-
-               super().__init___(config)
-               self.config = config
-
-               # Init parameters
-               # xxx
-               
-               # If rl contains the network
-               # self.set_network(networks, learning_rates)
-               
-               # Init learning time
-               self.learning_time = 0
-               self.cur_checkpoint = 0
-               
-               # Save init agent
-               save_class(self.config.agent_save_dir, 'checkpoint' + str(self.cur_checkpoint), self)
-               self.cur_checkpoint += 1
+          # If rl contains the network
+          # self.set_network(networks, learning_rates)
+          
+          # Init learning time
+          self.learning_time = 0
+          self.cur_checkpoint = 0
+          
+          # Save init agent
+          save_class(self.config.agent_save_dir, 'checkpoint' + str(self.cur_checkpoint), self)
+          self.cur_checkpoint += 1
+```
 
 3️⃣ Initialize the Network (Optional)
 
@@ -63,13 +63,17 @@ You just need to inherit it and design your own Agent — Jump directly to [Crea
 This function is designed for rl methods that require networks and is not necessary.
 ```
 
-         def set_network(self, networks: dict, learning_rates: float):
-             pass
+```{code}
+    def set_network(self, networks: dict, learning_rates: float):
+        pass
+```
 
 4️⃣ Set update rules
 
-         def update_setting(self, config):
-             pass
+```{code}
+    def update_setting(self, config):
+        pass
+```
 
 5️⃣ The Main Function for Training 
 
