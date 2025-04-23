@@ -14,12 +14,35 @@ Config
 
 ## 1. Implement your own algorithm in Metabox
 
-[GLEET](source/guide/Gallery/GLEET.md)
-[GLHF](source/guide/Gallery/GLHF.md)
-[LES](source/guide/Gallery/LES.md)
-[OPROS](source/guide/Gallery/OPROS.md)
+### MetaBBO
 
-## 2. fit your own dataset in Metabox
+#### 1. Create your own Agent
+
+     from metabox.rl import basic_agent
+
+     class MyRL(basic_agent)
+       pass
+
+     class MyAgent(MyRL)
+       pass
+
+> [!IMPORTANT]
+> MetaBOX has pre-implemented various RL methods — refer to **Gallery > Config** for details. \
+> You just need to inherit it and design your own Agent！
+
+     from metabox.rl import xxx
+     
+     class MyAgent(xxx):
+       pass
+
+#### 2. Create your own Optimizer
+
+     from metabox.environment.optimizer import Learnale_Optimizer
+     
+     class MyOptimizer(xxx):
+       pass
+
+## 2. Implement your own dataset in Metabox
 
 ## 3. Config
 
