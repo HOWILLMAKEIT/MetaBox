@@ -44,10 +44,28 @@ For further exploration, we recommend reading the comprehensive survey : "[Towar
 ## Common Usage
 ### 1. Train one MetaBox's algorithm on MetaBox's one dataset
 
-> [!NOTE]
-> **The following code demonstrates the core training logic.**  
-> Numerous configurable options are available — refer to **Gallery > Config** for details.
- 
+```{note}
+**The following code demonstrates the core training logic.**  
+Numerous configurable options are available — refer to **Gallery > Config** for details.
+```
+<!-- ```{note} Notes require **no** arguments, so content can start here.
+```
+```{tip} Notes require **no** arguments, so content can start here.
+```
+```{warning} Notes require **no** arguments, so content can start here.
+```
+:::{note}
+This text is **standard** _Markdown_
+:::
+:::{warning}
+This text is **standard** _Markdown_
+:::
+```{admonition} Here's my title
+:class: note
+
+Here's my admonition content
+
+``` -->
 🧪 General Training Code
 
     from metabox import Trainer, Config
@@ -87,14 +105,20 @@ For further exploration, we recommend reading the comprehensive survey : "[Towar
     trainer = Trainer(user_config, agent, optimizer, dataset)
     trainer.train()
 
-> [!TIP]
-> **Train your algorithm on MetaBox** — refer to  **Gallery > Config** for details.
+<!-- > [!TIP]
+> **Train your algorithm on MetaBox** — refer to  **Gallery > Config** for details. -->
+```{tip} **Train your algorithm on MetaBox** — refer to  **Gallery > Config** for details.
+```
 
 ### 2. Test one MetaBox's algorithm on MetaBox's one Dataset
 
-> [!NOTE]
+<!-- > [!NOTE]
 > **The following code demonstrates the core test logic.**  
-> Numerous configurable options are available — refer to **Gallery > Config** for details.
+> Numerous configurable options are available — refer to **Gallery > Config** for details. -->
+```{note} **The following code demonstrates the core test logic.**  
+Numerous configurable options are available — refer to **Gallery > Config** for details.
+```
+
 
 🧪 General Tester Code
 
@@ -126,12 +150,18 @@ For further exploration, we recommend reading the comprehensive survey : "[Towar
     tester = Tester(config, dataset)
     tester.test()
 
-> [!TIP]
+<!-- > [!TIP]
 > **Test your algorithm on MetaBox** — refer to  **Gallery > Config** for details.\
-> **Test two or more algorithms** — refer to  **Gallery > Config** for details.
-    
+> **Test two or more algorithms** — refer to  **Gallery > Config** for details. -->
+```{tip} **Test your algorithm on MetaBox** — refer to  **Gallery > Config** for details.\
+**Test two or more algorithms** — refer to  **Gallery > Config** for details.
+```
 ### 3. The builder of user_config
-> [!IMPORTANT]
+<!-- > [!IMPORTANT]
 > MetaBox provides granularly configurable parameters that empower you to **​​tailor training and testing workflows**​​. \
 > ​​Feeling overwhelmed?​​ Navigate to **​​Gallery > Config**​​ to access the intuitive **user_config builder**. \
-> This tool is designed to accelerate your process and simplify configuration management."
+> This tool is designed to accelerate your process and simplify configuration management." -->
+```{important} MetaBox provides granularly configurable parameters that empower you to **​​tailor training and testing workflows**​​. 
+​​Feeling overwhelmed?​​ Navigate to **​​Gallery > Config**​​ to access the intuitive **user_config builder**. 
+This tool is designed to accelerate your process and simplify configuration management."
+```

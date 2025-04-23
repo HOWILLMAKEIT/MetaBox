@@ -85,7 +85,7 @@ ok 按照[autodoc2 官方文档](https://sphinx-autodoc2.readthedocs.io/en/stabl
 使用到的一些说法：
 
 - config (object): Configuration object containing all necessary parameters for experiment.For details you can visit config.py.
-- data (dict): The test result.Also a nested dictionary where the first-level keys are problem names, and the second-level keys are agent names. Each agent maps to a list or array of results.或者是：structured as `dict[problem][algo][run][generation][objective]`.(主要是可以参考这种写法，使用first-level keys……这样的语句来表达数据结构,或者直接写第二种，好像第二种挺直观的)
+- data (dict): The test result.Also a nested dictionary where the first-level keys are problem names, and the second-level keys are agent names. Each agent maps to a list or array of results.或者是：structured as `dict[problem][algo][run][generation][objective]`.(主要是可以参考这种写法，使用 first-level keys……这样的语句来表达数据结构,或者直接写第二种，好像第二种挺直观的)
 
 ## markdown 与 readthedocs 的一些使用问题
 
@@ -201,3 +201,33 @@ sphinx-build 将把 po 文件构建为 mo 文件，并且你可以在 build 里�
 # 记录
 
 RL 用 ppo 为例子，算法来源，函数接口，函数的全称
+
+# 问题记录：
+
+1. Q：代码块没有复制小图标 A：使用 sphinx_copybutton 插件，完成（应该可以自定义样式？[link](https://sphinx-copybutton.readthedocs.io/en/latest/index.html)）
+2. Q：不支持!NOTE A:下面是解决方案，因为我们使用的是 mystparseer，根据[官方文档](https://myst-parser.readthedocs.io/en/latest/intro.html)
+   我们可以这样使用：
+<!-- 
+```
+
+```{note} Notes require **no** arguments, so content can start here.
+```
+```{tip} Notes require **no** arguments, so content can start here.
+```
+```{warning} Notes require **no** arguments, so content can start here.
+```
+:::{note}
+This text is **standard** _Markdown_
+:::
+```{admonition} Here's my title
+:class: note
+
+Here's my admonition content
+
+```
+
+``` -->
+
+这语法好麻烦。。。。注释了自己看吧。。。。
+
+

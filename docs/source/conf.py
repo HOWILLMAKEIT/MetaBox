@@ -30,7 +30,7 @@ extensions = [
     'autodoc2',
     'sphinx_markdown_tables',
     'myst_parser',
-
+    'sphinx_copybutton',
 ]
 autodoc2_packages = [
     {

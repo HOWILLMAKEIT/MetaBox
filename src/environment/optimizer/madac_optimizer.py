@@ -290,6 +290,51 @@ def chebyshev(solution_obj, ideal_point, weights, min_weight=0.0001):
 
 
 class MADAC_Optimizer(Learnable_Optimizer):
+    """
+    # Introduction
+    todo:MADAC是这个意思？
+    MADAC_Optimizer is a Multi-Agent Decomposition Algorithm for Cooperative (MADAC) multi-objective optimization
+    that extends the Learnable_Optimizer class. It implements a MOEA/D (Multi-Objective Evolutionary Algorithm Based
+    on Decomposition) variant with multi-agent reinforcement learning capabilities to adaptively select algorithm
+    parameters during the optimization process.
+    todo:写论文链接
+    # Attributes
+    ## Problem Related
+    - n_ref_points (int): Number of reference points for performance calculation.
+    - episode_limit (int): Maximum number of generations/episodes.
+    ## MDP Related
+    - reward_type (int): Type of reward function to use (0-3).
+    - n_agents (int): Number of agents in the multi-agent system.
+    - early_stop (bool): Flag to enable early stopping.
+    ## MOEA/D Algorithm Related
+    - moead_neighborhood_maxsize (int): Maximum neighborhood size.
+    - moead_delta (float): Probability of selecting mating pool from neighborhood.
+    - moead_eta (int): Maximum number of solutions replaced by each offspring.
+    - adaptive_open (bool): Flag to enable adaptive weight vector adjustment.
+    - max_fes (int): Maximum function evaluations.
+    # Methods
+    ## init_population(problem)
+    Initializes the population for the given problem.
+    ## get_neighborhoods()
+    Constructs neighborhoods for each subproblem based on weight vector distances.
+    ## get_weights(n_obj)
+    Generates weight vectors based on the number of objectives.
+    ## update(action, problem)
+    Performs one step update in MOEA/D including solution generation and selection.
+    - action: Contains neighborhood size, operator type, operator parameter, and weight adjustment decisions.
+    ## get_state()
+    Returns the current state observation for reinforcement learning agents.
+    ## get_hypervolume(n_samples=1e5)
+    Calculates or estimates the hypervolume indicator.
+    ## get_igd()
+    Calculates the Inverted Generational Distance.
+    ## get_reward(value)
+    Calculates the reward based on performance improvement.
+    # Usage
+    The optimizer is designed to be used within a reinforcement learning loop where agents make
+    decisions about algorithm parameters, receive rewards based on optimization performance,
+    and update their policies accordingly.
+    """
     def __init__(self, config):
         super.__init__()
         self.__config = config
@@ -309,6 +354,20 @@ class MADAC_Optimizer(Learnable_Optimizer):
         self.operators = Operators(self.rng)
 
     def init_population(self, problem):
+        """
+        # Introduction
+        Initializes the population and related parameters for the multi-objective optimizer based on the provided problem instance.
+        # Args:
+        todo:problem 写清楚数据结构
+        - problem: An object representing the optimization problem, which must define the number of objectives (`n_obj`), number of variables (`n_var`), lower bounds (`lb`), upper bounds (`ub`), and an evaluation method (`eval`). It should also provide a method `get_ref_set` for generating reference points.
+        # Returns:
+        - dict: The current state of the optimizer after initialization, as returned by `self.get_state()`.
+        # Notes:
+        - This method sets up the initial population, objective values, weights, neighborhoods, and various tracking variables such as the ideal point and IGD (Inverted Generational Distance) calculator.
+        - It also initializes adaptive weights and static parameters required for the optimizer's operation.
+        """
+
+        
         self.problem = problem
         self.n_obj = problem.n_obj
         self.n_var = problem.n_var
@@ -333,6 +392,16 @@ class MADAC_Optimizer(Learnable_Optimizer):
         return self.get_state()
 
     def get_neighborhoods(self):
+        """
+        # Introduction
+        Computes the neighborhoods for each weight vector in the optimizer by finding the closest weight vectors according to a sorting function.
+        # Returns:
+        - list[list[int]]: A list where each element contains the indices of the nearest neighbors for the corresponding weight vector.
+        # Notes:
+        - The number of neighbors is determined by `self.moead_neighborhood_maxsize`.
+        - The sorting of neighbors is performed using `self.moead_sort_weights`.
+        """
+        
         neighborhoods = []  # the i-th element save the index of the neighborhoods of it
         for i in range(len(self.weights)):
             sorted_weights = self.moead_sort_weights(
@@ -342,6 +411,17 @@ class MADAC_Optimizer(Learnable_Optimizer):
         return neighborhoods
 
     def get_weights(self, n_obj):
+        """
+        # Introduction
+        Generates a set of weight vectors for multi-objective optimization based on the number of objectives.
+        # Args:
+        - n_obj (int): The number of objectives for which to generate weight vectors.
+        # Returns:
+        - np.ndarray or similar: An array of weight vectors suitable for the specified number of objectives.
+        # Notes:
+        The function selects different parameters for the `normal_boundary_weights` function depending on the value of `n_obj` to ensure appropriate distribution of weights for common cases (e.g., 3, 6, 8 objectives). For other values, a default parameter set is used.
+        """
+        
         weights = None
         if n_obj == 3:
             weights = normal_boundary_weights(n_obj, 13, 0)
@@ -359,6 +439,22 @@ class MADAC_Optimizer(Learnable_Optimizer):
                 self.ideal_point[i], solution_obj[i])
 
     def _init_adaptive_weights(self):
+        """
+        # Introduction
+        Initializes the adaptive weights and related parameters for the optimizer, setting up structures and values required for adaptive weight adjustment during optimization.
+        # Attributes Set:
+        - EP (list): Stores elite population members.
+        - EP_obj (list): Stores objective values of elite population members.
+        - EP_MaxSize (int): Maximum size of the elite population, set to 1.5 times the population size.
+        - rate_update_weight (float): Rate at which weights are updated, used to determine the number of subproblems to adjust.
+        - nus (int): Maximum number of subproblems whose weights may be adjusted, computed as rate_update_weight * population_size.
+        - wag (int): Adaptive iteration interval, representing the number of episodes between weight adjustments.
+        - adaptive_cooling_time (int): Time interval for adaptive cooling, set equal to wag.
+        - adaptive_end (int): The episode at which adaptive weight adjustment ends, set to 90% of the total optimization process.
+        # Notes:
+        This method assumes that `self.population_size` and `self.episode_limit` are already defined as attributes of the class.
+        """
+        
         self.EP = []
         self.EP_obj = []
         self.EP_MaxSize = int(self.population_size * 1.5)
@@ -371,6 +467,38 @@ class MADAC_Optimizer(Learnable_Optimizer):
         self.adaptive_end = int(self.episode_limit * self.population_size * 0.9)
 
     def _init_static(self):
+        """
+        # Introduction
+        Initializes and resets static tracking variables and statistics for the optimizer, including counters, historical records, and running statistics for various performance metrics.
+        # Attributes Set:
+        - nfe (int): Counter for the number of function evaluations (discarded).
+        - moead_generation (int): Counter for MOEA/D generations (discarded).
+        - best_value (float): Best objective value found so far.
+        - last_value (float): Last recorded objective value.
+        - inital_value (float or None): Initial objective value.
+        - last_bonus (float): Last bonus value.
+        - stag_count (int): Number of iterations without improvement.
+        - stag_count_max (float): Maximum allowed stagnation count, set as one-tenth of `episode_limit`.
+        - hv_his (list): History of hypervolume values.
+        - hv_last5 (MovAvg): Moving average of the last 5 hypervolume values.
+        - nds_ratio_his (list): History of non-dominated solution ratios.
+        - nds_ratio_last5 (MovAvg): Moving average of the last 5 non-dominated solution ratios.
+        - ava_dist_his (list): History of average distances.
+        - ava_dist_last5 (MovAvg): Moving average of the last 5 average distances.
+        - igd_his (list): History of IGD (Inverted Generational Distance) values.
+        - igd_last5 (MovAvg): Moving average of the last 5 IGD values.
+        - value_his (list): History of objective values.
+        - hv_running (RunningMeanStd): Running mean and standard deviation for hypervolume.
+        - nds_ratio_running (RunningMeanStd): Running mean and standard deviation for non-dominated solution ratio.
+        - ava_dist_running (RunningMeanStd): Running mean and standard deviation for average distance.
+        - igd_running (RunningMeanStd): Running mean and standard deviation for IGD.
+        - info_reward_his (list): History of informational rewards.
+        - info_obs_his (list): History of informational observations.
+        - info_igd_his (list): History of informational IGD values.
+        # Notes:
+        This method is intended to be called during initialization or reset of the optimizer to ensure all tracking variables are in a consistent state.
+        """
+        
         self.nfe = 0  # Discarded
         self.moead_generation = 0  # Discarded
         self.best_value = 1e6
@@ -405,6 +533,36 @@ class MADAC_Optimizer(Learnable_Optimizer):
         self.info_igd_his = []
 
     def get_state(self):
+        """
+        # Introduction
+        Constructs and returns the current state observation for all agents in the optimizer environment. The state is represented as a 22-dimensional feature vector containing normalized problem parameters, progress indicators, and various statistical metrics related to the optimization process.
+        # Returns:
+        - list of numpy.ndarray: A list containing the same 22-dimensional observation vector for each agent (`self.n_agents`), where each vector encodes the current environment state.
+        # Observation Vector Details:
+        - obs_[0]: Inverse of the number of objectives.
+        - obs_[1]: Inverse of the number of variables.
+        - obs_[2]: Normalized current generation count.
+        - obs_[3]: Normalized stagnation count.
+        - obs_[4]: Current hypervolume metric.
+        - obs_[5]: Ratio of non-dominated solutions.
+        - obs_[6]: Average distance metric.
+        - obs_[7]: Recent change in hypervolume.
+        - obs_[8]: Recent change in non-dominated solution ratio.
+        - obs_[9]: Recent change in average distance.
+        - obs_[10]: Mean of the last 5 hypervolume values.
+        - obs_[11]: Mean of the last 5 non-dominated solution ratios.
+        - obs_[12]: Mean of the last 5 average distances.
+        - obs_[13]: Standard deviation of the last 5 hypervolume values.
+        - obs_[14]: Standard deviation of the last 5 non-dominated solution ratios.
+        - obs_[15]: Standard deviation of the last 5 average distances.
+        - obs_[16]: Running mean of hypervolume.
+        - obs_[17]: Running mean of non-dominated solution ratio.
+        - obs_[18]: Running mean of average distance.
+        - obs_[19]: Running variance of hypervolume.
+        - obs_[20]: Running variance of non-dominated solution ratio.
+        - obs_[21]: Running variance of average distance.
+        """
+        
         obs_ = np.zeros(22)
         obs_[0] = 1 / self.problem.n_obj
         obs_[1] = 1 / self.problem.n_var
@@ -431,6 +589,23 @@ class MADAC_Optimizer(Learnable_Optimizer):
         return [obs_] * self.n_agents
 
     def get_action(self, action_idx, action):
+        """
+        # Introduction
+        Maps an action index and action value to a specific agent parameter value based on predefined lists.
+        # Args:
+        todo:写清楚action 结构
+        - action_idx (int): The index indicating which agent parameter to select.  
+            - 0: Neighbor size  
+            - 1: Operator strategy  
+            - 2: Probability constant  
+            - 3: Weight
+        - action (int): The index within the selected parameter list to retrieve the value.
+        # Returns:
+        - int | float | str: The value from the corresponding agent parameter list based on the provided indices.
+        # Raises:
+        - IndexError: If `action` is out of range for the selected parameter list.
+        """
+        
         neighborsize_agent = [15, 20, 25, 30]
         os_agent = ['DE1', 'DE2', 'DE3', 'DE4']
         pc_agent = [0.4, 0.5, 0.6, 0.7]
@@ -446,11 +621,29 @@ class MADAC_Optimizer(Learnable_Optimizer):
 
     def update(self, action, problem):
         """
+        # Introduction
+        Performs a single update step in the MOEA/D (Multi-Objective Evolutionary Algorithm based on Decomposition) optimization process. This includes solution generation, selection, and adaptive weight adjustment.
+        # Args:
+        todo: action和problem 结构
+        - action (list): A list of parameters controlling the update step, including neighborhood size, operator type, operator parameter, and weight adjustment flag.
+        - problem (object): The optimization problem instance, providing evaluation and problem-specific methods.
+        # Returns:
+        - tuple: A tuple containing:
+            - obs (object): The updated state observation.
+            - rewards (list): A list of reward values for each agent.
+            - done (bool): Whether the optimization process has reached its stopping condition.
+            - info (dict): Additional information, including best and last IGD (Inverted Generational Distance) values.
+        # Raises:
+        - Exception: If the weight adjustment flag in `action[3]` is greater than 1.
+        """
+        
+        """
         one step update in moea/d
         inclue solution generation and solution selection
         @param action: neighboor size; operator type; operator parameter
         :return:
         """
+
         self.moead_neighborhood_size = self.get_action(0, action[0])
         self.os = self.get_action(1, action[1])
         self.pc = self.get_action(2, action[2])
@@ -506,6 +699,19 @@ class MADAC_Optimizer(Learnable_Optimizer):
         return self.obs, [reward] * self.n_agents, self.done, info
 
     def update_information(self):
+        """
+        # Introduction
+        Updates the optimizer's internal information by identifying the non-dominated solutions (Pareto front) in the current population and storing relevant metadata.
+        # Args:
+        None
+        # Side Effects:
+        - Updates `self.cost` with the objective values of the non-dominated individuals in the population.
+        - Updates `self.metadata` with the current population and their objective values.
+        # Notes:
+        - Assumes `self.population_obj` contains the objective values for the current population.
+        - The method `find_non_dominated_indices` is used to determine the indices of non-dominated solutions.
+        """
+        
         index =  self.find_non_dominated_indices(self.population_obj)
         self.cost = [self.population_obj[i] for i in index] # parato front
         self.metadata = {
@@ -515,10 +721,23 @@ class MADAC_Optimizer(Learnable_Optimizer):
         
     def find_non_dominated_indices(self, population_list):
         """
+        # Introduction
+        Identifies the indices of non-dominated solutions (Pareto optimal solutions) in a given population for multi-objective optimization.
+        # Args:
+        todo:真的是float吗?
+        - population_list (List[List[float]]): A list where each element is a list representing the objective values of a single solution in the population.
+        # Returns:
+        - numpy.ndarray: An array of indices corresponding to the non-dominated solutions in the population.
+        # Notes:
+        - A solution is considered non-dominated if no other solution in the population is better in all objectives and strictly better in at least one objective.
+        """
+        
+        """
         此函数用于找出种群中的支配解
         :param population_list: 种群的目标值的列表，列表中的每个元素是一个代表单个解目标值的列表
         :return: 支配解的列表
         """
+        
         # 将列表转换为 numpy 数组
         population = np.array(population_list)
         n_solutions = population.shape[0]
@@ -537,8 +756,22 @@ class MADAC_Optimizer(Learnable_Optimizer):
         return non_dominated_indices
 
     def update_ep(self):
+        """
+        # Introduction
+        Updates the current evolutionary population (EP) by incorporating offspring, filtering non-dominated solutions, and maintaining the population size using a crowding distance-based selection.
+        # Args:
+        None
+        # Returns:
+        None
+        # Details:
+        - Extends the current population (`EP` and `EP_obj`) with offspring solutions.
+        - Filters the population to retain only non-dominated solutions.
+        - If the population exceeds the maximum allowed size (`EP_MaxSize`), removes overcrowded solutions based on a crowding distance metric to maintain diversity.
+        """
+        
         """Update the current evolutional population EP
         """
+        
         self.EP.extend(self.offspring_list)
         self.EP_obj.extend(self.offspring_obj_list)
 
@@ -564,8 +797,27 @@ class MADAC_Optimizer(Learnable_Optimizer):
         self.EP_obj = list((itemgetter(*idx)(self.EP_obj)))
 
     def update_weight(self):
+        """
+        # Introduction
+        Updates the population, objective values, and weights of subproblems in the optimizer by removing overcrowded subproblems and introducing new ones from the external population (EP). Also updates the neighborhoods for each subproblem based on the new weights.
+        # Args:
+        None
+        # Modifies:
+        todo:population_obj中的元素的结构是什么写清楚
+        - self.population (list): The updated list of subproblems after deletion and addition.
+        - self.population_obj (list): The updated list of objective values for the population.
+        - self.weights (list): The updated list of weights for the population.
+        - self.neighborhoods (list): The updated neighborhoods for each subproblem.
+        # Details:
+        - Removes the most overcrowded subproblems based on distance metrics.
+        - Adds new subproblems from the external population (EP) based on their distance to the current population.
+        - Calculates new weights for the added subproblems.
+        - Updates the neighborhoods for each subproblem using the MOEA/D sorting method.
+        # Raises:
+        None
+        """
         # Delete the overcrowded subproblems
-
+        
         # Delete the overcrowded subproblems
         l_ep = len(self.EP)
         nus = min(l_ep, self.nus)
@@ -614,6 +866,19 @@ class MADAC_Optimizer(Learnable_Optimizer):
                 sorted_weights[:self.moead_neighborhood_maxsize])
 
     def update_igd(self, value):
+        """
+        # Introduction
+        Updates the internal IGD (Inverted Generational Distance) tracking variables based on the provided value.
+        Tracks the history of values, updates the best value found, and manages stagnation count.
+        # Args:
+        - value (float): The new IGD value to be recorded and evaluated.
+        # Side Effects:
+        - Appends the new value to `self.value_his`.
+        - Updates `self.best_value` and resets `self.stag_count` if the new value is better.
+        - Increments `self.stag_count` if the new value is not better.
+        - Updates `self.last_value` with the new value.
+        """
+        
         self.value_his.append(value)
         if value < self.best_value:
             self.stag_count = 0
@@ -626,6 +891,19 @@ class MADAC_Optimizer(Learnable_Optimizer):
         return chebyshev(solution_obj, self.ideal_point, weights)
 
     def moead_update_solution(self, solution, solution_obj, mating_indices):
+        """
+        # Introduction
+        Updates the MOEA/D population by potentially replacing individuals in the mating neighborhood with a given solution if it improves the scalarized fitness value. Ensures that the number of replacements does not exceed a predefined threshold.
+        # Args:
+        - solution (Any): The candidate solution to potentially insert into the population.
+        - solution_obj (Any): The objective values associated with the candidate solution.
+        - mating_indices (List[int]): Indices of the population members considered for replacement.
+        # Returns:
+        - None
+        # Notes:
+        - The method shuffles the mating indices, evaluates each candidate in the neighborhood, and replaces it with the new solution if the new solution has a better scalarized fitness value according to the corresponding weight vector.
+        - The number of replacements is limited by `self.moead_eta`.
+        """
         """
         repair solution, make constraint satisfiable
         :param solution:
@@ -655,6 +933,19 @@ class MADAC_Optimizer(Learnable_Optimizer):
 
     @staticmethod
     def moead_sort_weights(base, weights):
+        """
+        # Introduction
+        Sorts a list of weight vectors by their Euclidean distance to a given base weight vector, returning the indices of the weights in ascending order of distance.
+        # Args:
+        todo:base和weights 数据结构，
+        - base (list[float]): The reference weight vector to which distances are computed.
+        - weights (list[list[float]]): A list of weight vectors to be sorted by proximity to the base.
+        # Returns:
+        - list[int]: A list of indices representing the order of weights sorted by increasing distance to the base vector.
+        # Notes:
+        - The function uses Euclidean distance as the metric for sorting.
+        """
+        
         """Returns the index of weights nearest to the base weight."""
 
         def compare(weight1, weight2):
@@ -676,16 +967,39 @@ class MADAC_Optimizer(Learnable_Optimizer):
 
     def moead_get_subproblems(self):
         """
+        # Introduction
+        Determines the order of subproblems to be searched in the MOEA/D optimization process. 
+        If utility-based updating is enabled, the method follows the utility-based MOEA/D search; 
+        otherwise, it uses the original MOEA/D specification.
+        # Returns:
+        - List[int]: A shuffled list of indices representing the subproblems to be searched in the current iteration.
+        """
+        
+        """
         Determines the subproblems to search.
         If :code:`utility_update` has been set, then this method follows the
         utility-based moea/D search.
         Otherwise, it follows the original moea/D specification.
         """
+        
         indices = list(range(self.population_size))
         self.rng.shuffle(indices)
         return indices
 
     def moead_get_mating_indices(self, index):
+        """
+        # Introduction
+        Determines the mating indices for the MOEA/D algorithm based on a probabilistic selection between the neighborhood and the entire population.
+        # Args:
+        - index (int): The index of the current individual in the population for which mating indices are to be determined.
+        # Returns:
+        - list[int]: A list of indices representing the selected mating pool, either from the individual's neighborhood or the entire population.
+        # Notes:
+        - With probability `moead_delta`, the method returns the indices of the individual's neighborhood up to `moead_neighborhood_size`.
+        - Otherwise, it returns the indices of the entire population.
+        """
+        
+        
         """Determines the mating indices.
 
         Returns the population members that are considered during mating.  With
@@ -698,6 +1012,20 @@ class MADAC_Optimizer(Learnable_Optimizer):
             return list(range(self.population_size))
 
     def get_hypervolume(self, n_samples=1e5):
+        """
+        # Introduction
+        Computes the hypervolume (HV) indicator for the current population of objective vectors, either exactly or via Monte Carlo estimation, depending on the number of objectives.
+        # Args:
+        todo:n_samples 数据类型
+        - n_samples (int or float, optional): The number of Monte Carlo samples to use when estimating the hypervolume for problems with more than 3 objectives. Defaults to 1e5.
+        # Returns:
+        - float: The calculated or estimated hypervolume value for the current population.
+        # Notes:
+        - For problems with 3 or fewer objectives, the hypervolume is computed exactly.
+        - For problems with more than 3 objectives, the hypervolume is estimated using Monte Carlo sampling.
+        - The method updates internal history and running statistics of hypervolume values after each computation.
+        """
+
         if self.problem.n_obj <= 3:
             hv_fast = False
         else:
@@ -749,6 +1077,18 @@ class MADAC_Optimizer(Learnable_Optimizer):
         return hv_value
 
     def get_igd(self):
+        """
+        # Introduction
+        todo:IGD是这个意思吗
+        Calculates the Inverted Generational Distance (IGD) for the current population and updates related historical and running statistics.
+        # Returns:
+        - float: The calculated IGD value for the current population.
+        # Side Effects:
+        - Appends the IGD value to `self.igd_his`.
+        - Adds the IGD value to `self.igd_last5`.
+        - Updates the running IGD statistics in `self.igd_running`.
+        """
+        
         igd_value = self.igd_calculator.calculate(self.population_obj)
         self.igd_his.append(igd_value)
         self.igd_last5.add(igd_value)
@@ -756,6 +1096,17 @@ class MADAC_Optimizer(Learnable_Optimizer):
         return igd_value
 
     def get_ratio_nondom_sol(self):
+        """
+        # Introduction
+        Calculates the ratio of non-dominated solutions in the current population and updates historical tracking metrics.
+        # Returns:
+        - float: The ratio of non-dominated solutions to the total number of solutions in the population.
+        # Side Effects:
+        - Appends the computed ratio to `self.nds_ratio_his`.
+        - Adds the ratio to `self.nds_ratio_last5`.
+        - Updates the running average in `self.nds_ratio_running` with the new ratio value.
+        """
+        
         count = len(self.find_non_dominated_indices(self.population_obj))
         ratio_value = count / len(self.population_obj)
         self.nds_ratio_his.append(ratio_value)
@@ -764,6 +1115,17 @@ class MADAC_Optimizer(Learnable_Optimizer):
         return ratio_value
 
     def get_average_dist(self):
+        """
+        # Introduction
+        Calculates the normalized average pairwise distance between individuals in the population based on their objective values.
+        # Args:
+        None
+        # Returns:
+        - float: The normalized average distance between all pairs of individuals in the population.
+        # Raises:
+        - SystemExit: If the computed average distance is NaN, prints diagnostic information and exits the program.
+        """
+        
         total_distance = cdist(
             [self.population_obj[i] for i in range(
                 self.population_size)],
@@ -784,6 +1146,18 @@ class MADAC_Optimizer(Learnable_Optimizer):
         return ava_dist
 
     def get_pre_k_change(self, k, value_his):
+        """
+        # Introduction
+        Calculates the change in value over the last `k` generations from a history of values.
+        # Args:
+        - k (int): The number of generations to look back.
+        - value_his (list[float]): A list containing the historical values.
+        # Returns:
+        - float: The difference between the most recent value and the value `k` generations ago. Returns 0 if there are not enough generations.
+        # Raises:
+        - IndexError: If `value_his` does not contain enough elements for the calculation when `self.moead_generation >= k`.
+        """
+        
         if self.moead_generation >= k:
             return value_his[-1] - value_his[-(k + 1)]
         else:
@@ -791,10 +1165,21 @@ class MADAC_Optimizer(Learnable_Optimizer):
 
     def get_reward(self, value):
         """
+        # Introduction
+        Calculates the reward based on the provided value and the selected reward type. The reward reflects the improvement or change in the value (typically IGD, where smaller is better) compared to historical values.
+        # Args:
+        - value (float): The current value (e.g., IGD) to evaluate for reward calculation.
+        # Returns:
+        - float: The computed reward based on the current value and the reward type.
+        # Raises:
+        - ValueError: If an invalid reward type is specified.
+        """
+        """
         use the value to get reward
         value(default is igd), the smaller the better
         :return: reward based on current igd and historical igd
         """
+        
         reward = 0
         if self.reward_type == 0:
             if value < self.best_value:
@@ -820,6 +1205,21 @@ class MADAC_Optimizer(Learnable_Optimizer):
 
 
 def normal_boundary_weights(nobjs, divisions_outer, divisions_inner=0):
+    """
+    # Introduction
+    Generates a set of uniformly distributed weight vectors on a simplex using the normal boundary intersection method. These weights are commonly used in multi-objective optimization algorithms to decompose the objective space.
+    # Args:
+    - nobjs (int): The number of objectives (dimensions) for which to generate the weights.
+    - divisions_outer (int): The number of divisions for the outer set of weights, determining the granularity of the weight vectors on the simplex boundary.
+    - divisions_inner (int, optional): The number of divisions for the inner set of weights, used to generate additional weights inside the simplex. Defaults to 0 (no inner weights).
+    # Returns:
+    - list[list[float]]: A list of weight vectors, where each vector is a list of floats summing to 1. Each vector represents a point on or inside the simplex.
+    
+    # Notes:
+    - The function first generates weights on the boundary of the simplex using the specified number of outer divisions.
+    - If `divisions_inner` is greater than 0, additional weights are generated inside the simplex and averaged with the uniform distribution.
+    """
+    
     """Returns weights generated by the normal boundary method.
 
     The weights produced by this method are uniformly distributed on the
