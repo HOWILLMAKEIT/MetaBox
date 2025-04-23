@@ -47,7 +47,25 @@ For further exploration, we recommend reading the comprehensive survey : "[Towar
 > [!NOTE]
 > **The following code demonstrates the core training logic.**  
 > Numerous configurable options are available — refer to **Gallery > Config** for details.
- 
+
+<!-- ```{note} Notes require **no** arguments, so content can start here.
+```
+```{tip} Notes require **no** arguments, so content can start here.
+```
+```{warning} Notes require **no** arguments, so content can start here.
+```
+:::{note}
+This text is **standard** _Markdown_
+:::
+:::{warning}
+This text is **standard** _Markdown_
+:::
+```{admonition} Here's my title
+:class: note
+
+Here's my admonition content
+
+``` -->
 🧪 General Training Code
 
     from metabox import Trainer, Config
