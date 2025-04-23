@@ -1,5 +1,6 @@
 .idea
 *.pyc
+./docs/build
 *.pkl
 *.err
 *.log

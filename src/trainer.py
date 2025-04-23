@@ -83,6 +83,32 @@ matplotlib.use('Agg')
 
 class Trainer(object):
     def __init__(self, config, user_agent = None, user_optimizer = None, user_datasets = None):
+        """
+        Initializes the trainer with the given configuration.
+        todo:重写注释
+        Args:
+            config (object): Configuration object containing the following attributes:
+                - seed (int): Random seed for reproducibility.
+                - resume_dir (str or None): Directory to resume training from a saved agent. 
+                  If None, a new agent is created.
+                - train_agent (str): Name of the training agent class to instantiate or load.
+                - train_optimizer (str): Name of the optimizer class to instantiate.
+                - problem (str): Problem type, e.g., 'bbob-surrogate'.
+                - is_train (bool): Flag indicating whether the mode is training or not.
+
+        Attributes:
+            config (object): Stores the provided configuration.
+            agent (object): The training agent, either newly created or loaded from a file.
+            optimizer (object): The optimizer for training the agent.
+            train_set (object): The training dataset constructed based on the problem type.
+            test_set (object): The testing dataset constructed based on the problem type.
+
+        Notes:
+            - Sets random seeds for reproducibility across PyTorch, CUDA, and NumPy.
+            - Configures PyTorch's cuDNN backend for deterministic behavior.
+            - If `resume_dir` is provided, loads the agent from a pickle file and updates its settings.
+            - Constructs the training and testing datasets based on the problem type.
+        """
         self.config = config
 
         if self.config.train_problem in ['bbob-surrogate-10D','bbob-surrogate-5D','bbob-surrogate-2D']:
@@ -118,6 +144,23 @@ class Trainer(object):
             self.optimizer = user_optimizer
 
     def save_log(self, epochs, steps, cost, returns, normalizer):
+        """
+        # Introduction
+        Saves training logs including epochs, steps, costs, returns, and normalizer values for each problem in the training set. The logs are saved as NumPy arrays in a structured directory based on agent class and runtime.
+        # Args:
+        - epochs (list or np.ndarray): List or array of epoch indices.
+        - steps (list or np.ndarray): List or array of step counts corresponding to each epoch.
+        - cost (dict): Dictionary mapping problem names to lists of cost values per epoch.
+        - returns (list or np.ndarray): List or array of return values per step.
+        - normalizer (dict): Dictionary mapping problem names to lists of normalizer values per epoch.
+        # Returns:
+        - None
+        # Notes:
+        - Creates the log directory if it does not exist.
+        - Pads cost and normalizer lists with their last value if they are shorter than the number of epochs.
+        - Saves logs as `.npy` files for later analysis.
+        """
+        
         log_dir = self.config.log_dir + f'/train/{self.agent.__class__.__name__}/{self.config.run_time}/log/'
         if not os.path.exists(log_dir):
             os.makedirs(log_dir)
@@ -140,6 +183,31 @@ class Trainer(object):
             pickle.dump(saving_class, f, -1)
 
     def train(self):
+        """
+        Trains the agent using the specified training configuration and dataset.
+
+        This method orchestrates the training process, including setting up the training environment,
+        managing epochs, logging progress, and saving checkpoints. It supports different training modes
+        ("single" and "multi") and integrates with TensorBoard for logging.
+
+        Attributes:
+            self.config (object): Configuration object containing training parameters such as batch size,
+                training mode, seed values, and logging options.
+            self.train_set (object): Dataset object containing the training problems.
+            self.agent (object): The agent to be trained.
+            self.optimizer (object): Optimizer used for training.
+
+        Workflow:
+            1. Initializes TensorBoard logger if enabled.
+            2. Configures batch size and training mode based on the configuration.
+            3. Iteratively trains the agent for each epoch until the stopping condition is met.
+            4. Logs training progress using tqdm and TensorBoard.
+            5. Saves checkpoints at specified intervals.
+            6. Handles random seed management for reproducibility.
+
+        Returns:
+            None
+        """
         print(f'start training: {self.config.run_time}')
         is_end = False
         # todo tensorboard
@@ -259,6 +327,40 @@ class Trainer(object):
                 is_end = True
 
     def rollout(self, checkpoint, rollout_run = 10):
+        def rollout(self, checkpoint, rollout_run=10):
+            """
+            Perform a rollout operation using a specified checkpoint and number of runs.
+
+            This method loads a pre-trained agent from a checkpoint file, initializes the 
+            environment for testing, and performs a batch rollout to evaluate the agent's 
+            performance on the test set.
+
+            Args:
+                checkpoint (int): The checkpoint index to load the agent from.
+                rollout_run (int, optional): The number of rollout runs to perform for each 
+                    problem in the test set. Defaults to 10.
+
+            Behavior:
+                - Seeds are set for reproducibility using the configuration's seed value.
+                - The agent is loaded from a serialized file located in the `agent_save_dir`.
+                - A deep copy of the test set is created for the rollout process.
+                - The rollout is performed in batches, iterating through the test set.
+                - For each problem in the test set, multiple environments are created, and 
+                  the agent performs a batch rollout using these environments.
+                - Progress is displayed using a progress bar, which updates with the agent's 
+                  status.
+
+            Notes:
+                - The method uses PyTorch for deterministic behavior by setting seeds and 
+                  disabling certain optimizations.
+                - The `rollout_batch_episode` method of the agent is called to perform the 
+                  rollout in parallel.
+
+            Raises:
+                FileNotFoundError: If the checkpoint file does not exist.
+                pickle.UnpicklingError: If there is an error while loading the agent.
+
+            """
         # 读取 agent
         torch.manual_seed(self.config.seed)
         torch.cuda.manual_seed(self.config.seed)

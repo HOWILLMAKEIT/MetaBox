@@ -17,6 +17,36 @@ def vector2nn(x,net):
     return net
 
 class Policy(nn.Module):
+    """
+    # Introduction
+    The `Policy` class implements a neural network-based policy for evolutionary optimization, utilizing attention mechanisms for selection and adaptation of candidate solutions. It is designed to operate on populations of solutions, transforming fitness values and controlling mutation step sizes in an adaptive manner.
+    # Args:
+    - pop_size (int): The size of the population.
+    - mu (float, optional): Mean for weight initialization. Default is 0.
+    - sigma (float, optional): Standard deviation for weight initialization. Default is 1.0.
+    - DK (int, optional): Dimensionality of the key/query/value vectors in attention layers. Default is 16.
+    - device (torch.device or str, optional): Device on which tensors are allocated (e.g., 'cpu' or 'cuda'). Default is None.
+    # Attributes:
+    - pop_size (int): Population size.
+    - mu (float): Mean for weight initialization.
+    - sigma (float): Standard deviation for weight initialization.
+    - DF (int): Dimensionality of fitness features (fixed at 2).
+    - D_sigma (int): Dimensionality of sigma features (fixed at 1).
+    - DK (int): Dimensionality of key/query/value vectors.
+    - device (torch.device or str): Device for computation.
+    - W_QP, W_KC, W_VC, W_QS, W_KS, W_QM, W_KM, W_VM, W_sigma (nn.Linear): Linear layers for attention mechanisms.
+    # Methods:
+    - _init_weights(mu, sigma): Initializes the weights and biases of all linear layers with a normal distribution.
+    - trans_F(f): Transforms fitness values into standardized z-scores and scaled ranks.
+    - adaptation(fitness, sigma): Computes adaptive mutation step sizes using attention over fitness and sigma features.
+    - selection(fitness_c, fitness_p): Performs selection among candidate and parent fitness values using attention, returning a one-hot selection mask.
+    # Returns:
+    - adaptation: Returns updated sigma values for each individual in the population.
+    - selection: Returns a one-hot encoded tensor indicating selected individuals.
+    # Notes:
+    This class is intended for use in evolutionary algorithms where neural attention mechanisms are leveraged for adaptive selection and mutation. It requires PyTorch and is designed to be compatible with GPU acceleration.
+    """
+    
     def __init__(self, pop_size, mu = 0, sigma = 1.0, DK = 16, device = None):
         super(Policy, self).__init__()
         self.pop_size = pop_size
@@ -45,6 +75,16 @@ class Policy(nn.Module):
         self._init_weights(self.mu, self.sigma)
 
     def _init_weights(self, mu, sigma):
+        """
+        # Introduction
+        Initializes the weights and biases of specific neural network layers using a normal distribution.
+        # Args:
+        - mu (float): The mean value for the normal distribution used to initialize weights and biases.
+        - sigma (float): The standard deviation for the normal distribution used to initialize weights and biases.
+        # Details:
+        Iterates over a predefined list of layer attributes (`self.W_QP`, `self.W_KC`, `self.W_VC`, `self.W_QS`, `self.W_KS`, `self.W_QM`, `self.W_KM`, `self.W_VM`, `self.W_sigma`) and applies normal initialization to both their `weight` and `bias` parameters.
+        """
+        
         for layer in [
             self.W_QP, self.W_KC, self.W_VC,
             self.W_QS, self.W_KS,
@@ -55,6 +95,18 @@ class Policy(nn.Module):
             nn.init.normal_(layer.bias, mean = mu, std = sigma)
 
     def trans_F(self, f):
+        """
+        # Introduction
+        Transforms the input tensor by computing its z-score normalization and scaled rank, returning both as a stacked tensor.
+        # Args:
+        - f (torch.Tensor): A 1D tensor of numerical values to be transformed.
+        # Returns:
+        - torch.Tensor: A 2D tensor of shape [N, 2], where the first column contains the z-score normalized values and the second column contains the scaled ranks.
+        # Notes:
+        - The z-score is computed as (f - mean) / (std + 1e-8) for numerical stability.
+        - The scaled rank is computed such that it is centered around zero.
+        """
+        
         z_score = (f - f.mean()) / (f.std() + 1e-8)
         ranks = torch.argsort(torch.argsort(-1 * z_score))
         scaled_rank = ranks / (len(ranks) - 1) - 0.5
@@ -62,6 +114,21 @@ class Policy(nn.Module):
         return torch.stack([z_score, scaled_rank], dim=1) # [NP, 2]
 
     def adaptation(self, fitness, sigma):
+        """
+        # Introduction
+        Adapts the mutation step size (`sigma`) for an evolutionary algorithm using an attention-based neural network mechanism.
+        # Args:
+        todo:把这俩参数写清楚，但是我没找到引用啊啊啊
+        - fitness (array-like): The fitness values of the population, shape [NP].
+        - sigma (array-like): The mutation step sizes for the population, shape [NP].
+        # Returns:
+        - torch.Tensor: The adapted mutation step sizes, shape [NP], after applying the learned adaptation.
+        # Notes:
+        - This method converts the input arrays to PyTorch tensors and processes them on the configured device.
+        - It uses neural network layers (`W_KM`, `W_QM`, `W_VM`, `W_sigma`) and an attention mechanism to compute the adaptation.
+        - The adaptation is applied multiplicatively to the original `sigma`.
+        """
+        
         # 先变 torch
         fitness = torch.Tensor(fitness).to(self.device)
         sigma = torch.Tensor(sigma).to(self.device)
@@ -82,6 +149,20 @@ class Policy(nn.Module):
         return delta_sigma * sigma
 
     def selection(self, fitness_c, fitness_p):
+        """
+        # Introduction
+        Performs a selection operation using attention mechanisms on child and parent fitness values, producing a one-hot encoded selection matrix.
+        # Args:
+        todo:把这俩参数写清楚，但是我没找到引用啊啊啊
+        - fitness_c (array-like): Fitness values of the child population.
+        - fitness_p (array-like): Fitness values of the parent population.
+        # Returns:
+        - torch.Tensor: A one-hot encoded tensor of shape [E, NP + 1], representing the selection outcome for each entity.
+        # Notes:
+        - The method applies linear transformations and attention mechanisms to compute selection probabilities.
+        - The last column in the output corresponds to a special selection (e.g., "no selection" or "new individual").
+        """
+        
         # 先变 torch
         fitness_c = torch.Tensor(fitness_c).to(self.device)
         fitness_p = torch.Tensor(fitness_p).to(self.device)
@@ -116,6 +197,43 @@ class Policy(nn.Module):
 
 
 class LGA_Optimizer(Learnable_Optimizer):
+    """
+    # Introduction
+    LGA_Optimizer is a learnable optimizer that utilizes a population-based metaheuristic approach with neural network-guided adaptation and selection mechanisms. It is designed to optimize black-box functions by evolving a population of candidate solutions using adaptive mutation and selection strategies.
+    # Args:
+    - config (object): Configuration object containing optimizer parameters such as maximum function evaluations (`maxFEs`), logging interval (`log_interval`), device specification (`device`), and metadata options (`full_meta_data`, `n_logpoint`).
+    # Attributes:
+    - NP (int): Population size.
+    - MaxFEs (int): Maximum number of function evaluations allowed.
+    - policy (Policy): Neural network-based policy for adaptation and selection.
+    - fes (int): Current number of function evaluations.
+    - cost (list): Log of best costs found during optimization.
+    - log_index (int): Current logging index.
+    - log_interval (int): Interval for logging progress.
+    - population (np.ndarray): Current population of candidate solutions.
+    - sigma (np.ndarray): Mutation step sizes for each individual.
+    - c_cost (np.ndarray): Current costs for each individual in the population.
+    - fitness (np.ndarray): Fitness values for the population.
+    - gbest_val (float): Best cost found so far.
+    - init_gbest (float): Initial best cost.
+    - meta_X (list): (Optional) History of populations for metadata logging.
+    - meta_Cost (list): (Optional) History of costs for metadata logging.
+    # Methods:
+    - __str__(): Returns the string representation of the optimizer.
+    - get_costs(position, problem): Evaluates the cost of given positions for a problem.
+    - get_state(): Returns the current fitness state.
+    - softmax(x): Computes the softmax of input array `x`.
+    - init_population(problem): Initializes the population and related attributes for a given problem.
+    - update(action, problem): Performs one or more optimization steps using the provided action (policy network and skip step), updates the population, and logs progress.
+    # Returns (from update):
+    - fitness (np.ndarray): Updated fitness values after the optimization step(s).
+    - reward (float): Relative improvement in best cost during the update.
+    - is_end (bool): Whether the optimization process has reached its end condition.
+    - info (dict): Additional information (currently empty).
+    # Raises:
+    - None explicitly, but may raise exceptions from underlying numpy or neural network operations if inputs are invalid.
+    """
+    
     def __init__(self, config):
         super().__init__(config)
         self.config = config
@@ -135,6 +253,19 @@ class LGA_Optimizer(Learnable_Optimizer):
         return "LGA_Optimizer"
 
     def get_costs(self, position, problem):
+        """
+        # Introduction
+        Calculates the cost of a given position for an optimization problem, optionally adjusting by the known optimum.
+        # Args:
+        todo:写清楚problem数据结构
+        - position (numpy.ndarray): A 2D array of shape (NP, dim) representing the population to be evaluated, where NP is the number of individuals (population size) and dim is the problem dimension. Each row represents an individual's position in the search space.
+        - problem (object): The optimization problem instance, which must have `eval(position)` and `optimum` attributes.
+        # Returns:
+        - float: The cost associated with the given position. If the problem's optimum is known, returns the difference between the evaluated cost and the optimum; otherwise, returns the evaluated cost.
+        # Raises:
+        - AttributeError: If the `problem` object does not have the required `eval` method or `optimum` attribute.
+        """
+        
         if problem.optimum is None:
             cost = problem.eval(position)
         else:
@@ -143,6 +274,13 @@ class LGA_Optimizer(Learnable_Optimizer):
         return cost
 
     def get_state(self):
+        """
+        # Introduction
+        Retrieves the current fitness value representing the state of the optimizer.
+        # Returns:
+        - float: The current fitness value of the optimizer.
+        """
+        
         return self.fitness
 
     def softmax(self, x):
@@ -150,6 +288,31 @@ class LGA_Optimizer(Learnable_Optimizer):
         return e_x / (e_x.sum(axis = 0) + 1e-8)
 
     def init_population(self, problem):
+        """
+        # Introduction
+        Initializes the population and related attributes for the optimizer based on the given problem definition.
+        # Args:
+        - problem: An object representing the optimization problem, expected to have attributes `dim` (int), `ub` (upper bounds), and `lb` (lower bounds).
+        # Returns:
+        - None
+        # Side Effects:
+        - Initializes or updates the following instance attributes:
+            - self.fes: Function evaluation counter.
+            - self.population: The initial population matrix.
+            - self.sigma: Standard deviation array for the population.
+            - self.c_cost: Costs of the initial population.
+            - self.fitness: Fitness values for the population.
+            - self.gbest_val: Best cost value found so far.
+            - self.cost: List of best cost values per generation.
+            - self.log_index: Logging index for tracking progress.
+            - self.init_gbest: Initial best cost value.
+            - self.meta_X, self.meta_Cost: (If enabled) Metadata for population and costs.
+        # Notes:
+        - Uses a random number generator (`self.rng`) to initialize the population.
+        - Assumes the existence of `get_costs` and `softmax` methods.
+        - If `self.config.full_meta_data` is True, stores additional metadata for analysis.
+        """
+        
         self.fes = 0
         dim = problem.dim
 
@@ -176,6 +339,25 @@ class LGA_Optimizer(Learnable_Optimizer):
         return None
 
     def update(self, action, problem):
+        """
+        # Introduction
+        Updates the optimizer's state based on the provided action and problem definition. This method performs one or more optimization steps, updating the population, fitness, and other internal variables according to the current policy and the results of the optimization process.
+        # Args:
+        todo:写清楚action和problem 的数据结构
+        - action (dict): A dictionary containing the current policy network ('net') and optional 'skip_step' parameter. The policy network is used for adaptation and selection during the optimization process.
+        - problem (object): An object representing the optimization problem, which must have attributes such as `dim` (problem dimensionality), `lb` (lower bounds), `ub` (upper bounds), and optionally `optimum`.
+        # Returns:
+        - tuple:
+            - fitness (np.ndarray): The updated fitness values of the population after the optimization step(s).
+            - improvement (float): The relative improvement in the best cost value from the initial to the current generation.
+            - is_end (bool): A flag indicating whether the optimization process has reached its termination condition.
+            - info (dict): Additional information about the optimization process (currently an empty dictionary).
+        # Notes:
+        - The method supports early stopping based on the number of function evaluations (`MaxFEs`), the minimum cost achieved, or a specified number of steps (`skip_step`).
+        - The optimizer maintains logs of the best cost values and, if configured, full meta-data about the population and costs at each step.
+        - The policy network is updated using the provided action, and is used for both mutation adaptation and selection.
+        """
+        
         # action 是 网络
 
         self.policy = vector2nn(action['net'], self.policy).to(self.config.device)
@@ -276,7 +458,7 @@ class LGA_Optimizer(Learnable_Optimizer):
 
 
 
-
+    # ?????????????
         dim = problem.dim
         # sample
         indices = self.rng.choice(np.arange(self.NP), size = self.NP, replace = True, p = self.fitness)

@@ -16,6 +16,7 @@ def vector2nn(x,net,device):
 
 
 class SelfAttn(nn.Module):
+    
     def __init__(self):
         super().__init__()
         self.Wq = nn.Linear(3,8)
@@ -65,6 +66,21 @@ class LES_Optimizer(Learnable_Optimizer):
         return "LES_Optimizer"
     
     def init_population(self, problem):
+        """
+        # Introduction
+        Initializes the population for the optimizer using a normal distribution based on the problem's bounds and dimension. Sets up initial evolution information, including parent solutions, their costs, and statistical parameters for the optimization process.
+        # Args:
+        todo:写清楚problem数据结构
+        - problem (object): An object representing the optimization problem, which must have attributes `ub` (upper bounds), `lb` (lower bounds), `dim` (problem dimensionality), and a method `eval` for evaluating a population.
+        # Returns:
+        - None
+        # Side Effects:
+        - Sets several instance attributes such as `ub`, `lb`, `problem`, `evolution_info`, `fes`, `cost`, `log_index`, and optionally `meta_X` and `meta_Cost` if full meta data logging is enabled.
+        # Notes:
+        - The initial population is generated using a normal distribution clipped to the problem's bounds.
+        - The method assumes that `self.rng` is a random number generator and `self.sigma_ratio`, `self.NP`, and `self.__config.full_meta_data` are properly initialized instance attributes.
+        """
+        
         self.ub = problem.ub
         self.lb = problem.lb
         self.problem = problem
@@ -93,6 +109,17 @@ class LES_Optimizer(Learnable_Optimizer):
         return None
 
     def cal_attn_feature(self):
+        """
+        # Introduction
+        Computes attention features for the current population in the evolutionary optimization process. The features include the z-score of population costs, shifted normalized ranking, and an improvement indicator, which are concatenated into a single tensor.
+        # Returns:
+        - torch.FloatTensor: A tensor of shape (N, 3), where N is the population size. Each row contains the z-score of the cost, the shifted normalized rank, and a boolean indicator of improvement for each individual.
+        # Notes:
+        - The z-score is calculated to standardize the population costs.
+        - The shifted rank normalizes the ranking of costs and centers it around zero.
+        - The improvement indicator is a boolean array indicating whether each individual's cost is better than the global best.
+        """
+        
         # z-score of population costs
         population_costs = self.evolution_info['parents_cost']
         z_score = (population_costs-np.mean(population_costs))/(np.std(population_costs)+1e-8) # avoid nan
@@ -104,6 +131,20 @@ class LES_Optimizer(Learnable_Optimizer):
         return torch.from_numpy(np.vstack([z_score,shifted_rank,improved]).T).to(torch.float32)
     
     def cal_mlp_feature(self, W):
+        """
+        # Introduction
+        Calculates multi-layer perceptron (MLP) features based on the current evolutionary state, including evolution paths and timestamp embeddings.
+        # Args:
+        - W (np.ndarray): Weight vector or matrix used to compute weighted sums of evolutionary information.
+        # Returns:
+        - Tuple[torch.Tensor, np.ndarray, np.ndarray]: 
+            - A torch tensor containing the concatenated feature vector (shape: [dim, 19]).
+            - Numpy array of updated evolution paths for the mean (`c`, shape: [3, dim]).
+            - Numpy array of updated evolution paths for the standard deviation (`s`, shape: [3, dim]).
+        # Notes:
+        The function computes updated evolution paths (`Pc` and `Ps`) for each alpha value, generates a timestamp embedding, and concatenates these features for use in an MLP. The output tensor is suitable for input into a neural network.
+        """
+        
         # P_c_t P_sigma_t
         Pc = []
         Ps = []
@@ -123,6 +164,22 @@ class LES_Optimizer(Learnable_Optimizer):
         return torch.from_numpy(np.hstack([c.T,s.T,rho])).to(torch.float32), c, s
     
     def update(self,action, problem):
+        """
+        # Introduction
+        Updates the optimizer's internal state by performing one or more evolutionary optimization steps using the provided action and problem. The method adapts model parameters, generates new populations, evaluates them, and logs progress until a stopping criterion is met.
+        # Args:
+        todo:写清楚action和problem数据结构
+        - action (dict): Dictionary containing new model parameters for attention and MLP networks, and optionally a 'skip_step' key to limit the number of steps.
+        - problem (object): The optimization problem instance, which must provide a `dim` attribute and an `eval` method for evaluating populations.
+        # Returns:
+        - tuple:
+            - float: The best cost (fitness) found in the current optimization run.
+            - float: The normalized improvement from the initial to the best cost.
+            - bool: Whether the stopping criterion was met.
+            - dict: Additional information (currently empty).
+        # Raises:
+        - None explicitly, but may raise exceptions if the action or problem objects are malformed or if numerical errors occur during optimization.
+        """
 
         # get new model parameters 
         self.attn=vector2nn(action['attn'],self.attn,self.device)

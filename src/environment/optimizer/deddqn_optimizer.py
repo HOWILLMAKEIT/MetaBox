@@ -6,6 +6,50 @@ import copy
 
 
 class DEDDQN_Optimizer(Learnable_Optimizer):
+    class DEDDQN_Optimizer:
+        """
+        # Introduction
+        The `DEDDQN_Optimizer` class implements a learnable optimizer based on Differential Evolution (DE) and Deep Q-Networks (DQN). 
+        It is designed to optimize a given problem by maintaining a population of candidate solutions and iteratively improving them 
+        using mutation, crossover, and selection operations. The optimizer also leverages reinforcement learning to adaptively select 
+        mutation strategies based on the optimization progress.
+
+        # Original Paper:
+        todo: add the original paper link
+
+        # Args:
+        - config (object): A configuration object containing the following attributes:
+            - F (float): Mutation factor for DE.
+            - Cr (float): Crossover probability for DE.
+            - NP (int): Population size.
+            - gen_max (int): Maximum number of generations for DE.
+            - W (int): Window size for storing recent operation metrics.
+            - maxFEs (int): Maximum number of function evaluations.
+            - dim (int): Dimensionality of the problem.
+            - dim_max (int): Maximum dimensionality of the problem.
+            - log_interval (int): Interval for logging optimization progress.
+            - full_meta_data (bool): Whether to store full metadata during optimization.
+            - n_logpoint (int): Number of log points for cost tracking.
+        # Methods:
+        - `__str__() -> str`: Returns the string representation of the optimizer.
+        - `init_population(problem) -> np.ndarray`: Initializes the population and returns the initial state.
+        - `update(action, problem) -> Tuple[np.ndarray, float, bool, dict]`: Updates the optimizer based on the selected action 
+          and returns the next state, reward, termination status, and additional information.
+        # Attributes:
+        - `fes (int)`: Tracks the number of function evaluations performed.
+        - `cost (list)`: Stores the best cost values at each logging interval.
+        - `log_index (int)`: Tracks the current logging index.
+        - `meta_X (list)`: Stores the population at each step (if `full_meta_data` is enabled).
+        - `meta_Cost (list)`: Stores the cost values at each step (if `full_meta_data` is enabled).
+        # Raises:
+        - ValueError: If an invalid action is provided during the `update` method.
+        # Notes:
+        - The optimizer uses four mutation strategies: 'rand/1', 'rand/2', 'rand-to-best/2', and 'cur-to-rand/1'.
+        - The optimizer maintains detailed metrics for each mutation strategy to adaptively select the most effective one.
+        - The `__get_state` method extracts features from the current population and optimization progress to represent the state 
+          for the reinforcement learning agent.
+        """
+    
     def __init__(self, config):
         super().__init__(config)
         config.F = 0.5
@@ -48,6 +92,42 @@ class DEDDQN_Optimizer(Learnable_Optimizer):
         return "DEDDQN_Optimizer"
 
     def init_population(self, problem):
+        """
+        # Introduction
+        Initializes the population for an optimization problem, setting up the initial solutions, their costs, and various tracking variables.
+        # Args:
+        - problem (object): An instance of the optimization problem, which must provide the following attributes and methods:
+            - `ub` (array-like): Upper bounds of the problem's search space.
+            - `lb` (array-like): Lower bounds of the problem's search space.
+            - `optimum` (float or None): The known optimal value of the problem, if available.
+            - `eval(X)` (callable): A method to evaluate the cost of a given population `X`.
+        # Returns:
+        - dict: The initial state of the optimizer, including population, costs, and other relevant metadata.
+        # Attributes Initialized:
+        - `self.__X` (ndarray): The initialized population within the search space bounds.
+        - `self.__cost` (ndarray): The evaluated costs of the population.
+        - `self.fes` (int): The number of function evaluations performed.
+        - `self.__gen` (int): The current generation counter.
+        - `self.__pointer` (int): A pointer for tracking operations.
+        - `self.__stagcount` (int): A counter for stagnation detection.
+        - `self.__X_gbest` (ndarray): The best solution found so far.
+        - `self.__c_gbest` (float): The cost of the best solution found so far.
+        - `self.__c_gworst` (float): The cost of the worst solution in the population.
+        - `self.__X_prebest` (ndarray): The best solution from the previous generation.
+        - `self.__c_prebest` (float): The cost of the best solution from the previous generation.
+        - `self.__OM` (list): A list of deques for tracking operator metadata.
+        - `self.__N_succ` (list): A list of deques for tracking successful operations.
+        - `self.__N_tot` (list): A list of deques for tracking total operations.
+        - `self.__OM_W` (list): A list for tracking operator weights.
+        - `self.log_index` (int): An index for logging purposes.
+        - `self.cost` (list): A list to store the best cost at each generation.
+        - `self.meta_X` (list, optional): A list to store the population at each generation (if `full_meta_data` is enabled).
+        - `self.meta_Cost` (list, optional): A list to store the costs at each generation (if `full_meta_data` is enabled).
+        # Notes:
+        - This method assumes that the `problem` object provides the necessary attributes and methods for population initialization and evaluation.
+        - If `problem.optimum` is provided, the costs are adjusted relative to the optimum.
+        """
+        
         # population initialization
         self.__X = self.rng.rand(self.__NP, self.__dim) * (problem.ub - problem.lb) + problem.lb
         if problem.optimum is None:
@@ -83,6 +163,23 @@ class DEDDQN_Optimizer(Learnable_Optimizer):
         return self.__get_state(problem)
 
     def __get_state(self, problem):
+        """
+        # Introduction
+        Generates a feature vector representing the current state of the optimization problem.
+        The features are derived from various properties of the optimization process, including
+        population diversity, fitness values, and historical operator performance.
+        # Args:
+        todo: 写清楚problem数据结构
+        - problem (object): The optimization problem instance containing bounds and other relevant data.
+        # Returns:
+        - numpy.ndarray: A 1D array of 99 features representing the current state of the optimization process.
+        # Notes:
+        - The feature vector includes normalized fitness values, distances between solutions, 
+          operator success rates, and other statistical measures.
+        - The method uses internal attributes such as population positions, fitness values, 
+          and operator performance metrics to compute the features.
+        """
+        
         max_dist = np.linalg.norm(np.array([problem.ub - problem.lb]).repeat(self.__dim), 2)
         features = np.zeros(99)
         features[0] = (self.__cost[self.__pointer] - self.__c_gbest) / (self.__c_gworst - self.__c_gbest)
@@ -138,6 +235,32 @@ class DEDDQN_Optimizer(Learnable_Optimizer):
         return features
 
     def update(self, action, problem):
+        """
+        # Introduction
+        Updates the optimizer's state based on the selected action and the problem instance.
+        This function implements the core logic of the DE-based optimizer, including mutation, 
+        crossover, selection, and reward computation.
+        # Args:
+        - action (int): The action index representing the mutation strategy to use. 
+          Valid values are:
+            - 0: 'rand/1'
+            - 1: 'rand/2'
+            - 2: 'rand-to-best/2'
+            - 3: 'cur-to-rand/1'
+        todo: 写清楚problem的数据结构
+        - problem (Problem): The optimization problem instance containing the objective 
+          function, bounds, and other problem-specific details.
+        # Returns:
+        - next_state (np.ndarray): The next state of the optimizer after applying the action.
+        - reward (float): The reward obtained from the action, calculated as the improvement 
+          in cost.
+        - is_done (bool): A flag indicating whether the optimization process has reached 
+          its termination condition.
+        - info (dict): Additional information about the current state of the optimizer.
+        # Raises:
+        - ValueError: If the provided `action` is not a valid mutation strategy index.
+        """
+
         if self.__pointer == 0:
             # update prebest
             self.__X_prebest = self.__X_gbest
@@ -256,22 +379,79 @@ def binomial(x: np.ndarray, v: np.ndarray, Cr: Union[np.ndarray, float], rng) ->
     return u
 
 def generate_random_int_single(NP: int, cols: int, pointer: int, rng: np.random.RandomState = None) -> np.ndarray:
+    """
+    # Introduction
+    Generates a random array of integers within a specified range, ensuring that a given pointer value is not included in the result.
+    # Args:
+    - NP (int): The upper bound (exclusive) for the random integers.
+    - cols (int): The number of random integers to generate.
+    - pointer (int): The integer value that must not appear in the generated array.
+    - rng (np.random.RandomState, optional): A random number generator instance. Defaults to None.
+    # Returns:
+    - np.ndarray: An array of randomly generated integers of length `cols`, excluding the `pointer` value.
+    """
+    
     r = rng.randint(low=0, high=NP, size=cols)
     while pointer in r:
         r = rng.randint(low=0, high=NP, size=cols)
     return r
 
 def rand_1_single(x: np.ndarray, F: float, pointer: int, r: np.ndarray = None, rng: np.random.RandomState = None) -> np.ndarray:
+    """
+    # Introduction
+    Implements the "rand/1" mutation strategy commonly used in Differential Evolution (DE) optimization algorithms.
+    This function generates a new candidate solution by combining three randomly selected vectors from the population.
+    # Args:
+    - x (np.ndarray): The population of candidate solutions, where each row represents an individual solution.
+    - F (float): The scaling factor used to control the amplification of the differential variation.
+    - pointer (int): The index of the current candidate solution in the population.
+    - r (np.ndarray, optional): An array of three unique random indices used to select individuals from the population. 
+      If `None`, the indices will be generated automatically.
+    - rng (np.random.RandomState, optional): A random number generator for reproducibility. If `None`, the default RNG is used.
+    # Returns:
+    - np.ndarray: A new candidate solution generated by applying the "rand/1" mutation strategy.
+    """
+    
     if r is None:
         r = generate_random_int_single(x.shape[0], 3, pointer,rng=rng)
     return x[r[0]] + F * (x[r[1]] - x[r[2]])
 
 def rand_2_single(x: np.ndarray, F: float, pointer: int, r: np.ndarray = None, rng: np.random.RandomState = None) -> np.ndarray:
+    """
+    # Introduction
+    Generates a new vector based on the DE/rand/2 mutation strategy used in Differential Evolution (DE) algorithms.
+    This method combines elements from multiple vectors in the population to create a trial vector.
+    # Args:
+    - x (np.ndarray): The population array where each row represents an individual vector.
+    - F (float): The scaling factor used to control the amplification of the differential variation.
+    - pointer (int): The index of the current target vector in the population.
+    - r (np.ndarray, optional): An array of indices used to select vectors from the population. If `None`, random indices are generated.
+    - rng (np.random.RandomState, optional): A random number generator instance for reproducibility. If `None`, the default RNG is used.
+    # Returns:
+    - np.ndarray: A new vector generated by applying the DE/rand/2 mutation strategy.
+    """
+    
     if r is None:
         r = generate_random_int_single(x.shape[0], 5, pointer, rng=rng)
     return x[r[0]] + F * (x[r[1]] - x[r[2]] + x[r[3]] - x[r[4]])
 
 def rand_to_best_2_single(x: np.ndarray, best: np.ndarray, F: float, pointer: int, r: np.ndarray = None, rng: np.random.RandomState = None) -> np.ndarray:
+    """
+    # Introduction
+    Generates a new candidate solution vector using the "rand-to-best/2" mutation strategy, commonly used in Differential Evolution algorithms.
+    # Args:
+    - x (np.ndarray): Population array of candidate solutions.
+    - best (np.ndarray): The current best solution vector.
+    - F (float): Differential weight, a scaling factor for the mutation.
+    - pointer (int): Index of the target vector in the population.
+    - r (np.ndarray, optional): Array of 5 unique random indices for mutation. If None, they are generated automatically.
+    - rng (np.random.RandomState, optional): Random number generator for reproducibility.
+    # Returns:
+    - np.ndarray: The mutated candidate solution vector.
+    # Raises:
+    - ValueError: If the input arrays have incompatible shapes or if insufficient unique indices are available for mutation.
+    """
+    
     if r is None:
         r = generate_random_int_single(x.shape[0], 5, pointer, rng=rng)
     return x[r[0]] + F * (best - x[r[0]] + x[r[1]] - x[r[2]] + x[r[3]] - x[r[4]])

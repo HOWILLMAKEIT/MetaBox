@@ -1,0 +1,236 @@
+# Problem & Baseline
+
+introduce the problem set and baseline we use
+
+```{toctree}
+
+:maxdepth: 1
+:hidden
+Problem
+Baseline
+
+```
+
+## Problem
+
+| 🚩 **Problem Category**         | 📚 **Problem set**                                                               |
+|-------------------------------|-------------------------------------------------------------------------------|
+| **Single-Objective Optimization** | COCO-BBOB、[BBOB-Surrogate](#bbob-surrogate)、HPO-B、NeuroEvolution、Protein-Docking、UAV、[CEC2013LSGO]((#cec2013lsgo)) |
+| **Multi-Objective Optimization**  | [MOO-Synthetic (dtlz、uf、wfg、zdt)](#moo-synthetic)                                   |
+|  **Multi-Modal Optimization**      | [CEC2013MMO](#cec2013mmo)                                                                    |
+|  **Multi-Task Optimization**       | [CEC2017MTO](#cec2017mto)、[WCCI2020](#wcci2020)                                                          |
+
+
+
+### Single-Object Optimization
+
+#### COCO-BBOB
+
+#### BBOB-Surrogate
+
+- **Introduction**：\
+  BBOB-Surrogate investigates the integration of surrogate modeling techniques into MetaBBO , enabling data-driven approximation of expensive objective functions while maintaining optimization fidelity.
+- **Original paper**：\
+  "[Surrogate Learning in Meta-Black-Box Optimization: A Preliminary Study](https://arxiv.org/abs/2503.18060)." arXiv preprint arXiv:2503.18060 (2025).
+- **Official Implementation**： [BBOB-Surrogate](https://github.com/GMC-DRL/Surr-RLDE)
+- **License**：None
+- **Problem Suite Composition**：\
+  BBOB-Surrogate contains a total of 72 optimization problems, corresponding to three dimensions (2, 5, 10), each dimension contains 24 problems. Each problem consists of a trained KAN or MLP network, which is used to fit 24 black box functions in the COCO-BBOB benchmark. The network here is a surrogate model of the original function.
+  
+#### HPO-B
+
+#### NeuroEvolution
+
+#### Protein-Docking
+
+#### UAV
+
+#### CEC2013LSGO
+
+- **Introduction**：\
+  CEC2013LSGO proposes 15 large-scale benchmark problems to represent a wider range of realworld large-scale optimization problems.
+- **Original paper**：\
+  "[Benchmark functions for the CEC 2013 special session and competition on large-scale global optimization](https://al-roomi.org/multimedia/CEC_Database/CEC2015/LargeScaleGlobalOptimization/CEC2015_LargeScaleGO_TechnicalReport.pdf)." gene 7.33 (2013): 8.
+- **Official Implementation**： [CEC2013LSGO](https://github.com/dmolina/cec2013lsgo)
+- **License**：GPL-3.0
+- **Problem Suite Composition**：\
+  CEC2013LSGO contains four major categories of large-scale problems:
+  1. Fully-separable functions (F1-F3) 
+  2. Two types of partially separable functions: 
+      1. Partially separable functions with a set of non-separable subcomponents and one fully-separable subcomponents (F4-F7) 
+      2. Partially separable functions with only a set of non-separable subcomponents and no fullyseparable subcomponent (F8-F11) 
+  3. Two types of overlapping functions: 
+      1. Overlapping functions with conforming subcomponents (F12-F13)
+      2. Overlapping functions with conflicting subcomponents (F14)
+  4. Fully-nonseparable functions (F15)
+
+### Multi-Objective Optimization
+
+#### MOO-Synthetic
+
+- **Introduction**：\
+  MOO-Synthetic provides a more comprehensive problem set for multi-objective optimization by combining multiple mainstream problem sets (ZDT、UF、DTLZ、WFG).
+- **Original paper**：
+  - **ZDT**："[Comparison of multiobjective evolutionary algorithms: Empirical results](https://ieeexplore.ieee.org/abstract/document/6787994)." Evolutionary computation 8.2 (2000): 173-195.
+  - **UF**: "[Multiobjective optimization test instances for the CEC 2009 special session and competition](https://www.al-roomi.org/multimedia/CEC_Database/CEC2009/MultiObjectiveEA/CEC2009_MultiObjectiveEA_TechnicalReport.pdf)." (2008): 1-30.
+  - **DTLZ**: "[Scalable multi-objective optimization test problems](https://ieeexplore.ieee.org/abstract/document/1007032)." Proceedings of the 2002 congress on evolutionary computation. CEC'02 (Cat. No. 02TH8600). Vol. 1. IEEE, 2002.
+  - **WFG**: "[A review of multiobjective test problems and a scalable test problem toolkit](https://ieeexplore.ieee.org/abstract/document/1705400)." IEEE Transactions on Evolutionary Computation 10.5 (2006): 477-506.
+- **Official Implementation**： [pymoo](https://github.com/anyoptimization/pymoo)
+- **License**：Apache-2.0
+- **Problem Suite Composition**：\
+  MOO-Synthetic contains 187 questions, consisting of the ZDT, UF, DTLZ, and WFG question sets.
+
+### Multi-Modal Optimization
+
+#### CEC2013MMO
+
+- **Introduction**：\
+  CEC2013MMO is a problem set for evaluating multi-modal optimization algorithms.
+- **Original paper**：
+  "[Benchmark functions for CEC’2013 special session and competition on niching methods for multimodal function optimization](https://web.xidian.edu.cn/xlwang/files/20150312_175833.pdf)." RMIT University, evolutionary computation and machine learning Group, Australia, Tech. Rep (2013).
+- **Official Implementation**： [CEC2013MMO](https://github.com/mikeagn/CEC2013)
+- **License**：View
+- **Problem Suite Composition**：\
+  CEC2013MMO includes 20 functions covering different dimensions and the number of global optima. Among them, F1 to F5 are simple functions, F6 to F10 are scalable functions with many global optima, and F11 to F20 are composition functions with challenging landscapes.
+
+### Multi-Modal Optimization
+#### CEC2017MTO
+
+- **Introduction**：\
+  CEC2017MTO is a problem set for evaluating multi-task optimization algorithms.
+- **Original paper**：
+  "[Evolutionary multitasking for single-objective continuous optimization: Benchmark problems, performance metric, and baseline results](https://arxiv.org/abs/1706.03470)." arXiv preprint arXiv:1706.03470 (2017).
+- **Official Implementation**： [CEC2017MTO](http://www.bdsc.site/websites/MTO/index.html)
+- **License**：None
+- **Problem Suite Composition**：\
+  CEC2017MTO has 9 multi-task questions, each of which contains two basic questions.
+
+  <p align="center">
+  <img src="https://github.com/GMC-DRL/MetaBox/blob/v2.0.0-docs/docs/pic/CEC2017MTO.png" width="700"/>
+  </p>
+
+#### WCCI2020
+
+- **Introduction**：\
+  WCCI2020 is a problem set for evaluating multi-task optimization algorithms.
+- **Original paper**：
+  "[WCCI2020 competition on evolutionary multi-task optimization](http://www.bdsc.site/websites/MTO_competition_2020/MTO_Competition_WCCI_2020.html)." IEEE World Congress on Computational Intelligence 2020. 2020.
+- **Official Implementation**： [WCCI2020](http://www.bdsc.site/websites/MTO/index.html)
+- **License**：None
+- **Problem Suite Composition**：\
+  The benchmark comprises 10 multi-task problems, each integrating 50 uniformly 50-dimensional base tasks.
+  <p align="center">
+  <img src="https://github.com/GMC-DRL/MetaBox/blob/v2.0.0-docs/docs/pic/WCCI2020.png" width="600"/>
+  </p>
+  For example, P1 is composed of a single base problem, which consists of 50 differently shifted and rotated Sphere functions. In contrast, composite problems like P4 formed by multiple base problems are constructed by cyclically incorporating differently shifted and rotated Sphere, Rosenbrock, and Ackley functions to form a multi-task optimization problem.
+## Baseline
+
+
+|  | SOO                                                                                          | MOO    | MMO                    | MTO  |
+|---------|-----------------------------------------------------------------------------------------------|--------|------------------------|------|
+| [MetaBBO](#metabbo)  | [B2Opt](#b2opt)、[DEDDQN](#deddqn)、[DEDQN](#dedqn)、[GLEET](#gleet)、[GLHF](#glhf)、[LDE](#lde)、[LES](#les)、[LGA](#lga)、[NRLPSO](#nrlpso)、[QLPSO](#qlpso)、[RLDAS](#rldas)、[RLDEAFL](#rldeafl)、[RLEPSO](#rlepso)、[RLPSO](#rlpso)、[SurrRLDE](#surrrlde)、[SYMBOL](#symbol)、OPRO | MADAC  | RLEMMO、PSORLNS         | L2T  |
+| [BBO](#bbo)     | CMA-ES、DE、GLPSO、JDE21、MADDE、NL-SHADE-LBC、PSO、SHADE、SAHLPSO、SDMSPSO                    |        |                        | MFEA |
+
+### MetaBBO
+#### Single-Object Optimization
+##### B2OPT
+- **Introduction**：\
+  B2Opt: Learning to Optimize Black-box Optimization with Little Budget.
+- **Original paper**：
+  "[**B2Opt: Learning to Optimize Black-box Optimization with Little Budget**](https://arxiv.org/abs/2304.11787)". arXiv preprint arXiv:2304.11787, (2023).
+- **Official Implementation**：[B2Opt](https://github.com/ninja-wm/B2Opt)
+##### DEDDQN
+- **Introduction**：\
+  DE-DDQN is an adaptive operator selection method based on Double Deep Q-Learning (DDQN), a Deep Reinforcement Learning method, to control the mutation strategies of Differential Evolution (DE).
+- **Original paper**：
+  "[**Deep reinforcement learning based parameter control in differential evolution**](https://dl.acm.org/doi/abs/10.1145/3321707.3321813)." Proceedings of the Genetic and Evolutionary Computation Conference (2019).
+- **Official Implementation**：[DE-DDQN](https://github.com/mudita11/DE-DDQN)
+##### DEDQN
+- **Introduction**：\
+  DEDQN is a mixed mutation strategy Differential Evolution (DE) algorithm based on deep Q-network (DQN), in which a deep reinforcement learning approach realizes the adaptive selection of mutation strategy in the evolution process.
+- **Original paper**：
+  "[**Differential evolution with mixed mutation strategy based on deep reinforcement learning**](https://www.sciencedirect.com/science/article/abs/pii/S1568494621005998)." Applied Soft Computing (2021).
+- **Official Implementation**： None
+##### GLEET
+- **Introduction**：\
+  GLEET is a **G**eneralizable **L**earning-based **E**xploration-**E**xploitation **T**radeoff framework, which could explicitly control the exploration-exploitation tradeoff hyper-parameters of a given EC algorithm to solve a class of problems via reinforcement learning. 
+- **Original paper**：
+  "[**Auto-configuring Exploration-Exploitation Tradeoff in Evolutionary Computation via Deep Reinforcement Learning**](https://dl.acm.org/doi/abs/10.1145/3638529.3653996)." Proceedings of the Genetic and Evolutionary Computation Conference (2024).
+- **Official Implementation**：[GLEET](https://github.com/GMC-DRL/GLEET)
+##### GLHF
+- **Introduction**：\
+  GLHF: General Learned Evolutionary Algorithm Via Hyper Functions
+- **Original paper**：
+  "[**GLHF: General Learned Evolutionary Algorithm Via Hyper Functions**](https://arxiv.org/abs/2405.03728)." arXiv preprint arXiv:2405.03728 (2024).
+- **Official Implementation**：[GLHF](https://github.com/ninja-wm/POM/)
+##### LDE
+- **Introduction**：\
+  LDE：Learning Adaptive Differential Evolution Algorithm From Optimization Experiences by Policy Gradient
+- **Original paper**：
+  "[**Learning Adaptive Differential Evolution Algorithm from Optimization Experiences by Policy Gradient**](https://ieeexplore.ieee.org/abstract/document/9359652)." IEEE Transactions on Evolutionary Computation (2021).
+- **Official Implementation**：[LDE](https://github.com/yierh/LDE)
+##### LES
+- **Introduction**：\
+ ** L**earned **E**volution **S**trategy (LES) is a novel self-attention-based evolution strategies parametrization, and discover effective update rules for ES via meta-learning.
+- **Original paper**：
+  "[**Discovering evolution strategies via meta-black-box optimization**](https://iclr.cc/virtual/2023/poster/11005)." The Eleventh International Conference on Learning Representations. (2023).
+- **Official Implementation**：[LES](https://github.com/RobertTLange/evosax/blob/main/evosax/strategies/les.py)
+##### LGA
+- **Introduction**：\
+  **L**earned **G**enetic **A**lgorithm parametrizes selection and mutation rate adaptation as cross- and self-attention modules and use MetaBBO to evolve their parameters on a set of diverse optimization tasks.
+- **Original paper**：
+  "[**Discovering attention-based genetic algorithms via meta-black-box optimization**](https://dl.acm.org/doi/abs/10.1145/3583131.3590496)." Proceedings of the Genetic and Evolutionary Computation Conference. (2023).
+- **Official Implementation**：[LGA](https://github.com/RobertTLange/evosax/blob/main/evosax/strategies/lga.py)
+##### NRLPSO
+- **Introduction**：\
+  NRLPSO is a reinforcement learning-based particle swarm optimization with neighborhood differential mutation strategy.
+- **Original paper**：
+  "[**Reinforcement learning-based particle swarm optimization with neighborhood differential mutation strategy**](https://www.sciencedirect.com/science/article/pii/S2210650223000482)." Swarm and Evolutionary Computation (2023).
+- **Official Implementation**：None
+##### QLPSO
+- **Introduction**：\
+  QLPSO is a problem-free PSO which integrates a reinforcement learning method.
+- **Original paper**：
+  "[**A reinforcement learning-based communication topology in particle swarm optimization**](https://link.springer.com/article/10.1007/s00521-019-04527-9)." Neural Computing and Applications (2020).
+- **Official Implementation**：None
+##### RLDAS
+- **Introduction**：\
+  RLDAS is a deep reinforcement learning-based dynamic algorithm selection framework.
+- **Original paper**：
+  "[**Deep Reinforcement Learning for Dynamic Algorithm Selection: A Proof-of-Principle Study on Differential Evolution**](https://ieeexplore.ieee.org/abstract/document/10496708/)." IEEE Transactions on Systems, Man, and Cybernetics: Systems (2024).
+- **Official Implementation**：[RL-DAS](https://github.com/GMC-DRL/RL-DAS)
+##### RLDEAFL
+
+##### RLEPSO
+- **Introduction**：\
+   RLEPSO is a new particle swarm optimization algorithm that combines reinforcement learning.
+- **Original paper**：
+  "[**RLEPSO: Reinforcement learning based Ensemble particle swarm optimizer**](https://dl.acm.org/doi/abs/10.1145/3508546.3508599)." Proceedings of the 2021 4th International Conference on Algorithms, Computing and Artificial Intelligence. (2021).
+- **Official Implementation**：None
+
+##### RLPSO
+- **Introduction**：\
+   RLPSO develops a reinforcement learning strategy to enhance PSO in convergence by replacing the uniformly distributed random number in the updating function with a random number generated from a selected normal distribution.
+- **Original paper**：
+  "[**Employing reinforcement learning to enhance particle swarm optimization methods**](https://www.tandfonline.com/doi/abs/10.1080/0305215X.2020.1867120)." Engineering Optimization (2022).Intelligence. (2021).
+- **Official Implementation**：None
+##### SurrRLDE
+- **Introduction**：\
+   SurrRLDE is a novel MetaBBO framework which combines surrogate learning process and reinforcement learning-aided Differential Evolution (DE) algorithm.
+- **Original paper**：
+   "[Surrogate Learning in Meta-Black-Box Optimization: A Preliminary Study](https://arxiv.org/abs/2503.18060)." arXiv preprint arXiv:2503.18060 (2025).
+- **Official Implementation**：[SurrRLDE](https://github.com/GMC-DRL/Surr-RLDE)
+##### SYMBOL
+- **Introduction**：\
+   SYMBOL is a novel framework that promotes the automated discovery of black-box optimizers through symbolic equation learning.
+- **Original paper**：
+  "[**Symbol: Generating Flexible Black-Box Optimizers through Symbolic Equation Learning**](https://openreview.net/forum?id=vLJcd43U7a)." The Twelfth International Conference on Learning Representations. (2024).
+- **Official Implementation**：[SYMBOL](https://github.com/GMC-DRL/Symbol)
+
+#### Multi-Objective Optimization
+
+#### Multi-Modal Optimization
+
+#### Multi-Task Optimization
+
+

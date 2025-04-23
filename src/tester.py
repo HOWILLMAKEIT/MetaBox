@@ -84,6 +84,20 @@ from .baseline.metabbo import (
 )
 
 def cal_t0(dim, fes):
+    """
+    # Introduction
+    Estimates the average time (in milliseconds) required to perform a set of basic NumPy vectorized operations.
+    '''T0 will be used to calculate the complexity of algorithms.'''
+    # Args:
+    - dim (int): The dimensionality of the random NumPy arrays to generate.
+    - fes (int): The number of function evaluations (iterations of operations) to perform in each timing loop.
+    # Returns:
+    - float: The average elapsed time in milliseconds over 10 runs for performing the specified operations.
+    # Notes:
+    - The function performs addition, division, multiplication, square root, logarithm, and exponential operations on randomly generated NumPy arrays.
+    - The timing is measured using `time.perf_counter()` for higher precision.
+    """
+    
     T0 = 0
     for i in range(10):
         start = time.perf_counter()
@@ -102,6 +116,20 @@ def cal_t0(dim, fes):
 
 
 def cal_t1(problem, dim, fes):
+    """
+    # Introduction
+    Measures the average time (in milliseconds) required to evaluate a problem's objective function over a batch of randomly generated solutions.
+    T1 will be used to calculate the complexity of the algorithm.
+    # Args:
+    - problem: a problem object 
+    - dim (int): The dimensionality of each solution vector.
+    - fes (int): The number of function evaluations
+    # Returns:
+    - float: The average elapsed time (in milliseconds) to evaluate the batch, computed over 10 runs.
+    # Notes:
+    - The function generates random solutions using `np.random.rand`.
+    - Timing is performed using `time.perf_counter`.
+    """
     T1 = 0
     for i in range(10):
         x = np.random.rand(fes, dim)
@@ -116,6 +144,22 @@ def cal_t1(problem, dim, fes):
 
 
 def record_data(data, test_set, agent_for_rollout, checkpoints, results, meta_results, config):
+    """
+    # Introduction
+    Processes a list of data items, updating results and meta_results dictionaries with information extracted from each item. Handles both standard result keys and metadata, organizing results by problem and agent.
+    # Args:
+    todo:这里写完了，有个问题，这个metadata具体的结构写在哪比较好
+    - data(dict): Metadata, a dict contain the rollout test result,similar to test result but has more details.
+    - test_set (object): The problem dataset for the test process.
+    - agent_for_rollout (str): The base name or identifier for the agent used during rollout.
+    - checkpoints (list): List of checkpoint identifiers for agents.
+    - results (dict): A dictionary to store or update results initialized only with the config information.
+    - meta_results (dict): An empty dictionary to store or update metadata results.
+    - config (object): Configuration object with attributes such as `full_meta_data` to control metadata processing.
+    # Returns:
+    - tuple: A tuple containing the updated `results` and `meta_results` dictionaries.
+    """
+    
     for item in data:
         for key in item.keys():
             if key == 'metadata' and config.full_meta_data:
@@ -133,6 +177,19 @@ def record_data(data, test_set, agent_for_rollout, checkpoints, results, meta_re
 
 
 def store_meta_data(log_dir, meta_data_results):
+    """
+    # Introduction
+    Stores and updates meta data results for different process names into pickle files within a specified log directory. Ensures that meta data is accumulated and persisted across multiple calls, and clears in-memory storage after saving.
+    # Args:
+    - log_dir (str): The directory path where the metadata should be stored.
+    - meta_data_results (dict): A dictionary where keys are process names and values are dictionaries mapping agent names to lists of meta data.
+    # Returns:
+    - dict: The updated `meta_data_results` dictionary with in-memory lists cleared after saving.
+    # Raises:
+    - OSError: If the function fails to create the required directories or write to files.
+    - pickle.PickleError: If there is an error during pickling or unpickling the data.
+    """
+    
     if not os.path.exists(log_dir+'/metadata/'):
         os.makedirs(log_dir+'/metadata/')
     for pname in meta_data_results.keys():
@@ -157,8 +214,27 @@ def store_meta_data(log_dir, meta_data_results):
                     
 class BBO_TestUnit():
     """
+    Introduction:
+    BBO_TestUnit is a test unit designed for running batch episodes of black-box optimization (BBO) algorithms in parallel using RAY. It encapsulates a problem instance and an optimizer, and ensures reproducibility by managing random seeds and PyTorch settings.
+
+
+    - optimizer (Basic_Optimizer): The optimizer instance to be tested.
+    - problem (Basic_Problem): The problem instance on which the optimizer will be evaluated.
+    - seed (int): The random seed for reproducibility.
+
+    # Methods:
+
+    - run_batch_episode(): Runs a single batch episode of the optimizer on the problem, returning a dictionary of results and timing information.
+
+    # Attributes:
+
+    - optimizer (Basic_Optimizer): The optimizer used in the test unit.
+    - problem (Basic_Problem): The problem instance for evaluation.
+    - seed (int): The random seed for reproducibility.
+    """
+    """
         A test unit for RAY parallel with a problem and a basic optimizer.
-        """
+    """
 
     def __init__(self,
                  optimizer: Basic_Optimizer,
@@ -170,6 +246,23 @@ class BBO_TestUnit():
         self.seed = seed
 
     def run_batch_episode(self):
+        """
+        # Introduction
+
+        Runs a single batch episode for the optimizer on the given problem, ensuring reproducibility by setting random seeds and configuring PyTorch settings.
+
+        # Args:
+
+        None
+
+        # Returns:
+
+        - dict: A dictionary containing the results of the optimizer's episode, including timing information, agent and problem names, and additional metrics.
+
+        # Raises:
+
+        None
+        """
         torch.manual_seed(self.seed)
         torch.cuda.manual_seed(self.seed)
         np.random.seed(self.seed)
@@ -191,9 +284,25 @@ class BBO_TestUnit():
 
 class MetaBBO_TestUnit():
     """
-        A test unit for RAY parallel with an agent, an env and a seed.
-        """
+    # Introduction
+    MetaBBO_TestUnit is a test unit designed for parallel execution using RAY, encapsulating an agent, an environment, and a random seed for reproducibility. It facilitates the evaluation of agent performance on a given environment, with optional checkpointing.
 
+
+    - agent (Basic_Agent): The agent to be evaluated.
+    - env (PBO_Env): The environment in which the agent operates.
+    - seed (int): The random seed for reproducibility.
+    - checkpoint (int, optional): An optional checkpoint identifier for the agent. Defaults to None.
+
+    # Methods:
+
+    - run_batch_episode(required_info: dict = {}): Runs a single batch episode with the specified agent and environment, ensuring reproducibility by setting random seeds and configuring PyTorch settings. Returns a dictionary containing episode results, timing, agent and problem names, and any additional rollout results.
+    """
+    """
+    
+        A test unit for RAY parallel with an agent, an env and a seed.
+    """
+
+    
     def __init__(self,
                  agent: Basic_Agent,
                  env: PBO_Env,
@@ -206,6 +315,19 @@ class MetaBBO_TestUnit():
         self.checkpoint = checkpoint
 
     def run_batch_episode(self, required_info = {}):
+        """
+        # Introduction
+
+        Runs a single batch episode using the agent and environment, ensuring reproducibility by setting random seeds and configuring PyTorch settings.
+
+        # Args:
+        todo:需不需要example
+        - required_info (dict, optional): Additional information required for the episode rollout. Defaults to an empty dictionary.
+
+        # Returns:
+
+        - dict: A dictionary containing the results of the episode, including timing information, agent and problem names, and any additional rollout results.
+        """
         torch.manual_seed(self.seed)
         torch.cuda.manual_seed(self.seed)
         np.random.seed(self.seed)
@@ -341,6 +463,19 @@ class Tester(object):
         torch.backends.cudnn.benchmark = False
         
     def initialize_record(self, key):
+        """
+        # Introduction
+
+        Initializes a record in the `test_results` dictionary for a given key, setting up nested dictionaries for each problem, agent, and optimizer.
+
+        # Args:
+
+        - key (str): The identifier for the test record to initialize.
+
+        # Side Effects:
+
+        - Modifies the `self.test_results` attribute by adding a new entry for `key` if it does not already exist. For each problem in `self.test_set.data`, creates sub-entries for each agent in `self.agent_name_list` and each optimizer in `self.t_optimizer_for_cp`, initializing them as empty lists.
+        """
         if key not in self.test_results.keys():
             self.test_results[key] = {}
         for problem in self.test_set.data:
@@ -351,6 +486,26 @@ class Tester(object):
                 self.test_results[key][problem.__str__()][type(optimizer).__name__] = []  # 51 np.arrays
         
     def record_test_data(self, data: list):
+        """
+        # Introduction
+
+        Records test data from a list of dictionaries, organizing results by problem and agent names.
+        Handles both metadata and other test result keys, updating internal result structures accordingly.
+
+        # Args:
+
+        - data (list): Metadata, a dict contain the rollout test result,similar to test result but has more details.
+        # Side Effects:
+
+        - Updates `self.meta_data_results` with metadata if `self.config.full_meta_data` is True.
+        - Updates `self.test_results` with other test result metrics, initializing records as needed.
+
+        # Notes:
+
+        - Assumes that `self.meta_data_results`, `self.test_results`, and `self.config.full_meta_data` are properly initialized.
+        - Ignores keys 'agent_name' and 'problem_name' when recording test results.
+        """
+
         for item in data:
             for key in item.keys():
                 if key == 'metadata' and self.config.full_meta_data:
@@ -362,6 +517,18 @@ class Tester(object):
                     self.test_results[key][item['problem_name']][item['agent_name']].append(item[key])            
 
     def test(self, ):
+        """
+        # Introduction
+        Runs tests on agents and optimizers using different parallelization strategies and records the results.
+        # Args:
+        None
+        # Side Effects:
+        - Records test data and stores meta data results after each test run.
+        - Saves the final test results to a pickle file in the log directory.
+        # Raises:
+        - NotImplementedError: If an unsupported parallelization mode is specified in the configuration.
+        """
+        
         # todo 第三种 并行是 agent * bs 个问题 * run
         print(f'start testing: {self.config.run_time}')
         parallel_batch = self.config.parallel_batch  # 'Full', 'Baseline_Problem', 'Problem_Testrun', 'Batch'
@@ -520,6 +687,26 @@ class Tester(object):
 
 
     def test_for_random_search(self):
+        """
+        # Introduction
+        Executes a comprehensive test suite for the Random Search optimizer across a set of benchmark problems, logging performance metrics and timing information for analysis.
+        # Args:
+        None (uses self.config for configuration).
+        # Returns:
+        todo: 这里就是test_result,同样的问题，它的具体结构是否写在这？感觉应该写在这，毕竟是在这里构建的,要放图在这里吗？
+        - dict: A dictionary `test_results` containing the metrics list:
+            - 'cost': Nested dict mapping problem names to optimizer names to lists of cost arrays (one per run).
+            - 'fes': Nested dict mapping problem names to optimizer names to lists of function evaluation counts (one per run).
+            - 'T0': Baseline timing value computed from problem dimension and max function evaluations.
+            - 'T1': Dict mapping optimizer names to average problem-specific timing metric.
+            - 'T2': Dict mapping optimizer names to average wall-clock time per run (in milliseconds).
+        # Notes:
+        - Runs 51 independent trials per problem.
+        - Uses tqdm for progress visualization.
+        - Seeds numpy's RNG for reproducibility.
+        - Pads cost arrays to length 51 if necessary.
+        """
+        
         config = self.config
         # get entire problem set
         if config.problem in ['bbob-surrogate-10D','bbob-surrogate-5D','bbob-surrogate-2D']:
@@ -579,6 +766,17 @@ class Tester(object):
 
 
     def name_translate(self, problem):
+        """
+        # Introduction
+        Translates a given problem identifier into a human-readable problem name.
+        # Args:
+        - problem (str): The identifier of the problem to be translated. Expected values include 'bbob', 'bbob-torch', 'bbob-noisy', 'bbob-noisy-torch', 'protein', or 'protein-torch'.
+        # Returns:
+        - str: The human-readable name corresponding to the given problem identifier.
+        # Raises:
+        - ValueError: If the provided problem identifier is not recognized.
+        """
+        
         if problem in ['bbob', 'bbob-torch']:
             return 'Synthetic'
         elif problem in ['bbob-noisy', 'bbob-noisy-torch']:
@@ -589,6 +787,27 @@ class Tester(object):
             raise ValueError(problem + ' is not defined!')
 
     def mgd_test(self, user_from, user_to, user_opt):
+        """
+        todo:重写注释
+        # Introduction
+        Executes the Meta Generalization Domain (MGD) test for evaluating agent performance across different problem domains and configurations. This method loads pre-trained agents, sets up test environments, and runs parallelized test episodes to collect and log performance metrics.
+        # Args:
+        None (uses instance attributes and configuration).
+        # Side Effects:
+        - Loads agent models and configuration from files.
+        - Runs parallelized test episodes using various batching strategies.
+        - Logs test results and meta-data to disk.
+        - Updates instance attributes `self.test_results` and `self.meta_data_results`.
+        # Raises:
+        - FileNotFoundError: If required model or configuration files are missing.
+        - KeyError: If specified agent or optimizer keys are not found in the configuration.
+        - Exception: Propagates exceptions from environment setup, agent loading, or parallel execution.
+        # Notes:
+        - Supports multiple parallelization strategies: 'Full', 'Baseline_Problem', 'Problem_Testrun', and 'Batch'.
+        - Stores results as pickled files in the specified log directory.
+        - Designed for use in meta-learning and black-box optimization benchmarking.
+        """
+        
         config = self.config
         print(f'start MGD_test: {config.run_time}')
         # get test set
@@ -770,6 +989,19 @@ class Tester(object):
             pickle.dump(self.test_results, f, -1)
 
     def mte_test(self, pre_train_file, scratch_file, agent):
+        """
+        # Introduction
+        Evaluates and visualizes the Model Transfer Efficiency (MTE) between a pre-trained agent and a scratch agent on a transfer learning task. The method loads experiment results, processes performance data, computes MTE, and generates a comparative plot of average returns over learning steps.
+        # Args:
+        None. Uses configuration from `self.config`.
+        # Returns:
+        None. Prints the computed MTE value and saves a plot comparing pre-trained and scratch agent performance.
+        # Raises:
+        - FileNotFoundError: If the required JSON or pickle files are not found.
+        - KeyError: If expected keys are missing in the loaded data.
+        - Exception: For errors during data processing or plotting.
+        """
+        
         config = self.config
         print(f'start MTE_test: {config.run_time}')
         # with open('model.json', 'r', encoding = 'utf-8') as f:
@@ -887,6 +1119,19 @@ class Tester(object):
 
 
 def rollout_batch(config, rollout_dir, rollout_opt):
+    """
+    todo:重写注释
+    # Introduction
+    Executes a batch rollout of agents on a test set of problems using various parallelization strategies. The function loads agent checkpoints, sets up environments, and evaluates agent performance across multiple seeds and problems, storing the results for further analysis.
+    # Args:
+    - config (object): Configuration object containing all necessary parameters for experiment.For details you can visit config.py.
+    # Returns:
+    - None: The function saves the rollout results and metadata to disk but does not return any value.
+    # Raises:
+    - KeyError: If the specified agent key is missing in the `model.json` file.
+    - NotImplementedError: If the specified parallelization mode in `config.parallel_batch` is not supported.
+    """
+    
     print(f'start rollout: {config.run_time}')
     num_gpus = 0 if config.device == 'cpu' else 1
     if config.test_problem in ['bbob-surrogate-10D','bbob-surrogate-5D','bbob-surrogate-2D']:

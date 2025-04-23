@@ -247,6 +247,36 @@ class MADAC_Optimizer(Learnable_Optimizer):
         return reward
 
     def get_state(self):
+        """
+        # Introduction
+        Constructs and returns the current state observation for all agents in the optimizer environment. The state is represented as a 22-dimensional feature vector containing normalized problem parameters, progress indicators, and various statistical metrics related to the optimization process.
+        # Returns:
+        - list of numpy.ndarray: A list containing the same 22-dimensional observation vector for each agent (`self.n_agents`), where each vector encodes the current environment state.
+        # Observation Vector Details:
+        - obs_[0]: Inverse of the number of objectives.
+        - obs_[1]: Inverse of the number of variables.
+        - obs_[2]: Normalized current generation count.
+        - obs_[3]: Normalized stagnation count.
+        - obs_[4]: Current hypervolume metric.
+        - obs_[5]: Ratio of non-dominated solutions.
+        - obs_[6]: Average distance metric.
+        - obs_[7]: Recent change in hypervolume.
+        - obs_[8]: Recent change in non-dominated solution ratio.
+        - obs_[9]: Recent change in average distance.
+        - obs_[10]: Mean of the last 5 hypervolume values.
+        - obs_[11]: Mean of the last 5 non-dominated solution ratios.
+        - obs_[12]: Mean of the last 5 average distances.
+        - obs_[13]: Standard deviation of the last 5 hypervolume values.
+        - obs_[14]: Standard deviation of the last 5 non-dominated solution ratios.
+        - obs_[15]: Standard deviation of the last 5 average distances.
+        - obs_[16]: Running mean of hypervolume.
+        - obs_[17]: Running mean of non-dominated solution ratio.
+        - obs_[18]: Running mean of average distance.
+        - obs_[19]: Running variance of hypervolume.
+        - obs_[20]: Running variance of non-dominated solution ratio.
+        - obs_[21]: Running variance of average distance.
+        """
+        
         obs_ = np.zeros(22)
         obs_[0] = 1 / self.problem.n_obj
         obs_[1] = 1 / self.problem.n_var
@@ -273,6 +303,23 @@ class MADAC_Optimizer(Learnable_Optimizer):
         return [obs_] * self.n_agents
 
     def get_action(self, action_idx, action):
+        """
+        # Introduction
+        Maps an action index and action value to a specific agent parameter value based on predefined lists.
+        # Args:
+        todo:写清楚action 结构
+        - action_idx (int): The index indicating which agent parameter to select.  
+            - 0: Neighbor size  
+            - 1: Operator strategy  
+            - 2: Probability constant  
+            - 3: Weight
+        - action (int): The index within the selected parameter list to retrieve the value.
+        # Returns:
+        - int | float | str: The value from the corresponding agent parameter list based on the provided indices.
+        # Raises:
+        - IndexError: If `action` is out of range for the selected parameter list.
+        """
+        
         neighborsize_agent = [15, 20, 25, 30]
         os_agent = ['DE1', 'DE2', 'DE3', 'DE4']
         pc_agent = [0.4, 0.5, 0.6, 0.7]
@@ -288,11 +335,29 @@ class MADAC_Optimizer(Learnable_Optimizer):
 
     def update(self, action, problem):
         """
+        # Introduction
+        Performs a single update step in the MOEA/D (Multi-Objective Evolutionary Algorithm based on Decomposition) optimization process. This includes solution generation, selection, and adaptive weight adjustment.
+        # Args:
+        todo: action和problem 结构
+        - action (list): A list of parameters controlling the update step, including neighborhood size, operator type, operator parameter, and weight adjustment flag.
+        - problem (object): The optimization problem instance, providing evaluation and problem-specific methods.
+        # Returns:
+        - tuple: A tuple containing:
+            - obs (object): The updated state observation.
+            - rewards (list): A list of reward values for each agent.
+            - done (bool): Whether the optimization process has reached its stopping condition.
+            - info (dict): Additional information, including best and last IGD (Inverted Generational Distance) values.
+        # Raises:
+        - Exception: If the weight adjustment flag in `action[3]` is greater than 1.
+        """
+        
+        """
         one step update in moea/d
         inclue solution generation and solution selection
         @param action: neighboor size; operator type; operator parameter
         :return:
         """
+
         self.moead_neighborhood_size = self.get_action(0, action[0])
         self.os = self.get_action(1, action[1])
         self.pc = self.get_action(2, action[2])
@@ -368,6 +433,19 @@ class MADAC_Optimizer(Learnable_Optimizer):
         self.metadata['cost'].append(copy.deepcopy(self.population_obj))
 
     def update_ep(self):
+        """
+        # Introduction
+        Updates the current evolutionary population (EP) by incorporating offspring, filtering non-dominated solutions, and maintaining the population size using a crowding distance-based selection.
+        # Args:
+        None
+        # Returns:
+        None
+        # Details:
+        - Extends the current population (`EP` and `EP_obj`) with offspring solutions.
+        - Filters the population to retain only non-dominated solutions.
+        - If the population exceeds the maximum allowed size (`EP_MaxSize`), removes overcrowded solutions based on a crowding distance metric to maintain diversity.
+        """
+        
         """Update the current evolutional population EP
         """
         self.EP.extend(copy.deepcopy(self.offspring_list))
@@ -473,6 +551,19 @@ class MADAC_Optimizer(Learnable_Optimizer):
 
     def moead_update_solution(self, solution, solution_obj, mating_indices):
         """
+        # Introduction
+        Updates the MOEA/D population by potentially replacing individuals in the mating neighborhood with a given solution if it improves the scalarized fitness value. Ensures that the number of replacements does not exceed a predefined threshold.
+        # Args:
+        - solution (Any): The candidate solution to potentially insert into the population.
+        - solution_obj (Any): The objective values associated with the candidate solution.
+        - mating_indices (List[int]): Indices of the population members considered for replacement.
+        # Returns:
+        - None
+        # Notes:
+        - The method shuffles the mating indices, evaluates each candidate in the neighborhood, and replaces it with the new solution if the new solution has a better scalarized fitness value according to the corresponding weight vector.
+        - The number of replacements is limited by `self.moead_eta`.
+        """
+        """
         repair solution, make constraint satisfiable
         :param solution:
         :param mating_indices:
@@ -501,6 +592,19 @@ class MADAC_Optimizer(Learnable_Optimizer):
 
     @staticmethod
     def moead_sort_weights(base, weights):
+        """
+        # Introduction
+        Sorts a list of weight vectors by their Euclidean distance to a given base weight vector, returning the indices of the weights in ascending order of distance.
+        # Args:
+        todo:base和weights 数据结构，
+        - base (list[float]): The reference weight vector to which distances are computed.
+        - weights (list[list[float]]): A list of weight vectors to be sorted by proximity to the base.
+        # Returns:
+        - list[int]: A list of indices representing the order of weights sorted by increasing distance to the base vector.
+        # Notes:
+        - The function uses Euclidean distance as the metric for sorting.
+        """
+        
         """Returns the index of weights nearest to the base weight."""
 
         def compare(weight1, weight2):
@@ -522,16 +626,39 @@ class MADAC_Optimizer(Learnable_Optimizer):
 
     def moead_get_subproblems(self):
         """
+        # Introduction
+        Determines the order of subproblems to be searched in the MOEA/D optimization process. 
+        If utility-based updating is enabled, the method follows the utility-based MOEA/D search; 
+        otherwise, it uses the original MOEA/D specification.
+        # Returns:
+        - List[int]: A shuffled list of indices representing the subproblems to be searched in the current iteration.
+        """
+        
+        """
         Determines the subproblems to search.
         If :code:`utility_update` has been set, then this method follows the
         utility-based moea/D search.
         Otherwise, it follows the original moea/D specification.
         """
+        
         indices = list(range(self.population_size))
         self.rng.shuffle(indices)
         return indices
 
     def moead_get_mating_indices(self, index):
+        """
+        # Introduction
+        Determines the mating indices for the MOEA/D algorithm based on a probabilistic selection between the neighborhood and the entire population.
+        # Args:
+        - index (int): The index of the current individual in the population for which mating indices are to be determined.
+        # Returns:
+        - list[int]: A list of indices representing the selected mating pool, either from the individual's neighborhood or the entire population.
+        # Notes:
+        - With probability `moead_delta`, the method returns the indices of the individual's neighborhood up to `moead_neighborhood_size`.
+        - Otherwise, it returns the indices of the entire population.
+        """
+        
+        
         """Determines the mating indices.
 
         Returns the population members that are considered during mating.  With
@@ -567,6 +694,17 @@ class MADAC_Optimizer(Learnable_Optimizer):
         return non_dominated_indices
 
     def get_ratio_nondom_sol(self):
+        """
+        # Introduction
+        Calculates the ratio of non-dominated solutions in the current population and updates historical tracking metrics.
+        # Returns:
+        - float: The ratio of non-dominated solutions to the total number of solutions in the population.
+        # Side Effects:
+        - Appends the computed ratio to `self.nds_ratio_his`.
+        - Adds the ratio to `self.nds_ratio_last5`.
+        - Updates the running average in `self.nds_ratio_running` with the new ratio value.
+        """
+        
         count = len(self.find_non_dominated_indices(self.population_obj))
         ratio_value = count / len(self.population_obj)
         self.nds_ratio_his.append(ratio_value)
@@ -575,6 +713,17 @@ class MADAC_Optimizer(Learnable_Optimizer):
         return ratio_value
 
     def get_average_dist(self):
+        """
+        # Introduction
+        Calculates the normalized average pairwise distance between individuals in the population based on their objective values.
+        # Args:
+        None
+        # Returns:
+        - float: The normalized average distance between all pairs of individuals in the population.
+        # Raises:
+        - SystemExit: If the computed average distance is NaN, prints diagnostic information and exits the program.
+        """
+        
         total_distance = cdist(
             [self.population_obj[i] for i in range(
                 self.population_size)],
@@ -595,6 +744,18 @@ class MADAC_Optimizer(Learnable_Optimizer):
         return ava_dist
 
     def get_pre_k_change(self, k, value_his):
+        """
+        # Introduction
+        Calculates the change in value over the last `k` generations from a history of values.
+        # Args:
+        - k (int): The number of generations to look back.
+        - value_his (list[float]): A list containing the historical values.
+        # Returns:
+        - float: The difference between the most recent value and the value `k` generations ago. Returns 0 if there are not enough generations.
+        # Raises:
+        - IndexError: If `value_his` does not contain enough elements for the calculation when `self.moead_generation >= k`.
+        """
+        
         if self.moead_generation >= k:
             return value_his[-1] - value_his[-(k + 1)]
         else:

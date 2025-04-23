@@ -3,6 +3,19 @@ import numpy as np
 from typing import Union, Iterable
 
 def cal_fdc(sample, fitness):
+    """
+    # Introduction
+    todo:FDC是这个意思吗
+    Calculates the Fitness-Distance Correlation (FDC) for a given set of samples and their corresponding fitness values. FDC is a metric used to assess the relationship between the fitness of solutions and their distance to the best solution in the sample set.
+    # Args:
+    - sample (np.ndarray): An array of candidate solutions, where each row represents a solution.
+    - fitness (np.ndarray): A 1D array of fitness values corresponding to each solution in `sample`.
+    # Returns:
+    - float: The computed fitness-distance correlation coefficient.
+    # Notes:
+    - The function normalizes the correlation by the product of the variances of distance and fitness, with a small epsilon added to avoid division by zero.
+    """
+    
     best = np.argmin(fitness)
     distance = np.linalg.norm(sample-sample[best], axis=-1)
     cfd = np.mean((fitness - np.mean(fitness)) * (distance - np.mean(distance)))
@@ -10,6 +23,20 @@ def cal_fdc(sample, fitness):
 
 
 def cal_rie(fitness):
+    """
+    # Introduction
+    todo:RIE是这个意思吗
+    Calculates the Relative Information Entropy (RIE) of a given fitness sequence, which quantifies the complexity or unpredictability of changes in the sequence at multiple scales.
+    # Args:
+    - fitness (list or np.ndarray): A sequence of numerical fitness values representing the progression of a process or optimization.
+    # Returns:
+    - float: The maximum entropy value computed across different epsilon scales, representing the RIE of the input sequence.
+    # Notes:
+    - The function uses a multi-scale approach by varying the epsilon threshold to detect significant changes in the fitness sequence.
+    - Entropy is normalized by the logarithm of the number of possible state transitions (6 in this case).
+    - Zero frequencies are replaced with the length of the fitness sequence to avoid log(0) issues.
+    """
+    
     epsilon_star = 0
     for i in range(1,len(fitness)):
         if (fitness[i] - fitness[i-1]) > epsilon_star:
@@ -50,6 +77,18 @@ def cal_rie(fitness):
 
 
 def cal_acf(fitness):
+    """
+    # Introduction
+    todo:ACF是什么意思
+    Calculates the lag-1 autocorrelation coefficient (ACF) of a given fitness array.
+    # Args:
+    - fitness (np.ndarray or list of float): An array or list containing fitness values.
+    # Returns:
+    - float: The computed lag-1 autocorrelation coefficient of the input fitness values.
+    # Notes:
+    - A small constant (1e-6) is added to the denominator to prevent division by zero.
+    """
+    
     avg_f = np.mean(fitness)
     a = np.sum((fitness - avg_f) ** 2) + 1e-6
     acf = 0
@@ -60,6 +99,19 @@ def cal_acf(fitness):
 
 
 def cal_nop(sample, fitness):
+    """
+    # Introduction
+    todo:NOP是什么意思
+    Calculates the normalized order preservation (NOP) metric for a given set of samples and their corresponding fitness values. The NOP metric measures how well the order of fitness values is preserved with respect to the distance from the best sample.
+    # Args:
+    - sample (np.ndarray): An array of sample points, where each row represents a sample.
+    - fitness (np.ndarray): A 1D array of fitness values corresponding to each sample.
+    # Returns:
+    - float: The normalized order preservation value, representing the proportion of times a closer sample does not have a worse fitness than a farther one.
+    # Notes:
+    - The function assumes that lower fitness values are better (i.e., minimization).
+    """
+    
     best = np.argmin(fitness)
     distance = np.linalg.norm(sample - sample[best], axis=-1)
     data = np.stack([fitness, distance], axis=0)
@@ -74,6 +126,18 @@ def cal_nop(sample, fitness):
 
 
 def random_walk_sampling(population, dim, steps, rng):
+    """
+    # Introduction
+    Generates a sequence of random walk samples within the bounds of a given population in a multi-dimensional space.
+    # Args:
+    - population (np.ndarray): The current population of solutions, shape (n_individuals, dim).
+    - dim (int): The dimensionality of the search space.
+    - steps (int): The number of steps (samples) to generate in the random walk.
+    - rng (np.random.Generator): A NumPy random number generator instance for reproducibility.
+    # Returns:
+    - np.ndarray: An array of shape (steps, dim) containing the random walk samples, scaled to the range defined by the population.
+    """
+    
     pmin = np.min(population, axis=0)
     pmax = np.max(population, axis=0)
     walks = []
@@ -87,6 +151,20 @@ def random_walk_sampling(population, dim, steps, rng):
 
 
 def cal_reward(survival, pointer):
+    """
+    # Introduction
+    Calculates a custom reward based on the survival status of elements and a specified pointer index.
+    # Args:
+    - survival (list): A sequence where each element represents the survival status (typically 1 or another integer) of an entity.
+    - pointer (int): The index in the survival list that is treated specially in the reward calculation.
+    # Returns:
+    - float: The computed reward value, normalized by the length of the survival list.
+    # Notes:
+    - If the element at the pointer index has a survival value of 1, the reward is incremented by 1.
+    - For all other indices, the reward is incremented by the reciprocal of their survival value.
+    - The final reward is averaged over the total number of elements in the survival list.
+    """
+    
     reward = 0
     for i in range(len(survival)):
         if i == pointer:
@@ -98,6 +176,46 @@ def cal_reward(survival, pointer):
 
 
 class DEDQN_Optimizer(Learnable_Optimizer):
+    """
+    # Introduction
+    DEDQN_Optimizer is a learnable optimizer based on Differential Evolution (DE) and Deep Q-Network (DQN) principles. It maintains a population of candidate solutions and iteratively improves them using mutation, crossover, and selection strategies, guided by reinforcement learning actions.
+    # Args:
+    - config (object): Configuration object containing optimizer parameters such as population size, mutation factor, crossover rate, problem dimension, maximum function evaluations, logging interval, and meta-data options.
+    # Attributes:
+    - __config (object): Stores the configuration object.
+    - __dim (int): Dimensionality of the optimization problem.
+    - __NP (int): Population size.
+    - __F (float): Mutation factor.
+    - __Cr (float): Crossover rate.
+    - __maxFEs (int): Maximum number of function evaluations.
+    - __rwsteps (int): Number of random walk steps for feature calculation.
+    - __solution_pointer (int): Index of the current solution to receive an action.
+    - __population (np.ndarray): Current population of candidate solutions.
+    - __cost (np.ndarray): Cost values of the current population.
+    - __gbest (np.ndarray): Global best solution found so far.
+    - __gbest_cost (float): Cost of the global best solution.
+    - __state (np.ndarray): Current state features for reinforcement learning.
+    - __survival (np.ndarray): Survival counters for each solution.
+    - fes (int): Current number of function evaluations.
+    - cost (list): Log of best costs at each logging interval.
+    - log_index (int): Current logging index.
+    - log_interval (int): Interval for logging progress.
+    # Methods:
+    - __cal_feature(problem): Calculates state features for reinforcement learning based on the current population and problem landscape.
+    - init_population(problem): Initializes the population and related attributes for a new optimization run.
+    - update(action, problem): Applies a mutation and crossover strategy based on the given action, updates the population, calculates reward, and checks for termination.
+    # Returns:
+    - __cal_feature: np.ndarray of calculated features.
+    - init_population: np.ndarray representing the initial state features.
+    - update: Tuple (state, reward, is_done, info) where:
+        - state (np.ndarray): Updated state features.
+        - reward (float): Reward signal for the taken action.
+        - is_done (bool): Whether the optimization process has terminated.
+        - info (dict): Additional information (currently empty).
+    # Raises:
+    - ValueError: If an invalid action is provided to the update method.
+    """
+    
     def __init__(self, config):
         super().__init__(config)
         config.NP = 100
@@ -125,6 +243,18 @@ class DEDQN_Optimizer(Learnable_Optimizer):
         self.log_interval = config.log_interval
 
     def __cal_feature(self, problem):
+        """
+        # Introduction
+        Calculates a set of feature descriptors for the current population in the optimization process, including FDC, RIE, ACF, and NOP, based on random walk sampling and cost evaluations.
+        # Args:
+        - problem (object): The optimization problem instance, which must provide an `eval` method for evaluating solutions and an `optimum` attribute for the known optimum value (if available).
+        # Returns:
+        todo:把FDC,RIE, ACF, NOP的意思写上去
+        - np.ndarray: A NumPy array containing the computed feature values in the order [fdc, rie, acf, nop].
+        # Notes:
+        - Increments the function evaluation count (`self.fes`) by the number of random walk steps.
+        """
+        
         samples = random_walk_sampling(self.__population, self.__dim, self.__rwsteps, self.rng)
         if problem.optimum is None:
             samples_cost = problem.eval(self.__population)
@@ -159,6 +289,23 @@ class DEDQN_Optimizer(Learnable_Optimizer):
         return self.__state
 
     def update(self, action, problem):
+        """
+        # Introduction
+        Updates the current solution in the population using a specified mutation and crossover strategy, evaluates the new solution, updates the best solution found, and manages logging and meta-data for the optimization process.
+        # Args:
+        todo:写清楚problem的数据结构
+        - action (int): The index of the mutation strategy to use (0: rand/1, 1: current-to-rand/1, 2: best/2).
+        - problem (object): The optimization problem instance, which must provide lower and upper bounds (`lb`, `ub`), an evaluation function (`eval`), and optionally an optimum value (`optimum`).
+        # Returns:
+        - tuple: A tuple containing:
+            - state (np.ndarray): The current feature state of the optimizer.
+            - reward (float): The reward calculated for the current update step.
+            - is_done (bool): Whether the optimization process has reached its termination condition.
+            - info (dict): Additional information (currently empty).
+        # Raises:
+        - ValueError: If the provided `action` is not one of the supported mutation strategies (0, 1, or 2).
+        """
+        
         # mutate first
         if action == 0:
             u = rand_1_single(self.__population, self.__F, self.__solution_pointer, rng=self.rng)
@@ -236,22 +383,79 @@ def binomial(x: np.ndarray, v: np.ndarray, Cr: Union[np.ndarray, float], rng) ->
     return u
 
 def generate_random_int_single(NP: int, cols: int, pointer: int, rng: np.random.RandomState = None) -> np.ndarray:
+    """
+    # Introduction
+    Generates a random array of integers within a specified range, ensuring that a given pointer value is not included in the result.
+    # Args:
+    - NP (int): The upper bound (exclusive) for the random integers.
+    - cols (int): The number of random integers to generate.
+    - pointer (int): The integer value that must not appear in the generated array.
+    - rng (np.random.RandomState, optional): A random number generator instance. Defaults to None.
+    # Returns:
+    - np.ndarray: An array of randomly generated integers of length `cols`, excluding the `pointer` value.
+    """
     r = rng.randint(low=0, high=NP, size=cols)
     while pointer in r:
         r = rng.randint(low=0, high=NP, size=cols)
     return r
 
 def rand_1_single(x: np.ndarray, F: float, pointer: int, r: np.ndarray = None, rng: np.random.RandomState = None) -> np.ndarray:
+    """
+    # Introduction
+    Generates a new candidate vector using the DE/rand/1 mutation strategy for Differential Evolution (DE) optimization algorithms.
+    # Args:
+    - x (np.ndarray): Population array of candidate solutions, where each row represents an individual.
+    - F (float): Differential weight, a scaling factor for the mutation.
+    - pointer (int): Index of the current target vector in the population.
+    - r (np.ndarray, optional): Array of three unique indices for mutation. If None, random indices are generated.
+    - rng (np.random.RandomState, optional): Random number generator for reproducibility.
+    # Returns:
+    - np.ndarray: The mutated vector generated by the DE/rand/1 strategy.
+    # Raises:
+    - ValueError: If the generated or provided indices in `r` are not unique or include the `pointer` index.
+    """
+    
     if r is None:
         r = generate_random_int_single(x.shape[0], 3, pointer,rng=rng)
     return x[r[0]] + F * (x[r[1]] - x[r[2]])
 
 def best_2_single(x: np.ndarray, best: np.ndarray, F: float, pointer: int, r: np.ndarray = None, rng: np.random.RandomState = None) -> np.ndarray:
+    """
+    # Introduction
+    Generates a new candidate solution vector using the "best/2" differential evolution strategy. This method perturbs the current best solution by adding the weighted difference of two pairs of randomly selected individuals from the population.
+    # Args:
+    - x (np.ndarray): The population array of candidate solutions.
+    - best (np.ndarray): The current best solution vector.
+    - F (float): The differential weight (scaling factor) applied to the difference vectors.
+    - pointer (int): The index of the target individual in the population.
+    - r (np.ndarray, optional): An array of 4 unique random indices for selecting individuals from the population. If None, random indices are generated.
+    - rng (np.random.RandomState, optional): Random number generator for reproducibility. If None, the default NumPy RNG is used.
+    # Returns:
+    - np.ndarray: The newly generated candidate solution vector.
+    # Raises:
+    - ValueError: If the population size is less than 4 or if invalid indices are provided.
+    """
+    
     if r is None:
         r = generate_random_int_single(x.shape[0], 4, pointer, rng=rng)
     return best + F * (x[r[0]] - x[r[1]] + x[r[2]] - x[r[3]])
 
 def cur_to_rand_1_single(x: np.ndarray, F: float, pointer: int, r: np.ndarray = None, rng: np.random.RandomState = None) -> np.ndarray:
+    """
+    # Introduction
+    Generates a new candidate vector using the "current-to-rand/1" mutation strategy, commonly used in Differential Evolution (DE) algorithms.
+    # Args:
+    - x (np.ndarray): Population array of candidate solutions, where each row represents an individual.
+    - F (float): Differential weight, a scaling factor for the mutation.
+    - pointer (int): Index of the current target vector in the population.
+    - r (np.ndarray, optional): Array of three unique random indices for mutation. If None, random indices are generated.
+    - rng (np.random.RandomState, optional): Random number generator for reproducibility. If None, the global numpy RNG is used.
+    # Returns:
+    - np.ndarray: The mutated candidate vector generated by the current-to-rand/1 strategy.
+    # Raises:
+    - ValueError: If the generated or provided indices in `r` are not unique or include `pointer`.
+    """
+    
     if r is None:
         r = generate_random_int_single(x.shape[0], 3, pointer, rng=rng)
     return x[pointer] + F * (x[r[0]] - x[pointer] + x[r[1]] - x[r[2]])
