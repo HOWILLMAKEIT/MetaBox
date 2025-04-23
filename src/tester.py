@@ -343,6 +343,8 @@ class Tester(object):
         test_run = self.config.test_run
         seed_list = list(range(1, test_run + 1)) # test_run
         num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
+
+        test_start_time = time.perf_counter()
         if parallel_batch == 'Full':
             testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent), PBO_Env(copy.deepcopy(p), copy.deepcopy(optimizer)), seed) for (agent, optimizer) in zip(self.agent_for_cp, self.l_optimizer_for_cp)
                                                                                                                                for p in self.test_set.data
@@ -361,7 +363,7 @@ class Tester(object):
                 testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent), PBO_Env(copy.deepcopy(p), copy.deepcopy(optimizer)), seed) for (agent, optimizer) in zip(self.agent_for_cp, self.l_optimizer_for_cp)
                                                                                                                                 for p in self.test_set.data
                                                                                                                                 ]
-                testunit_list += [BBO_TestUnit(copy.deepcopy(optimizer), copy.deepcopy(p), seed, self.config) for optimizer in self.t_optimizer_for_cp
+                testunit_list += [BBO_TestUnit(copy.deepcopy(optimizer), copy.deepcopy(p), seed) for optimizer in self.t_optimizer_for_cp
                                                                                                 for p in self.test_set.data
                                                                                                 ]
                 MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray', num_gpus=num_gpus)
@@ -411,17 +413,83 @@ class Tester(object):
                 for ip, problem in enumerate(self.test_set):
                     for i, seed in enumerate(seed_list):
                         pbar.set_description_str(f"Batch Testing Optimizer {optimizer.__str__()} with Problem Batch {ip}, Run {i}")
-                        testunit_list = [BBO_TestUnit(loads(dumps(optimizer)), copy.deepcopy(p), seed) for p in problem]
+                        testunit_list = [BBO_TestUnit(copy.deepcopy(optimizer), copy.deepcopy(p), seed) for p in problem]
                         MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray', num_gpus=num_gpus)
                         meta_test_data = MetaBBO_test.rollout()
                         self.record_test_data(meta_test_data)
                         pbar.update()
                     self.meta_data_results = store_meta_data(self.log_dir, self.meta_data_results)
             pbar.close()
-                        
+
+        elif parallel_batch == "serial":
+            pbar_len = (len(self.agent_for_cp) + len(self.t_optimizer_for_cp)) * self.test_set.N * self.config.test_run
+            pbar = tqdm(total = pbar_len, desc = "Serial Testing")
+            for (agent, optimizer) in zip(self.agent_for_cp, self.l_optimizer_for_cp):
+                for ip, problem in enumerate(self.test_set.data):
+                    for i, seed in enumerate(seed_list):
+                        pbar.set_description(f"Batch Testing Agent {agent.__str__()} with Problem Batch {ip}, Run {i}")
+                        env = PBO_Env(copy.deepcopy(problem), copy.deepcopy(optimizer))
+
+                        torch.manual_seed(seed)
+                        torch.cuda.manual_seed(seed)
+                        np.random.seed(seed)
+                        torch.backends.cudnn.deterministic = True
+                        torch.backends.cudnn.benchmark = False
+
+                        torch.set_default_dtype(torch.float64)
+                        tmp_agent = copy.deepcopy(agent)
+
+                        start_time = time.perf_counter()
+                        res = tmp_agent.rollout_episode(env, seed, {})
+                        end_time = time.perf_counter()
+                        res['T1'] = env.problem.T1
+                        res['T2'] = (end_time - start_time) * 1000
+                        agent_name = tmp_agent.__str__()
+                        res['agent_name'] = agent_name
+                        res['problem_name'] = problem.__str__()
+                        meta_test_data = [res]
+                        self.record_test_data(meta_test_data)
+                        pbar.update()
+                    self.meta_data_results = store_meta_data(self.log_dir, self.meta_data_results)
+            for optimizer in self.t_optimizer_for_cp:
+                for ip, problem in enumerate(self.test_set.data):
+                    for i, seed in enumerate(seed_list):
+                        pbar.set_description_str(f"Batch Testing Optimizer {optimizer.__str__()} with Problem Batch {ip}, Run {i}")
+
+                        torch.manual_seed(seed)
+                        torch.cuda.manual_seed(seed)
+                        np.random.seed(seed)
+                        torch.backends.cudnn.deterministic = True
+                        torch.backends.cudnn.benchmark = False
+
+                        torch.set_default_dtype(torch.float64)
+
+                        tmp_optimizer = copy.deepcopy(optimizer)
+                        tmp_problem = copy.deepcopy(problem)
+                        tmp_optimizer.seed(seed)
+                        tmp_problem.reset()
+
+                        start_time = time.perf_counter()
+                        res = tmp_optimizer.run_episode(tmp_problem)
+                        end_time = time.perf_counter()
+
+                        res['T1'] = tmp_problem.T1
+                        res['T2'] = (end_time - start_time) * 1000
+                        res['agent_name'] = tmp_optimizer.__str__()
+                        res['problem_name'] = tmp_problem.__str__()
+
+                        meta_test_data = [res]
+                        self.record_test_data(meta_test_data)
+                        pbar.update()
+                    self.meta_data_results = store_meta_data(self.log_dir, self.meta_data_results)
         else:
             raise NotImplementedError
-        
+
+        test_end_time = time.perf_counter()
+
+        with open(self.log_dir + f'/test_time_log.txt', 'a') as f:
+            f.write(f"Test time: {test_end_time - test_start_time} seconds\n")
+
         with open(self.log_dir + f'/test_results.pkl', 'wb') as f:
             pickle.dump(self.test_results, f, -1)
 
@@ -897,7 +965,7 @@ def rollout_batch(config):
                     pbar.update()
             meta_data_results = store_meta_data(config.rollout_log_dir, meta_data_results)
         pbar.close()
-                    
+
     else:
         raise NotImplementedError
 
