@@ -19,9 +19,11 @@ Config
 #### 1. Create your own Agent
 ##### 1.1. Create your own RL
 
+[Create your own Agent](#2-create-your-own-optimizer)
+
 ```{important}
 MetaBOX has pre-implemented various RL methods — refer to **Gallery > Config** for details. \
-You just need to inherit it and design your own Agent — Jump directly to **Gallery > Config** ！
+You just need to inherit it and design your own Agent — Jump directly to [Create your own Agent](#2-create-your-own-optimizer) ！
 ```
 
 1️⃣ Import Required Packages
