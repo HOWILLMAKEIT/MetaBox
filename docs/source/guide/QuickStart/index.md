@@ -28,9 +28,10 @@ pip install metabox
 
 MetaBBO, an emerging research direction in recent years, aims to automate the design of BBO algorithms by constructing intelligent agents as replacements for human experts.
 
-<p align="center">
-  <img src="https://github.com/GMC-DRL/MetaBox/blob/v2.0.0-docs/docs/pic/metabbo.png" width="400"/>
-</p>
+```{image} /_static/metabbo.png
+:alt: MetaBBO
+:align: center
+```
 
 Its dual-layer architecture synergizes:
 
