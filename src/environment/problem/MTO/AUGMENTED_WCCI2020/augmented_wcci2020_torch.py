@@ -70,6 +70,9 @@ class Sphere_Torch(AUGMENTED_WCCI2020_Torch_Problem):
     def func(self, x):
         z = self.sr_func(x, self.shift, self.rotate)
         return torch.sum(z ** 2, -1)
+    
+    def __str__(self):
+        return 'S'
 
 class Ackley_Torch(AUGMENTED_WCCI2020_Torch_Problem):
     LB = -50
@@ -84,6 +87,9 @@ class Ackley_Torch(AUGMENTED_WCCI2020_Torch_Problem):
         sum1 = -0.2 * torch.sqrt(torch.sum(z ** 2, -1) / self.dim)
         sum2 = torch.sum(torch.cos(2 * torch.pi * z), -1) / self.dim
         return torch.round(torch.e + 20 - 20 * torch.exp(sum1) - torch.exp(sum2), decimals = 15) + self.bias
+    
+    def __str__(self):
+        return 'A'
     
 class Griewank_Torch(AUGMENTED_WCCI2020_Torch_Problem):
     LB = -100
@@ -100,6 +106,10 @@ class Griewank_Torch(AUGMENTED_WCCI2020_Torch_Problem):
         for i in range(self.dim):
             p *= torch.cos(z[:, i] / torch.sqrt(torch.tensor(1 + i)))
         return 1 + s / 4000 - p + self.bias
+    
+    def __str__(self):
+        return 'G'
+
 
 class Rastrigin_Torch(AUGMENTED_WCCI2020_Torch_Problem):
     LB = -50
@@ -112,6 +122,9 @@ class Rastrigin_Torch(AUGMENTED_WCCI2020_Torch_Problem):
     def func(self, x):
         z = self.sr_func(x, self.shift, self.rotate)
         return torch.sum(z ** 2 - 10 * torch.cos(2 * torch.pi * z) + 10, -1) + self.bias
+    
+    def __str__(self):
+        return 'R'
     
 class Rosenbrock_Torch(AUGMENTED_WCCI2020_Torch_Problem):
     LB = -50
@@ -128,6 +141,9 @@ class Rosenbrock_Torch(AUGMENTED_WCCI2020_Torch_Problem):
         z = z[:, :-1]
         tmp1 = z ** 2 - z_
         return torch.sum(100 * tmp1 * tmp1 + (z - 1) ** 2, -1) + self.bias
+    
+    def __str__(self):
+        return 'Ro'
 
 class Weierstrass_Torch(AUGMENTED_WCCI2020_Torch_Problem):
     LB = -0.5
@@ -145,6 +161,9 @@ class Weierstrass_Torch(AUGMENTED_WCCI2020_Torch_Problem):
             sum1 += torch.sum(torch.pow(a, k) * torch.cos(2 * torch.pi * torch.pow(b, k) * (z + 0.5)), -1)
             sum2 += torch.pow(a, k) * torch.cos(2 * torch.pi * torch.pow(b, k) * 0.5)
         return sum1 - self.dim * sum2 + self.bias
+    
+    def __str__(self):
+        return 'W'
      
 class Schwefel_Torch(AUGMENTED_WCCI2020_Torch_Problem):
     LB = -500
@@ -161,3 +180,6 @@ class Schwefel_Torch(AUGMENTED_WCCI2020_Torch_Problem):
         z += a
         g = z * torch.sin(torch.sqrt(torch.abs(z)))
         return b * self.dim - torch.sum(g,-1)
+    
+    def __str__(self):
+        return 'Sc'

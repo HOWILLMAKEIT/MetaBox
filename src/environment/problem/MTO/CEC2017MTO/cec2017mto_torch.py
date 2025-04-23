@@ -76,6 +76,9 @@ class Sphere_Torch(CEC2017_Torch_Problem):
     def func(self, x):
         z = self.sr_func(x, self.shift, self.rotate)
         return torch.sum(z ** 2, -1)
+    
+    def __str__(self):
+        return 'Sphere'
 
 class Ackley_Torch(CEC2017_Torch_Problem):
     def __init__(self, dim, shift=None, rotate=None, bias=0):
@@ -88,6 +91,9 @@ class Ackley_Torch(CEC2017_Torch_Problem):
         sum1 = -0.2 * torch.sqrt(torch.sum(z ** 2, -1) / self.dim)
         sum2 = torch.sum(torch.cos(2 * torch.pi * z), -1) / self.dim
         return torch.round(torch.e + 20 - 20 * torch.exp(sum1) - torch.exp(sum2), decimals = 15) + self.bias
+    
+    def __str__(self):
+        return 'Ackley'
     
 
 class Griewank_Torch(CEC2017_Torch_Problem):
@@ -103,6 +109,9 @@ class Griewank_Torch(CEC2017_Torch_Problem):
         for i in range(self.dim):
             p *= torch.cos(z[:, i] / torch.sqrt(torch.tensor(1 + i)))
         return 1 + s / 4000 - p + self.bias
+    
+    def __str__(self):
+        return 'Griewank'
 
 class Rastrigin_Torch(CEC2017_Torch_Problem):
     def __init__(self, dim, shift=None, rotate=None, bias=0):
@@ -113,6 +122,9 @@ class Rastrigin_Torch(CEC2017_Torch_Problem):
     def func(self, x):
         z = self.sr_func(x, self.shift, self.rotate)
         return torch.sum(z ** 2 - 10 * torch.cos(2 * torch.pi * z) + 10, -1) + self.bias
+    
+    def __str__(self):
+        return 'Rastrigin'
     
 class Rosenbrock_Torch(CEC2017_Torch_Problem):
     def __init__(self, dim, shift=None, rotate=None, bias=0):
@@ -127,6 +139,9 @@ class Rosenbrock_Torch(CEC2017_Torch_Problem):
         z = z[:, :-1]
         tmp1 = z ** 2 - z_
         return torch.sum(100 * tmp1 * tmp1 + (z - 1) ** 2, -1) + self.bias
+    
+    def __str__(self):
+        return 'Rosenbrock'
 
 
 class Weierstrass_Torch(CEC2017_Torch_Problem):
@@ -144,6 +159,9 @@ class Weierstrass_Torch(CEC2017_Torch_Problem):
             sum2 += torch.pow(a, k) * torch.cos(2 * torch.pi * torch.pow(b, k) * 0.5)
         return sum1 - self.dim * sum2 + self.bias
     
+    def __str__(self):
+        return 'Weierstrass'
+    
 class Schwefel_Torch(CEC2017_Torch_Problem):
     def __init__(self, dim, shift=None, rotate=None, bias=0):
         super().__init__(dim, shift, rotate, bias)
@@ -157,3 +175,6 @@ class Schwefel_Torch(CEC2017_Torch_Problem):
         z += a
         g = z * torch.sin(torch.sqrt(torch.abs(z)))
         return b * self.dim - torch.sum(g,-1)
+    
+    def __str__(self):
+        return 'Schwefel'

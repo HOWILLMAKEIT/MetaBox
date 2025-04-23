@@ -69,7 +69,7 @@ class Sphere(AUGMENTED_WCCI2020_Numpy_Problem):
         return np.sum(z ** 2, -1)
     
     def __str__(self):
-        return 'Sphere'
+        return 'S'
 
 class Ackley(AUGMENTED_WCCI2020_Numpy_Problem):
     LB = -50
@@ -86,7 +86,7 @@ class Ackley(AUGMENTED_WCCI2020_Numpy_Problem):
         return np.round(np.e + 20 - 20 * np.exp(sum1) - np.exp(sum2), 15) + self.bias
     
     def __str__(self):
-        return 'Ackley'
+        return 'A'
     
 class Griewank(AUGMENTED_WCCI2020_Numpy_Problem):
     LB = -100
@@ -105,7 +105,7 @@ class Griewank(AUGMENTED_WCCI2020_Numpy_Problem):
         return 1 + s / 4000 - p + self.bias
     
     def __str__(self):
-        return 'Griewank'
+        return 'G'
 
 class Rastrigin(AUGMENTED_WCCI2020_Numpy_Problem):
     LB = -50
@@ -120,7 +120,7 @@ class Rastrigin(AUGMENTED_WCCI2020_Numpy_Problem):
         return np.sum(z ** 2 - 10 * np.cos(2 * np.pi * z) + 10, -1) + self.bias
     
     def __str__(self):
-        return 'Rastrigin'
+        return 'R'
     
 class Rosenbrock(AUGMENTED_WCCI2020_Numpy_Problem):
     LB = -50
@@ -139,7 +139,7 @@ class Rosenbrock(AUGMENTED_WCCI2020_Numpy_Problem):
         return np.sum(100 * tmp1 * tmp1 + (z - 1) ** 2, -1) + self.bias
     
     def __str__(self):
-        return 'Rosenbrock'
+        return 'Ro'
 
 class Weierstrass(AUGMENTED_WCCI2020_Numpy_Problem):
     LB = -0.5
@@ -159,7 +159,7 @@ class Weierstrass(AUGMENTED_WCCI2020_Numpy_Problem):
         return sum1 - self.dim * sum2 + self.bias
     
     def __str__(self):
-        return 'Weierstrass'
+        return 'W'
     
 class Schwefel(AUGMENTED_WCCI2020_Numpy_Problem):
     LB = -500
@@ -178,4 +178,4 @@ class Schwefel(AUGMENTED_WCCI2020_Numpy_Problem):
         return b * self.dim - np.sum(g,-1)
     
     def __str__(self):
-        return 'Schwefel'
+        return 'Sc'
