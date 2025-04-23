@@ -18,10 +18,127 @@ Config
 
 #### 1. Create your own Agent
 
-     from metabox.rl import basic_agent
+     import torch
+     from metaevobox.rl import basic_agent
 
-     class MyRL(basic_agent)
-       pass
+     class MyRL(basic_agent):
+          
+          def __init__(self, config):
+         
+         # If rl contains the network
+         # def __init__(self, config, networks: dict, learning_rates: float):
+
+               super().__init___(config)
+               self.config = config
+
+               # Init parameters
+               # xxx
+               
+               # If rl contains the network
+               # self.set_network(networks, learning_rates)
+               
+               # Init learning time
+               self.learning_time = 0
+               self.cur_checkpoint = 0
+               
+               # Save init agent
+               save_class(self.config.agent_save_dir, 'checkpoint' + str(self.cur_checkpoint), self)
+               self.cur_checkpoint += 1
+
+          # If rl contains the network
+          # def set_network(self, networks: dict, learning_rates: float):
+          #    pass
+             
+         def update_setting(self, config):
+             pass
+
+         def train_episode(self, 
+                           envs,
+                           seeds: Optional[Union[int, List[int], np.ndarray]],
+                           para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc']='dummy',
+                           compute_resource = {},
+                           tb_logger = None,
+                           required_info = {}):
+             
+             num_cpus = None
+             num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
+             if 'num_cpus' in compute_resource.keys():
+                 num_cpus = compute_resource['num_cpus']
+             if 'num_gpus' in compute_resource.keys():
+                 num_gpus = compute_resource['num_gpus']
+             env = ParallelEnv(envs, para_mode, num_cpus=num_cpus, num_gpus=num_gpus)
+             env.seed(seeds) 
+
+             state = env.reset()
+             state = torch.FloatTensor(state)
+
+             R = torch.zeros(len(env))
+
+             while not env.all_done():
+                 # Get actions based on specific methods
+                 # action = ....
+
+                 # State transient
+                 next_state, reward, is_end, info = env.step(action)
+                 R += reward
+
+                 # Specific operations
+                 # xxxx
+
+                 # Store info
+                 self.learning_time += 1
+                 if self.learning_time >= (self.config.save_interval * self.cur_checkpoint):
+                     save_class(self.config.agent_save_dir, 'checkpoint-'+str(self.cur_checkpoint), self)
+                     self.cur_checkpoint += 1
+     
+                 if self.learning_time >= self.config.max_learning_step:
+                     return_info = {'return': _R, 'learn_steps': self.learning_time, }
+                     env_cost = env.get_env_attr('cost')
+                     return_info['gbest'] = env_cost[-1]
+                     for key in required_info.keys():
+                         return_info[key] = env.get_env_attr(required_info[key])
+                     env.close()
+                     return self.learning_time >= self.config.max_learning_step, return_info
+
+             # Return the necessary training data
+             is_train_ended = self.learning_time >= self.config.max_learning_step
+             return_info = {'return': R, 'learn_steps': self.learning_time, }
+             env_cost = env.get_env_attr('cost')
+             return_info['gbest'] = env_cost[-1]
+             for key in required_info.keys():
+                 return_info[key] = env.get_env_attr(required_info[key])
+             env.close()
+             return is_train_ended, return_info
+
+         def rollout_episode(self, env, seed=None, required_info = {}):
+             with torch.no_grad():
+                 if seed is not None:
+                     env.seed(seed)
+                 is_done = False
+                 state = env.reset()
+                 R = 0
+                 
+                 while not is_done:
+                     # Get actions based on specific methods
+                     # action = ....
+                     
+                     # State transient
+                     next_state, reward, is_end, info = env.step(action)
+                     R += reward
+                    
+                 # Return the necessary test data
+                 env_cost = env.get_env_attr('cost')
+                 env_fes = env.get_env_attr('fes')
+                 env_metadata = env.get_env_attr('metadata') 
+                 results = {'cost': env_cost, 'fes': env_fes, 'return': R, 'metadata': env_metadata}
+                 for key in required_info.keys():
+                     results[key] = getattr(env, required_info[key])
+                 return results
+
+         def log_to_tb_train(self, tb_logger):
+             # Record the training data to tensorboard
+             # Exp： 
+             pass
 
      class MyAgent(MyRL)
        pass
