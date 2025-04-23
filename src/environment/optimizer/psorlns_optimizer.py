@@ -186,28 +186,33 @@ class PSORLNS_Optimizer(Learnable_Optimizer):
                 
         # calculate the new costs
         new_cost = self.get_costs(new_position, problem)
+        particles_filter = new_cost < self.particles['c_cost']
+        accept_new_position = self.particles['current_position'].copy()
+        accept_new_cost = self.particles['c_cost'].copy()
+        accept_new_position[particles_filter] = new_position[particles_filter].copy()
+        accept_new_cost[particles_filter] = new_cost[particles_filter].copy()
 
         # update particles
-        filters = new_cost < self.particles['pbest']
+        filters = accept_new_cost < self.particles['pbest']
 
-        new_cbest_val = np.min(new_cost)
-        new_cbest_index = np.argmin(new_cost)
+        new_cbest_val = np.min(accept_new_cost)
+        new_cbest_index = np.argmin(accept_new_cost)
         filters_best_val = new_cbest_val < self.particles['gbest_val']
 
-        new_pop_dist = distance.cdist(new_position, new_position)
+        new_pop_dist = distance.cdist(accept_new_position, accept_new_position)
 
-        new_particles = {'current_position': new_position.copy(),
-                         'c_cost': new_cost.copy(),
+        new_particles = {'current_position': accept_new_position.copy(),
+                         'c_cost': accept_new_cost.copy(),
                          'pbest_position': np.where(np.expand_dims(filters, axis = -1),
-                                                    new_position.copy(),
+                                                    accept_new_position.copy(),
                                                     self.particles['pbest_position']),
                          'pbest': np.where(filters,
-                                           new_cost.copy(),
+                                           accept_new_cost.copy(),
                                            self.particles['pbest']),
                          'velocity': new_velocity.copy(),
                          'gbest_val': new_cbest_val if filters_best_val else self.particles['gbest_val'],
                          'gbest_position': np.where(np.expand_dims(filters_best_val, axis = -1),
-                                                    new_position[new_cbest_index],
+                                                    accept_new_position[new_cbest_index],
                                                     self.particles['gbest_position']),
                          'pop_dist': new_pop_dist.copy()
                          }
@@ -227,7 +232,7 @@ class PSORLNS_Optimizer(Learnable_Optimizer):
         is_end = np.array([self.fes >= self.max_fes] * self.ps)
 
         # cal the reward
-        reward = self.cal_reward(self.particles['c_cost'], parent_cost)
+        reward = self.cal_reward(new_cost, parent_cost)
 
         # get the population next_state
         next_state = self.observe()  # ps, 9

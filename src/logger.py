@@ -1191,25 +1191,15 @@ class MMO_Logger(Basic_Logger):
         super().__init__(config)
 
     def data_wrapper_prsr_rollout(self, data, ):
-        res = []
-        for key in data.keys():
-            res.append(np.array(data[key])[:, -1, 3])
-        return np.array(res)
+        res = np.array(data)
+        return res[:, -1, 3]
 
     def data_wrapper_prsr_hist(self,data,):
         return np.array(data)[:, :, 3]
 
     def data_wrapper_cost_rollout(self,data, ):
-        res = []
-        for key in data.keys():
-            res.append(np.array(data[key])[:, -1])
-        return np.array(res)
-
-    def data_wrapper_return_rollout(self,data, ):
-        res = []
-        for key in data.keys():
-            res.append(np.array(data[key]))
-        return np.array(res)
+        res = np.array(data)
+        return res[:, -1]
 
     def gen_agent_performance_prsr_table(self, results: dict, data_type: str, out_dir: str) -> None:
         """
@@ -1469,9 +1459,6 @@ class MMO_Logger(Basic_Logger):
         self.draw_boxplot(results, log_dir+'pics/', pdf_fig=pdf_fig)
         self.draw_boxplot_prsr(results['pr'], 'pr', log_dir+'pics/', pdf_fig=pdf_fig)
         self.draw_boxplot_prsr(results['sr'], 'sr', log_dir+'pics/', pdf_fig=pdf_fig)
-        self.draw_overall_boxplot(results['cost'], log_dir+'pics/', pdf_fig=pdf_fig)
-        self.draw_overall_boxplot_prsr(results['pr'], 'pr', log_dir+'pics/',pdf_fig=pdf_fig)
-        self.draw_overall_boxplot_prsr(results['sr'], 'sr', log_dir+'pics/',pdf_fig=pdf_fig)
 
         self.draw_test_data(results['cost'], 'cost', log_dir + 'pics/', logged=True, categorized=False, pdf_fig=pdf_fig, data_wrapper=np.array)
         self.draw_test_data(results['pr'],'pr', log_dir + 'pics/', logged=False, categorized=False, pdf_fig=pdf_fig, data_wrapper=self.data_wrapper_prsr_hist)
@@ -1486,10 +1473,10 @@ class MMO_Logger(Basic_Logger):
             results = pickle.load(f)
         if not os.path.exists(log_dir + 'pics/'):
             os.makedirs(log_dir + 'pics/')
-        self.draw_train_logger('return', results['return'], log_dir + 'pics/', pdf_fig=pdf_fig, data_wrapper=self.data_wrapper_return_rollout)
-        self.draw_train_logger('cost', results['cost'], log_dir + 'pics/', pdf_fig=pdf_fig, data_wrapper=self.data_wrapper_cost_rollout)
-        self.draw_train_logger('pr', results['pr'], log_dir + 'pics/', pdf_fig=pdf_fig, data_wrapper=self.data_wrapper_prsr_rollout)
-        self.draw_train_logger('sr', results['sr'], log_dir + 'pics/', pdf_fig=pdf_fig, data_wrapper=self.data_wrapper_prsr_rollout)
+        self.draw_train_logger('return', results['steps'], results['return'], log_dir + 'pics/', pdf_fig=pdf_fig)
+        self.draw_train_logger('cost', results['steps'],results['cost'], log_dir + 'pics/', pdf_fig=pdf_fig, data_wrapper=self.data_wrapper_cost_rollout)
+        self.draw_train_logger('pr', results['steps'],results['pr'], log_dir + 'pics/', pdf_fig=pdf_fig, data_wrapper=self.data_wrapper_prsr_rollout)
+        self.draw_train_logger('sr', results['steps'],results['sr'], log_dir + 'pics/', pdf_fig=pdf_fig, data_wrapper=self.data_wrapper_prsr_rollout)
 
 #logger
 # class basic_Logger:
