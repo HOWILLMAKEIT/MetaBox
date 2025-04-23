@@ -8,3 +8,4 @@ sphinx-intl
 recommonmark
 sphinx_markdown_tables
 myst-parser
+sphinx_copybutton
