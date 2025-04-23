@@ -163,9 +163,9 @@ This function is designed for rl methods that require networks and is not necess
              # Exp：tb_logger.add_scalar('loss', loss.item(), mini_step)
              pass
 
-     ```{tips}
-     Not familiar with tensorboard? Click this [link](https://www.tensorflow.org/tensorboard/get_started).
-     ```
+```{tips}
+Not familiar with tensorboard? Click this [link](https://www.tensorflow.org/tensorboard/get_started).
+```
 
 
 ##### 1.1. Create your own Agent
