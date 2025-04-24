@@ -375,7 +375,7 @@ and need to be adjusted appropriately **according to specific tasks**.
 ### BBO
 
 ```{tip}
-Considering that you may need to compare with other bbo,
+Considering that you may need to compare with other bbo,\
 we also open the bbo design interface to you! 😉
 ```
 
