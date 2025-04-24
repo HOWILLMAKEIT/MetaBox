@@ -7,6 +7,21 @@ import os
 import math
 
 class Memory:
+    """
+    # Introduction
+
+    A class to store and manage the memory required for reinforcement learning algorithms.
+    It keeps track of actions, states, log probabilities, and rewards during an episode
+    and provides functionality to clear the stored memory.
+
+    # Methods:
+    - __init__(): Initializes the memory by creating empty lists for actions, states, log probabilities, and rewards.
+    - clear_memory(): Clears the stored memory by deleting the lists of actions, states, log probabilities, and rewards.
+
+    # Raises:
+
+    This class does not raise any exceptions.
+    """
     def __init__(self):
         self.actions = []
         self.states = []
@@ -21,6 +36,20 @@ class Memory:
 
 
 class ReplayBuffer:
+    """
+    # Introduction
+    The `ReplayBuffer` class is a utility for storing and sampling experiences in reinforcement learning. It uses a fixed-size buffer to store transitions (state, action, reward, next state, done) and provides methods to append new experiences and sample mini-batches for training. This class is essential for implementing experience replay, which helps stabilize and improve the learning process in reinforcement learning algorithms.
+    # Args
+    - `max_size` (int): The maximum number of experiences the buffer can hold.
+    # Attributes
+    - `buffer` (collections.deque): A deque object that stores the experiences with a fixed maximum size.
+    # Methods
+    - `append(exp)`: Adds a new experience to the buffer.
+    - `sample(batch_size)`: Samples a mini-batch of experiences from the buffer.
+    - `__len__()`: Returns the current number of experiences stored in the buffer.
+    # Raises
+    - `ValueError`: Raised in the `sample` method if the requested batch size exceeds the number of stored experiences.
+    """
     def __init__(self, max_size):
         self.buffer = collections.deque(maxlen=max_size)
 
@@ -52,6 +81,32 @@ class ReplayBuffer:
 
 
 class ReplayBuffer_torch:
+    """
+    # Introduction
+    The `ReplayBuffer_torch` class implements a replay buffer for reinforcement learning using PyTorch. It is designed to store and sample transitions (state, action, reward, next_state, done) efficiently, enabling agents to learn from past experiences. The buffer supports fixed capacity and operates in a circular manner, overwriting old transitions when full.
+    # Args
+    - `capacity` (int): The maximum number of transitions the buffer can store.
+    - `state_dim` (int): The dimensionality of the state space.
+    - `device` (torch.device): The device (CPU or GPU) on which the buffer's tensors are stored.
+    # Attributes
+    - `capacity` (int): The maximum number of transitions the buffer can store.
+    - `device` (torch.device): The device (CPU or GPU) on which the buffer's tensors are stored.
+    - `position` (int): The current position in the buffer where the next transition will be stored.
+    - `size` (int): The current number of transitions stored in the buffer.
+    - `states` (torch.Tensor): A tensor storing the states of transitions.
+    - `actions` (torch.Tensor): A tensor storing the actions of transitions.
+    - `rewards` (torch.Tensor): A tensor storing the rewards of transitions.
+    - `next_states` (torch.Tensor): A tensor storing the next states of transitions.
+    - `dones` (torch.Tensor): A tensor storing the done flags of transitions.
+    # Methods
+    - `append(state, action, reward, next_state, done)`: Adds a new transition to the buffer. Overwrites the oldest transition if the buffer is full.
+    - `sample(batch_size)`: Samples a batch of transitions from the buffer.
+    - `__len__()`: Returns the current number of transitions stored in the buffer.
+    # Returns
+    - `sample(batch_size)`: Returns a tuple of tensors `(states, actions, rewards, next_states, dones)` representing a batch of sampled transitions.
+    # Raises
+    - No explicit exceptions are raised by this class.
+    """
     def __init__(self, capacity, state_dim, device):
 
         self.capacity = capacity
@@ -142,6 +197,19 @@ def clip_grad_norms(param_groups, max_norm = math.inf):
     return grad_norms, grad_norms_clipped
 
 def save_class(dir, file_name, saving_class):
+    """
+    # Introduction
+    Saves a Python object (class instance) to a file in pickle format.
+    # Args:
+    - dir (str): The directory where the file will be saved. If the directory
+                   does not exist, it will be created.
+    - file_name (str): The name of the file (without extension) to save the object.
+    - saving_class (object): The Python object (class instance) to be saved.
+    # Raises:
+    - OSError: If there is an issue creating the directory or writing the file.
+    # Notes:
+    - The saved file will have a `.pkl` extension.
+    """
     if not os.path.exists(dir):
         os.makedirs(dir)
     with open(dir+file_name+'.pkl', 'wb') as f:

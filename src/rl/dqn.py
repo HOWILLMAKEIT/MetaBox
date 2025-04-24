@@ -31,6 +31,45 @@ def clip_grad_norms(param_groups, max_norm=math.inf):
 
 
 class DQN_Agent(Basic_Agent):
+    """
+    # Introduction
+    The `DQN_Agent` class implements a Deep Q-Network (DQN) agent for reinforcement learning. This agent uses experience replay, epsilon-greedy exploration, and gradient clipping to learn optimal policies in a given environment. It supports parallelized environments and provides methods for training, action selection, and evaluation.
+    # Args
+    - `config`: Configuration object containing all necessary parameters for experiment.For details you can visit config.py.
+    - `networks` (dict): A dictionary of neural networks used by the agent, with keys as network names (e.g., 'actor', 'critic') and values as the corresponding network instances.
+    - `learning_rates` (float): Learning rate for the optimizer.
+    # Attributes
+    - `gamma` (float): Discount factor for future rewards.
+    - `n_act` (int): Number of possible actions in the environment.
+    - `epsilon` (float): Exploration rate for epsilon-greedy policy.
+    - `max_grad_norm` (float): Maximum gradient norm for gradient clipping.
+    - `memory_size` (int): Size of the replay buffer.
+    - `batch_size` (int): Batch size for training.
+    - `warm_up_size` (int): Minimum number of experiences required in the replay buffer before training starts.
+    - `device` (str): Device to run computations on (e.g., 'cpu' or 'cuda').
+    - `replay_buffer` (ReplayBuffer): Replay buffer for storing experiences.
+    - `network` (list): List of network names used by the agent.
+    - `optimizer` (torch.optim.Optimizer): Optimizer for training the networks.
+    - `criterion` (torch.nn.Module): Loss function used for training.
+    - `learning_time` (int): Counter for the number of training steps.
+    - `cur_checkpoint` (int): Counter for the current checkpoint index.
+    # Methods
+    - `set_network(networks, learning_rates)`: Sets up the neural networks, optimizers, and loss functions for the agent.
+    - `update_setting(config)`: Updates the agent's configuration and resets training-related attributes.
+    - `get_action(state, epsilon_greedy=False)`: Selects an action based on the current state using the epsilon-greedy policy.
+    - `train_episode(envs, seeds, para_mode, compute_resource, tb_logger, required_info)`: Trains the agent for one episode in a parallelized environment.
+    - `rollout_episode(env, seed, required_info)`: Executes a single rollout episode in the environment and collects results.
+    - `rollout_batch_episode(envs, seeds, para_mode, compute_resource, required_info)`: Executes multiple rollout episodes in parallelized environments and collects results.
+    - `log_to_tb_train(tb_logger, mini_step, grad_norms, loss, Return, Reward, predict_Q, target_Q, extra_info)`: Logs training metrics to TensorBoard.
+    # Returns
+    - `train_episode`: A tuple containing a boolean indicating whether training has ended and a dictionary with training metrics.
+    - `rollout_episode`: A dictionary containing results of the rollout episode, including return and environment-specific metrics.
+    - `rollout_batch_episode`: A dictionary containing results of the batch rollout episodes, including return and environment-specific metrics.
+    # Raises
+    - `AssertionError`: If required network attributes (e.g., `model`) are not set.
+    - `ValueError`: If the length of the learning rates list does not match the number of networks.
+    - `AssertionError`: If the optimizer or criterion specified in the configuration is invalid.
+    """
     def __init__(self, config, network: dict, learning_rates: float):
         super().__init__(config)
         self.config = config

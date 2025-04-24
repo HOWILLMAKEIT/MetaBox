@@ -27,6 +27,14 @@ class Basic_Agent:
 
 
     def update_setting(self, config):
+        """
+        # Introduction
+        Updates the configuration settings of the agent and initializes the learning process.
+        # Args
+        - `config`: Configuration object containing all necessary parameters for experiment.For details you can visit config.py.
+        # Returns
+        - None
+        """
         pass
 
     def train_episode(self,

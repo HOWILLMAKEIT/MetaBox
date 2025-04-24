@@ -35,6 +35,55 @@ def clip_grad_norms(param_groups, max_norm = math.inf):
 
 
 class VDN_Agent(Basic_Agent):
+    """
+    # Introduction
+    The `VDN_Agent` class implements a Value Decomposition Network (VDN) agent for multi-agent reinforcement learning. This agent is designed to handle cooperative multi-agent environments by decomposing the joint action-value function into individual agent value functions. It supports experience replay, target networks, epsilon-greedy exploration, and parallelized environments. The class provides methods for training, action selection, and evaluation.
+    # Args
+    - `config`: Configuration object containing all necessary parameters for experiment.For details you can visit config.py.
+    - `network` (dict): A dictionary of neural networks used by the agent, where keys are network names and values are the corresponding network objects.
+    - `learning_rates` (float): Learning rate or a list of learning rates for the optimizer(s).
+    # Attributes
+    - `n_agent` (int): Number of agents in the environment.
+    - `n_act` (int): Number of actions available to each agent.
+    - `available_action` (list): List of available actions for each agent.
+    - `memory_size` (int): Size of the replay buffer.
+    - `warm_up_size` (int): Number of experiences required in the replay buffer before training starts.
+    - `gamma` (float): Discount factor for future rewards.
+    - `epsilon` (float): Epsilon value for epsilon-greedy exploration.
+    - `epsilon_start` (float): Initial epsilon value for exploration.
+    - `epsilon_end` (float): Final epsilon value for exploration.
+    - `epsilon_decay_steps` (int): Number of steps for epsilon decay.
+    - `max_grad_norm` (float): Maximum gradient norm for gradient clipping.
+    - `batch_size` (int): Batch size for training.
+    - `chunk_size` (int): Chunk size for sampling trajectories from the replay buffer.
+    - `update_iter` (int): Number of update iterations per training step.
+    - `device` (str): Device used for computation (e.g., 'cpu' or 'cuda').
+    - `replay_buffer` (MultiAgent_ReplayBuffer): Replay buffer for storing experiences.
+    - `network` (list): List of network names used by the agent.
+    - `optimizer` (torch.optim.Optimizer): Optimizer for training the networks.
+    - `criterion` (torch.nn.Module): Loss function used for training.
+    - `learning_time` (int): Counter for the number of training steps.
+    - `cur_checkpoint` (int): Counter for the current checkpoint index.
+    # Methods
+    - `set_network(networks: dict, learning_rates: float)`: Sets up the networks, optimizer, and loss function for the agent.
+    - `get_step() -> int`: Returns the current training step.
+    - `update_setting(config)`: Updates the agent's configuration and resets training-related attributes.
+    - `get_action(state, epsilon_greedy=False) -> np.ndarray`: Selects an action based on the current state and exploration strategy.
+    - `train_episode(...)`: Trains the agent for one episode in a parallelized environment.
+    - `rollout_episode(env, seed=None, required_info={}) -> dict`: Executes a single episode in the environment and returns the results.
+    - `rollout_batch_episode(...) -> dict`: Executes multiple episodes in parallelized environments and returns the results.
+    - `log_to_tb_train(...)`: Logs training metrics and information to TensorBoard.
+    # Returns
+    - `train_episode`: A tuple containing:
+        - `is_train_ended` (bool): Whether the training has reached the maximum number of steps.
+        - `return_info` (dict): Information about the training episode, including return, learning steps, and additional metrics.
+    - `rollout_episode`: A dictionary containing episode results, including cost, return, and metadata.
+    - `rollout_batch_episode`: A dictionary containing batch episode results, including cost, return, and metadata.
+    # Raises
+    - `AssertionError`: If required network attributes (e.g., `model`) are not set.
+    - `ValueError`: If the length of the learning rates list does not match the number of networks.
+    - `AssertionError`: If the optimizer or criterion specified in the configuration is invalid.
+    """
     def __init__(self, config, networks, learning_rates):
         super().__init__(config)
         self.config = config

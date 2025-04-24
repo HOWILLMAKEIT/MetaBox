@@ -10,6 +10,21 @@ import numpy as np
 
 # memory for recording transition during training process
 class Memory:
+    """
+    # Introduction
+
+    A class to store and manage the memory required for reinforcement learning algorithms.
+    It keeps track of actions, states, log probabilities, and rewards during an episode
+    and provides functionality to clear the stored memory.
+
+    # Methods:
+    - __init__(): Initializes the memory by creating empty lists for actions, states, log probabilities, and rewards.
+    - clear_memory(): Clears the stored memory by deleting the lists of actions, states, log probabilities, and rewards.
+
+    # Raises:
+
+    This class does not raise any exceptions.
+    """
     def __init__(self):
         self.actions = []
         self.states = []
@@ -44,6 +59,42 @@ def clip_grad_norms(param_groups, max_norm = math.inf):
 
 
 class PPO_Agent(Basic_Agent):
+    """
+    # Introduction
+    The `PPO_Agent` class implements a Proximal Policy Optimization (PPO) agent for reinforcement learning. This agent uses actor-critic architecture, generalized advantage estimation, and clipping techniques to optimize policies in a stable and efficient manner. It supports parallelized environments, logging to TensorBoard, and saving/loading checkpoints for training continuation.
+    # Args
+    - `config`: Configuration object containing all necessary parameters for experiment.For details you can visit config.py.
+    - `networks` (dict): A dictionary of neural networks used by the agent, with keys as network names (e.g., 'actor', 'critic') and values as the corresponding network instances.
+    - `learning_rates` (float): Learning rate for the optimizer.
+    # Attributes
+    - `gamma` (float): Discount factor for future rewards.
+    - `n_step` (int): Number of steps for n-step returns.
+    - `K_epochs` (int): Number of epochs for PPO updates.
+    - `eps_clip` (float): Clipping parameter for PPO objective.
+    - `max_grad_norm` (float): Maximum gradient norm for gradient clipping.
+    - `device` (str): Device to run the computations on (e.g., 'cpu' or 'cuda').
+    - `network` (list): List of network names initialized in the agent.
+    - `optimizer` (torch.optim.Optimizer): Optimizer for training the networks.
+    - `learning_time` (int): Counter for the total number of training steps.
+    - `cur_checkpoint` (int): Counter for the current checkpoint index.
+    # Methods
+    - `set_network(networks, learning_rates)`: Initializes the actor and critic networks, sets up the optimizer, and moves networks to the specified device.
+    - `get_step()`: Returns the current training step count.
+    - `update_setting(config)`: Updates the agent's configuration and resets training-related attributes.
+    - `train_episode(envs, seeds, para_mode, compute_resource, tb_logger, required_info)`: Trains the agent for one episode using the PPO algorithm.
+    - `rollout_episode(env, seed, required_info)`: Executes a single rollout in the environment and collects results.
+    - `rollout_batch_episode(envs, seeds, para_mode, compute_resource, required_info)`: Executes rollouts in parallel environments and collects results.
+    - `log_to_tb_train(tb_logger, mini_step, grad_norms, reinforce_loss, baseline_loss, Return, Reward, memory_reward, critic_output, logprobs, entropy, approx_kl_divergence, extra_info)`: Logs training metrics to TensorBoard.
+    # Returns
+    - `train_episode`: A tuple `(is_train_ended, return_info)` where:
+        - `is_train_ended` (bool): Indicates whether the training has reached the maximum number of steps.
+        - `return_info` (dict): Contains training metrics such as rewards, learning steps, and environment-specific information.
+    - `rollout_episode`: A dictionary containing rollout results such as rewards, costs, and metadata.
+    - `rollout_batch_episode`: A dictionary containing batch rollout results such as rewards, costs, and metadata.
+    # Raises
+    - `AssertionError`: If required network attributes (e.g., 'actor', 'critic') are not set or if the optimizer specified in the configuration is invalid.
+    - `ValueError`: If the length of the learning rates list does not match the number of networks.
+    """
     def __init__(self, config, networks: dict, learning_rates: float):
         super().__init__(config)
         self.config = config

@@ -29,6 +29,38 @@ def clip_grad_norms(param_groups, max_norm=math.inf):
 
 
 class QLearning_Agent(Basic_Agent):
+    """
+    # Introduction
+    The `QLearning_Agent` class implements a Q-Learning agent for reinforcement learning. This agent uses a tabular Q-learning approach to learn optimal policies in discrete state and action spaces. It supports parallelized environments, epsilon-greedy exploration, and provides methods for training, action selection, and evaluation.
+    # Args
+    - `config`: Configuration object containing all necessary parameters for experiment.For details you can visit config.py.
+    # Attributes
+    - `gamma` (float): Discount factor for future rewards.
+    - `n_act` (int): Number of possible actions.
+    - `n_state` (int): Number of possible states.
+    - `epsilon` (float): Exploration rate for epsilon-greedy policy.
+    - `lr_model` (float): Learning rate for updating the Q-table.
+    - `q_table` (torch.Tensor): Q-table storing the state-action values.
+    - `learning_time` (int): Counter for the number of learning steps taken.
+    - `cur_checkpoint` (int): Counter for the current checkpoint index.
+    - `config` (object): Configuration object passed during initialization.
+    # Methods
+    - `__init__(config)`: Initializes the Q-Learning agent with the given configuration.
+    - `update_setting(config)`: Updates the agent's settings and resets learning time and checkpoints.
+    - `get_action(state, epsilon_greedy=False)`: Selects an action based on the current state using an epsilon-greedy policy.
+    - `train_episode(envs, seeds, para_mode, compute_resource, tb_logger, required_info)`: Trains the agent for one episode in the given environment(s).
+    - `rollout_episode(env, seed, required_info)`: Executes a single episode in the environment without training and returns the results.
+    - `rollout_batch_episode(envs, seeds, para_mode, compute_resource, required_info)`: Executes multiple episodes in parallel environments without training and returns the results.
+    - `log_to_tb_train(tb_logger, mini_step, loss, Return, Reward, extra_info)`: Logs training metrics and additional information to TensorBoard.
+    # Returns
+    - `train_episode`: A tuple containing:
+        - `is_train_ended` (bool): Whether the training has reached the maximum learning steps.
+        - `return_info` (dict): Dictionary containing training results such as cumulative rewards, learning steps, and evaluation metrics.
+    - `rollout_episode`: A dictionary containing evaluation results such as cumulative rewards, environment costs, and metadata.
+    - `rollout_batch_episode`: A dictionary containing evaluation results for batch episodes, including cumulative rewards, environment costs, and metadata.
+    # Raises
+    - `AssertionError`: If required attributes or configurations are missing during execution.
+    """
     def __init__(self, config):
         super().__init__(config)
         self.config = config
