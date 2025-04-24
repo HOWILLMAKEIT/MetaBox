@@ -267,7 +267,7 @@ class DDQN_Agent(Basic_Agent):
     def rollout_episode(self,
                         env,
                         seed = None,
-                        required_info = ['normalizer', 'gbest']):
+                        required_info = {}):
         with torch.no_grad():
             if seed is not None:
                 env.seed(seed)
@@ -282,17 +282,16 @@ class DDQN_Agent(Basic_Agent):
                 action = self.get_action(state)[0]
                 state, reward, is_done, info = env.step(action)
                 R += reward
-            _Rs = R.detach().numpy().tolist()
             env_cost = env.get_env_attr('cost')
             env_fes = env.get_env_attr('fes')
-            results = {'cost': env_cost, 'fes': env_fes, 'return': _Rs}
+            results = {'cost': env_cost, 'fes': env_fes, 'return': R}
             if self.config.full_meta_data:
                 meta_X = env.get_env_attr('meta_X')
                 meta_Cost = env.get_env_attr('meta_Cost')
                 metadata = {'X': meta_X, 'Cost': meta_Cost}
                 results['metadata'] = metadata
-            for key in required_info:
-                results[key] = getattr(env, key)
+            for key in required_info.keys():
+                results[key] = env.get_env_attr(required_info[key])
             return results
     
     def rollout_batch_episode(self, 

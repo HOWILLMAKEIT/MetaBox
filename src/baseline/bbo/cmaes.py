@@ -1,4 +1,4 @@
-from environment.optimizer.basic_optimizer import Basic_Optimizer
+from ...environment.optimizer.basic_optimizer import Basic_Optimizer
 import cma
 import numpy as np
 import time
