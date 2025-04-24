@@ -66,7 +66,7 @@ class UF1(Basic_Problem):
         self.ub = np.array([1] * self.n_var)
         self.vtype = float
 
-    def eval(self, x):  # 目标函数
+    def func(self, x):  # 目标函数
         if x.ndim == 1:
             x = np.expand_dims(x, axis = 0)
         Vars = x  # 得到决策变量矩阵
@@ -100,7 +100,7 @@ class UF2(Basic_Problem):
         self.ub = np.array([1] * self.n_var)
         self.vtype = float
 
-    def eval(self, x):  # 目标函数
+    def func(self, x):  # 目标函数
         if x.ndim == 1:
             x = np.expand_dims(x, axis = 0)
         Vars = x  # 得到决策变量矩阵
@@ -137,7 +137,7 @@ class UF3(Basic_Problem):  # 继承Problem的父类
         self.ub = np.array([1] * self.n_var)
         self.vtype = float
 
-    def eval(self, x):  # 目标函数
+    def func(self, x):  # 目标函数
         if x.ndim == 1:
             x = np.expand_dims(x, axis = 0)
         Vars = x  # 决策变量矩阵
@@ -178,7 +178,7 @@ class UF4(Basic_Problem):
         self.ub[0] = 1
         self.vtype = float
 
-    def eval(self, x):  # 目标函数
+    def func(self, x):  # 目标函数
         if x.ndim == 1:
             x = np.expand_dims(x, axis = 0)
         Vars = x  # 决策变量矩阵
@@ -216,7 +216,7 @@ class UF5(Basic_Problem):
         self.ub = np.array([1] * self.n_var)
         self.vtype = float
 
-    def eval(self, x):  # 目标函数
+    def func(self, x):  # 目标函数
         if x.ndim == 1:
             x = np.expand_dims(x, axis = 0)
         Vars = x  # 决策变量矩阵
@@ -255,7 +255,7 @@ class UF6(Basic_Problem):  # 继承Problem父类
         self.ub = np.array([1] * self.n_var)
         self.vtype = float
 
-    def eval(self, x):  # 目标函数
+    def func(self, x):  # 目标函数
         if x.ndim == 1:
             x = np.expand_dims(x, axis = 0)
         Vars = x  # 决策变量矩阵
@@ -302,7 +302,7 @@ class UF7(Basic_Problem):  # 继承Problem父类
         self.ub = np.array([1] * self.n_var)
         self.vtype = float
 
-    def eval(self, x):  # 目标函数
+    def func(self, x):  # 目标函数
         if x.ndim == 1:
             x = np.expand_dims(x, axis = 0)
         Vars = x  # 决策变量矩阵
@@ -338,7 +338,7 @@ class UF8(Basic_Problem):  # 继承Problem父类
         self.ub = np.array([1] * 2 + [2] * (self.n_var - 2))
         self.vtype = float
 
-    def eval(self, x):  # 目标函数
+    def func(self, x):  # 目标函数
         if x.ndim == 1:
             x = np.expand_dims(x, axis = 0)
         Vars = x  # 决策变量矩阵
@@ -379,7 +379,7 @@ class UF9(Basic_Problem):  # 继承Problem父类
         # 调用父类构造方法完成实例化
         self.vtype = float
 
-    def eval(self, x):  # 目标函数
+    def func(self, x):  # 目标函数
         if x.ndim == 1:
             x = np.expand_dims(x, axis = 0)
         Vars = x  # 决策变量矩阵
@@ -420,7 +420,7 @@ class UF10(Basic_Problem):  # 继承Problem父类
         self.ub = np.array([1] * 2 + [2] * (self.n_var - 2))
         self.vtype = float
 
-    def eval(self, x):  # 目标函数
+    def func(self, x):  # 目标函数
         if x.ndim == 1:
             x = np.expand_dims(x, axis = 0)
         Vars = x  # 决策变量矩阵
@@ -462,16 +462,16 @@ if __name__ == '__main__':
     uf9 = UF9()
     uf10 = UF10()
     x = np.ones((30,))
-    print(uf1.eval(x))
-    print(uf2.eval(x))
-    print(uf3.eval(x))
-    print(uf4.eval(x))
-    print(uf5.eval(x))
-    print(uf6.eval(x))
-    print(uf7.eval(x))
-    print(uf8.eval(x))
-    print(uf9.eval(x))
-    print(uf10.eval(x))
+    print(uf1.func(x))
+    print(uf2.func(x))
+    print(uf3.func(x))
+    print(uf4.func(x))
+    print(uf5.func(x))
+    print(uf6.func(x))
+    print(uf7.func(x))
+    print(uf8.func(x))
+    print(uf9.func(x))
+    print(uf10.func(x))
     s1 = uf1.get_ref_set()
     s2 = uf2.get_ref_set()
     s3 = uf3.get_ref_set()
