@@ -68,7 +68,7 @@ class UF1_Torch(Basic_Problem_Torch):
         self.ub = th.tensor([1] * self.n_var)
         self.vtype = float
 
-    def eval(self, x):  # 目标函数
+    def func(self, x):  # 目标函数
         if x.dim() == 1:
             x = x.unsqueeze(0)
         Vars = x  # 得到决策变量矩阵
@@ -102,7 +102,7 @@ class UF2_Torch(Basic_Problem_Torch):
         self.ub = th.tensor([1] * self.n_var)
         self.vtype = float
 
-    def eval(self, x):  # 目标函数
+    def func(self, x):  # 目标函数
         if x.dim() == 1:
             x = x.unsqueeze(0)
         Vars = x  # 得到决策变量矩阵
@@ -139,7 +139,7 @@ class UF3_Torch(Basic_Problem_Torch):  # 继承Problem的父类
         self.ub = th.tensor([1] * self.n_var)
         self.vtype = float
 
-    def eval(self, x):  # 目标函数
+    def func(self, x):  # 目标函数
         if x.dim() == 1:
             x = x.unsqueeze(0)
         Vars = x  # 决策变量矩阵
@@ -180,7 +180,7 @@ class UF4_Torch(Basic_Problem_Torch):
         self.ub[0] = 1
         self.vtype = float
 
-    def eval(self, x):  # 目标函数
+    def func(self, x):  # 目标函数
         if x.dim() == 1:
             x = x.unsqueeze(0)
         Vars = x  # 决策变量矩阵
@@ -217,7 +217,7 @@ class UF5_Torch(Basic_Problem_Torch):
         self.lb[0] = 0
         self.ub = th.tensor([1] * self.n_var)
 
-    def eval(self, x):  # 目标函数
+    def func(self, x):  # 目标函数
         if x.dim() == 1:
             x = x.unsqueeze(0)
         Vars = x  # 决策变量矩阵
@@ -255,7 +255,7 @@ class UF6_Torch(Basic_Problem_Torch):  # 继承Problem父类
         self.lb[0] = 0
         self.ub = th.tensor([1] * self.n_var)
 
-    def eval(self, x):  # 目标函数
+    def func(self, x):  # 目标函数
         if x.dim() == 1:
             x = x.unsqueeze(0)
         Vars = x  # 决策变量矩阵
@@ -301,7 +301,7 @@ class UF7_Torch(Basic_Problem_Torch):  # 继承Problem父类
         self.lb[0] = 0
         self.ub = th.tensor([1] * self.n_var)
 
-    def eval(self, x):  # 目标函数
+    def func(self, x):  # 目标函数
         if x.dim() == 1:
             x = x.unsqueeze(0)
         Vars = x  # 决策变量矩阵
@@ -336,7 +336,7 @@ class UF8_Torch(Basic_Problem_Torch):  # 继承Problem父类
         self.lb = th.tensor([0] * 2 + [-2] * (self.n_var - 2))
         self.ub = th.tensor([1] * 2 + [2] * (self.n_var - 2))
 
-    def eval(self, x):  # 目标函数
+    def func(self, x):  # 目标函数
         if x.dim() == 1:
             x = x.unsqueeze(0)
         Vars = x  # 决策变量矩阵
@@ -376,7 +376,7 @@ class UF9_Torch(Basic_Problem_Torch):  # 继承Problem父类
         self.lb = th.tensor([0] * 2 + [-2] * (self.n_var - 2))
         self.ub = th.tensor([1] * 2 + [2] * (self.n_var - 2))
 
-    def eval(self, x):  # 目标函数
+    def func(self, x):  # 目标函数
         if x.dim() == 1:
             x = x.unsqueeze(0)
         Vars = x  # 决策变量矩阵
@@ -416,7 +416,7 @@ class UF10_Torch(Basic_Problem_Torch):  # 继承Problem父类
         self.lb = th.tensor([0] * 2 + [-2] * (self.n_var - 2))
         self.ub = th.tensor([1] * 2 + [2] * (self.n_var - 2))
 
-    def eval(self, x):  # 目标函数
+    def func(self, x):  # 目标函数
         if x.dim() == 1:
             x = x.unsqueeze(0)
         Vars = x  # 决策变量矩阵
@@ -459,16 +459,16 @@ if __name__ == '__main__':
     uf9 = UF9_Torch()
     uf10 = UF10_Torch()
     x = th.ones(30)
-    print(uf1.eval(x))
-    print(uf2.eval(x))
-    print(uf3.eval(x))
-    print(uf4.eval(x))
-    print(uf5.eval(x))
-    print(uf6.eval(x))
-    print(uf7.eval(x))
-    print(uf8.eval(x))
-    print(uf9.eval(x))
-    print(uf10.eval(x))
+    print(uf1.func(x))
+    print(uf2.func(x))
+    print(uf3.func(x))
+    print(uf4.func(x))
+    print(uf5.func(x))
+    print(uf6.func(x))
+    print(uf7.func(x))
+    print(uf8.func(x))
+    print(uf9.func(x))
+    print(uf10.func(x))
     s1 = uf1.get_ref_set()
     s2 = uf2.get_ref_set()
     s3 = uf3.get_ref_set()
