@@ -5,6 +5,58 @@ from scipy.spatial import distance
 from sklearn.cluster import DBSCAN
 
 class RLEMMO_Optimizer(Learnable_Optimizer):
+    """
+    # RLEMMO_Optimizer
+    todo: add paper link and adjust the description
+    A reinforcement learning-based evolutionary multi-modal optimizer (RLEMMO) that extends `Learnable_Optimizer`. This optimizer is designed for multi-modal optimization problems and leverages a population-based approach with multiple mutation strategies, neighborhood structures, and reward mechanisms.
+    # Introduction
+    RLEMMO_Optimizer maintains a population of candidate solutions and applies various evolutionary operators (actions) to explore and exploit the search space. It uses neighborhood information, clustering, and reinforcement learning-inspired mechanisms to adaptively guide the search process. The optimizer is suitable for problems with multiple global optima and supports meta-data collection for analysis.
+    # Args:
+    - config (object): Configuration object containing optimizer parameters and settings.
+    # Attributes:
+    - ps (int): Population size.
+    - k_neighbors (int): Number of neighbors for each individual.
+    - n_action (int): Number of available mutation actions.
+    - FF (float): Differential evolution scaling factor.
+    - CR (float): Crossover rate.
+    - eps (float): DBSCAN clustering epsilon parameter.
+    - min_samples (int): Minimum samples for DBSCAN clustering.
+    - reward_scale (float): Scaling factor for reward normalization.
+    - fes (int): Current number of function evaluations.
+    - cost (list): History of global best costs.
+    - pr (list): History of peak ratios.
+    - sr (list): History of success rates.
+    - log_index (int): Current logging index.
+    - log_interval (int): Interval for logging progress.
+    - individuals (dict): Dictionary holding current population and related information.
+    - gbest_val (float): Current global best value.
+    # Methods:
+    - __str__(): Returns the string representation of the optimizer.
+    - get_costs(position, problem): Calculates the costs of given solutions.
+    - find_nei(pop_dist): Finds the neighborhood matrix based on population distances.
+    - act1(pop_choice): Applies the first mutation strategy to selected individuals.
+    - act2(pop_choice): Applies the second mutation strategy using neighborhood bests.
+    - act3(pop_choice): Applies the third mutation strategy using three neighbors.
+    - act4(pop_choice): Applies the fourth mutation strategy with random and neighborhood bests.
+    - act5(pop_choice): Applies the fifth mutation strategy with random individuals.
+    - cal_pr_sr(problem): Calculates peak ratio and success rate for the current population.
+    - initialize_individuals(problem): Initializes the population and related structures.
+    - init_population(problem): Resets the optimizer and initializes the population.
+    - observe(): Encodes the current state of the population for learning or analysis.
+    - mydbscan(problem): Applies DBSCAN clustering to the normalized population.
+    - cal_reward(problem): Calculates the reward based on clustering and solution quality.
+    - update(action, problem): Applies actions to the population, updates states, and computes reward.
+    # Returns:
+    Most methods return updated population states, costs, rewards, or encoded features depending on their purpose.
+    # Raises:
+    - ValueError: If an invalid action is provided to the `update` method.
+    - AssertionError: If unexpected NaN values are encountered in state encoding.
+    # Notes:
+    - The optimizer is designed for use in reinforcement learning or meta-optimization frameworks.
+    - Meta-data collection is supported if enabled in the configuration.
+    - Requires external dependencies such as `numpy`, `scipy.spatial.distance`, and `sklearn.cluster.DBSCAN`.
+    """
+    
     def __init__(self, config):
         super().__init__(config)
         self.__config = config
@@ -137,6 +189,30 @@ class RLEMMO_Optimizer(Learnable_Optimizer):
 
     # initialize GPSO environment
     def initialize_individuals(self, problem):
+        """
+        # Introduction
+        Initializes the population of individuals for the optimizer, setting up their positions, costs, neighborhood relationships, and best-known solutions.
+        # Args:
+        - problem (object): An object representing the optimization problem, which must have the attributes `dim` (int, dimensionality of the problem), `ub` (np.ndarray or float, upper bounds), and `lb` (np.ndarray or float, lower bounds).
+        # Side Effects:
+        - Initializes and stores the following attributes in `self.individuals`:
+            - 'current_position': np.ndarray of shape (ps, dim), the positions of all individuals.
+            - 'c_cost': np.ndarray of shape (ps,), the cost of each individual.
+            - 'pop_dist': np.ndarray of shape (ps, ps), pairwise distances between individuals.
+            - 'neighbor_matrix': np.ndarray of shape (ps, ps), neighborhood relationships.
+            - 'gbest_position': np.ndarray of shape (dim,), the position of the global best individual.
+            - 'gbest_val': float, the cost of the global best individual.
+            - 'no_improve': int, counter for global no improvement.
+            - 'lbest_position': list of np.ndarray, best positions in each individual's neighborhood.
+            - 'lbest_val': list of float, best costs in each individual's neighborhood.
+            - 'local_no_improve': np.ndarray of shape (ps,), counters for local no improvement.
+            - 'per_no_improve': np.ndarray of shape (ps,), counters for personal no improvement.
+        - Sets `self.max_cost` to the maximum cost in the initial population.
+        - Sets `self.gbest_val` to the global best cost.
+        # Returns:
+        - None
+        """
+        
         rand_pos = np.random.rand(self.ps, problem.dim) * (problem.ub - problem.lb) + problem.lb
         c_cost = self.get_costs(rand_pos, problem)
         pop_dist = distance.cdist(rand_pos, rand_pos)
@@ -174,6 +250,20 @@ class RLEMMO_Optimizer(Learnable_Optimizer):
 
     # the interface for environment reseting
     def init_population(self, problem):
+        """
+        # Introduction
+        Initializes the population and related state variables for the optimizer based on the provided problem instance.
+        # Args:
+        - problem (object): An object representing the optimization problem, expected to have attributes such as `maxfes`, `dim`, `ub`, and `lb`.
+        # Returns:
+        - np.ndarray: The initial state of the population, including population state, exploration state, and exploitation state.
+        # Notes:
+        - Sets up internal counters and logging intervals.
+        - Initializes individuals and their costs.
+        - Calculates and stores initial performance metrics (pr, sr).
+        - Optionally collects meta-data if configured.
+        """
+        
         self.max_fes = problem.maxfes
         self.dim = problem.dim
         self.max_dist=np.sqrt((problem.ub - problem.lb)**2*self.dim)
@@ -280,6 +370,21 @@ class RLEMMO_Optimizer(Learnable_Optimizer):
 
 
     def update(self, action, problem):
+        """
+        # Introduction
+        Updates the optimizer's population based on the provided actions and problem instance, applying evolutionary operators, updating global and local bests, and calculating rewards and termination conditions.
+        # Args:
+        - action (np.ndarray): An array of actions to apply to each individual in the population.
+        - problem (object): The optimization problem instance, providing bounds and cost evaluation.
+        # Returns:
+        - next_state (np.ndarray): The observed state of the population after the update.
+        - reward (float): The calculated reward for the current update step, scaled by `reward_scale`.
+        - is_end (bool): Flag indicating whether the optimization process has reached its end condition.
+        - info (dict): Additional information (currently empty).
+        # Raises:
+        - ValueError: If an invalid action is encountered in the `action` array.
+        """
+        
         is_end=False
         
         # record the gbest_val in the begining

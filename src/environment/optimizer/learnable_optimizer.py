@@ -17,19 +17,61 @@ import time
 
 class Learnable_Optimizer:
     """
+    # Introduction
+    Abstract superclass for learnable backbone optimizers, providing a template for population initialization, update mechanisms, and random seed management for reproducible optimization experiments.
+    # Args:
+    - config (Any): Configuration object containing optimizer settings, including device information.
+    # Attributes:
+    - __config (Any): Stores the configuration object.
+    - rng_seed (Optional[int]): The random seed used for reproducibility.
+    - rng (np.random.RandomState): Numpy random number generator initialized with the seed.
+    - rng_cpu (torch.Generator): PyTorch CPU random number generator initialized with the seed.
+    - rng_gpu (Optional[torch.Generator]): PyTorch GPU random number generator, if applicable.
+    # Methods:
+    - init_population(problem: Basic_Problem) -> Any: Abstract method to initialize the population for the optimization problem.
+    - update(action: Any, problem: Basic_Problem) -> Tuple[Any]: Abstract method to update the optimizer state based on the given action and problem.
+    - seed(seed: Optional[int] = None): Sets the random seed for numpy and PyTorch generators for reproducibility.
+    # Raises:
+    - NotImplementedError: If `init_population` or `update` methods are not implemented in a subclass.
+    """
+    
+    """
     Abstract super class for learnable backbone optimizers.
     """
+    
     def __init__(self, config):
         self.__config = config
         self.rng_seed = None
 
     def init_population(self,
                         problem: Basic_Problem) -> Any:
+        """
+        # Introduction
+        Initializes the population for the optimization process based on the provided problem definition.
+        # Args:
+        - problem (Basic_Problem): An instance representing the optimization problem, containing information such as the search space, constraints, and objective function.
+        # Returns:
+        - Any: The initialized population, with the specific type and structure depending on the implementation and problem requirements.
+        # Raises:
+        - NotImplementedError: This method must be implemented by subclasses; calling this base method will always raise this exception.
+        """
         raise NotImplementedError
 
     def update(self,
                action: Any,
                problem: Basic_Problem) -> Tuple[Any]:
+        """
+            # Introduction
+            Updates the optimizer's internal state based on the provided action and problem instance.
+            # Args:
+            - action (Any): The action to be applied for updating the optimizer.
+            - problem (Basic_Problem): The problem instance containing relevant information for the update.
+            # Returns:
+            - Tuple[Any]: A tuple containing the results of the update operation.
+            # Raises:
+            - NotImplementedError: This method must be implemented by subclasses.
+            
+            """
         raise NotImplementedError
 
     def seed(self, seed = None):

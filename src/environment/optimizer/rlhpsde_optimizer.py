@@ -101,6 +101,35 @@ class Population:
 
 
 class RLHPSDE_Optimizer(Learnable_Optimizer):
+    """
+    # RLHPSDE_Optimizer
+    todo:写清楚名字
+    A reinforcement learning-based hyper-parameter self-adaptive differential evolution optimizer.  
+    This optimizer dynamically adapts its mutation and crossover strategies using reinforcement learning, and employs random walk-based landscape analysis to guide its search process.
+    # Introduction
+    The `RLHPSDE_Optimizer` class extends `Learnable_Optimizer` and implements a self-adaptive differential evolution algorithm enhanced with reinforcement learning.  
+    It utilizes random walk sampling and landscape analysis (fitness distance correlation and information entropy ruggedness) to determine the current state of the optimization landscape, which is then used to select appropriate mutation strategies.  
+    The optimizer maintains a population of candidate solutions and iteratively updates them to minimize a given objective function.
+    # Args:
+    - config (object): Configuration object containing algorithm parameters such as dimension, maximum function evaluations, logging interval, and other DE-specific settings.
+    # Methods:
+    - `__init__(self, config)`: Initializes the optimizer with the provided configuration.
+    - `__str__(self)`: Returns the string representation of the optimizer.
+    - `init_population(self, problem)`: Initializes the population and evaluates initial costs.
+    - `__simple_random_walk(self, lb, ub)`: Performs a simple random walk in the search space for landscape analysis.
+    - `__progressive_random_walk(self, lb, ub)`: Performs a progressive random walk in the search space for landscape analysis.
+    - `__DFDC(self, sample, cost)`: Computes the Dynamic Fitness Distance Correlation to assess problem difficulty.
+    - `__DRIE(self, cost)`: Computes the Dynamic Ruggedness of Information Entropy to assess landscape ruggedness.
+    - `__get_state(self, problem)`: Determines the current state of the optimization landscape using random walk analysis.
+    - `update(self, action, problem)`: Applies the selected mutation strategy, updates the population, and returns the new state, reward, done flag, and additional info.
+    # Returns:
+    - Various methods return internal state representations, rewards, and status flags as part of the reinforcement learning loop.
+    # Raises:
+    - ValueError: Raised if an invalid action is provided or if landscape analysis metrics are out of expected bounds.
+    # Usage:
+    Instantiate with a configuration object and use in a reinforcement learning loop to optimize a given problem.
+    """
+    
     def __init__(self, config):
         super().__init__(config)
         config.F = 0.5
@@ -126,6 +155,17 @@ class RLHPSDE_Optimizer(Learnable_Optimizer):
         return "RLHPSDE"
 
     def init_population(self, problem):
+        """
+        # Introduction
+        Initializes the population for the optimization process, sets up costs, sorts individuals, and prepares logging and metadata as required.
+        # Args:
+        - problem (object): An object representing the optimization problem, expected to have attributes `lb` (lower bounds), `ub` (upper bounds), and methods or properties for cost evaluation.
+        # Returns:
+        - object: The current state of the optimizer after population initialization, as returned by `self.__get_state(problem)`.
+        # Side Effects:
+        - Initializes and modifies internal attributes such as `self.__population`, `self.fes`, `self.log_index`, `self.meta_X`, `self.meta_Cost`, and `self.cost`.
+        """
+        
         self.__population = Population(self.__config, self.rng)
         self.__population.initialize_group(lb=problem.lb, ub=problem.ub)
         self.__population.initialize_costs(problem)
@@ -241,6 +281,22 @@ class RLHPSDE_Optimizer(Learnable_Optimizer):
         return self.__DFDC(sample, sample_cost) * 1 + self.__DRIE(sample_cost) * 2
 
     def update(self, action, problem):
+        """
+        # Introduction
+        Updates the optimizer's population based on the selected action and the given problem instance. This method performs mutation, crossover, selection, and updates the best solution found so far. It also manages logging, reward calculation, and meta-data collection for reinforcement learning-based hyper-parameter search.
+        # Args:
+        - action (int): The action index specifying which mutation and crossover strategy to use.
+        - problem (object): The problem instance providing evaluation, lower/upper bounds, and optimum value.
+        # Returns:
+        - tuple: A tuple containing:
+            - state (object): The updated state representation for the RL agent.
+            - reward (float): The reward signal based on the proportion of improved solutions.
+            - done (bool): Whether the optimization process has reached its termination condition.
+            - info (dict): Additional information (currently empty).
+        # Raises:
+        - ValueError: If the provided `action` is not a valid index for the available strategies.
+        """
+        
         population = self.__population
         NP, dim = population.NP, population.dim
         # Mu
