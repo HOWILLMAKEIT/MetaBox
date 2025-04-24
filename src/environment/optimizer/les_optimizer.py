@@ -41,6 +41,39 @@ class LrNet(nn.Module):
         return self.sm(self.ln2(X))
 
 class LES_Optimizer(Learnable_Optimizer):
+    """
+    # Introduction
+    **L**earned **E**volution **S**trategy (LES) is a novel self-attention-based evolution strategies parametrization, and discover effective update rules for ES via meta-learning.
+    # Original paper
+    "[**Discovering evolution strategies via meta-black-box optimization**](https://iclr.cc/virtual/2023/poster/11005)." The Eleventh International Conference on Learning Representations. (2023).
+    # Official Implementation
+    [LES](https://github.com/RobertTLange/evosax/blob/main/evosax/strategies/les.py)
+    # Attributes:
+    - device (str or torch.device): The device on which neural network modules are allocated.
+    - max_fes (int): Maximum number of function evaluations allowed.
+    - attn (nn.Module): Neural network module for computing attention weights over the population.
+    - mlp (nn.Module): Neural network module for computing adaptive learning rates for mean and standard deviation updates.
+    - alpha (list of float): List of time-scale parameters for evolution path updates.
+    - timestamp (np.ndarray): Array of time steps for timestamp embedding.
+    - save_time (int): Counter for saving intermediate results (if used).
+    - NP (int): Population size.
+    - sigma_ratio (float): Ratio for initializing standard deviation relative to the upper bound.
+    - fes (int): Current number of function evaluations.
+    - cost (list): List of best costs recorded at logging intervals.
+    - log_index (int): Index for logging progress.
+    - log_interval (int): Interval (in function evaluations) for logging progress.
+    - evolution_info (dict): Dictionary containing current population, costs, evolution paths, and statistical parameters.
+    - meta_X (list, optional): List of population snapshots for meta data logging.
+    - meta_Cost (list, optional): List of cost snapshots for meta data logging.
+    # Methods:
+    - __str__(): Returns the string representation of the optimizer.
+    - init_population(problem): Initializes the population and evolution information based on the problem's bounds and dimension.
+    - cal_attn_feature(): Computes attention features for the current population, including z-score, shifted normalized ranking, and improvement indicator.
+    - cal_mlp_feature(W): Calculates MLP features based on evolution paths and timestamp embeddings, given attention weights W.
+    - update(action, problem): Performs one or more evolutionary optimization steps using the provided action (model parameters) and problem instance, updating the optimizer's state and logging progress.
+    - The optimizer assumes the presence of a random number generator (`self.rng`) and that neural network modules (`SelfAttn`, `LrNet`) and utility functions (`vector2nn`) are defined elsewhere.
+    - The optimizer is designed for use in meta-learning or reinforcement learning settings, where the neural network modules are updated externally.
+    """
     def __init__(self, config):
         super().__init__(config)
         self.__config = config
@@ -70,7 +103,6 @@ class LES_Optimizer(Learnable_Optimizer):
         # Introduction
         Initializes the population for the optimizer using a normal distribution based on the problem's bounds and dimension. Sets up initial evolution information, including parent solutions, their costs, and statistical parameters for the optimization process.
         # Args:
-        todo:写清楚problem数据结构
         - problem (object): An object representing the optimization problem, which must have attributes `ub` (upper bounds), `lb` (lower bounds), `dim` (problem dimensionality), and a method `eval` for evaluating a population.
         # Returns:
         - None

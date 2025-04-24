@@ -6,8 +6,11 @@ from .learnable_optimizer import Learnable_Optimizer
 class LDE_Optimizer(Learnable_Optimizer):
     """
     # Introduction
-    LDE_Optimizer implements a Learnable Differential Evolution (DE) optimizer for population-based optimization problems. 
-    It supports batch optimization, meta-learning, and provides mechanisms for population initialization, mutation, crossover, selection, and feature extraction for meta-learning tasks.
+    LDE:Learning Adaptive Differential Evolution Algorithm From Optimization Experiences by Policy Gradient
+    # Original paper
+    "[**Learning Adaptive Differential Evolution Algorithm from Optimization Experiences by Policy Gradient**](https://ieeexplore.ieee.org/abstract/document/9359652)." IEEE Transactions on Evolutionary Computation (2021).
+    # Official Implementation
+    [LDE](https://github.com/yierh/LDE)
     # Args:
     - config (object): Configuration object containing optimizer parameters such as population size (`NP`), number of histogram bins (`BINS`), initial and minimum p-best rates (`P_INI`, `P_NUM_MIN`), problem dimension (`dim`), logging intervals, and other DE-specific settings.
     # Attributes:

@@ -178,7 +178,11 @@ def cal_reward(survival, pointer):
 class DEDQN_Optimizer(Learnable_Optimizer):
     """
     # Introduction
-    DEDQN_Optimizer is a learnable optimizer based on Differential Evolution (DE) and Deep Q-Network (DQN) principles. It maintains a population of candidate solutions and iteratively improves them using mutation, crossover, and selection strategies, guided by reinforcement learning actions.
+    DEDQN is a mixed mutation strategy Differential Evolution (DE) algorithm based on deep Q-network (DQN), in which a deep reinforcement learning approach realizes the adaptive selection of mutation strategy in the evolution process.
+    # Original paper
+    "[**Differential evolution with mixed mutation strategy based on deep reinforcement learning**](https://www.sciencedirect.com/science/article/abs/pii/S1568494621005998)." Applied Soft Computing (2021).
+    # Official Implementation
+    None
     # Args:
     - config (object): Configuration object containing optimizer parameters such as population size, mutation factor, crossover rate, problem dimension, maximum function evaluations, logging interval, and meta-data options.
     # Attributes:

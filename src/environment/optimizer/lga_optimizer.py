@@ -199,7 +199,12 @@ class Policy(nn.Module):
 class LGA_Optimizer(Learnable_Optimizer):
     """
     # Introduction
-    LGA_Optimizer is a learnable optimizer that utilizes a population-based metaheuristic approach with neural network-guided adaptation and selection mechanisms. It is designed to optimize black-box functions by evolving a population of candidate solutions using adaptive mutation and selection strategies.
+    **L**earned **G**enetic **A**lgorithm parametrizes selection and mutation rate adaptation as cross- and self-attention modules and use MetaBBO to evolve their parameters on a set of diverse optimization tasks.
+    # Original paper
+    "[**Discovering attention-based genetic algorithms via meta-black-box optimization**](https://dl.acm.org/doi/abs/10.1145/3583131.3590496)." Proceedings of the Genetic and Evolutionary Computation Conference. (2023).
+    # Official Implementation
+    [LGA](https://github.com/RobertTLange/evosax/blob/main/evosax/strategies/lga.py)
+
     # Args:
     - config (object): Configuration object containing optimizer parameters such as maximum function evaluations (`maxFEs`), logging interval (`log_interval`), device specification (`device`), and metadata options (`full_meta_data`, `n_logpoint`).
     # Attributes:

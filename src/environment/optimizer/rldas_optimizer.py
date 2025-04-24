@@ -7,6 +7,48 @@ import scipy.stats as stats
 
 
 class RLDAS_Optimizer(Learnable_Optimizer):
+    """
+    # Introduction
+    RLDAS is a deep reinforcement learning-based dynamic algorithm selection framework.
+    #Original paper
+    "[**Deep Reinforcement Learning for Dynamic Algorithm Selection: A Proof-of-Principle Study on Differential Evolution**](https://ieeexplore.ieee.org/abstract/document/10496708/)." IEEE Transactions on Systems, Man, and Cybernetics: Systems (2024).
+    # Official Implementation
+    [RL-DAS](https://github.com/GMC-DRL/RL-DAS)
+    # Args:
+    - config (object): Configuration object containing parameters such as maximum function evaluations (`maxFEs`), logging interval (`log_interval`), problem types, and meta-data settings.
+    # Attributes:
+    - MaxFEs (int): Maximum number of function evaluations allowed.
+    - period (int): Number of function evaluations per optimization period, adjusted based on problem type.
+    - max_step (int): Maximum number of optimization steps.
+    - sample_times (int): Number of times to sample local optimizers per observation.
+    - n_dim_obs (int): Number of dimensions in the observation feature vector.
+    - final_obs (Any): Stores the final observation state.
+    - terminal_error (float): Threshold for considering the optimization as converged.
+    - FEs (int): Current number of function evaluations used.
+    - cost (list): History of best costs found during optimization.
+    - log_index (int): Index for logging progress.
+    - log_interval (int): Interval for logging progress.
+    - optimizers (list): List of embedded optimizer instances.
+    - best_history (list): History of best moves for each optimizer.
+    - worst_history (list): History of worst moves for each optimizer.
+    - population (Population): The current population of candidate solutions.
+    - cost_scale_factor (float): Scaling factor for normalizing costs.
+    - done (bool): Indicates whether the optimization process is finished.
+    - meta_X (list): (Optional) History of population groups for meta-data logging.
+    - meta_Cost (list): (Optional) History of population costs for meta-data logging.
+    # Methods:
+    - __init__(self, config): Initializes the optimizer with the given configuration.
+    - __str__(self): Returns the string representation of the optimizer.
+    - init_population(self, problem): Initializes the population and optimizer states for a given problem.
+    - local_sample(self): Samples the local optimizers and returns candidate solutions and their costs.
+    - observe(self, problem): Observes and returns the current environment state as a feature vector.
+    - update(self, action, problem): Applies the selected optimizer, updates the population, computes the reward, and returns the next state, reward, and done flag.
+    # Returns:
+    - Various methods return updated population states, feature vectors, rewards, and completion flags as appropriate for reinforcement learning environments.
+    # Raises:
+    - May raise exceptions related to population initialization, optimizer execution, or invalid configurations.
+    """
+    
     def __init__(self, config):
         super().__init__(config)
         self.MaxFEs = config.maxFEs
@@ -103,6 +145,23 @@ class RLDAS_Optimizer(Learnable_Optimizer):
         return np.array(move, dtype = object)
 
     def update(self, action, problem):
+        """
+        # Introduction
+        Executes an optimization step using the selected optimizer, updates the population, tracks progress, and computes the reward for reinforcement learning-based dynamic algorithm selection.
+        # Args:
+        - action (int): The index of the optimizer to use for this update step.
+        - problem (object): The optimization problem instance, which should provide an `optimum` attribute and be compatible with the optimizer's `step` method.
+        # Returns:
+        - observe (Any): The observation/state after the update, as returned by `self.observe(problem)`.
+        - reward (float): The reward computed based on the improvement in the global best cost.
+        - done (bool): Whether the optimization process has reached a terminal state.
+        - info (dict): An empty dictionary for compatibility with RL environments.
+        # Notes:
+        - Updates internal histories for best and worst solutions.
+        - Handles logging and meta-data collection if enabled in configuration.
+        - Suppresses warnings during execution.
+        """
+        
         warnings.filterwarnings("ignore")
         act = action
 

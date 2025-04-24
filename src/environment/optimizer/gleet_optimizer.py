@@ -6,12 +6,11 @@ import numpy as np
 class GLEET_Optimizer(Learnable_Optimizer):
     """
     # Introduction
-    todo: check the function doc
-    GLEET_Optimizer is a learnable optimizer based on Particle Swarm Optimization (PSO) principles, designed for meta-optimization tasks. It manages a population of particles, updates their positions and velocities, and incorporates various reward functions and boundary handling strategies. The optimizer is capable of encoding population features for meta-learning and supports logging and meta-data collection.
-    
-    # original paper:
-    todo:add the original paper link
-        
+    GLEET is a **G**eneralizable **L**earning-based **E**xploration-**E**xploitation **T**radeoff framework, which could explicitly control the exploration-exploitation tradeoff hyper-parameters of a given EC algorithm to solve a class of problems via reinforcement learning. 
+    # Original paper
+    "[**Auto-configuring Exploration-Exploitation Tradeoff in Evolutionary Computation via Deep Reinforcement Learning**](https://dl.acm.org/doi/abs/10.1145/3638529.3653996)." Proceedings of the Genetic and Evolutionary Computation Conference (2024).
+    # Official Implementation
+    [GLEET](https://github.com/GMC-DRL/GLEET)
     # Args:
     - config (object): Configuration object containing optimizer hyperparameters such as dimension (`dim`), maximum function evaluations (`maxFEs`), logging interval (`log_interval`), and meta-data options (`full_meta_data`).
     # Attributes:

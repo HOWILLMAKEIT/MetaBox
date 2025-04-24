@@ -6,49 +6,46 @@ import copy
 
 
 class DEDDQN_Optimizer(Learnable_Optimizer):
-    class DEDDQN_Optimizer:
-        """
-        # Introduction
-        The `DEDDQN_Optimizer` class implements a learnable optimizer based on Differential Evolution (DE) and Deep Q-Networks (DQN). 
-        It is designed to optimize a given problem by maintaining a population of candidate solutions and iteratively improving them 
-        using mutation, crossover, and selection operations. The optimizer also leverages reinforcement learning to adaptively select 
-        mutation strategies based on the optimization progress.
-
-        # Original Paper:
-        todo: add the original paper link
-
-        # Args:
-        - config (object): A configuration object containing the following attributes:
-            - F (float): Mutation factor for DE.
-            - Cr (float): Crossover probability for DE.
-            - NP (int): Population size.
-            - gen_max (int): Maximum number of generations for DE.
-            - W (int): Window size for storing recent operation metrics.
-            - maxFEs (int): Maximum number of function evaluations.
-            - dim (int): Dimensionality of the problem.
-            - dim_max (int): Maximum dimensionality of the problem.
-            - log_interval (int): Interval for logging optimization progress.
-            - full_meta_data (bool): Whether to store full metadata during optimization.
-            - n_logpoint (int): Number of log points for cost tracking.
-        # Methods:
-        - `__str__() -> str`: Returns the string representation of the optimizer.
-        - `init_population(problem) -> np.ndarray`: Initializes the population and returns the initial state.
-        - `update(action, problem) -> Tuple[np.ndarray, float, bool, dict]`: Updates the optimizer based on the selected action 
-          and returns the next state, reward, termination status, and additional information.
-        # Attributes:
-        - `fes (int)`: Tracks the number of function evaluations performed.
-        - `cost (list)`: Stores the best cost values at each logging interval.
-        - `log_index (int)`: Tracks the current logging index.
-        - `meta_X (list)`: Stores the population at each step (if `full_meta_data` is enabled).
-        - `meta_Cost (list)`: Stores the cost values at each step (if `full_meta_data` is enabled).
-        # Raises:
-        - ValueError: If an invalid action is provided during the `update` method.
-        # Notes:
-        - The optimizer uses four mutation strategies: 'rand/1', 'rand/2', 'rand-to-best/2', and 'cur-to-rand/1'.
-        - The optimizer maintains detailed metrics for each mutation strategy to adaptively select the most effective one.
-        - The `__get_state` method extracts features from the current population and optimization progress to represent the state 
-          for the reinforcement learning agent.
-        """
+    
+    """
+    # Introduction
+    DE-DDQN is an adaptive operator selection method based on Double Deep Q-Learning (DDQN), a Deep Reinforcement Learning method, to control the mutation strategies of Differential Evolution (DE).
+    # Original paper
+    "[**Deep reinforcement learning based parameter control in differential evolution**](https://dl.acm.org/doi/abs/10.1145/3321707.3321813)." Proceedings of the Genetic and Evolutionary Computation Conference (2019).
+    # Official Implementation
+    [DE-DDQN](https://github.com/mudita11/DE-DDQN)
+    # Args:
+    - config (object): A configuration object containing the following attributes:
+        - F (float): Mutation factor for DE.
+        - Cr (float): Crossover probability for DE.
+        - NP (int): Population size.
+        - gen_max (int): Maximum number of generations for DE.
+        - W (int): Window size for storing recent operation metrics.
+        - maxFEs (int): Maximum number of function evaluations.
+        - dim (int): Dimensionality of the problem.
+        - dim_max (int): Maximum dimensionality of the problem.
+        - log_interval (int): Interval for logging optimization progress.
+        - full_meta_data (bool): Whether to store full metadata during optimization.
+        - n_logpoint (int): Number of log points for cost tracking.
+    # Methods:
+    - `__str__() -> str`: Returns the string representation of the optimizer.
+    - `init_population(problem) -> np.ndarray`: Initializes the population and returns the initial state.
+    - `update(action, problem) -> Tuple[np.ndarray, float, bool, dict]`: Updates the optimizer based on the selected action 
+      and returns the next state, reward, termination status, and additional information.
+    # Attributes:
+    - `fes (int)`: Tracks the number of function evaluations performed.
+    - `cost (list)`: Stores the best cost values at each logging interval.
+    - `log_index (int)`: Tracks the current logging index.
+    - `meta_X (list)`: Stores the population at each step (if `full_meta_data` is enabled).
+    - `meta_Cost (list)`: Stores the cost values at each step (if `full_meta_data` is enabled).
+    # Raises:
+    - ValueError: If an invalid action is provided during the `update` method.
+    # Notes:
+    - The optimizer uses four mutation strategies: 'rand/1', 'rand/2', 'rand-to-best/2', and 'cur-to-rand/1'.
+    - The optimizer maintains detailed metrics for each mutation strategy to adaptively select the most effective one.
+    - The `__get_state` method extracts features from the current population and optimization progress to represent the state 
+      for the reinforcement learning agent.
+    """
     
     def __init__(self, config):
         super().__init__(config)

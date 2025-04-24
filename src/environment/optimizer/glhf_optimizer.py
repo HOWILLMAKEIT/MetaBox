@@ -8,11 +8,11 @@ import numpy as np
 class GLHF_Optimizer(Learnable_Optimizer):
     """
     # Introduction
-    GLHF_Optimizer is a learnable optimizer designed for population-based optimization tasks. It maintains a population of candidate solutions and updates them using a policy network (action). The optimizer tracks the best solution found, supports logging, and can collect meta-data for analysis.
-    
-    # Original Paper:
-    todo: Add the reference/link to the original paper 
-    
+    GLHF: General Learned Evolutionary Algorithm Via Hyper Functions
+    # Original paper
+    "[**GLHF: General Learned Evolutionary Algorithm Via Hyper Functions**](https://arxiv.org/abs/2405.03728)." arXiv preprint arXiv:2405.03728 (2024).
+    # Official Implementation
+    [GLHF](https://github.com/ninja-wm/POM/)
     # Args:
     - config (object): Configuration object containing optimizer parameters such as `maxFEs`, `log_interval`, `device`, and `full_meta_data`.
     # Attributes:

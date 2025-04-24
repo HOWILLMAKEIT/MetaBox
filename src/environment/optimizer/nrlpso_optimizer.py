@@ -3,6 +3,62 @@ import numpy as np
 import math
 
 class NRLPSO_Optimizer(Learnable_Optimizer):
+    """
+    # Introduction
+    NRLPSO is a reinforcement learning-based particle swarm optimization with neighborhood differential mutation strategy.
+    # Original paper
+    "[**Reinforcement learning-based particle swarm optimization with neighborhood differential mutation strategy**](https://www.sciencedirect.com/science/article/pii/S2210650223000482)." Swarm and Evolutionary Computation (2023).
+    # Official Implementation
+    None
+    # Args:
+    - config (object): Configuration object containing algorithm parameters such as maximum function evaluations (`maxFEs`), problem dimensionality (`dim`), logging interval (`log_interval`), and flags for metadata collection (`full_meta_data`, `n_logpoint`).
+    # Attributes:
+    - NP (int): Number of particles in the population.
+    - k (int): Number of neighbors considered for each particle.
+    - total_state (int): Total number of possible states/actions for each particle.
+    - w_max, w_min (float): Maximum and minimum inertia weights for velocity update.
+    - u, v, v_ratio (float): Parameters controlling inertia weight adaptation.
+    - n_state (int): Number of discrete states for reinforcement learning.
+    - __maxFEs (int): Maximum number of function evaluations allowed.
+    - __dim (int): Dimensionality of the optimization problem.
+    - cost (list): History of global best costs for logging.
+    - log_index (int): Current logging index.
+    - log_interval (int): Interval for logging progress.
+    - meta_X, meta_Cost (list): Optional metadata for population and cost history.
+    - pointer (int): Index of the current particle being updated.
+    - __population (np.ndarray): Current positions of all particles.
+    - __velocity (np.ndarray): Current velocities of all particles.
+    - __cost (np.ndarray): Current costs of all particles.
+    - __pbest_pos, __pbest_cost (np.ndarray): Personal best positions and costs.
+    - __gbest_pos, __gbest_cost (np.ndarray): Global best position and cost.
+    - pbest_stag_count (np.ndarray): Stagnation counters for personal bests.
+    - fes (int): Current number of function evaluations.
+    - r_w (float): Random value for inertia weight adaptation.
+    - __state (np.ndarray): Current state/action for each particle.
+    - pbest_neb, gbest_neb (np.ndarray): Neighborhoods for personal and global bests.
+    - pbest_neb_index, gbest_neb_index (np.ndarray): Indices of neighborhood members.
+    - distance, d_min, d_max (np.ndarray, float): Distance metrics for diversity calculation.
+    - w (float): Current inertia weight.
+    # Methods:
+    - init_population(problem): Initializes the particle population and related attributes.
+    - update_construct_neighborhood(): Constructs neighborhoods for each particle based on distances.
+    - cal_w(): Calculates the dynamic inertia weight for velocity updates.
+    - cal_reward(f_new, f_old, ef_new, ef_old): Computes the reward signal for reinforcement learning based on cost and diversity changes.
+    - cal_ef(ith): Calculates the normalized diversity (exploration factor) for a given particle.
+    - update_distance(): Updates the pairwise distances and diversity metrics for the population.
+    - cal_cs(p1, p2): Calculates the cosine similarity between two vectors.
+    - get_p_b(ith): Selects a neighbor from the personal best neighborhood.
+    - get_p_a(): Selects a neighbor from the global best neighborhood.
+    - generate_v_vector(action, ith, w): Generates the velocity vector for a particle based on its action/state.
+    - cal_cost(x, problem): Evaluates the cost of a solution.
+    - neb_mutation(ith, problem): Performs neighborhood-based mutation for stagnated particles.
+    - update(action, problem): Updates the state, position, and velocity of the current particle, applies mutation if needed, and logs progress.
+    # Returns:
+    - Various methods return updated states, rewards, done flags, and info dictionaries as required by the optimizer interface.
+    # Raises:
+    - No explicit exceptions are raised, but underlying numpy or problem evaluation errors may propagate.
+    """
+    
     def __init__(self, config):
         super().__init__(config)
         self.__config = config
@@ -26,6 +82,19 @@ class NRLPSO_Optimizer(Learnable_Optimizer):
         
 
     def init_population(self, problem):
+        """
+        # Introduction
+        Initializes the population and related attributes for the optimizer based on the given problem definition.
+        # Args:
+        - problem: An object representing the optimization problem, which must provide `lb` (lower bounds), `ub` (upper bounds), `eval` (evaluation function), and optionally `optimum` (known optimum value).
+        # Returns:
+        - int: The initial state of the individual at the current pointer index.
+        # Notes:
+        - Initializes population positions, velocities, personal and global bests, and other tracking variables.
+        - Handles optional meta-data logging if enabled in the configuration.
+        - Sets up the initial state for each individual in the population.
+        """
+
         self.pointer = 0
         # init population
         self.__population = self.rng.rand(self.NP, self.__dim) * (problem.ub - problem.lb) + problem.lb
@@ -63,6 +132,20 @@ class NRLPSO_Optimizer(Learnable_Optimizer):
 
     
     def update_construct_neighborhood(self):
+        """
+        # Introduction
+        Updates the neighborhood information for both personal best (pbest) and global best (gbest) particles in the population. This method computes the k-nearest neighbors for each particle based on Euclidean distance, and updates the corresponding neighborhood indices and positions.
+        # Args:
+        None
+        # Updates:
+        - self.pbest_neb_index (np.ndarray): Indices of the k-nearest neighbors for each particle's personal best position.
+        - self.pbest_neb (np.ndarray): Positions of the k-nearest neighbors for each particle's personal best.
+        - self.gbest_neb_index (np.ndarray): Indices of the k-nearest neighbors for the global best position.
+        - self.gbest_neb (np.ndarray): Positions of the k-nearest neighbors for the global best.
+        # Notes:
+        - Assumes that `self.__population`, `self.__pbest_pos`, `self.__gbest_pos`, `self.NP`, and `self.k` are properly initialized.
+        - Uses Euclidean distance to determine neighborhood proximity.
+        """
 
         # pbest neb
         pbest_to_every_distance = np.sqrt(np.sum((self.__pbest_pos[None, :] - self.__population[:, None])**2, axis=-1))
@@ -242,6 +325,28 @@ class NRLPSO_Optimizer(Learnable_Optimizer):
             self.__cost[P2_idx] = cost
 
     def update(self, action, problem):
+        """
+        # Introduction
+        Updates the state of the optimizer for a single agent/particle based on the provided action and the optimization problem. This method handles velocity and position updates, reward calculation, personal and global best tracking, neighborhood mutation, logging, and episode termination checks.
+        # Args:
+        - action (Any): The action to be applied for updating the agent's state (typically from a reinforcement learning policy or heuristic).
+        - problem (object): The optimization problem instance, which should provide lower and upper bounds (`lb`, `ub`), and optionally an optimum value.
+        # Returns:
+        - tuple:
+            - state (Any): The updated state of the agent after applying the action.
+            - reward (float): The reward calculated based on the improvement in cost and efficiency.
+            - is_done (bool): Whether the optimization episode should be terminated.
+            - info (dict): Additional information (currently empty, but can be extended).
+        # Notes:
+        - Updates the velocity and position of the current agent/particle.
+        - Applies boundary constraints to the position.
+        - Updates personal and global bests if improvements are found.
+        - Applies neighborhood mutation if stagnation is detected.
+        - Logs progress at specified intervals.
+        - Handles episode termination based on function evaluations or optimum achievement.
+        - Optionally stores meta-data if configured.
+        """
+        
         if self.pointer == 0:
             self.update_construct_neighborhood()
             # dynamic w

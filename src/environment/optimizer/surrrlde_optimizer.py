@@ -5,6 +5,50 @@ from .learnable_optimizer import Learnable_Optimizer
 
 
 class SurrRLDE_Optimizer(Learnable_Optimizer):
+	"""
+	# Introduction
+   	SurrRLDE is a novel MetaBBO framework which combines surrogate learning process and reinforcement learning-aided Differential Evolution (DE) algorithm.
+	# Original paper
+   	"[Surrogate Learning in Meta-Black-Box Optimization: A Preliminary Study](https://arxiv.org/abs/2503.18060)." arXiv preprint arXiv:2503.18060 (2025).
+	# Official Implementation
+ 	[SurrRLDE](https://github.com/GMC-DRL/Surr-RLDE)
+	# Args:
+	- config (object): Configuration object containing optimizer parameters such as population size, mutation and crossover rates, dimensionality, device, bounds, logging intervals, and problem-specific settings.
+	# Attributes:
+	- device (str): Device to run computations on ('cpu' or 'cuda').
+	- F (float): Mutation factor for DE.
+	- Cr (float): Crossover probability for DE.
+	- pop_size (int): Number of individuals in the population.
+	- maxFEs (int): Maximum number of function evaluations.
+	- dim (int): Dimensionality of the problem.
+	- ub (float or array): Upper bound(s) for variables.
+	- lb (float or array): Lower bound(s) for variables.
+	- population (torch.Tensor): Current population of candidate solutions.
+	- fitness (torch.Tensor): Fitness values of the current population.
+	- pop_cur_best (torch.Tensor): Current best individual in the population.
+	- fit_cur_best (torch.Tensor): Fitness of the current best individual.
+	- pop_history_best (torch.Tensor): Best individual found so far.
+	- fit_history_best (torch.Tensor): Fitness of the best individual found so far.
+	- fit_init_best (torch.Tensor): Fitness of the best individual in the initial population.
+	- improved_gen (int): Number of generations since last improvement.
+	- fes (int): Number of function evaluations used.
+	- cost (list): History of best fitness values at logging points.
+	- cur_logpoint (int): Current logging point index.
+	- log_interval (int): Interval for logging best fitness.
+	- meta_X (list): (Optional) History of populations for meta-data collection.
+	- meta_Cost (list): (Optional) History of fitness values for meta-data collection.
+	# Methods:
+	- __str__(): Returns the string representation of the optimizer.
+	- get_state(problem): Computes and returns the current state vector for RL, based on population diversity, fitness, and progress.
+	- init_population(problem): Initializes the population and evaluates initial fitness values.
+	- update(action, problem): Performs one generation of DE using the specified action (mutation strategy and F), updates population and fitness, and returns the next state, reward, done flag, and info.
+	- mutation(mut_way): Applies the specified DE mutation strategy to generate mutant vectors.
+	- crossover(mut_population): Performs crossover between current and mutant populations.
+	- generate_random_int(NP, cols): Generates random integer indices for DE operations, ensuring no self-selection.
+	# Raises:
+	- ValueError: If an invalid action or mutation strategy is specified.
+	"""
+    
 	def __init__(self, config):
 		super().__init__(config)
 

@@ -3,6 +3,43 @@ from .learnable_optimizer import Learnable_Optimizer
 from typing import Union, Iterable
 
 class RLPSO_Optimizer(Learnable_Optimizer):
+    """
+    # Introduction
+    RLPSO develops a reinforcement learning strategy to enhance PSO in convergence by replacing the uniformly distributed random number in the updating function with a random number generated from a selected normal distribution.
+    # Original paper
+    "[**Employing reinforcement learning to enhance particle swarm optimization methods**](https://www.tandfonline.com/doi/abs/10.1080/0305215X.2020.1867120)." Engineering Optimization (2022).Intelligence. (2021).
+    # Official Implementation
+    None
+    # Args:
+    - config (object): Configuration object containing optimizer parameters such as dimension (`dim`), inertia weight decay (`w_decay`), acceleration coefficient (`c`), population size (`NP`), maximum function evaluations (`maxFEs`), logging interval (`log_interval`), and meta-data logging flag (`full_meta_data`).
+    # Attributes:
+    - __config (object): Stores the configuration object.
+    - __dim (int): Dimensionality of the problem.
+    - __w_decay (bool): Flag indicating whether to use inertia weight decay.
+    - __w (float): Current inertia weight.
+    - __c (float): Acceleration coefficient.
+    - __NP (int): Number of particles in the swarm.
+    - __max_fes (int): Maximum number of function evaluations.
+    - fes (int or None): Current number of function evaluations.
+    - cost (list or None): List of global best costs at each logging interval.
+    - log_index (int or None): Current logging index.
+    - log_interval (int): Interval for logging global best cost.
+    - meta_X (list): List of particle positions for meta-data logging (if enabled).
+    - meta_Cost (list): List of particle costs for meta-data logging (if enabled).
+    # Methods:
+    - __init__(self, config): Initializes the optimizer with the given configuration.
+    - __str__(self): Returns the string representation of the optimizer.
+    - init_population(self, problem): Initializes the particle swarm population and returns the initial state.
+    - __get_state(self, index): Returns the concatenated state vector for the given particle index.
+    - __get_costs(self, problem, position): Evaluates the cost(s) of the given position(s) using the problem's evaluation function.
+    - update(self, action, problem): Updates the state of the optimizer using the provided action and returns the new state, reward, done flag, and additional info.
+    # Usage:
+    Instantiate with a configuration object and use `init_population` to initialize. Call `update` iteratively with actions to perform optimization steps.
+    # Raises:
+    - AttributeError: If required configuration attributes are missing.
+    - ValueError: If input dimensions do not match the problem specification.
+    """
+    
     def __init__(self, config):
         super().__init__(config)
         
@@ -32,6 +69,22 @@ class RLPSO_Optimizer(Learnable_Optimizer):
 
     # initialize PSO environment
     def init_population(self, problem):
+        """
+        # Introduction
+        Initializes the particle population for the RLPSO (Reinforcement Learning Particle Swarm Optimization) algorithm, setting up positions, velocities, and tracking variables for optimization.
+        # Args:
+        - problem (object): An object representing the optimization problem, which must provide lower and upper bounds (`lb`, `ub`) for the search space.
+        # Returns:
+        - object: The initial state of the optimizer, as returned by `self.__get_state(self.__cur_index)`.
+        # Side Effects:
+        - Initializes and updates internal attributes such as particle positions, velocities, personal and global bests, and logging structures.
+        - Resets function evaluation count and other tracking variables.
+        - Optionally stores meta-data if configured.
+        # Notes:
+        - Assumes that `self.rng` is a random number generator and that `self.__get_costs` and `self.__get_state` are defined elsewhere in the class.
+        - The method is intended to be called at the start of the optimization process.
+        """
+        
         rand_pos = self.rng.uniform(low=problem.lb, high=problem.ub, size=(self.__NP, self.__dim))
         self.fes = 0
         self.__max_velocity=0.1*(problem.ub-problem.lb)
@@ -83,6 +136,25 @@ class RLPSO_Optimizer(Learnable_Optimizer):
         return cost
 
     def update(self, action, problem):
+        """
+        # Introduction
+        Updates the state of the RL-PSO (Reinforcement Learning Particle Swarm Optimization) optimizer for a single particle based on the provided action and problem definition. This includes updating velocity, position, personal best, and global best, as well as calculating rewards and logging progress.
+        # Args:
+        - action (np.ndarray or float): The action to be taken, typically representing a random factor for velocity update.
+        - problem (object): The optimization problem instance, which must provide lower and upper bounds (`lb`, `ub`), and optionally an optimum value.
+        # Returns:
+        - state (np.ndarray): The updated state representation for the next step.
+        - reward (float): The reward signal computed from the improvement in cost.
+        - is_done (bool): Whether the optimization process has reached its termination condition.
+        - info (dict): Additional information (currently empty, reserved for future use).
+        # Notes:
+        - The method linearly decreases the inertia coefficient if enabled.
+        - Velocity and position are updated according to the PSO update rules, with velocity clipping and position boundary handling.
+        - Updates personal and global bests if improvements are found.
+        - Logs global best values at specified intervals.
+        - Handles full meta-data logging if configured.
+        - Ensures the cost log is filled up to the required number of log points upon completion.
+        """
         
         is_done = False
 

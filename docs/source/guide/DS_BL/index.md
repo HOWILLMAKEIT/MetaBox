@@ -171,7 +171,7 @@ Baseline
 - **Official Implementation**：[LDE](https://github.com/yierh/LDE)
 ##### LES
 - **Introduction**：\
- ** L**earned **E**volution **S**trategy (LES) is a novel self-attention-based evolution strategies parametrization, and discover effective update rules for ES via meta-learning.
+ **L**earned **E**volution **S**trategy (LES) is a novel self-attention-based evolution strategies parametrization, and discover effective update rules for ES via meta-learning.
 - **Original paper**：
   "[**Discovering evolution strategies via meta-black-box optimization**](https://iclr.cc/virtual/2023/poster/11005)." The Eleventh International Conference on Learning Representations. (2023).
 - **Official Implementation**：[LES](https://github.com/RobertTLange/evosax/blob/main/evosax/strategies/les.py)

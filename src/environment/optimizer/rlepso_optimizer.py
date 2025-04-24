@@ -3,6 +3,51 @@ from .learnable_optimizer import Learnable_Optimizer
 
 
 class RLEPSO_Optimizer(Learnable_Optimizer):
+    """
+    # Introduction
+    RLEPSO is a new particle swarm optimization algorithm that combines reinforcement learning.
+    # Original paper
+    "[**RLEPSO: Reinforcement learning based Ensemble particle swarm optimizer**](https://dl.acm.org/doi/abs/10.1145/3508546.3508599)." Proceedings of the 2021 4th International Conference on Algorithms, Computing and Artificial Intelligence. (2021).
+    # Official Implementation
+    None
+
+    # Args:
+    - config (object): Configuration object containing all necessary hyperparameters and settings for the optimizer, such as population size, dimensionality, maximum function evaluations, logging intervals, and meta-data options.
+    # Attributes:
+    - __config: Stores the configuration object.
+    - __dim (int): Dimensionality of the optimization problem.
+    - __w_decay (bool): Whether to use weight decay in velocity update.
+    - __w (float): Inertia weight for velocity update.
+    - __NP (int): Number of particles in the swarm.
+    - __pci (np.ndarray): Probability coefficients for learning from other particles.
+    - __n_group (int): Number of groups for parameter adaptation.
+    - __no_improve (int): Counter for global no-improvement steps.
+    - __per_no_improve (np.ndarray): Counter for per-particle no-improvement steps.
+    - fes (int): Current number of function evaluations.
+    - cost (list): History of global best costs.
+    - log_index (int): Current logging index.
+    - log_interval (int): Interval for logging progress.
+    - __max_fes (int): Maximum number of function evaluations.
+    - __is_done (bool): Flag indicating if optimization is complete.
+    - meta_X (list): History of particle positions (if full_meta_data is enabled).
+    - meta_Cost (list): History of particle costs (if full_meta_data is enabled).
+    # Methods:
+    - __str__(): Returns the string representation of the optimizer.
+    - init_population(problem): Initializes the particle population and velocities.
+    - update(action, problem): Updates the swarm based on the given action and problem, returning the next state, reward, done flag, and info.
+    - __get_costs(problem, position): Computes the cost for a set of positions.
+    - __get_v_clpso(): Computes the velocity component based on CLPSO strategy.
+    - __tournament_selection(): Performs tournament selection among particles.
+    - __get_v_fdr(): Computes the velocity component based on Fitness-Distance-Ratio.
+    - __get_coe(actions): Computes the coefficients for velocity update based on actions.
+    - __reinit(filter, problem): Reinitializes particles that meet certain criteria.
+    - __get_state(): Returns the current state representation for reinforcement learning.
+    # Returns:
+    - The optimizer provides methods to initialize the population, update the swarm, and retrieve optimization progress and meta-data.
+    # Raises:
+    - AssertionError: If the shape of the actions array does not match the expected size in __get_coe.
+    """
+    
     def __init__(self, config):
         super().__init__(config)
 
@@ -38,6 +83,21 @@ class RLEPSO_Optimizer(Learnable_Optimizer):
         return "RLEPSO_Optimizer"
 
     def init_population(self, problem):
+        """
+        # Introduction
+        Initializes the particle population for the RL-EPSO optimizer, setting up positions, velocities, and tracking variables for the optimization process.
+        # Args:
+        - problem (object): An object representing the optimization problem, which must have attributes `lb` (lower bounds), `ub` (upper bounds), and be compatible with the cost evaluation method.
+        # Returns:
+        - dict: The initial state of the optimizer, including particle positions, velocities, personal and global bests, and other relevant metadata.
+        # Side Effects:
+        - Updates internal attributes such as particle positions, velocities, costs, and logging variables.
+        - Optionally stores meta-data if configured.
+        # Notes:
+        - Assumes that `self.rng` is a random number generator and `self.__get_costs` is a method for evaluating the cost of particle positions.
+        - Resets counters for stagnation and improvement tracking.
+        """
+        
         rand_pos = self.rng.uniform(low = problem.lb, high = problem.ub, size = (self.__NP, self.__dim))
         self.__max_velocity = 0.1 * (problem.ub - problem.lb)
         rand_vel = self.rng.uniform(low = -self.__max_velocity, high = self.__max_velocity, size = (self.__NP, self.__dim))
@@ -177,6 +237,27 @@ class RLEPSO_Optimizer(Learnable_Optimizer):
         return np.array([self.fes / self.__max_fes])
 
     def update(self, action, problem):
+        """
+        # Introduction
+        Updates the state of the RL-based Particle Swarm Optimization (PSO) optimizer for one iteration, including particle velocities, positions, personal and global bests, and handles reinitialization and logging. Calculates the reward and determines if the optimization process should terminate.
+        # Args:
+        - action (np.ndarray): Action array representing the ratio to learn from pbest and gbest, typically in the range (0, 1).
+        - problem (object): Problem instance containing the objective function, lower and upper bounds, and other problem-specific information.
+        # Returns:
+        - next_state (np.ndarray): The next state representation after the update.
+        - reward (int): Reward signal indicating improvement (1 if global best improved, -1 otherwise).
+        - is_end (bool): Flag indicating whether the optimization process has reached its end condition.
+        - info (dict): Additional information (currently empty).
+        # Notes:
+        - Updates particle velocities and positions using multiple velocity components (CLPSO, FDR, pbest, gbest).
+        - Applies velocity and position clamping to respect problem bounds.
+        - Updates personal and global bests based on new costs.
+        - Handles reinitialization of particles based on patience and mutation coefficients.
+        - Logs progress and meta-data if configured.
+        - Calculates reward based on improvement of the global best value.
+        - Checks for termination based on function evaluation limits or problem-specific optimum.
+        """
+        
         is_end = False
 
         pre_gbest = self.__particles['gbest_val']

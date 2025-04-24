@@ -47,6 +47,48 @@ def symbol_config(config):
 
 
 class SYMBOL_Optimizer(Learnable_Optimizer):
+    """
+    # Introduction
+    SurrRLDE is a novel MetaBBO framework which combines surrogate learning process and reinforcement learning-aided Differential Evolution (DE) algorithm.
+    # Original paper
+    "[Surrogate Learning in Meta-Black-Box Optimization: A Preliminary Study](https://arxiv.org/abs/2503.18060)." arXiv preprint arXiv:2503.18060 (2025).
+    # Official Implementation
+    [SurrRLDE](https://github.com/GMC-DRL/Surr-RLDE)
+    # Args:
+    - config (object): Configuration object containing optimizer parameters such as dimension, maximum function evaluations, logging intervals, initialization methods, and other relevant settings.
+    # Attributes:
+    - tokenizer (MyTokenizer): Tokenizer for parsing symbolic expressions.
+    - __config (object): Internal reference to the configuration object.
+    - dim (int): Dimensionality of the optimization problem.
+    - NP (int): Population size.
+    - no_improve (int): Counter for stagnation in improvement.
+    - per_no_improve (np.ndarray): Array tracking stagnation per individual.
+    - evaling (bool): Evaluation mode flag.
+    - max_fes (int): Maximum number of function evaluations.
+    - boarder_method (str): Method for handling boundary conditions ('clipping' or 'periodic').
+    - replace (Myreplace): Utility for processing symbolic expressions.
+    - log_interval (int): Interval for logging progress.
+    - teacher_optimizer (object): Teacher optimizer instance for imitation learning.
+    - is_train (bool): Training mode flag.
+    - population (Population): Current population of candidate solutions.
+    - log_index (int): Logging index for tracking progress.
+    - cost (list): List of best costs at each logging point.
+    - meta_X (list): (Optional) List of population positions for meta-data logging.
+    - meta_Cost (list): (Optional) List of population costs for meta-data logging.
+    # Methods:
+    - __str__(): Returns the string representation of the optimizer.
+    - init_population(problem): Initializes the population for a given problem, possibly using a teacher optimizer for imitation.
+    - eval(): Sets the optimizer to evaluation mode.
+    - train(): Sets the optimizer to training mode.
+    - observe(): Encodes and returns the current population features.
+    - update(action, problem): Applies a symbolic update rule to the population, computes reward, and checks termination.
+    - cal_reward(tea_pop, max_step): Calculates the reward based on imitation and optimization progress.
+    # Returns:
+    - Various methods return encoded features, rewards, termination flags, and logging information as appropriate for integration with reinforcement learning environments.
+    # Raises:
+    - AssertionError: If symbolic expression parsing or boundary handling encounters unsupported or inconsistent states.
+    """
+    
     def __init__(self, config):
         super().__init__(config)
 
@@ -82,6 +124,21 @@ class SYMBOL_Optimizer(Learnable_Optimizer):
 
     # the interface for environment reseting
     def init_population(self, problem):
+        """
+        # Introduction
+        Initializes the population for the optimization process, optionally using a teacher optimizer for population initialization if in training mode.
+        # Args:
+        - problem (Problem): An instance of the optimization problem, containing bounds and other problem-specific information.
+        # Returns:
+        - Any: The observed state after population initialization, as returned by `self.observe()`.
+        # Raises:
+        - None directly, but may raise exceptions from called methods such as `eval`, `copy.deepcopy`, or population initialization routines.
+        # Notes:
+        - If `self.is_train` is True, the population is initialized using a teacher optimizer and a custom initialization method.
+        - If `self.is_train` is False, the population is initialized normally and reset.
+        - Logs and meta-data are initialized if configured.
+        """
+        
         # self.NP=self.__Nmax
         self.max_x = problem.ub
         self.min_x = problem.lb
@@ -119,6 +176,23 @@ class SYMBOL_Optimizer(Learnable_Optimizer):
 
     # input the self.population and expr function, return the population after applying expr function
     def update(self, action, problem):
+        """
+        # Introduction
+        Updates the optimizer's population based on the provided action and problem, applying the specified update expression, handling boundary conditions, and calculating rewards. This method is central to the optimization process, performing one or more update steps and logging progress.
+        # Args:
+        - action (dict): A dictionary containing the update expression (`'expr'`) and the number of steps to skip (`'skip_step'`).
+        - problem: The optimization problem instance, which may provide information such as the optimum value.
+        # Returns:
+        - tuple: A tuple containing:
+            - observation: The current observation of the optimizer's state.
+            - reward (float): The reward calculated for this update step.
+            - is_end (bool): Whether the optimization process has reached its end condition.
+            - info (dict): Additional information (currently an empty dictionary).
+        # Raises:
+        - AssertionError: If the number of 'randx' replacements does not match the expected count.
+        - AssertionError: If the shapes of the update variables do not match.
+        - AssertionError: If an unsupported boundary method is specified.
+        """
 
         expr = action['expr']
         skip_step = action['skip_step']
