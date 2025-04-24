@@ -375,14 +375,14 @@ and need to be adjusted appropriately **according to specific tasks**.
 ### BBO
 
 ```{tip}
-Considering that you may need to compare with other bbo,
+Considering that you may need to compare with other bbo,\
 we also open the bbo design interface to you! 😉
 ```
 
 1️⃣ Inheritance and Initialization
 
 ```python
-from environment.optimizer.basic_optimizer import Basic_Optimizer
+from metaevobox.environment.optimizer.basic_optimizer import Basic_Optimizer
 
 class MyBBO(Basic_Optimizer):
     def __init__(self, config):
@@ -438,7 +438,216 @@ def run_episode(self, problem):
 ```
 ## 2. Implement your own dataset in Metabox
 
+```{important}
+The dataset needs to be constructed in **two versions: torch and numpy**, \
+to facilitate the use of different optimizers. \ 
+The following is an example of the numpy version
+```
+
+1️⃣ Inheritance and Initialization
+```python
+from metaevobox.environment.problem.basic_problem import Basic_Problem
+# torch version : from metaevobox.environment.problem.basic_problem import Basic_Problem_Torch
+class MyProblem(Basic_Problem):
+# torch version : class MyProblem(Basic_Problem_Torch)
+    def __init__(self):
+        # Init parameters
+        self.opt = None
+        self.optimum = 0.0
+
+    def get_optimial(self)
+        return self.opt
+
+    def func(self, x):
+        raise NotImplementedError
+```
+
+2️⃣ Instantiation Function
+```python
+class MyFunction(MyProblem):
+    def __init__(self):
+        super().__init__()
+
+        self.opt = # Specific setting
+
+    def __str__(self):
+        return 'MyFunction'
+    
+    def func(self, x):
+        # Specific Operation
+        return result
+```
+
+2️⃣ Instantiation Dataset
+```python
+import numpy as np
+from torch.utils.data import Dataset
+
+class MyDataset(Dataset):
+    def __init__(self, data, batch_size=1):
+        super().__init__()
+        self.data = data
+        self.batch_size = batch_size
+        self.N = len(self.data)
+        self.ptr = [i for i in range(0, self.N, batch_size)]
+        self.index = np.arange(self.N)
+        self.maxdim = 0
+        for item in self.data:
+            self.maxdim = max(self.maxdim, item.dim)
+
+    @staticmethod
+    def get_datasets(version='numpy',
+                     train_batch_size=1,
+                     test_batch_size=1,
+                     difficulty=None,
+                     user_train_list=None,
+                     user_test_list=None):
+        if difficulty == None and user_test_list == None and user_train_list == None:
+            raise ValueError('Please set difficulty or user_train_list and user_test_list.')
+        if difficulty not in ['easy', 'difficult', 'all', None]:
+            raise ValueError(f'{difficulty} difficulty is invalid.')
+        func_id = [i for i in range(1, # The number of functions)]
+        train_set = []
+        test_set = []
+
+        if difficulty == 'easy':
+            train_id = [# Specific setting]
+            for id in func_id:
+                if version == 'numpy':
+                    instance = eval(f'F{id}')()
+                else:
+                    instance = eval(f'F{id}_Torch')()
+                if id in train_id:
+                    train_set.append(instance)
+                else:
+                    test_set.append(instance)
+
+         # difficulty == 'difficult' is the same
+         elif difficulty == 'all':
+             for id in func_id:
+                 if version == 'numpy':
+                     instance = eval(f'F{id}')()
+                 else:
+                     instance = eval(f'F{id}_Torch')()
+                 train_set.append(instance)
+                 test_set.append(instance)
+         elif difficulty is None:
+             train_id = user_train_list
+             test_id = user_test_list
+             for id in func_id:
+                 if version == 'numpy':
+                     instance = eval(f'F{id}')()
+                 else:
+                     instance = eval(f'F{id}_Torch')()
+                 if id in train_id:
+                     train_set.append(instance)
+                 elif id in test_id:
+                     test_set.append(instance)
+
+        return MyDataset(train_set, train_batch_size), MyDataset(test_set, test_batch_size)
+    
+    # get a batch of data
+    def __getitem__(self, item):
+        
+        ptr = self.ptr[item]
+        index = self.index[ptr: min(ptr + self.batch_size, self.N)]
+        res = []
+        for i in range(len(index)):
+            res.append(self.data[index[i]])
+        return res
+
+    # get the number of data
+    def __len__(self):
+        return self.N
+
+    def __add__(self, other: 'MyDataset'):
+        return MyDataset(self.data + other.data, self.batch_size)
+
+    def shuffle(self):
+        self.index = np.random.permutation(self.N)
+```
+
 ## 3. Config
+
+### The Config of Problem Setup
+| **Config Name**                | **Description**                                                        | **Possible Values**                                                                                                               | **Default**                                                                                                                   |
+|---------------------------------|------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
+| train_problem                   | Specify the problem suite for training                                 | ['bbob-10D', 'bbob-30D', 'bbob-torch-10D', 'bbob-torch-30D', 'bbob-noisy-10D', 'bbob-noisy-30D', 'bbob-noisy-torch-10D', 'bbob-noisy-torch-30D', 'bbob-surrogate-2D','bbob-surrogate-5D','bbob-surrogate-10D', 'hpo-b', 'lsgo', 'lsgo-torch', 'protein', 'protein-torch', 'uav', 'uav-torch', 'mmo', 'mmo-torch', 'wcci2020', 'cec2017mto', 'moo-synthetic'] | 'bbob'                                                                                                                       |
+| test_problem                    | Specify the problem suite for testing, default to be consistent with training | ['None', 'bbob-10D', 'bbob-30D', 'bbob-torch-10D', 'bbob-torch-30D', 'bbob-noisy-10D', 'bbob-noisy-30D', 'bbob-noisy-torch-10D', 'bbob-noisy-torch-30D', 'bbob-surrogate-2D','bbob-surrogate-5D','bbob-surrogate-10D', 'hpo-b', 'lsgo', 'lsgo-torch', 'protein', 'protein-torch', 'uav', 'uav-torch', 'ne', 'mmo', 'mmo-torch', 'wcci2020', 'cec2017mto', 'moo-synthetic'] | None                                                                                                                         |
+| train_difficulty                | Difficulty level for training problems                                 | ['all', 'easy', 'difficult', 'user-define']                                                                                        | 'easy'                                                                                                                       |
+| test_difficulty                 | Difficulty level for testing problems, default to be consistent with training | ['all', 'easy', 'difficult', 'user-define']                                                                                        | None                                                                                                                         |
+| upperbound                      | Upperbound of search space                                             | float value                                                                                                                       | 5                                                                                                                           |
+| user_train_problem_list         | User-defined training problem list                                     | List of problems                                                                                                                 | None                                                                                                                         |
+| user_test_problem_list          | User-defined testing problem list                                      | List of problems                                                                                                                 | None                                                                                                                         |
+| device                          | Device to use                                                          | ['cpu', 'cuda']                                                                                                                  | 'cpu'                                                                                                                        |
+
+### The Config of Training Mode
+| **Config Name**                | **Description**                                                        | **Possible Values**                                                                                                               | **Default**                                                                                                                   |
+|---------------------------------|------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
+| train                           | Switch to train mode                                                   | None or action                                                                                                                   | None                                                                                                                         |
+| test                            | Switch to inference mode                                               | None or action                                                                                                                   | None                                                                                                                         |
+| rollout                         | Switch to rollout mode                                                 | None or action                                                                                                                   | None                                                                                                                         |
+| run_experiment                  | Switch to run_experiment mode                                          | None or action                                                                                                                   | None                                                                                                                         |
+| mgd_test                        | Switch to mgd_test mode                                                | None or action                                                                                                                   | None                                                                                                                         |
+| mte_test                        | Switch to mte_test mode                                                | None or action                                                                                                                   | None                                                                                                                         |
+| task_cnt                        | Number of tasks in multitask                                           | int value                                                                                                                        | 10                                                                                                                           |
+| generation                      | Total generations for L2O                                              | int value                                                                                                                        | 250                                                                                                                          |
+| full_meta_data                  | Store the metadata                                                     | True or False                                                                                                                    | True                                                                                                                         |
+| max_learning_step               | The maximum learning step for training                                | int value                                                                                                                        | 1500000                                                                                                                       |
+| train_batch_size                | Batch size of train set                                                | int value                                                                                                                        | 1                                                                                                                             |
+| train_agent                     | Agent for training                                                     | Agent name                                                                                                                       | None                                                                                                                         |
+| train_optimizer                 | Optimizer for training                                                 | Optimizer name                                                                                                                   | None                                                                                                                         |
+| agent_save_dir                  | Save your own trained agent model                                      | string path                                                                                                                      | 'agent_model/train/'                                                                                                         |
+| log_dir                         | Logging testing output                                                 | string path                                                                                                                      | 'output/'                                                                                                                     |
+| draw_interval                   | Interval epochs in drawing figures                                     | int value                                                                                                                        | 3                                                                                                                             |
+| agent_for_plot_training         | Learnable optimizer to compare                                         | List of agent names                                                                                                              | ['RL_HPSDE_Agent']                                                                                                           |
+| n_checkpoint                    | Number of training checkpoints                                         | int value                                                                                                                        | 20                                                                                                                            |
+| resume_dir                      | Directory to load previous checkpoint model                            | string path                                                                                                                      | None                                                                                                                         |
+| train_parallel_mode             | The parallel processing method for batch env step in training          | ['dummy', 'subproc', 'ray']                                                                                                      | 'dummy'                                                                                                                       |
+### The Config of Testing Mode
+| **Config Name**                | **Description**                                                        | **Possible Values**                                                                                                               | **Default**                                                                                                                   |
+|---------------------------------|------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
+| agent                           | Key written in key.json                                                | List of agent names                                                                                                              | []                                                                                                                            |
+| t_optimizer                     | Traditional optimizer                                                  | List of traditional optimizer names                                                                                               | []                                                                                                                            |
+| test_batch_size                 | Batch size of test set                                                 | int value                                                                                                                        | 1                                                                                                                             |
+| parallel_batch                  | The parallel processing mode for testing                               | ['Full', 'Baseline_Problem', 'Problem_Testrun', 'Batch']                                                                          | 'Batch'                                                                                                                       |
+### The Config of Rollout Mode
+| **Config Name**                | **Description**                                                        | **Possible Values**                                                                                                               | **Default**                                                                                                                   |
+|---------------------------------|------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
+| agent_for_rollout               | Learnable agent for rollout                                            | Learnable agent name                                                                                                             | None                                                                                                                         |
+| checkpoints_for_rollout         | The index of checkpoints for rollout                                   | List of checkpoint indices                                                                                                       | None                                                                                                                         |
+| plot_smooth                     | A float between 0 and 1 to control the smoothness of figure curves      | float value between 0 and 1                                                                                                      | 0.8                                                                                                                          |
+### Zero-Shot & Transfer Learning
+| **Config Name**                | **Description**                                                        | **Possible Values**                                                                                                               | **Default**                                                                                                                   |
+|---------------------------------|------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
+| problem_from                    | Source problem set in zero-shot and transfer learning                  | ['bbob', 'bbob-noisy', 'bbob-torch', 'bbob-noisy-torch', 'protein', 'protein-torch']                                               | None                                                                                                                         |
+| problem_to                      | Target problem set in zero-shot and transfer learning                  | ['bbob', 'bbob-noisy', 'bbob-torch', 'bbob-noisy-torch', 'protein', 'protein-torch']                                               | None                                                                                                                         |
+| difficulty_from                 | Difficulty of source problem set in zero-shot and transfer learning    | ['easy', 'difficult']                                                                                                             | 'easy'                                                                                                                       |
+| difficulty_to                   | Difficulty of target problem set in zero-shot and transfer learning    | ['easy', 'difficult']                                                                                                             | 'easy'                                                                                                                       |
+### Zero-Shot Parameters
+| **Config Name**                | **Description**                                                        | **Possible Values**                                                                                                               | **Default**                                                                                                                   |
+|---------------------------------|------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
+| model_from                      | The model trained on source problem set                                | string value                                                                                                                      | None                                                                                                                         |
+| model_to                        | The model trained on target problem set                                | string value                                                                                                                      | None                                                                                                                         |
+### Transfer Learning Parameters
+| **Config Name**                | **Description**                                                        | **Possible Values**                                                                                                               | **Default**                                                                                                                   |
+|---------------------------------|------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
+| pre_train_rollout               | Key of pre-train models rollout in model.json                          | string value                                                                                                                      | None                                                                                                                         |
+| scratch_rollout                 | Key of scratch models rollout result in model.json                     | string value                                                                                                                      | None                                                                                                                         |
+
+### General Parameters
+| **Config Name**                | **Description**                                                        | **Possible Values**                                                                                                               | **Default**                                                                                                                   |
+|---------------------------------|------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
+| max_epoch                       | Maximum epoch for training                                             | int value                                                                                                                        | 100                                                                                                                           |
+| seed                            | Random seed for experiment                                             | int value                                                                                                                        | 3849                                                                                                                          |
+| epoch_seed                      | Epoch seed for specific experiments                                    | int value                                                                                                                        | 100                                                                                                                           |
+| id_seed                         | ID seed for model generation                                           | int value                                                                                                                        | 5                                                                                                                             |
+| train_mode                      | Training mode                                                           | ['single', 'multi']                                                                                                               | 'single'                                                                                                                      |
+| end_mode                        | End mode                                                                | ['step', 'epoch']                                                                                                                | 'epoch'                                                                                                                       |
+| test_run                        | Test run number                                                         | int value                                                                                                                        | 51                                                                                                                            |
+| rollout_run                     | Rollout run number                                                      | int value                                                                                                                        | 10                                                                                                                            |
+| no_tb                           | Disable tensorboard logging                                            | True or False                                                                                                                    | False                                                                                                                         |
+| log_step                        | Log every log_step steps                                               | int value                                                                                                                        | 50                                                                                                                            |
 
 ## BashBuilder
 
