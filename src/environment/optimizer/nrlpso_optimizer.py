@@ -122,6 +122,8 @@ class NRLPSO_Optimizer(Learnable_Optimizer):
         if self.__config.full_meta_data:
             self.meta_X = [self.__population.copy()]
             self.meta_Cost = [self.__cost.copy()]
+            self.meta_tmp_x = []
+            self.meta_tmp_cost = []
 
         self.r_w = self.rng.rand()
 
@@ -384,6 +386,19 @@ class NRLPSO_Optimizer(Learnable_Optimizer):
             self.__gbest_pos = self.__population[self.pointer]
 
         self.__state[self.pointer] = action
+
+        if self.__config.full_meta_data:
+            self.meta_tmp_x.append(self.__population[self.pointer].copy())
+            self.meta_tmp_cost.append(self.__cost[self.pointer].copy())
+
+            # 在某一轮迭代结束后（例如在 for j in range(NP) 之后）
+            if len(self.meta_tmp_cost) == self.NP:  # 或 len(self.meta_tmp_x) == NP
+                self.meta_X.append(np.array(self.meta_tmp_x))
+                self.meta_Cost.append(np.array(self.meta_tmp_cost))
+
+                self.meta_tmp_x.clear()
+                self.meta_tmp_cost.clear()
+
         self.pointer = (self.pointer + 1) % self.NP
 
         if self.fes >= self.log_index * self.log_interval:
@@ -395,9 +410,6 @@ class NRLPSO_Optimizer(Learnable_Optimizer):
         else:
             is_done = self.fes >= self.__maxFEs
 
-        if self.__config.full_meta_data:
-            self.meta_X.append(self.__population.copy())
-            self.meta_Cost.append(self.__cost.copy())
         if is_done:
             if len(self.cost) >= self.__config.n_logpoint + 1:
                 self.cost[-1] = self.__gbest_cost

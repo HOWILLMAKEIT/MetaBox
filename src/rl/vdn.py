@@ -13,27 +13,6 @@ from .basic_agent import Basic_Agent
 
 from ..environment.parallelenv.parallelenv import ParallelEnv
 
-
-def clip_grad_norms(param_groups, max_norm = math.inf):
-    """
-    Clips the norms for all param groups to max_norm and returns gradient norms before clipping
-    :param optimizer:
-    :param max_norm:
-    :param gradient_norms_log:
-    :return: grad_norms, clipped_grad_norms: list with (clipped) gradient norms per group
-    """
-    grad_norms = [
-        torch.nn.utils.clip_grad_norm(
-            group['params'],
-            max_norm if max_norm > 0 else math.inf,  # Inf so no clipping but still call to calc
-            norm_type = 2
-        )
-        for idx, group in enumerate(param_groups)
-    ]
-    grad_norms_clipped = [min(g_norm, max_norm) for g_norm in grad_norms] if max_norm > 0 else grad_norms
-    return grad_norms, grad_norms_clipped
-
-
 class VDN_Agent(Basic_Agent):
     """
     # Introduction
