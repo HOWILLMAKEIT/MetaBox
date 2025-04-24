@@ -39,7 +39,7 @@ class ZDT_Torch(Basic_Problem_Torch):
 class ZDT1_Torch(ZDT_Torch):
 
 
-    def eval(self, x, *args, **kwargs):
+    def func(self, x, *args, **kwargs):
         if x.dim() == 1:
             x = x.unsqueeze(0)
         f1 = x[:, 0]
@@ -59,7 +59,7 @@ class ZDT1_Torch(ZDT_Torch):
 class ZDT2_Torch(ZDT_Torch):
 
 
-    def eval(self, x, *args, **kwargs):
+    def func(self, x, *args, **kwargs):
         if x.dim() == 1:
             x = x.unsqueeze(0)
         f1 = x[:, 0]
@@ -80,7 +80,7 @@ class ZDT2_Torch(ZDT_Torch):
 
 class ZDT3_Torch(ZDT_Torch):
 
-    def eval(self, x, *args, **kwargs):
+    def func(self, x, *args, **kwargs):
         if x.dim() == 1:
             x = x.unsqueeze(0)
         f1 = x[:, 0]
@@ -114,7 +114,7 @@ class ZDT4_Torch(ZDT_Torch):
         # self.func = self._evaluate
 
 
-    def eval(self, x,*args, **kwargs):
+    def func(self, x,*args, **kwargs):
         if x.dim() == 1:
             x = x.unsqueeze(0)
         f1 = x[:, 0]
@@ -146,7 +146,7 @@ class ZDT5_Torch(ZDT_Torch):
 
 
 
-    def eval(self, x, *args, **kwargs):
+    def func(self, x, *args, **kwargs):
         if x.dim() == 1:
             x = x.unsqueeze(0)
         x = x.to(th.float32)
@@ -182,7 +182,7 @@ class ZDT6_Torch(ZDT_Torch):
         super().__init__(n_var=n_var, **kwargs)
 
 
-    def eval(self, x,  *args, **kwargs):
+    def func(self, x,  *args, **kwargs):
         if x.dim() == 1:
             x = x.unsqueeze(0)
         f1 = 1 - th.exp(-4 * x[:, 0]) * th.pow(th.sin(6 * math.pi * x[:, 0]), 6)
@@ -280,17 +280,17 @@ if __name__ == '__main__':
     zdt1 = ZDT1_Torch()
     zdt2 = ZDT2_Torch()
     zdt3 = ZDT3_Torch()
-    print(zdt1.eval(x1))
-    print(zdt2.eval(x1))
-    print(zdt3.eval(x1))
+    print(zdt1.func(x1))
+    print(zdt2.func(x1))
+    print(zdt3.func(x1))
     x2 = th.ones(10,10)
     zdt4 = ZDT4_Torch()
     zdt6 = ZDT6_Torch()
-    print(zdt4.eval(x2))
-    print(zdt6.eval(x2))
+    print(zdt4.func(x2))
+    print(zdt6.func(x2))
     x3 = th.ones(10,45)
     zdt5 = ZDT5_Torch()
-    print(zdt5.eval(x3))
+    print(zdt5.func(x3))
     s1 = zdt1.get_ref_set()
     s2 = zdt2.get_ref_set()
     s3 = zdt3.get_ref_set()
