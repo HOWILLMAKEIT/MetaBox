@@ -1,93 +1,66 @@
+from environment.optimizer.basic_optimizer import Basic_Optimizer
+import cma
 import numpy as np
-from deap import base
-from deap import creator
-from deap import tools
-from deap import algorithms
-from deap import cma
-from ...environment.optimizer.basic_optimizer import Basic_Optimizer
-
+import time
+import warnings
+import math
 
 class CMAES(Basic_Optimizer):
     def __init__(self, config):
         super().__init__(config)
         config.NP = 50
-
         self.__config = config
-        self.__toolbox = base.Toolbox()
-        self.__creator = creator
-        self.__algorithm = algorithms
+
         self.log_interval = config.log_interval
+        self.n_logpoint = config.n_logpoint
         self.full_meta_data = config.full_meta_data
 
     def __str__(self):
         return "CMAES"
-    
-    def run_episode(self, problem):
-        self.rng_gpu = None
-        self.rng_cpu = None
-        self.rng = None
-        np.random.seed(self.rng_seed)
 
-        self.__creator.create("Fitnessmin", base.Fitness, weights=(-1.0,))
-        self.__creator.create("Individual", list, fitness=creator.Fitnessmin)
-        if self.full_meta_data:
-            self.meta_Cost = []
-            self.meta_X = []
+    def run_episode(self, problem):
+        cost = []
+        self.meta_X = []
+        self.meta_Cost = []
+        index = 1
+
         def problem_eval(x):
             if problem.optimum is None:
                 fitness = problem.eval(x)
             else:
                 fitness = problem.eval(x) - problem.optimum
-            return fitness,   # return a tuple
+            return fitness
 
-        self.__toolbox.register("evaluate", problem_eval)
-        strategy = cma.Strategy(centroid=[problem.ub] * problem.dim, sigma=0.5, lambda_=self.__config.NP)
-        self.__toolbox.register("generate", strategy.generate, creator.Individual)
-        self.__toolbox.register("update", strategy.update)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            cma.evolution_strategy._CMASolutionDict = cma.evolution_strategy._CMASolutionDict_empty
+            es = cma.CMAEvolutionStrategy(np.ones(problem.dim), (problem.ub - problem.lb) * 0.3,
+                                          {'popsize':self.__config.NP,
+                                           'bounds': [problem.lb, problem.ub],
+                                           'maxfevals': self.__config.maxFEs, 'tolfun': 1e-20, 'tolfunhist': 0})
 
-        initial_population = self.__toolbox.generate()
-        initial_fitnesses = self.__toolbox.map(self.__toolbox.evaluate, initial_population)
-        for ind, fit in zip(initial_population, initial_fitnesses):
-            ind.fitness.values = fit
-        if self.full_meta_data:
-            self.meta_X.append(np.array([ind.copy() for ind in initial_population]))  # (NP, dim)
-            self.meta_Cost.append(
-                np.array([ind.fitness.values[0] for ind in initial_population]))  # (NP, )
-
-        hof = tools.HallOfFame(1)
-        stats = tools.Statistics(lambda ind: ind.fitness.values)
-        stats.register("avg", np.mean)
-        stats.register("std", np.std)
-        stats.register("min", np.min)
-        stats.register("max", np.max)
-        fes = 0
-        log_index = 0
-        cost = []
-        while True:
-            pop, logbook = self.__algorithm.eaGenerateUpdate(self.__toolbox, ngen=1, stats=stats, halloffame=hof, verbose=False)
-            fes += len(logbook) * self.__config.NP
+        while not es.stop():
+            X_batch = es.ask()
+            y = problem_eval(X_batch)
             if self.full_meta_data:
-                self.meta_X.append(np.array([ind.copy() for ind in pop]))
-                self.meta_Cost.append(np.array([ind.fitness.values[0] for ind in pop]))
+                self.meta_X.append(np.array(X_batch.copy()))
+                self.meta_Cost.append(np.array(y.copy()))
+            gbest = np.min(y)
+            es.tell(X_batch, y)
+            if es.result[3] >= index * self.log_interval:
+                index += 1
+                cost.append(gbest)
 
-            while fes >= log_index * self.log_interval:
-                log_index += 1
-                cost.append(hof[0].fitness.values[0])
-            if problem.optimum is None:
-                done = fes >= self.__config.maxFEs
+            if len(cost) >= self.n_logpoint + 1:
+                cost[-1] = gbest
             else:
-                done = fes >= self.__config.maxFEs
-            if done:
-                if len(cost) >= self.__config.n_logpoint + 1:
-                    cost[-1] = hof[0].fitness.values[0]
-                else:
-                    while len(cost) < self.__config.n_logpoint + 1:
-                        cost.append(hof[0].fitness.values[0])
-                break
-        results = {'cost': cost, 'fes': fes}
+                while len(cost) < self.n_logpoint + 1:
+                    cost.append(gbest)
+
+        results = {'cost': cost, 'fes': es.result[3]}
 
         if self.full_meta_data:
-            metadata = {'X':self.meta_X, 'Cost':self.meta_Cost}
+            metadata = {'X': self.meta_X, 'Cost': self.meta_Cost}
             results['metadata'] = metadata
-        # 与agent一致，去除return，加上metadata
         return results
+
