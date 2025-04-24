@@ -2,8 +2,27 @@
 import torch as th
 from ....problem.basic_problem import Basic_Problem_Torch
 import math
+def find_non_dominated_indices(Point):
+    """
+    此函数用于找出种群中的支配解
+    :param population_list: 种群的目标值的列表，列表中的每个元素是一个代表单个解目标值的列表
+    :return: 支配解的列表
+    """
+    # 将列表转换为 numpy 数组
+    n_points = Point.shape[0]
+    is_dominated = th.zeros(n_points, dtype=bool)
 
+    for i in range(n_points):
+        for j in range(n_points):
+            if i != j:
+                # 检查是否存在解 j 支配解 i
+                if th.all(Point[j] <= Point[i]) and th.any(Point[j] < Point[i]):
+                    is_dominated[i] = True
+                    break
 
+    # 找出非支配解的索引
+    non_dominated_indices = th.where(~is_dominated)[0]
+    return non_dominated_indices
 
 class ZDT_Torch(Basic_Problem_Torch):
 
@@ -13,14 +32,16 @@ class ZDT_Torch(Basic_Problem_Torch):
         self.vtype = float
         self.lb = th.zeros(n_var)
         self.ub = th.ones(n_var)
-
-
+    def __str__(self):
+        return  self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 
 class ZDT1_Torch(ZDT_Torch):
 
 
     def eval(self, x, *args, **kwargs):
+        if x.dim() == 1:
+            x = x.unsqueeze(0)
         f1 = x[:, 0]
         g = 1 + 9.0 / (self.n_var - 1) * th.sum(x[:, 1:], axis=1)
         f2 = g * (1 - th.pow((f1 / g), 0.5))
@@ -39,6 +60,8 @@ class ZDT2_Torch(ZDT_Torch):
 
 
     def eval(self, x, *args, **kwargs):
+        if x.dim() == 1:
+            x = x.unsqueeze(0)
         f1 = x[:, 0]
         c = th.sum(x[:, 1:], axis=1)
         g = 1.0 + 9.0 * c / (self.n_var - 1)
@@ -58,6 +81,8 @@ class ZDT2_Torch(ZDT_Torch):
 class ZDT3_Torch(ZDT_Torch):
 
     def eval(self, x, *args, **kwargs):
+        if x.dim() == 1:
+            x = x.unsqueeze(0)
         f1 = x[:, 0]
         c = th.sum(x[:, 1:], axis=1)
         g = 1.0 + 9.0 * c / (self.n_var - 1)
@@ -71,9 +96,11 @@ class ZDT3_Torch(ZDT_Torch):
         ObjV1 = th.linspace(0, 1, N)
         ObjV2 = 1 - ObjV1 ** 0.5 - ObjV1 * th.sin(10 * math.pi * ObjV1)
         f = th.stack([ObjV1, ObjV2]).T
-        levels, criLevel = ea.ndsortESS(f.numpy(), None, 1)
-        levels = th.tensor(levels)
-        referenceObjV = f[th.where(levels == 1)[0]]
+        index = find_non_dominated_indices(f)
+        referenceObjV = f[index,:]
+        # levels, criLevel = ea.ndsortESS(f.numpy(), None, 1)
+        # levels = th.tensor(levels)
+        # referenceObjV = f[th.where(levels == 1)[0]]
         return referenceObjV
 
 
@@ -88,6 +115,8 @@ class ZDT4_Torch(ZDT_Torch):
 
 
     def eval(self, x,*args, **kwargs):
+        if x.dim() == 1:
+            x = x.unsqueeze(0)
         f1 = x[:, 0]
         g = 1.0
         g += 10 * (self.n_var - 1)
@@ -118,6 +147,8 @@ class ZDT5_Torch(ZDT_Torch):
 
 
     def eval(self, x, *args, **kwargs):
+        if x.dim() == 1:
+            x = x.unsqueeze(0)
         x = x.to(th.float32)
 
         _x = [x[:, :30]]
@@ -152,6 +183,8 @@ class ZDT6_Torch(ZDT_Torch):
 
 
     def eval(self, x,  *args, **kwargs):
+        if x.dim() == 1:
+            x = x.unsqueeze(0)
         f1 = 1 - th.exp(-4 * x[:, 0]) * th.pow(th.sin(6 * math.pi * x[:, 0]), 6)
         g = 1 + 9.0 * th.pow(th.sum(x[:, 1:], axis=1) / (self.n_var - 1.0), 0.25)
         f2 = g * (1 - th.pow(f1 / g, 2))
@@ -243,7 +276,7 @@ def normalize(X, lb=None, ub=None, return_bounds=False, estimate_bounds_if_none=
         return X, norm.lb, norm.ub
 
 if __name__ == '__main__':
-    x1 = th.ones(10,30)
+    x1 = th.ones(30)
     zdt1 = ZDT1_Torch()
     zdt2 = ZDT2_Torch()
     zdt3 = ZDT3_Torch()
@@ -264,3 +297,4 @@ if __name__ == '__main__':
     s4 = zdt4.get_ref_set()
     s5 = zdt5.get_ref_set()
     s6 = zdt6.get_ref_set()
+

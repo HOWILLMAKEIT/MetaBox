@@ -56,6 +56,7 @@ def crtup(n_obj, n_ref_points = 1000):
     return W, n_comb
 
 
+# Basic_Problem
 class UF1(Basic_Problem):
     def __init__(self):
         self.n_obj = 2
@@ -66,6 +67,8 @@ class UF1(Basic_Problem):
         self.vtype = float
 
     def eval(self, x):  # 目标函数
+        if x.ndim == 1:
+            x = np.expand_dims(x, axis = 0)
         Vars = x  # 得到决策变量矩阵
         x1 = Vars[:, [0]]
         J1 = np.array(list(range(2, self.n_var, 2)))
@@ -84,6 +87,9 @@ class UF1(Basic_Problem):
         referenceObjV = np.array([ObjV1, ObjV2]).T
         return referenceObjV
 
+    def __str__(self):
+        return self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
+
 
 class UF2(Basic_Problem):
     def __init__(self):
@@ -95,6 +101,8 @@ class UF2(Basic_Problem):
         self.vtype = float
 
     def eval(self, x):  # 目标函数
+        if x.ndim == 1:
+            x = np.expand_dims(x, axis = 0)
         Vars = x  # 得到决策变量矩阵
         x1 = Vars[:, [0]]
         J1 = np.array(list(range(2, self.n_var, 2)))
@@ -117,6 +125,9 @@ class UF2(Basic_Problem):
         referenceObjV = np.array([ObjV1, ObjV2]).T
         return referenceObjV
 
+    def __str__(self):
+        return self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
+
 
 class UF3(Basic_Problem):  # 继承Problem的父类
     def __init__(self):
@@ -127,6 +138,8 @@ class UF3(Basic_Problem):  # 继承Problem的父类
         self.vtype = float
 
     def eval(self, x):  # 目标函数
+        if x.ndim == 1:
+            x = np.expand_dims(x, axis = 0)
         Vars = x  # 决策变量矩阵
         x1 = Vars[:, [0]]
         J1 = np.array(list(range(2, self.n_var, 2)))
@@ -151,6 +164,9 @@ class UF3(Basic_Problem):  # 继承Problem的父类
         referenceObjV = np.array([ObjV1, ObjV2]).T
         return referenceObjV
 
+    def __str__(self):
+        return self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
+
 
 class UF4(Basic_Problem):
     def __init__(self):
@@ -163,6 +179,8 @@ class UF4(Basic_Problem):
         self.vtype = float
 
     def eval(self, x):  # 目标函数
+        if x.ndim == 1:
+            x = np.expand_dims(x, axis = 0)
         Vars = x  # 决策变量矩阵
         x1 = Vars[:, [0]]
         J1 = np.array(list(range(2, self.n_var, 2)))
@@ -185,6 +203,9 @@ class UF4(Basic_Problem):
         referenceObjV = np.array([ObjV1, ObjV2]).T
         return referenceObjV
 
+    def __str__(self):
+        return self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
+
 
 class UF5(Basic_Problem):
     def __init__(self):
@@ -196,6 +217,8 @@ class UF5(Basic_Problem):
         self.vtype = float
 
     def eval(self, x):  # 目标函数
+        if x.ndim == 1:
+            x = np.expand_dims(x, axis = 0)
         Vars = x  # 决策变量矩阵
         x1 = Vars[:, [0]]
         J1 = np.array(list(range(2, self.n_var, 2)))
@@ -219,6 +242,9 @@ class UF5(Basic_Problem):
         referenceObjV = np.array([ObjV1, ObjV2]).T
         return referenceObjV
 
+    def __str__(self):
+        return self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
+
 
 class UF6(Basic_Problem):  # 继承Problem父类
     def __init__(self):
@@ -230,6 +256,8 @@ class UF6(Basic_Problem):  # 继承Problem父类
         self.vtype = float
 
     def eval(self, x):  # 目标函数
+        if x.ndim == 1:
+            x = np.expand_dims(x, axis = 0)
         Vars = x  # 决策变量矩阵
         x1 = Vars[:, [0]]
         J1 = np.array(list(range(2, self.n_var, 2)))
@@ -261,6 +289,9 @@ class UF6(Basic_Problem):  # 继承Problem父类
         referenceObjV = np.array([ObjV1, ObjV2]).T
         return referenceObjV
 
+    def __str__(self):
+        return self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
+
 
 class UF7(Basic_Problem):  # 继承Problem父类
     def __init__(self):
@@ -272,6 +303,8 @@ class UF7(Basic_Problem):  # 继承Problem父类
         self.vtype = float
 
     def eval(self, x):  # 目标函数
+        if x.ndim == 1:
+            x = np.expand_dims(x, axis = 0)
         Vars = x  # 决策变量矩阵
         x1 = Vars[:, [0]]
         J1 = np.array(list(range(2, self.n_var, 2)))
@@ -293,6 +326,9 @@ class UF7(Basic_Problem):  # 继承Problem父类
         referenceObjV = np.array([ObjV1, ObjV2]).T
         return referenceObjV
 
+    def __str__(self):
+        return self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
+
 
 class UF8(Basic_Problem):  # 继承Problem父类
     def __init__(self):
@@ -303,6 +339,8 @@ class UF8(Basic_Problem):  # 继承Problem父类
         self.vtype = float
 
     def eval(self, x):  # 目标函数
+        if x.ndim == 1:
+            x = np.expand_dims(x, axis = 0)
         Vars = x  # 决策变量矩阵
         x1 = Vars[:, [0]]
         x2 = Vars[:, [1]]
@@ -328,6 +366,9 @@ class UF8(Basic_Problem):  # 继承Problem父类
         referenceObjV = ObjV
         return referenceObjV
 
+    def __str__(self):
+        return self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
+
 
 class UF9(Basic_Problem):  # 继承Problem父类
     def __init__(self):
@@ -339,6 +380,8 @@ class UF9(Basic_Problem):  # 继承Problem父类
         self.vtype = float
 
     def eval(self, x):  # 目标函数
+        if x.ndim == 1:
+            x = np.expand_dims(x, axis = 0)
         Vars = x  # 决策变量矩阵
         x1 = Vars[:, [0]]
         x2 = Vars[:, [1]]
@@ -364,8 +407,12 @@ class UF9(Basic_Problem):  # 继承Problem父类
         referenceObjV = ObjV[~idx]
         return referenceObjV
 
+    def __str__(self):
+        return self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
+
 
 class UF10(Basic_Problem):  # 继承Problem父类
+
     def __init__(self):
         self.n_obj = 3  # 初始化M（目标维数）
         self.n_var = 30  # 初始化Dim（决策变量维数）
@@ -374,6 +421,8 @@ class UF10(Basic_Problem):  # 继承Problem父类
         self.vtype = float
 
     def eval(self, x):  # 目标函数
+        if x.ndim == 1:
+            x = np.expand_dims(x, axis = 0)
         Vars = x  # 决策变量矩阵
         x1 = Vars[:, [0]]
         x2 = Vars[:, [1]]
@@ -397,6 +446,9 @@ class UF10(Basic_Problem):  # 继承Problem父类
         referenceObjV = ObjV
         return referenceObjV
 
+    def __str__(self):
+        return self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
+
 
 if __name__ == '__main__':
     uf1 = UF1()
@@ -409,7 +461,7 @@ if __name__ == '__main__':
     uf8 = UF8()
     uf9 = UF9()
     uf10 = UF10()
-    x = np.random.rand(100, 30)
+    x = np.ones((30,))
     print(uf1.eval(x))
     print(uf2.eval(x))
     print(uf3.eval(x))

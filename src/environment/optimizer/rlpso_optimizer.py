@@ -117,6 +117,8 @@ class RLPSO_Optimizer(Learnable_Optimizer):
         if self.__config.full_meta_data:
             self.meta_X = [rand_pos.copy()]
             self.meta_Cost = [c_cost.copy()]
+            self.meta_tmp_x = []
+            self.meta_tmp_cost = []
 
         return self.__get_state(self.__cur_index)
 
@@ -218,11 +220,20 @@ class RLPSO_Optimizer(Learnable_Optimizer):
 
         reward = (pre_cost-new_cost)/(self.__max_cost-self.__particles['gbest_val'])
 
-        self.__cur_index = (self.__cur_index+1) % self.__NP
-
         if self.__config.full_meta_data:
-            self.meta_X.append(self.__particles['current_position'].copy())
-            self.meta_Cost.append(self.__particles['c_cost'].copy())
+            self.meta_tmp_x.append(self.__particles['current_position'][j].copy())
+            self.meta_tmp_cost.append(self.__particles['c_cost'][j].copy())
+
+            # 在某一轮迭代结束后（例如在 for j in range(NP) 之后）
+            if len(self.meta_tmp_cost) == self.__NP:  # 或 len(self.meta_tmp_x) == NP
+                self.meta_X.append(np.array(self.meta_tmp_x))
+                self.meta_Cost.append(np.array(self.meta_tmp_cost))
+
+                self.meta_tmp_x.clear()
+                self.meta_tmp_cost.clear()
+
+
+        self.__cur_index = (self.__cur_index+1) % self.__NP
 
         if is_done:
             if len(self.cost) >= self.__config.n_logpoint + 1:

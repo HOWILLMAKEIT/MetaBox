@@ -157,6 +157,8 @@ class QLPSO_Optimizer(Learnable_Optimizer):
         if self.__config.full_meta_data:
             self.meta_X = [self.__population.copy()]
             self.meta_Cost = [self.__cost.copy()]
+            self.meta_tmp_x = []
+            self.meta_tmp_cost = []
 
         return self.__state[self.__solution_pointer]
 
@@ -201,6 +203,19 @@ class QLPSO_Optimizer(Learnable_Optimizer):
         if f_new < f_old:
             self.__pbest[self.__solution_pointer] = self.__population[self.__solution_pointer] #record pbest position
         self.__state[self.__solution_pointer] = action
+
+        if self.__config.full_meta_data:
+            self.meta_tmp_x.append(self.__population[self.__solution_pointer].copy())
+            self.meta_tmp_cost.append(self.__cost[self.__solution_pointer].copy())
+
+            # 在某一轮迭代结束后（例如在 for j in range(NP) 之后）
+            if len(self.meta_tmp_cost) == self.__NP:  # 或 len(self.meta_tmp_x) == NP
+                self.meta_X.append(np.array(self.meta_tmp_x))
+                self.meta_Cost.append(np.array(self.meta_tmp_cost))
+
+                self.meta_tmp_x.clear()
+                self.meta_tmp_cost.clear()
+
         self.__solution_pointer = (self.__solution_pointer + 1) % self.__NP
 
         if self.fes >= self.log_index * self.log_interval:
@@ -211,10 +226,6 @@ class QLPSO_Optimizer(Learnable_Optimizer):
             is_done = self.fes >= self.__maxFEs
         else:
             is_done = self.fes >= self.__maxFEs
-
-        if self.__config.full_meta_data:
-            self.meta_X.append(self.__population.copy())
-            self.meta_Cost.append(self.__cost.copy())
 
         if is_done:
             if len(self.cost) >= self.__config.n_logpoint + 1:

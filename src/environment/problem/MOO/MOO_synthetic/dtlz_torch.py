@@ -57,6 +57,25 @@ def crtup(n_obj, n_ref_points=1000):
     W = W / H
     return W, n_comb
 
+def crtgp(dim, N):
+    # 计算一个大致的划分数目
+    n_points_per_dim = int(np.floor(N ** (1 / dim)))  # 计算每个维度上大致的点数
+
+    # 计算生成的网格点数
+    total_points = n_points_per_dim ** dim
+
+    # 调整每个维度的点数，使得总点数最接近N且不超过N
+    while total_points > N:
+        n_points_per_dim -= 1
+        total_points = n_points_per_dim ** dim
+
+    # 生成网格点
+    grid_points = np.meshgrid(*[np.linspace(0, 1, n_points_per_dim)] * dim)
+    grid_points = np.vstack([g.ravel() for g in grid_points]).T  # 将网格点扁平化并合并为一个数组
+
+    # Sizes = [n_points_per_dim] * dim  # 每个维度的点数
+    return grid_points, total_points
+
 class DTLZ_Torch(Basic_Problem_Torch):
     def __init__(self, n_var, n_obj, k=None, **kwargs):
 
@@ -113,6 +132,8 @@ class DTLZ1_Torch(DTLZ_Torch):
         return th.column_stack(f)
 
     def eval(self, x, *args, **kwargs):
+        if x.dim() == 1:
+            x = x.unsqueeze(0)
         X_, X_M = x[:, :self.n_obj - 1], x[:, self.n_obj - 1:]
         g = self.g1(X_M)
         out = self.obj_func(X_, g)
@@ -130,6 +151,8 @@ class DTLZ2_Torch(DTLZ_Torch):
 
 
     def eval(self, x, *args, **kwargs):
+        if x.dim() == 1:
+            x = x.unsqueeze(0)
         X_, X_M = x[:, :self.n_obj - 1], x[:, self.n_obj - 1:]
         g = self.g2(X_M)
         out= self.obj_func(X_, g, alpha=1)
@@ -147,6 +170,8 @@ class DTLZ3_Torch(DTLZ_Torch):
         super().__init__(n_var=n_var, n_obj=n_obj, **kwargs)
 
     def eval(self, x, *args, **kwargs):
+        if x.dim() == 1:
+            x = x.unsqueeze(0)
         X_, X_M = x[:, :self.n_obj - 1], x[:, self.n_obj - 1:]
         g = self.g1(X_M)
         out = self.obj_func(X_, g, alpha=1)
@@ -167,6 +192,8 @@ class DTLZ4_Torch(DTLZ_Torch):
 
 
     def eval(self, x,  *args, **kwargs):
+        if x.dim() == 1:
+            x = x.unsqueeze(0)
         X_, X_M = x[:, :self.n_obj - 1], x[:, self.n_obj - 1:]
         g = self.g2(X_M)
         out =  self.obj_func(X_, g, alpha=self.alpha)
@@ -185,6 +212,8 @@ class DTLZ5_Torch(DTLZ_Torch):
 
 
     def eval(self, x, *args, **kwargs):
+        if x.dim() == 1:
+            x = x.unsqueeze(0)
         X_, X_M = x[:, :self.n_obj - 1], x[:, self.n_obj - 1:]
         g = self.g2(X_M)
 
@@ -209,6 +238,8 @@ class DTLZ6_Torch(DTLZ_Torch):
 
 
     def eval(self, x, *args, **kwargs):
+        if x.dim() == 1:
+            x = x.unsqueeze(0)
         X_, X_M = x[:, :self.n_obj - 1], x[:, self.n_obj - 1:]
         g = th.sum(th.pow(X_M, 0.1), axis=1)
 
@@ -234,6 +265,8 @@ class DTLZ7_Torch(DTLZ_Torch):
 
 
     def eval(self, x,*args, **kwargs):
+        if x.dim() == 1:
+            x = x.unsqueeze(0)
         f = []
         for i in range(0, self.n_obj - 1):
             f.append(x[:, i])
@@ -251,7 +284,7 @@ class DTLZ7_Torch(DTLZ_Torch):
         a = 0.2514118360889171
         b = 0.6316265307000614
         c = 0.8594008566447239
-        Vars, Sizes = crtup(self.n_obj - 1, N)  # 生成单位超空间内均匀的网格点集
+        Vars, Sizes = crtgp(self.n_obj - 1, N)  # 生成单位超空间内均匀的网格点集
         Vars = th.tensor(Vars)
         middle = 0.5
         left = Vars <= middle
@@ -265,7 +298,7 @@ class DTLZ7_Torch(DTLZ_Torch):
         return referenceObjV
 
 if __name__ == '__main__':
-    x = th.ones((3,10))
+    x = th.ones((10))
     dtlz1 = DTLZ1_Torch(n_var=10, n_obj=5)
     dtlz2 = DTLZ2_Torch(n_var=10, n_obj=5)
     dtlz3 = DTLZ3_Torch(n_var=10, n_obj=5)
@@ -287,4 +320,3 @@ if __name__ == '__main__':
     s5=dtlz5.get_ref_set()
     s6=dtlz6.get_ref_set()
     s7=dtlz7.get_ref_set()
-

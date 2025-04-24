@@ -3,6 +3,7 @@ from ....problem.basic_problem import Basic_Problem
 import itertools
 import numpy as np
 from scipy.special import comb
+import math
 
 def crtup(n_obj, n_ref_points=1000):
     def find_H_for_closest_points(N, M):
@@ -55,6 +56,24 @@ def crtup(n_obj, n_ref_points=1000):
     W = W / H
     return W, n_comb
 
+def crtgp(dim, N):
+    # 计算一个大致的划分数目
+    n_points_per_dim = int(np.floor(N ** (1 / dim)))  # 计算每个维度上大致的点数
+
+    # 计算生成的网格点数
+    total_points = n_points_per_dim ** dim
+
+    # 调整每个维度的点数，使得总点数最接近N且不超过N
+    while total_points > N:
+        n_points_per_dim -= 1
+        total_points = n_points_per_dim ** dim
+
+    # 生成网格点
+    grid_points = np.meshgrid(*[np.linspace(0, 1, n_points_per_dim)] * dim)
+    grid_points = np.vstack([g.ravel() for g in grid_points]).T  # 将网格点扁平化并合并为一个数组
+
+    # Sizes = [n_points_per_dim] * dim  # 每个维度的点数
+    return grid_points, total_points
 
 class DTLZ(Basic_Problem):
     def __init__(self, n_var, n_obj, k=None, **kwargs):
@@ -113,6 +132,8 @@ class DTLZ1(DTLZ):
         return np.column_stack(f)
 
     def eval(self, x, *args, **kwargs):
+        if x.ndim == 1:
+            x = np.expand_dims(x, axis=0)
         X_, X_M = x[:, :self.n_obj - 1], x[:, self.n_obj - 1:]
         g = self.g1(X_M)
         out = self.obj_func(X_, g)
@@ -130,6 +151,8 @@ class DTLZ2(DTLZ):
 
 
     def eval(self, x, *args, **kwargs):
+        if x.ndim == 1:
+            x = np.expand_dims(x, axis=0)
         X_, X_M = x[:, :self.n_obj - 1], x[:, self.n_obj - 1:]
         g = self.g2(X_M)
         out= self.obj_func(X_, g, alpha=1)
@@ -146,6 +169,8 @@ class DTLZ3(DTLZ):
         super().__init__(n_var=n_var, n_obj=n_obj, **kwargs)
 
     def eval(self, x, *args, **kwargs):
+        if x.ndim == 1:
+            x = np.expand_dims(x, axis=0)
         X_, X_M = x[:, :self.n_obj - 1], x[:, self.n_obj - 1:]
         g = self.g1(X_M)
         out = self.obj_func(X_, g, alpha=1)
@@ -165,6 +190,8 @@ class DTLZ4(DTLZ):
 
 
     def eval(self, x,  *args, **kwargs):
+        if x.ndim == 1:
+            x = np.expand_dims(x, axis=0)
         X_, X_M = x[:, :self.n_obj - 1], x[:, self.n_obj - 1:]
         g = self.g2(X_M)
         out =  self.obj_func(X_, g, alpha=self.alpha)
@@ -182,6 +209,8 @@ class DTLZ5(DTLZ):
 
 
     def eval(self, x, *args, **kwargs):
+        if x.ndim == 1:
+            x = np.expand_dims(x, axis=0)
         X_, X_M = x[:, :self.n_obj - 1], x[:, self.n_obj - 1:]
         g = self.g2(X_M)
 
@@ -195,7 +224,7 @@ class DTLZ5(DTLZ):
         N = n_ref_points
         P = np.vstack([np.linspace(0, 1, N), np.linspace(1, 0, N)]).T
         P = P / np.tile(np.sqrt(np.sum(P ** 2, 1, keepdims=True)), (1, P.shape[1]))
-        P = np.hstack([P[:, np.zeros(self.n_obj - 2, dtype=np.int)], P])
+        P = np.hstack([P[:, np.zeros(self.n_obj - 2, dtype=np.int64)], P])
         referenceObjV = P / np.sqrt(2) ** np.tile(np.hstack([self.n_obj - 2, np.linspace(self.n_obj - 2, 0, self.n_obj - 1)]),
                                                   (P.shape[0], 1))
         return referenceObjV
@@ -206,6 +235,8 @@ class DTLZ6(DTLZ):
 
 
     def eval(self, x, *args, **kwargs):
+        if x.ndim == 1:
+            x = np.expand_dims(x, axis=0)
         X_, X_M = x[:, :self.n_obj - 1], x[:, self.n_obj - 1:]
         g = np.sum(np.power(X_M, 0.1), axis=1)
 
@@ -219,7 +250,7 @@ class DTLZ6(DTLZ):
         N = n_ref_points  #
         P = np.vstack([np.linspace(0, 1, N), np.linspace(1, 0, N)]).T
         P = P / np.tile(np.sqrt(np.sum(P ** 2, 1, keepdims=True)), (1, P.shape[1]))
-        P = np.hstack([P[:, np.zeros(self.n_obj - 2, dtype=np.int)], P])
+        P = np.hstack([P[:, np.zeros(self.n_obj - 2, dtype=np.int64)], P])
         referenceObjV = P / np.sqrt(2) ** np.tile(np.hstack([self.n_obj - 2, np.linspace(self.n_obj - 2, 0, self.n_obj - 1)]),
                                                   (P.shape[0], 1))
         return referenceObjV
@@ -231,6 +262,8 @@ class DTLZ7(DTLZ):
 
 
     def eval(self, x,*args, **kwargs):
+        if x.ndim == 1:
+            x = np.expand_dims(x, axis=0)
         f = []
         for i in range(0, self.n_obj - 1):
             f.append(x[:, i])
@@ -248,7 +281,7 @@ class DTLZ7(DTLZ):
         a = 0.2514118360889171
         b = 0.6316265307000614
         c = 0.8594008566447239
-        Vars, Sizes = crtup(self.n_obj - 1, N)  # 生成单位超空间内均匀的网格点集
+        Vars, Sizes = crtgp(self.n_obj - 1, N)  # 生成单位超空间内均匀的网格点集
         middle = 0.5
         left = Vars <= middle
         right = Vars > middle
@@ -261,7 +294,7 @@ class DTLZ7(DTLZ):
         return referenceObjV
 
 if __name__ == '__main__':
-    x = np.ones((3,10))
+    x = np.ones((10,))
     dtlz1 = DTLZ1(n_var=10, n_obj=5)
     dtlz2 = DTLZ2(n_var=10, n_obj=5)
     dtlz3 = DTLZ3(n_var=10, n_obj=5)

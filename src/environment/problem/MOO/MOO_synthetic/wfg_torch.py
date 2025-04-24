@@ -1,6 +1,5 @@
 import torch as th
 import math
-
 from ....problem.basic_problem import Basic_Problem_Torch
 import itertools
 import numpy as np
@@ -59,6 +58,29 @@ def crtup(n_obj, n_ref_points = 1000):
     return W, n_comb
 
 
+def find_non_dominated_indices(Point):
+    """
+    此函数用于找出种群中的支配解
+    :param population_list: 种群的目标值的列表，列表中的每个元素是一个代表单个解目标值的列表
+    :return: 支配解的列表
+    """
+    # 将列表转换为 numpy 数组
+    n_points = Point.shape[0]
+    is_dominated = th.zeros(n_points, dtype = bool)
+
+    for i in range(n_points):
+        for j in range(n_points):
+            if i != j:
+                # 检查是否存在解 j 支配解 i
+                if th.all(Point[j] <= Point[i]) and th.any(Point[j] < Point[i]):
+                    is_dominated[i] = True
+                    break
+
+    # 找出非支配解的索引
+    non_dominated_indices = th.where(~is_dominated)[0]
+    return non_dominated_indices
+
+
 class WFG_Torch(Basic_Problem_Torch):
 
     def __init__(self, n_var, n_obj, k = None, l = None, **kwargs):
@@ -113,6 +135,9 @@ class WFG_Torch(Basic_Problem_Torch):
         X = th.column_stack([K, suffix])
         return X * self.ub
 
+    def __str__(self):
+        return self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
+
 
 class WFG1_Torch(WFG_Torch):
 
@@ -144,6 +169,8 @@ class WFG1_Torch(WFG_Torch):
         return th.column_stack(t)
 
     def eval(self, x, *args, **kwargs):
+        if x.dim() == 1:
+            x = x.unsqueeze(0)
         y = x / self.ub
         y = WFG1_Torch.t1(y, self.n_var, self.k)
         y = WFG1_Torch.t2(y, self.n_var, self.k)
@@ -215,6 +242,8 @@ class WFG2_Torch(WFG_Torch):
         return th.column_stack(t)
 
     def eval(self, x, *args, **kwargs):
+        if x.dim() == 1:
+            x = x.unsqueeze(0)
         y = x / self.ub
         y = WFG1_Torch.t1(y, self.n_var, self.k)
         y = WFG2_Torch.t2(y, self.n_var, self.k)
@@ -246,9 +275,11 @@ class WFG2_Torch(WFG_Torch):
             x[i, 0] = a[th.min(rank[0: 10])]
         Point = convex(x)
         Point[:, [M - 1]] = disc(x)
-        [levels, criLevel] = ea.ndsortESS(Point.numpy(), None, 1)  # 非支配分层，只分出第一层即可
-        levels = th.tensor(levels)
-        Point = Point[th.where(levels == 1)[0], :]  # 只保留点集中的非支配点
+        # [levels, criLevel] = ea.ndsortESS(Point.numpy(), None, 1)  # 非支配分层，只分出第一层即可
+        # levels = th.tensor(levels)
+        # Point = Point[th.where(levels == 1)[0], :]  # 只保留点集中的非支配点
+        index = find_non_dominated_indices(Point)
+        Point = Point[index]
         referenceObjV = th.tile(th.tensor([list(range(2, 2 * self.n_obj + 1, 2))]), (Point.shape[0], 1)) * Point
         return referenceObjV
 
@@ -264,6 +295,8 @@ class WFG3_Torch(WFG_Torch):
         validate_wfg2_wfg3(l)
 
     def eval(self, x, *args, **kwargs):
+        if x.dim() == 1:
+            x = x.unsqueeze(0)
         y = x / self.ub
         y = WFG1_Torch.t1(y, self.n_var, self.k)
         y = WFG2_Torch.t2(y, self.n_var, self.k)
@@ -298,6 +331,8 @@ class WFG4_Torch(WFG_Torch):
         return th.column_stack(t)
 
     def eval(self, x, *args, **kwargs):
+        if x.dim() == 1:
+            x = x.unsqueeze(0)
         y = x / self.ub
         y = WFG4_Torch.t1(y)
         y = WFG4_Torch.t2(y, self.n_obj, self.k)
@@ -330,6 +365,8 @@ class WFG5_Torch(WFG_Torch):
         return _transformation_param_deceptive(x, A = 0.35, B = 0.001, C = 0.05)
 
     def eval(self, x, *args, **kwargs):
+        if x.dim() == 1:
+            x = x.unsqueeze(0)
         y = x / self.ub
         y = WFG5_Torch.t1(y)
         y = WFG4_Torch.t2(y, self.n_obj, self.k)
@@ -364,6 +401,8 @@ class WFG6_Torch(WFG_Torch):
         return th.column_stack(t)
 
     def eval(self, x, *args, **kwargs):
+        if x.dim() == 1:
+            x = x.unsqueeze(0)
         y = x / self.ub
         y = WFG1_Torch.t1(y, self.n_var, self.k)
         y = WFG6_Torch.t2(y, self.n_obj, self.n_var, self.k)
@@ -393,6 +432,8 @@ class WFG7_Torch(WFG_Torch):
         return x
 
     def eval(self, x, *args, **kwargs):
+        if x.dim() == 1:
+            x = x.unsqueeze(0)
         y = x / self.ub
         y = WFG7_Torch.t1(y, self.k)
         y = WFG1_Torch.t1(y, self.n_var, self.k)
@@ -424,6 +465,8 @@ class WFG8_Torch(WFG_Torch):
         return th.column_stack(ret)
 
     def eval(self, x, *args, **kwargs):
+        if x.dim() == 1:
+            x = x.unsqueeze(0)
         y = x / self.ub
         y[:, self.k:self.n_var] = WFG8_Torch.t1(y, self.n_var, self.k)
         y = WFG1_Torch.t1(y, self.n_var, self.k)
@@ -482,6 +525,8 @@ class WFG9_Torch(WFG_Torch):
         return th.column_stack(t)
 
     def eval(self, x, *args, **kwargs):
+        if x.dim() == 1:
+            x = x.unsqueeze(0)
         y = x / self.ub
         y[:, :self.n_var - 1] = WFG9_Torch.t1(y, self.n_var)
         y = WFG9_Torch.t2(y, self.n_var, self.k)
@@ -704,11 +749,11 @@ if __name__ == '__main__':
     wfg3 = WFG3_Torch(10, 3)
     wfg4 = WFG4_Torch(10, 3)
     wfg5 = WFG5_Torch(10, 3)
-    wfg6 = WFG_Torch(10, 3)
+    wfg6 = WFG6_Torch(10, 3)
     wfg7 = WFG7_Torch(10, 3)
     wfg8 = WFG8_Torch(10, 3)
     wfg9 = WFG9_Torch(10, 3)
-    x = th.ones(10, 10)
+    x = th.ones(10)
     print(wfg1.eval(x))
     print(wfg2.eval(x))
     print(wfg3.eval(x))

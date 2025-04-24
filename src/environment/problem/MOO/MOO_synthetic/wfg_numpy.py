@@ -1,7 +1,6 @@
 import numpy as np
 from ....problem.basic_problem import Basic_Problem
 import itertools
-import numpy as np
 from scipy.special import comb
 
 
@@ -55,6 +54,29 @@ def crtup(n_obj, n_ref_points = 1000):
 
     W = W / H
     return W, n_comb
+
+
+def find_non_dominated_indices(Point):
+    """
+    此函数用于找出种群中的支配解
+    :param population_list: 种群的目标值的列表，列表中的每个元素是一个代表单个解目标值的列表
+    :return: 支配解的列表
+    """
+    # 将列表转换为 numpy 数组
+    n_points = Point.shape[0]
+    is_dominated = np.zeros(n_points, dtype = bool)
+
+    for i in range(n_points):
+        for j in range(n_points):
+            if i != j:
+                # 检查是否存在解 j 支配解 i
+                if np.all(Point[j] <= Point[i]) and np.any(Point[j] < Point[i]):
+                    is_dominated[i] = True
+                    break
+
+    # 找出非支配解的索引
+    non_dominated_indices = np.where(~is_dominated)[0]
+    return non_dominated_indices
 
 
 class WFG(Basic_Problem):
@@ -113,6 +135,9 @@ class WFG(Basic_Problem):
         X = np.column_stack([K, suffix])
         return X * self.ub
 
+    def __str__(self):
+        return self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
+
 
 class WFG1(WFG):
 
@@ -144,6 +169,8 @@ class WFG1(WFG):
         return np.column_stack(t)
 
     def eval(self, x, *args, **kwargs):
+        if x.ndim == 1:
+            x = np.expand_dims(x, axis = 0)
         y = x / self.ub
         y = WFG1.t1(y, self.n_var, self.k)
         y = WFG1.t2(y, self.n_var, self.k)
@@ -214,6 +241,8 @@ class WFG2(WFG):
         return np.column_stack(t)
 
     def eval(self, x, *args, **kwargs):
+        if x.ndim == 1:
+            x = np.expand_dims(x, axis = 0)
         y = x / self.ub
         y = WFG1.t1(y, self.n_var, self.k)
         y = WFG2.t2(y, self.n_var, self.k)
@@ -244,8 +273,8 @@ class WFG2(WFG):
             x[i, 0] = a[np.min(rank[0: 10])]
         Point = convex(x)
         Point[:, [M - 1]] = disc(x)
-        [levels, criLevel] = ea.ndsortESS(Point, None, 1)  # 非支配分层，只分出第一层即可#
-        Point = Point[np.where(levels == 1)[0], :]  # 只保留点集中的非支配点
+        index = find_non_dominated_indices(Point)  # 非支配分层，只分出第一层即可#
+        Point = Point[index, :]
         referenceObjV = np.tile(np.array([list(range(2, 2 * self.n_obj + 1, 2))]), (Point.shape[0], 1)) * Point
         return referenceObjV
 
@@ -261,6 +290,8 @@ class WFG3(WFG):
         validate_wfg2_wfg3(l)
 
     def eval(self, x, *args, **kwargs):
+        if x.ndim == 1:
+            x = np.expand_dims(x, axis = 0)
         y = x / self.ub
         y = WFG1.t1(y, self.n_var, self.k)
         y = WFG2.t2(y, self.n_var, self.k)
@@ -295,6 +326,8 @@ class WFG4(WFG):
         return np.column_stack(t)
 
     def eval(self, x, *args, **kwargs):
+        if x.ndim == 1:
+            x = np.expand_dims(x, axis = 0)
         y = x / self.ub
         y = WFG4.t1(y)
         y = WFG4.t2(y, self.n_obj, self.k)
@@ -325,6 +358,8 @@ class WFG5(WFG):
         return _transformation_param_deceptive(x, A = 0.35, B = 0.001, C = 0.05)
 
     def eval(self, x, *args, **kwargs):
+        if x.ndim == 1:
+            x = np.expand_dims(x, axis = 0)
         y = x / self.ub
         y = WFG5.t1(y)
         y = WFG4.t2(y, self.n_obj, self.k)
@@ -358,6 +393,8 @@ class WFG6(WFG):
         return np.column_stack(t)
 
     def eval(self, x, *args, **kwargs):
+        if x.ndim == 1:
+            x = np.expand_dims(x, axis = 0)
         y = x / self.ub
         y = WFG1.t1(y, self.n_var, self.k)
         y = WFG6.t2(y, self.n_obj, self.n_var, self.k)
@@ -386,6 +423,8 @@ class WFG7(WFG):
         return x
 
     def eval(self, x, *args, **kwargs):
+        if x.ndim == 1:
+            x = np.expand_dims(x, axis = 0)
         y = x / self.ub
         y = WFG7.t1(y, self.k)
         y = WFG1.t1(y, self.n_var, self.k)
@@ -416,6 +455,8 @@ class WFG8(WFG):
         return np.column_stack(ret)
 
     def eval(self, x, *args, **kwargs):
+        if x.ndim == 1:
+            x = np.expand_dims(x, axis = 0)
         y = x / self.ub
         y[:, self.k:self.n_var] = WFG8.t1(y, self.n_var, self.k)
         y = WFG1.t1(y, self.n_var, self.k)
@@ -473,6 +514,8 @@ class WFG9(WFG):
         return np.column_stack(t)
 
     def eval(self, x, *args, **kwargs):
+        if x.ndim == 1:
+            x = np.expand_dims(x, axis = 0)
         y = x / self.ub
         y[:, :self.n_var - 1] = WFG9.t1(y, self.n_var)
         y = WFG9.t2(y, self.n_var, self.k)
@@ -698,7 +741,7 @@ if __name__ == '__main__':
     wfg7 = WFG7(10, 3)
     wfg8 = WFG8(10, 3)
     wfg9 = WFG9(10, 3)
-    x = np.random.rand(10, 10)
+    x = np.random.rand(10)
     s1 = wfg1.get_ref_set()
     s2 = wfg2.get_ref_set()
     s3 = wfg3.get_ref_set()
