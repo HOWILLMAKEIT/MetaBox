@@ -117,14 +117,7 @@ def train_episode(self,
            save_class(self.config.agent_save_dir, 'checkpoint-'+str(self.cur_checkpoint), self)
            self.cur_checkpoint += 1
 
-       if self.learning_time >= self.config.max_learning_step:
-           return_info = {'return': _R, 'learn_steps': self.learning_time, }
-           env_cost = env.get_env_attr('cost')
-           return_info['gbest'] = env_cost[-1]
-           for key in required_info.keys():
-               return_info[key] = env.get_env_attr(required_info[key])
-           env.close()
-           return self.learning_time >= self.config.max_learning_step, return_info
+       return self.learning_time >= self.config.max_learning_step, return_info
 
    # Return the necessary training data
    is_train_ended = self.learning_time >= self.config.max_learning_step
@@ -250,14 +243,7 @@ def train_episode(self,
            save_class(self.config.agent_save_dir, 'checkpoint-'+str(self.cur_checkpoint), self)
            self.cur_checkpoint += 1
 
-       if self.learning_time >= self.config.max_learning_step:
-           return_info = {'return': _R, 'learn_steps': self.learning_time, }
-           env_cost = env.get_env_attr('cost')
-           return_info['gbest'] = env_cost[-1]
-           for key in required_info.keys():
-               return_info[key] = env.get_env_attr(required_info[key])
-           env.close()
-           return self.learning_time >= self.config.max_learning_step, return_info
+       return self.learning_time >= self.config.max_learning_step
 
    # Return the necessary training data
    is_train_ended = self.learning_time >= self.config.max_learning_step
@@ -337,8 +323,10 @@ def init_population(self, problem):
     # xxxx
 
     if self.config.full_meta_data:
-        self.meta_X = [self.population.copy()]
-        self.meta_Cost = [self.cost.copy()]
+        self.meta_X = [population.copy()]
+        # population is all individuals in each generation
+        self.meta_Cost = [all_cost.copy()]
+        # all_cost is all evaluation values in each generation
 
     return # According to your specific needs
 
@@ -351,20 +339,29 @@ def update(self, action, problem):
     # Specific operations
     # xxxx
 
+    # Record all individuals in each generation
+    # and their corresponding evaluation values
+    if self.full_meta_data:
+        self.meta_X.append(population.copy())
+        # population is all individuals in each generation
+        self.meta_Cost.append(all_cost.copy())
+        # all_cost is all evaluation values in each generation
+
     # In order to ensure that the logger data format is correct,
     # there is only one stop mechanism.
     is_end = self.fes >= self.max_fes
 
     if self.fes >= self.log_interval * self.log_index:
         self.log_index += 1
-        self.cost.append(self.gbest_val)
+        self.cost.append(self.gbest_cost)
+        # gbest_cost is the optimal evaluation value
 
     if is_end:
         if len(self.cost) >= self.config.n_logpoint + 1:
-            self.cost[-1] = self.gbest_val
+            self.cost[-1] = self.gbest_cost
         else:
             while len(self.cost) < self.config.n_logpoint + 1:
-                self.cost.append(self.gbest_val)
+                self.cost.append(self.gbest_cost)
 
     info = {}
     return next_state, reward, is_end, info
@@ -410,8 +407,34 @@ class MyBBO(Basic_Optimizer):
 ```python
 def run_episode(self, problem):
 
+    # Update
+    is_end = False
+    while not is_end:
 
+        if self.full_meta_data:
+            self.meta_X.append(population.copy())
+            # population is all individuals in each generation
+            self.meta_Cost.append(all_cost.copy())
+            # all_cost is all evaluation values in each generation
 
+        if self.fes >= log_index * self.log_interval:
+            log_index += 1
+            self.cost.append(self.gbest_cost)
+            # gbest_cost is the optimal evaluation value
+
+        is_end = self.fes >= self.config.maxFEs
+
+     # Record
+     if len(self.cost) >= self.__n_logpoint + 1:
+         self.cost[-1] = self.gbest
+     else:
+         self.cost.append(self.gbest)
+     results = {'cost': self.cost, 'fes': self.fes}
+
+     if self.full_meta_data:
+         metadata = {'X':self.meta_X, 'Cost':self.meta_Cost}
+         results['metadata'] = metadata
+      return results
 ```
 ## 2. Implement your own dataset in Metabox
 
