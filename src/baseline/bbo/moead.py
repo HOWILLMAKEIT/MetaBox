@@ -562,9 +562,6 @@ def pbi(solution_obj, ideal_point, weights, theta=5):
 
     return (d1 + theta * d2).tolist()
 
-## indicators
-POSITIVE_INFINITY = float("inf")
-EPSILON = sys.float_info.epsilon
 class Indicator(object):
     #__metaclass = ABCMeta
 
