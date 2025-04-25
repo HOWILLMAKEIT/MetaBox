@@ -200,7 +200,6 @@ class LES_Optimizer(Learnable_Optimizer):
         # Introduction
         Updates the optimizer's internal state by performing one or more evolutionary optimization steps using the provided action and problem. The method adapts model parameters, generates new populations, evaluates them, and logs progress until a stopping criterion is met.
         # Args:
-        todo:写清楚action和problem数据结构
         - action (dict): Dictionary containing new model parameters for attention and MLP networks, and optionally a 'skip_step' key to limit the number of steps.
         - problem (object): The optimization problem instance, which must provide a `dim` attribute and an `eval` method for evaluating populations.
         # Returns:

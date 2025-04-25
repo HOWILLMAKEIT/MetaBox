@@ -29,6 +29,42 @@ class MLP(nn.Module):
         return x
 
 class bbob_surrogate_model(Basic_Problem):
+    """
+    # Introduction
+    BBOB-Surrogate investigates the integration of surrogate modeling techniques into MetaBBO , enabling data-driven approximation of expensive objective functions while maintaining optimization fidelity.
+    # Original paper
+    "[Surrogate Learning in Meta-Black-Box Optimization: A Preliminary Study](https://arxiv.org/abs/2503.18060)." arXiv preprint arXiv:2503.18060 (2025).
+    # Official Implementation
+    [BBOB-Surrogate](https://github.com/GMC-DRL/Surr-RLDE)
+    # License
+    None
+    # Problem Suite Composition
+    BBOB-Surrogate contains a total of 72 optimization problems, corresponding to three dimensions (2, 5, 10), each dimension contains 24 problems. Each problem consists of a trained KAN or MLP network, which is used to fit 24 black box functions in the COCO-BBOB benchmark. The network here is a surrogate model of the original function.
+    # Args:
+    - dim (int): Dimensionality of the problem.
+    - func_id (int): Identifier for the BBOB function.
+    - lb (float or np.ndarray): Lower bound(s) of the input domain.
+    - ub (float or np.ndarray): Upper bound(s) of the input domain.
+    - shift (np.ndarray): Shift vector for the function.
+    - rotate (np.ndarray): Rotation matrix for the function.
+    - bias (float): Bias term for the function.
+    - config (object): Configuration object containing device information.
+    # Attributes:
+    - dim (int): Problem dimensionality.
+    - func_id (int): BBOB function identifier.
+    - instance (object): Instantiated BBOB function.
+    - device (str or torch.device): Device for computation (CPU or GPU).
+    - optimum (Any): Placeholder for the optimum value (not set in this class).
+    - model (KAN or MLP): Loaded surrogate model for the function.
+    - ub (float or np.ndarray): Upper bound(s) of the input domain.
+    - lb (float or np.ndarray): Lower bound(s) of the input domain.
+    # Methods:
+    - func(x): Evaluates the surrogate model for a given input `x`, supporting both numpy arrays and torch tensors.
+    - eval(x): General evaluation method that adapts to both individual and population inputs, measuring evaluation time.
+    - __str__(): Returns a string representation of the surrogate model instance.
+    # Raises:
+    - ValueError: If the specified dimension is not supported for training.
+    """
     def __init__(self, dim, func_id, lb, ub, shift, rotate, bias, config):
         self.dim = dim
         self.func_id = func_id
@@ -133,6 +169,37 @@ class bbob_surrogate_model(Basic_Problem):
 
 
 class bbob_surrogate_Dataset(Dataset):
+    """
+    # Introduction
+    BBOB-Surrogate investigates the integration of surrogate modeling techniques into MetaBBO , enabling data-driven approximation of expensive objective functions while maintaining optimization fidelity.
+    # Original paper
+    "[Surrogate Learning in Meta-Black-Box Optimization: A Preliminary Study](https://arxiv.org/abs/2503.18060)." arXiv preprint arXiv:2503.18060 (2025).
+    # Official Implementation
+    [BBOB-Surrogate](https://github.com/GMC-DRL/Surr-RLDE)
+    # License
+    None
+    # Problem Suite Composition
+    BBOB-Surrogate contains a total of 72 optimization problems, corresponding to three dimensions (2, 5, 10), each dimension contains 24 problems. Each problem consists of a trained KAN or MLP network, which is used to fit 24 black box functions in the COCO-BBOB benchmark. The network here is a surrogate model of the original function.
+    # Args:
+    - data (list): List of surrogate or BBOB function instances.
+    - batch_size (int, optional): Number of items per batch. Defaults to 1.
+    # Attributes:
+    - data (list): The dataset containing function instances.
+    - batch_size (int): The batch size for data loading.
+    - N (int): Total number of items in the dataset.
+    - ptr (list): List of starting indices for each batch.
+    - index (np.ndarray): Array of indices for shuffling and sampling.
+    - maxdim (int): Maximum dimensionality among all function instances.
+    # Methods:
+    - get_datasets(...): Static method to generate train and test datasets based on configuration, difficulty, and user-specified splits.
+    - __len__(): Returns the number of items in the dataset.
+    - __getitem__(item): Returns a batch of data at the specified batch index.
+    - __add__(other): Concatenates two datasets.
+    - shuffle(): Randomly permutes the dataset indices for shuffling.
+    # Raises:
+    - ValueError: If configuration or arguments are invalid (e.g., unsupported suit, missing difficulty, or conflicting train/test splits).
+    """
+    
     def __init__(self,
                  data,
                  batch_size=1):

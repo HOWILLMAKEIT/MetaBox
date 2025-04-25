@@ -2,6 +2,80 @@ from ....problem.basic_problem import Basic_Problem
 import numpy as np
 
 class CEC2013LSGO_Numpy_Problem(Basic_Problem):
+    """
+    # CEC2013LSGO_Numpy_Problem
+    A base class for handling the CEC2013 Large Scale Global Optimization (LSGO) benchmark problems using NumPy.  
+    Provides methods for reading problem-specific data files, performing vector and matrix operations, and implementing basic benchmark functions.
+    # Introduction
+      CEC2013LSGO proposes 15 large-scale benchmark problems to represent a wider range of realworld large-scale optimization problems.
+    # Original paper
+      "[Benchmark functions for the CEC 2013 special session and competition on large-scale global optimization](https://al-roomi.org/multimedia/CEC_Database/CEC2015/LargeScaleGlobalOptimization/CEC2015_LargeScaleGO_TechnicalReport.pdf)." gene 7.33 (2013): 8.
+    # Official Implementation
+    [CEC2013LSGO](https://github.com/dmolina/cec2013lsgo)
+    # License
+    GPL-3.0
+    # Problem Suite Composition
+      CEC2013LSGO contains four major categories of large-scale problems:
+      1. Fully-separable functions (F1-F3) 
+      2. Two types of partially separable functions: 
+          1. Partially separable functions with a set of non-separable subcomponents and one fully-separable subcomponents (F4-F7) 
+          2. Partially separable functions with only a set of non-separable subcomponents and no fullyseparable subcomponent (F8-F11) 
+      3. Two types of overlapping functions: 
+          1. Overlapping functions with conforming subcomponents (F12-F13)
+          2. Overlapping functions with conflicting subcomponents (F14)
+      4. Fully-nonseparable functions (F15) 
+    # Attributes:
+    - data_dir (str): Directory containing the data files for the benchmark problems.
+    - min_dim (int): Minimum subspace dimension.
+    - med_dim (int): Medium subspace dimension.
+    - max_dim (int): Maximum subspace dimension.
+    - dim (int): Dimensionality of the problem (default 1000).
+    - ID (int or None): Identifier for the specific benchmark function.
+    - s_size (int): Number of subspaces.
+    - overlap (int or None): Overlap size between subspaces.
+    - lb (float or None): Lower bound of the search space.
+    - ub (float or None): Upper bound of the search space.
+    - Ovector (np.ndarray or None): Optimum vector.
+    - OvectorVec (list or None): List of optimum vectors for each subspace.
+    - Pvector (np.ndarray or None): Permutation vector.
+    - r_min_dim (int or None): Rotation matrix dimension for min_dim.
+    - r_med_dim (int or None): Rotation matrix dimension for med_dim.
+    - r_max_dim (int or None): Rotation matrix dimension for max_dim.
+    - anotherz (np.ndarray): Auxiliary vector for transformations.
+    - anotherz1 (np.ndarray or None): Auxiliary vector for transformations.
+    - numevals (int): Number of function evaluations.
+    - opt (float or None): Optimal value.
+    - optimum (float): Known optimum value.
+    # Methods:
+    - get_optimal(): Returns the optimal value.
+    - func(x): Abstract method for evaluating the objective function (must be implemented in subclasses).
+    - readOvector(): Reads the optimum vector from file.
+    - readOvectorVec(): Reads and splits the optimum vector into subspace vectors.
+    - readPermVector(): Reads the permutation vector from file.
+    - readR(sub_dim): Reads the rotation matrix for a given subspace dimension.
+    - readS(num): Reads the subspace sizes from file.
+    - readW(num): Reads the subspace weights from file.
+    - multiply(vector, matrix): Multiplies a vector by a matrix.
+    - rotateVector(i, c): Rotates a subspace vector using the appropriate rotation matrix.
+    - rotateVectorConform(i, c): Rotates a subspace vector with overlap consideration.
+    - rotateVectorConflict(i, c, x): Rotates a subspace vector with overlap and conflict consideration.
+    - sphere(x): Sphere benchmark function.
+    - elliptic(x): Elliptic benchmark function.
+    - rastrigin(x): Rastrigin benchmark function.
+    - ackley(x): Ackley benchmark function.
+    - schwefel(x): Schwefel benchmark function.
+    - rosenbrock(x): Rosenbrock benchmark function.
+    - transform_osz(z): Applies the OSZ transformation to a vector.
+    - transform_asy(z, beta=0.2): Applies the asymmetric transformation to a vector.
+    - Lambda(z, alpha=10): Applies the Lambda transformation to a vector.
+    # Raises:
+    - NotImplementedError: If `func` is not implemented in a subclass.
+    - FileNotFoundError: If required data files are missing.
+    # Notes:
+    This class is intended to be subclassed for specific CEC2013 LSGO benchmark functions.  
+    It assumes the presence of data files in the specified directory, following the CEC2013 naming conventions.
+    """
+    
     def __init__(self):
         
         # 设置默认的数据类型

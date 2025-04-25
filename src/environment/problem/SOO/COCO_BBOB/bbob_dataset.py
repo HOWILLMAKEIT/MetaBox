@@ -3,6 +3,40 @@ from .bbob_torch import *
 from torch.utils.data import Dataset
 
 class BBOB_Dataset(Dataset):
+    """
+    # Introduction
+    BBOB-Surrogate investigates the integration of surrogate modeling techniques into MetaBBO , enabling data-driven approximation of expensive objective functions while maintaining optimization fidelity.
+    # Original paper
+    "[Surrogate Learning in Meta-Black-Box Optimization: A Preliminary Study](https://arxiv.org/abs/2503.18060)." arXiv preprint arXiv:2503.18060 (2025).
+    # Official Implementation
+    [BBOB-Surrogate](https://github.com/GMC-DRL/Surr-RLDE)
+    # License
+    None
+    # Problem Suite Composition
+    BBOB-Surrogate contains a total of 72 optimization problems, corresponding to three dimensions (2, 5, 10), each dimension contains 24 problems. Each problem consists of a trained KAN or MLP network, which is used to fit 24 black box functions in the COCO-BBOB benchmark. The network here is a surrogate model of the original function.
+    # Args:
+    - data (list): A list of BBOB problem instances.
+    - batch_size (int, optional): Number of instances per batch. Defaults to 1.
+    # Attributes:
+    - data (list): The list of BBOB problem instances.
+    - batch_size (int): The batch size for sampling.
+    - N (int): Total number of problem instances.
+    - ptr (list): List of starting indices for each batch.
+    - index (np.ndarray): Permuted indices for shuffling.
+    - maxdim (int): Maximum dimensionality among all problem instances.
+    # Methods:
+    - get_datasets(...): Static method to generate train and test datasets based on suit, difficulty, and other configuration options.
+    - __getitem__(item): Returns a batch of problem instances at the specified batch index.
+    - __len__(): Returns the total number of problem instances.
+    - __add__(other): Concatenates two BBOB_Dataset objects.
+    - shuffle(): Randomly permutes the order of the dataset.
+    # Raises:
+    - ValueError: If required arguments are missing or invalid (e.g., unsupported suit, invalid difficulty, or upperbound too low).
+    batch = train_set[0]
+    train_set.shuffle()
+    ```
+    """
+    
     def __init__(self,
                  data,
                  batch_size=1):

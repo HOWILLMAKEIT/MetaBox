@@ -6,7 +6,6 @@ from scipy.spatial import distance
 class PSORLNS_Optimizer(Learnable_Optimizer):
     """
     # PSORLNS_Optimizer
-    todo:写清楚名字
     An implementation of a learnable optimizer that combines Particle Swarm Optimization (PSO) with Reinforcement Learning-based Neighborhood Search (RLNS). This optimizer maintains a population of particles and updates their positions and velocities based on both PSO dynamics and adaptive neighborhood strategies, aiming to solve optimization problems efficiently.
     # Args:
     - config (object): Configuration object containing hyperparameters and settings for the optimizer.

@@ -52,6 +52,36 @@ model_depth = [
 ]
 
 class NE_Problem(Basic_Problem):
+    """
+    # NE_Problem
+    A neural evolution problem class for optimizing neural network policies in Brax environments.
+    # Introduction
+    `NE_Problem` sets up a neural network-based optimization problem for a given Brax environment. It initializes the environment, neural network model, and evaluation mechanism, and provides a function to evaluate batches of neural network parameters.
+    # Args:
+    - env_name (str): The name of the Brax environment to solve.
+    - model_depth (int): The number of layers (depth) for the neural network policy.
+    - seed (int): Random seed for reproducibility.
+    # Attributes:
+    - env_state_dim (int): Dimension of the environment's state space.
+    - env_action_dim (int): Dimension of the environment's action space.
+    - nn_model (MLP): The neural network policy model.
+    - dim (int): Total number of parameters in the neural network.
+    - ub (float): Upper bound for parameter values.
+    - lb (float): Lower bound for parameter values.
+    - pop_size (int): Population size for evolutionary algorithms.
+    - adapter (ParamsAndVector): Adapter for converting between parameter vectors and model parameters.
+    - evaluator (BraxProblem): Evaluator for running policy rollouts in the environment.
+    # Methods:
+    ## func(x)
+    Evaluates a batch of neural network parameter vectors by running them in the environment and returning their rewards.
+    ### Args:
+    - x (np.ndarray): Batch of neural network parameters with shape (batch_size, num_params).
+    ### Returns:
+    - torch.Tensor: Rewards for each parameter vector in the batch.
+    ### Raises:
+    - AssertionError: If the input parameter dimension does not match the expected dimension.
+    """
+    
     def __init__(self,env_name,model_depth, seed):
         self.env_state_dim = envs[env_name]['state_dim']
         self.env_action_dim = envs[env_name]['action_dim']

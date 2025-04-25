@@ -82,7 +82,6 @@ def DE_rand_1(populations):
     # Introduction
     Applies the DE/rand/1 strategy from Differential Evolution to a population, generating new candidate solutions (offsprings) through mutation and crossover operations.
     # Args:
-    todo:写清楚populations的数据结构
     - populations (np.ndarray): The current population of candidate solutions, typically represented as a 2D NumPy array where each row is an individual.
     # Returns:
     - np.ndarray: The new population (offsprings) generated after mutation and crossover.
@@ -440,7 +439,6 @@ class L2T_Optimizer(Learnable_Optimizer):
         # Introduction
         Updates the optimizer's state based on the provided actions and tasks, manages reward accumulation, logging, and determines if the optimization process has ended.
         # Args:
-        todo:action 和tasks的数据结构写一下
         - actions (Any): Actions to be applied in the current update step.
         - tasks (Any): Tasks relevant to the current optimization step.
         # Returns:

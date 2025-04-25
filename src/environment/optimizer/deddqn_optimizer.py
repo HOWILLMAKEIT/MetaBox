@@ -168,7 +168,6 @@ class DEDDQN_Optimizer(Learnable_Optimizer):
         The features are derived from various properties of the optimization process, including
         population diversity, fitness values, and historical operator performance.
         # Args:
-        todo: 写清楚problem数据结构
         - problem (object): The optimization problem instance containing bounds and other relevant data.
         # Returns:
         - numpy.ndarray: A 1D array of 99 features representing the current state of the optimization process.
@@ -246,7 +245,6 @@ class DEDDQN_Optimizer(Learnable_Optimizer):
             - 1: 'rand/2'
             - 2: 'rand-to-best/2'
             - 3: 'cur-to-rand/1'
-        todo: 写清楚problem的数据结构
         - problem (Problem): The optimization problem instance containing the objective 
           function, bounds, and other problem-specific details.
         # Returns:

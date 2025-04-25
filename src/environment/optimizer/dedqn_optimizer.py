@@ -5,13 +5,12 @@ from typing import Union, Iterable
 def cal_fdc(sample, fitness):
     """
     # Introduction
-    todo:FDC是这个意思吗
-    Calculates the Fitness-Distance Correlation (FDC) for a given set of samples and their corresponding fitness values. FDC is a metric used to assess the relationship between the fitness of solutions and their distance to the best solution in the sample set.
+    Calculates the fitness distance correlation (FDC) for a given set of samples and their corresponding fitness values. FDC is a metric used to assess the relationship between the fitness of solutions and their distance to the best solution in the sample set.
     # Args:
     - sample (np.ndarray): An array of candidate solutions, where each row represents a solution.
     - fitness (np.ndarray): A 1D array of fitness values corresponding to each solution in `sample`.
     # Returns:
-    - float: The computed fitness-distance correlation coefficient.
+    - float: The computed fitness distance correlation coefficient.
     # Notes:
     - The function normalizes the correlation by the product of the variances of distance and fitness, with a small epsilon added to avoid division by zero.
     """
@@ -25,8 +24,7 @@ def cal_fdc(sample, fitness):
 def cal_rie(fitness):
     """
     # Introduction
-    todo:RIE是这个意思吗
-    Calculates the Relative Information Entropy (RIE) of a given fitness sequence, which quantifies the complexity or unpredictability of changes in the sequence at multiple scales.
+    Calculates the ruggedness of information entropy (RIE) of a given fitness sequence, which quantifies the complexity or unpredictability of changes in the sequence at multiple scales.
     # Args:
     - fitness (list or np.ndarray): A sequence of numerical fitness values representing the progression of a process or optimization.
     # Returns:
@@ -77,17 +75,7 @@ def cal_rie(fitness):
 
 
 def cal_acf(fitness):
-    """
-    # Introduction
-    todo:ACF是什么意思
-    Calculates the lag-1 autocorrelation coefficient (ACF) of a given fitness array.
-    # Args:
-    - fitness (np.ndarray or list of float): An array or list containing fitness values.
-    # Returns:
-    - float: The computed lag-1 autocorrelation coefficient of the input fitness values.
-    # Notes:
-    - A small constant (1e-6) is added to the denominator to prevent division by zero.
-    """
+
     
     avg_f = np.mean(fitness)
     a = np.sum((fitness - avg_f) ** 2) + 1e-6
@@ -99,18 +87,7 @@ def cal_acf(fitness):
 
 
 def cal_nop(sample, fitness):
-    """
-    # Introduction
-    todo:NOP是什么意思
-    Calculates the normalized order preservation (NOP) metric for a given set of samples and their corresponding fitness values. The NOP metric measures how well the order of fitness values is preserved with respect to the distance from the best sample.
-    # Args:
-    - sample (np.ndarray): An array of sample points, where each row represents a sample.
-    - fitness (np.ndarray): A 1D array of fitness values corresponding to each sample.
-    # Returns:
-    - float: The normalized order preservation value, representing the proportion of times a closer sample does not have a worse fitness than a farther one.
-    # Notes:
-    - The function assumes that lower fitness values are better (i.e., minimization).
-    """
+
     
     best = np.argmin(fitness)
     distance = np.linalg.norm(sample - sample[best], axis=-1)
@@ -247,17 +224,7 @@ class DEDQN_Optimizer(Learnable_Optimizer):
         self.log_interval = config.log_interval
 
     def __cal_feature(self, problem):
-        """
-        # Introduction
-        Calculates a set of feature descriptors for the current population in the optimization process, including FDC, RIE, ACF, and NOP, based on random walk sampling and cost evaluations.
-        # Args:
-        - problem (object): The optimization problem instance, which must provide an `eval` method for evaluating solutions and an `optimum` attribute for the known optimum value (if available).
-        # Returns:
-        todo:把FDC,RIE, ACF, NOP的意思写上去
-        - np.ndarray: A NumPy array containing the computed feature values in the order [fdc, rie, acf, nop].
-        # Notes:
-        - Increments the function evaluation count (`self.fes`) by the number of random walk steps.
-        """
+
         
         samples = random_walk_sampling(self.__population, self.__dim, self.__rwsteps, self.rng)
         if problem.optimum is None:
@@ -297,7 +264,6 @@ class DEDQN_Optimizer(Learnable_Optimizer):
         # Introduction
         Updates the current solution in the population using a specified mutation and crossover strategy, evaluates the new solution, updates the best solution found, and manages logging and meta-data for the optimization process.
         # Args:
-        todo:写清楚problem的数据结构
         - action (int): The index of the mutation strategy to use (0: rand/1, 1: current-to-rand/1, 2: best/2).
         - problem (object): The optimization problem instance, which must provide lower and upper bounds (`lb`, `ub`), an evaluation function (`eval`), and optionally an optimum value (`optimum`).
         # Returns:

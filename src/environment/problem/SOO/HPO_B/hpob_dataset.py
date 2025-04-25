@@ -8,6 +8,36 @@ import xgboost as xgb
 
 
 class HPOB_Dataset(Dataset):
+    """
+    # HPOB_Dataset
+    A dataset class for handling HPO-B (Hyperparameter Optimization Benchmark) problems, supporting batching, shuffling, and dataset splitting for meta-learning and benchmarking tasks.
+    # Args:
+    - data (list): A list of HPOB_Problem instances or similar objects representing individual optimization problems.
+    - batch_size (int, optional): The number of problems per batch. Defaults to 1.
+    # Attributes:
+    - data (list): The dataset containing problem instances.
+    - maxdim (int): The maximum dimensionality among all problems in the dataset.
+    - batch_size (int): The batch size used for iteration.
+    - N (int): The total number of problems in the dataset.
+    - ptr (list): List of starting indices for each batch.
+    - index (np.ndarray): Array of indices for shuffling and batching.
+    # Methods:
+    - get_datasets(datapath=None, train_batch_size=1, test_batch_size=1, upperbound=None, difficulty=None, user_train_list=None, user_test_list=None, cost_normalize=False):
+        Loads and processes the HPO-B dataset, returning train and test HPOB_Dataset instances according to the specified parameters.
+    - __getitem__(item):
+        Returns a batch of problems corresponding to the given batch index.
+    - __len__():
+        Returns the total number of problems in the dataset.
+    - __add__(other):
+        Concatenates two HPOB_Dataset instances and returns a new dataset.
+    - shuffle():
+        Randomly permutes the order of problems in the dataset for shuffling during training.
+    # Returns:
+    - HPOB_Dataset: An instance of the dataset, or a tuple of train and test datasets when using `get_datasets`.
+    # Raises:
+    - NotImplementedError: If user-specified train/test lists are not provided correctly in `get_datasets`.
+    """
+    
     def __init__(self,
                  data,
                  batch_size = 1):

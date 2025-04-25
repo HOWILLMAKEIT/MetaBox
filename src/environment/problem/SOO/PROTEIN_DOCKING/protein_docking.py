@@ -7,6 +7,35 @@ import time
 
 
 class Protein_Docking_Numpy_Problem(Basic_Problem):
+    """
+    # Protein_Docking_Numpy_Problem
+    Represents a protein docking optimization problem using a reduced coordinate system and numpy operations. This class is designed to evaluate the energy of protein-protein interfaces based on atomic coordinates and interaction parameters.
+    # Args:
+    - coor_init (np.ndarray): Initial coordinates of the interface atoms, shape [n_atoms, 3].
+    - q (np.ndarray): Charge interaction matrix, shape [n_atoms, n_atoms].
+    - e (np.ndarray): Energy parameter matrix, shape [n_atoms, n_atoms].
+    - r (np.ndarray): Distance parameter matrix, shape [n_atoms, n_atoms].
+    - basis (np.ndarray): Basis vectors for reduced coordinates, shape [dim, 3*n_atoms].
+    - eigval (np.ndarray): Eigenvalues for coordinate transformation, shape [dim].
+    - problem_id (str): Identifier for the problem instance.
+    # Attributes:
+    - n_atoms (int): Number of interface atoms considered.
+    - dim (int): Dimensionality of the reduced coordinate space.
+    - lb (float): Lower bound for optimization variables.
+    - ub (float): Upper bound for optimization variables.
+    - optimum (None): Placeholder for the optimum value (unknown).
+    # Methods:
+    - __str__(): Returns the problem identifier as a string.
+    - func(x): Computes the energy of the protein docking configuration for input variable(s) `x`.
+        # Args:
+            - x (np.ndarray): Input variables in the reduced coordinate space, shape [NP, dim] or [dim].
+        # Returns:
+            - np.ndarray: Computed energy values for each input configuration.
+    # Notes:
+    - The energy function combines electrostatic and Lennard-Jones-like terms, with distance-based masking for different interaction regimes.
+    - The class is intended for use in optimization algorithms for protein docking.
+    """
+    
     n_atoms = 100  # number of interface atoms considered for computational concern
     dim = 12
     lb = -1.5

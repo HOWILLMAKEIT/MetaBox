@@ -89,7 +89,6 @@ class GLHF_Optimizer(Learnable_Optimizer):
         # Introduction
         Initializes the population for the optimizer based on the problem's dimensionality and bounds, sets up random number generators according to the device configuration, evaluates the initial costs, and prepares metadata for tracking optimization progress.
         # Args:
-        todo:problem 写清楚
         - problem (object): An object representing the optimization problem, which must have attributes `dim` (int), `ub` (upper bound, tensor or array), and `lb` (lower bound, tensor or array).
         # Returns:
         - torch.Tensor: A tensor where the first column is the cost (unsqueezed to shape [N, 1]) and the remaining columns are the population data, concatenated along dimension 1.as returned by `self.get_state()`.
@@ -138,7 +137,6 @@ class GLHF_Optimizer(Learnable_Optimizer):
         # Introduction
         Updates the optimizer's population and cost values based on the provided action (typically a policy network) and the given problem instance. Calculates the reward, checks for termination, logs progress, and returns the next state and relevant information.
         # Args:
-        todo:写清楚action和problem的数据结构
         - action (Callable): A function or policy network that takes the current population state and returns a new population.
         - problem (object): The problem instance containing the objective function and (optionally) the optimum value.
         # Returns:

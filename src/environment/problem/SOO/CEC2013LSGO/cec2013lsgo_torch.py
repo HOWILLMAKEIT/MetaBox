@@ -2,6 +2,76 @@ from ....problem.basic_problem import Basic_Problem_Torch
 import torch
 
 class CEC2013LSGO_Torch_Problem(Basic_Problem_Torch):
+    """
+    # CEC2013LSGO_Torch_Problem
+    A PyTorch-based implementation of the CEC2013 Large-Scale Global Optimization (LSGO) benchmark problem set.  
+    This class provides methods for loading problem-specific data, performing vector transformations, and evaluating standard benchmark functions.
+    # Introduction
+      CEC2013LSGO proposes 15 large-scale benchmark problems to represent a wider range of realworld large-scale optimization problems.
+    # Original paper
+      "[Benchmark functions for the CEC 2013 special session and competition on large-scale global optimization](https://al-roomi.org/multimedia/CEC_Database/CEC2015/LargeScaleGlobalOptimization/CEC2015_LargeScaleGO_TechnicalReport.pdf)." gene 7.33 (2013): 8.
+    # Official Implementation
+    [CEC2013LSGO](https://github.com/dmolina/cec2013lsgo)
+    # License
+    GPL-3.0
+    # Problem Suite Composition
+      CEC2013LSGO contains four major categories of large-scale problems:
+      1. Fully-separable functions (F1-F3) 
+      2. Two types of partially separable functions: 
+          1. Partially separable functions with a set of non-separable subcomponents and one fully-separable subcomponents (F4-F7) 
+          2. Partially separable functions with only a set of non-separable subcomponents and no fullyseparable subcomponent (F8-F11) 
+      3. Two types of overlapping functions: 
+          1. Overlapping functions with conforming subcomponents (F12-F13)
+          2. Overlapping functions with conflicting subcomponents (F14)
+      4. Fully-nonseparable functions (F15)
+    # Attributes:
+    - data_dir (str): Directory containing problem data files.
+    - min_dim (int): Minimum subspace dimension.
+    - med_dim (int): Medium subspace dimension.
+    - max_dim (int): Maximum subspace dimension.
+    - dim (int): Problem dimension (default: 1000).
+    - ID (int or None): Problem identifier.
+    - s_size (int): Number of subspaces.
+    - overlap (int or None): Overlap size between subspaces.
+    - lb (float or None): Lower bound of the search space.
+    - ub (float or None): Upper bound of the search space.
+    - Ovector (torch.Tensor or None): Optimum vector.
+    - OvectorVec (list or None): List of optimum vectors for subspaces.
+    - Pvector (torch.Tensor or None): Permutation vector.
+    - r_min_dim, r_med_dim, r_max_dim (int or None): Rotation matrix dimensions.
+    - anotherz (torch.Tensor): Auxiliary tensor for transformations.
+    - anotherz1 (torch.Tensor or None): Auxiliary tensor for transformations.
+    - numevals (int): Number of function evaluations.
+    - opt (float or None): Optimal value.
+    - optimum (float): Known optimum value.
+    # Methods:
+    - get_optimal(): Returns the optimal value.
+    - func(x): Abstract method for evaluating the objective function (must be implemented in subclasses).
+    - readOvector(): Loads the optimum vector from file.
+    - readOvectorVec(): Loads and splits the optimum vector into subspace vectors.
+    - readPermVector(): Loads the permutation vector from file.
+    - readR(sub_dim): Loads the rotation matrix for a given subspace dimension.
+    - readS(num): Loads the subspace dimensions from file.
+    - readW(num): Loads the weights for subspaces from file.
+    - multiply(vector, matrix): Multiplies a vector by a matrix.
+    - rotateVector(i, c): Rotates a subspace vector using the appropriate rotation matrix.
+    - rotateVectorConform(i, c): Rotates a subspace vector with overlap consideration.
+    - rotateVectorConflict(i, c, x): Rotates a subspace vector with conflict consideration.
+    - sphere(x): Sphere benchmark function.
+    - elliptic(x): Elliptic benchmark function.
+    - rastrigin(x): Rastrigin benchmark function.
+    - ackley(x): Ackley benchmark function.
+    - schwefel(x): Schwefel benchmark function.
+    - rosenbrock(x): Rosenbrock benchmark function.
+    - transform_osz(z): Applies the OSZ transformation to a vector.
+    - transform_asy(z, beta=0.2): Applies the asymmetric transformation to a vector.
+    - Lambda(z, alpha=10): Applies the Lambda transformation to a vector.
+    # Notes:
+    - This class is designed to be subclassed for specific CEC2013 LSGO functions.
+    - Data files must be present in the specified `data_dir`.
+    - All computations are performed using double-precision (`torch.float64`).
+    """
+    
     def __init__(self):
         
         # 设置默认的数据类型

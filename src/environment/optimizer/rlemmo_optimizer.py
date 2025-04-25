@@ -7,7 +7,6 @@ from sklearn.cluster import DBSCAN
 class RLEMMO_Optimizer(Learnable_Optimizer):
     """
     # RLEMMO_Optimizer
-    todo: add paper link and adjust the description
     A reinforcement learning-based evolutionary multi-modal optimizer (RLEMMO) that extends `Learnable_Optimizer`. This optimizer is designed for multi-modal optimization problems and leverages a population-based approach with multiple mutation strategies, neighborhood structures, and reward mechanisms.
     # Introduction
     RLEMMO_Optimizer maintains a population of candidate solutions and applies various evolutionary operators (actions) to explore and exploit the search space. It uses neighborhood information, clustering, and reinforcement learning-inspired mechanisms to adaptively guide the search process. The optimizer is suitable for problems with multiple global optima and supports meta-data collection for analysis.

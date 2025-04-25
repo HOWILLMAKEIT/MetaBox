@@ -5,6 +5,39 @@ import numpy as np
 import pickle
 
 class UAV_Dataset(Dataset):
+    """
+    # UAV_Dataset
+    A dataset class for handling UAV (Unmanned Aerial Vehicle) environment instances, supporting batching, shuffling, and custom train/test splits for machine learning tasks.
+    # Args:
+    - data (list): List of environment instances or data samples.
+    - batch_size (int, optional): Number of samples per batch. Defaults to 1.
+    # Attributes:
+    - data (list): The dataset samples.
+    - batch_size (int): Batch size for data loading.
+    - N (int): Total number of samples in the dataset.
+    - ptr (list): List of starting indices for each batch.
+    - index (np.ndarray): Array of indices for shuffling and sampling.
+    - maxdim (int): Maximum dimension among all data samples.
+    # Methods:
+    - get_datasets(...): Static method to generate train and test UAV_Dataset instances based on difficulty, custom splits, and data source.
+    - __getitem__(item): Returns a batch of data samples at the specified batch index.
+    - __len__(): Returns the total number of samples in the dataset.
+    - __add__(other): Concatenates two UAV_Dataset instances.
+    - shuffle(): Randomly shuffles the dataset indices.
+    # Raises:
+    - ValueError: If required arguments for dataset splitting are not provided or if an invalid difficulty is specified.
+    # Usage Example:
+    ```python
+    train_set, test_set = UAV_Dataset.get_datasets(
+        version='numpy',
+        train_batch_size=8,
+        test_batch_size=8,
+        difficulty='easy',
+        path='path/to/data.pkl'
+    )
+    ```
+    """
+    
     def __init__(self, data, batch_size = 1):
         super().__init__()
         self.data = data

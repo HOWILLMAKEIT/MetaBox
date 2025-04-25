@@ -307,7 +307,6 @@ class MADAC_Optimizer(Learnable_Optimizer):
         # Introduction
         Maps an action index and action value to a specific agent parameter value based on predefined lists.
         # Args:
-        todo:写清楚action 结构
         - action_idx (int): The index indicating which agent parameter to select.  
             - 0: Neighbor size  
             - 1: Operator strategy  
@@ -338,7 +337,6 @@ class MADAC_Optimizer(Learnable_Optimizer):
         # Introduction
         Performs a single update step in the MOEA/D (Multi-Objective Evolutionary Algorithm based on Decomposition) optimization process. This includes solution generation, selection, and adaptive weight adjustment.
         # Args:
-        todo: action和problem 结构
         - action (list): A list of parameters controlling the update step, including neighborhood size, operator type, operator parameter, and weight adjustment flag.
         - problem (object): The optimization problem instance, providing evaluation and problem-specific methods.
         # Returns:
@@ -596,7 +594,6 @@ class MADAC_Optimizer(Learnable_Optimizer):
         # Introduction
         Sorts a list of weight vectors by their Euclidean distance to a given base weight vector, returning the indices of the weights in ascending order of distance.
         # Args:
-        todo:base和weights 数据结构，
         - base (list[float]): The reference weight vector to which distances are computed.
         - weights (list[list[float]]): A list of weight vectors to be sorted by proximity to the base.
         # Returns:

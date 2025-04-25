@@ -118,7 +118,6 @@ class Policy(nn.Module):
         # Introduction
         Adapts the mutation step size (`sigma`) for an evolutionary algorithm using an attention-based neural network mechanism.
         # Args:
-        todo:把这俩参数写清楚，但是我没找到引用啊啊啊
         - fitness (array-like): The fitness values of the population, shape [NP].
         - sigma (array-like): The mutation step sizes for the population, shape [NP].
         # Returns:
@@ -153,7 +152,6 @@ class Policy(nn.Module):
         # Introduction
         Performs a selection operation using attention mechanisms on child and parent fitness values, producing a one-hot encoded selection matrix.
         # Args:
-        todo:把这俩参数写清楚，但是我没找到引用啊啊啊
         - fitness_c (array-like): Fitness values of the child population.
         - fitness_p (array-like): Fitness values of the parent population.
         # Returns:
@@ -262,7 +260,6 @@ class LGA_Optimizer(Learnable_Optimizer):
         # Introduction
         Calculates the cost of a given position for an optimization problem, optionally adjusting by the known optimum.
         # Args:
-        todo:写清楚problem数据结构
         - position (numpy.ndarray): A 2D array of shape (NP, dim) representing the population to be evaluated, where NP is the number of individuals (population size) and dim is the problem dimension. Each row represents an individual's position in the search space.
         - problem (object): The optimization problem instance, which must have `eval(position)` and `optimum` attributes.
         # Returns:
@@ -348,7 +345,6 @@ class LGA_Optimizer(Learnable_Optimizer):
         # Introduction
         Updates the optimizer's state based on the provided action and problem definition. This method performs one or more optimization steps, updating the population, fitness, and other internal variables according to the current policy and the results of the optimization process.
         # Args:
-        todo:写清楚action和problem 的数据结构
         - action (dict): A dictionary containing the current policy network ('net') and optional 'skip_step' parameter. The policy network is used for adaptation and selection during the optimization process.
         - problem (object): An object representing the optimization problem, which must have attributes such as `dim` (problem dimensionality), `lb` (lower bounds), `ub` (upper bounds), and optionally `optimum`.
         # Returns:

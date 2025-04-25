@@ -6,6 +6,35 @@ from ....problem.basic_problem import Basic_Problem
 import time
 from .protein_docking import Protein_Docking_Torch_Problem, Protein_Docking_Numpy_Problem
 class Protein_Docking_Dataset(Dataset):
+    """
+    # Protein_Docking_Dataset
+    A dataset class for handling protein docking problem instances, supporting batching, shuffling, and dataset splitting for training and testing.
+    # Attributes:
+    - proteins_set (dict): Dictionary containing protein IDs categorized by difficulty ('rigid', 'medium', 'difficult').
+    - n_start_points (int): Number of starting models per protein (default: 10).
+    - data (list): List of problem instances.
+    - batch_size (int): Number of instances per batch.
+    - N (int): Total number of problem instances.
+    - ptr (list): List of starting indices for each batch.
+    - index (np.ndarray): Array of indices for data access and shuffling.
+    - maxdim (int): Maximum dimension among all problem instances.
+    # Methods:
+    - __init__(self, data, batch_size=1): Initializes the dataset with provided data and batch size.
+    - get_datasets(version, train_batch_size=1, test_batch_size=1, difficulty='easy', dataset_seed=1035): 
+        Static method to generate training and testing datasets based on difficulty and random seed.
+    - __getitem__(self, item): Returns a batch of problem instances at the specified batch index.
+    - __len__(self): Returns the total number of problem instances.
+    - __add__(self, other): Concatenates two Protein_Docking_Dataset instances.
+    - shuffle(self): Randomly permutes the order of the dataset.
+    # Args:
+    - data (list): List of problem instances to be included in the dataset.
+    - batch_size (int, optional): Number of instances per batch (default: 1).
+    # Returns:
+    - Protein_Docking_Dataset: An instance of the dataset for protein docking problems.
+    # Raises:
+    - ValueError: If an unsupported difficulty or version is provided in `get_datasets`.
+    """
+    
     proteins_set = {'rigid': ['1AVX', '1BJ1', '1BVN', '1CGI', '1DFJ', '1EAW', '1EWY', '1EZU', '1IQD', '1JPS',
                               '1KXQ', '1MAH', '1N8O', '1PPE', '1R0R', '2B42', '2I25', '2JEL', '7CEI', '1AY7'],
                     'medium': ['1GRN', '1IJK', '1M10', '1XQS', '2HRK'],

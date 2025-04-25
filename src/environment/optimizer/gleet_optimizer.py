@@ -210,8 +210,6 @@ class GLEET_Optimizer(Learnable_Optimizer):
         # Introduction
         Calculates the cost(s) for a given position or set of positions in the search space, updating the function evaluation count.
         # Args:
-        todo:这里应该是part of the population ，我想知道particular的结构，然后写清楚
-        todo:problem的结构要不要写清楚
         - position (np.ndarray): The position(s) in the search space for which the cost is to be evaluated. Shape is typically (n_samples, n_dimensions).
         - problem (object): The optimization problem instance, which must provide an `eval` method and an optional `optimum` attribute.
         # Returns:
@@ -370,7 +368,6 @@ class GLEET_Optimizer(Learnable_Optimizer):
         # Introduction
         Updates the state of the particle swarm optimizer (PSO) for one iteration based on the given action and problem definition. This includes updating particle velocities and positions, handling boundary conditions, evaluating costs, updating personal and global bests, managing stagnation counters, calculating rewards, and preparing the next state for further optimization or reinforcement learning.
         # Args:
-        todo:action 和 problem的结构写清楚
         - action (np.ndarray): The action(s) to be applied to the particles, typically representing control parameters or decisions for the optimizer.
         - problem (object): The optimization problem instance, which must provide lower and upper bounds (`lb`, `ub`), and optionally an `optimum` attribute.
         # Returns:

@@ -6,6 +6,37 @@ from .evox_ne import *
 
 
 class NE_Dataset(Dataset):
+    """
+    # Introduction
+    NE_Dataset is a dataset wrapper for neural environment (NE) problems, supporting batching, shuffling, and flexible dataset generation for training and testing. It is designed to facilitate experiments with different problem difficulties and user-defined splits.
+    # Args:
+    - data (list): A list of NE_Problem instances or similar data objects.
+    - batch_size (int, optional): Number of samples per batch. Defaults to 1.
+    # Attributes:
+    - data (list): The dataset containing NE_Problem instances.
+    - batch_size (int): The batch size for data loading.
+    - N (int): Total number of data samples.
+    - ptr (list): List of starting indices for each batch.
+    - index (np.ndarray): Array of indices for shuffling and sampling.
+    - maxdim (int): Maximum dimension among all data items.
+    # Methods:
+    - get_datasets(train_batch_size=1, test_batch_size=1, difficulty='easy', user_train_list=None, user_test_list=None, instance_seed=3849):
+        Static method to generate training and testing NE_Dataset instances based on difficulty or user-defined splits.
+    - __getitem__(item):
+        Returns a batch of data corresponding to the batch index.
+    - __len__():
+        Returns the total number of data samples.
+    - __add__(other):
+        Concatenates two NE_Dataset instances.
+    - shuffle():
+        Randomly permutes the order of data indices for shuffling.
+    # Returns:
+    - NE_Dataset: An instance of the NE_Dataset class.
+    # Raises:
+    - AssertionError: If the provided difficulty is not one of ['all', 'easy', 'difficult', 'user-define'].
+    - NotImplementedError: If user-defined lists are not provided for 'user-define' difficulty.
+    """
+    
     def __init__(self,
                  data,
                  batch_size=1):

@@ -103,7 +103,6 @@ class Population:
 class RLHPSDE_Optimizer(Learnable_Optimizer):
     """
     # RLHPSDE_Optimizer
-    todo:写清楚名字
     A reinforcement learning-based hyper-parameter self-adaptive differential evolution optimizer.  
     This optimizer dynamically adapts its mutation and crossover strategies using reinforcement learning, and employs random walk-based landscape analysis to guide its search process.
     # Introduction

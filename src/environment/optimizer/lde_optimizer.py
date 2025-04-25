@@ -69,7 +69,6 @@ class LDE_Optimizer(Learnable_Optimizer):
         # Introduction
         Computes the cost for each item in a batch given a corresponding population, optionally normalizing by the optimum value if available.
         # Args:
-        todo:batch写清楚
         - batch (list): A list of objects, each with an `optimum` attribute and an `eval` method that evaluates a population member.
         - pop (list): A list of population members, one for each item in the batch.
         # Returns:
@@ -303,7 +302,6 @@ class LDE_Optimizer(Learnable_Optimizer):
         # Introduction
         Initializes the population for the optimizer, evaluates their fitness, and sets up internal tracking variables.
         # Args:
-        TODO:problem写清楚
         - problem (object): An object representing the optimization problem, expected to have attributes `lb` (lower bounds) and `ub` (upper bounds).
         # Returns:
         - np.ndarray: Feature representation of the initialized population, as returned by `self.__get_feature()`.
@@ -359,7 +357,6 @@ class LDE_Optimizer(Learnable_Optimizer):
         # Introduction
         Updates the population and fitness values in the LDE optimizer using the provided action and problem instance. This method performs one iteration of the optimization process, applying mutation, crossover, and selection operations, and computes the reward and termination status.
         # Args:
-        todo: 写清楚actiong和problem的结构
         - action (np.ndarray): The action tensor containing scale factors and crossover rates for the population, typically output from a policy network. Shape: [batch_size, NP*2].
         - problem (object): The optimization problem instance, which should provide an evaluation method and may contain an optimum attribute.
         # Returns:

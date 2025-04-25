@@ -88,7 +88,6 @@ class B2OPT_Optimizer(Learnable_Optimizer):
         # Introduction
         Initializes the population for an optimization problem and computes initial costs.
         # Args:
-        todo: 把problem的数据结构写清楚
         - problem (object): An object representing the optimization problem. It must have the following attributes:
             - `dim` (int): Dimensionality of the problem.
             - `lb` (torch.Tensor): Lower bounds of the search space.
@@ -148,7 +147,6 @@ class B2OPT_Optimizer(Learnable_Optimizer):
         # Introduction
         Updates the state of the optimizer based on the given action and problem, and calculates the reward, next state, and termination condition.
         # Args:
-        todo: 把problem的数据结构写清楚
         - action (callable): A policy network function that takes the current population, costs, and EMS index as input and returns updated positions.
         - problem (object): The optimization problem instance containing problem-specific details.
         # Returns:

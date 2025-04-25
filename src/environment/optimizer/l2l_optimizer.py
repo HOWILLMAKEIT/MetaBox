@@ -66,7 +66,6 @@ class L2L_Optimizer(Learnable_Optimizer):
         # Introduction
         Initializes the population and internal state variables for the optimizer.
         # Args:
-        todo:写清楚problem数据结构
         - problem: The optimization problem instance for which the population is to be initialized.
         # Effects:
         - Resets the function evaluation counter (`__fes`) to zero.
@@ -88,7 +87,6 @@ class L2L_Optimizer(Learnable_Optimizer):
         # Introduction
         Updates the optimizer state based on the provided action and problem instance. Scales the action, evaluates it on the problem, tracks the best result, and determines if the optimization process is done.
         # Args:
-        todo:写清楚两个的数据结构
         - action (Any): The action to be evaluated, can be a numpy array or other type.
         - problem (object): The problem instance, expected to have `lb`, `ub`, `eval()`, and `optimum` attributes.
         # Returns:

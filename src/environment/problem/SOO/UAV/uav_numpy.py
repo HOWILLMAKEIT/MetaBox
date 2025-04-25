@@ -35,6 +35,48 @@ from scipy.interpolate import RegularGridInterpolator
 import pickle
 
 class UAV_Numpy_Problem(Basic_Problem):
+    """
+    # Introduction
+    Represents a UAV (Unmanned Aerial Vehicle) path planning problem using numpy for efficient computation. 
+    This class defines the problem boundaries, coordinate transformations, and geometric utilities for 
+    optimization algorithms in a simulated terrain environment.
+    # References:
+    Shehadeh, M. A., & Kudela, J. (2025). Benchmarking global optimization techniques for unmanned aerial vehicle path planning.arXiv. https://arxiv.org/abs/2501.14503
+    # Attributes:
+    - terrain_model (dict): The model describing the terrain, including start/end points, boundaries, and dimensions.
+    - FES (int): Function evaluation count or budget.
+    - optimum (Any): Stores the optimum solution found (if any).
+    - problem_id (Any): Identifier for the problem instance.
+    - dim (int): Dimensionality of the problem.
+    - lb (np.ndarray): Lower bounds for the optimization variables.
+    - ub (np.ndarray): Upper bounds for the optimization variables.
+    # Methods:
+    - __init__():
+        Initializes the UAV_Numpy_Problem instance and its attributes.
+    - __str__():
+        Returns a string representation of the problem, typically including the terrain/problem ID.
+    - __boundaries__():
+        Calculates and sets the lower and upper bounds for the optimization variables based on the terrain model.
+        Also computes velocity bounds for each variable.
+    - spherical_to_cart_vec(solve):
+        Converts a population of solutions from spherical coordinates (r, psi, phi) to Cartesian coordinates (x, y, z).
+        ## Args:
+        - solve (np.ndarray): 2D array of shape [NP, 3 * n], where NP is the population size and n is the number of waypoints.
+        ## Returns:
+        - tuple: (x, y, z) each as np.ndarray of shape [NP, n], representing Cartesian coordinates for each solution.
+    - DistP2S(xs, a, b):
+        Computes the minimum distance from a point to a line segment for a batch of segments.
+        ## Args:
+        - xs (np.ndarray): 1D array of shape [2], representing the point coordinates.
+        - a (np.ndarray): 2D array of shape [2, NP], representing the start points of the segments.
+        - b (np.ndarray): 2D array of shape [2, NP], representing the end points of the segments.
+        ## Returns:
+        - np.ndarray: 1D array of shape [NP], containing the minimum distances from xs to each segment.
+    # Usage:
+    Instantiate the class, set the `terrain_model`, call `__boundaries__()` to initialize bounds, and use 
+    `spherical_to_cart_vec` and `DistP2S` for coordinate transformations and geometric calculations during optimization.
+    """
+    
     def __init__(self):
         self.terrain_model = None
         self.FES = 0
