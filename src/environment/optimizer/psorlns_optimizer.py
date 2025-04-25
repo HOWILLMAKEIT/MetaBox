@@ -4,6 +4,42 @@ import numpy as np
 from scipy.spatial import distance
 
 class PSORLNS_Optimizer(Learnable_Optimizer):
+    """
+    # PSORLNS_Optimizer
+    todo:写清楚名字
+    An implementation of a learnable optimizer that combines Particle Swarm Optimization (PSO) with Reinforcement Learning-based Neighborhood Search (RLNS). This optimizer maintains a population of particles and updates their positions and velocities based on both PSO dynamics and adaptive neighborhood strategies, aiming to solve optimization problems efficiently.
+    # Args:
+    - config (object): Configuration object containing hyperparameters and settings for the optimizer.
+    # Attributes:
+    - w (float): Inertia weight for velocity update.
+    - c1 (float): Cognitive coefficient for velocity update.
+    - c2 (float): Social coefficient for velocity update.
+    - ps (int): Population size (number of particles).
+    - TT2 (float): Threshold for selecting better/worse neighbors.
+    - neighbor_num (list): List of possible neighbor counts for adaptive neighborhood selection.
+    - fes (int): Current number of function evaluations.
+    - cost (list): History of global best costs.
+    - pr (list): History of peak ratios.
+    - sr (list): History of success rates.
+    - log_index (int): Current logging index.
+    - log_interval (int): Interval for logging progress.
+    - particles (dict): Dictionary storing current state of all particles.
+    - meta_X, meta_Cost, meta_Pr, meta_Sr (list): Optional metadata for full logging.
+    # Methods:
+    - __str__(): Returns the name of the optimizer.
+    - cal_pr_sr(problem): Calculates peak ratio and success rate for the current population.
+    - initialize_particles(problem): Initializes particle positions, velocities, and costs.
+    - init_population(problem): Resets the optimizer and initializes the population.
+    - get_costs(position, problem): Evaluates the cost of given positions.
+    - observe(): Encodes the current population state as features.
+    - cal_reward(current_cost, parent_cost): Computes the reward signal for reinforcement learning.
+    - update(action, problem): Updates the population based on actions, evaluates new solutions, and manages logging and termination.
+    # Returns:
+    - Various methods return updated states, rewards, termination flags, and logging information as appropriate for reinforcement learning environments.
+    # Raises:
+    - No explicit exceptions are raised, but downstream errors may occur if problem definitions are invalid or if configuration parameters are inconsistent.
+    """
+    
     def __init__(self, config):
         super().__init__(config)
         self.__config = config
@@ -42,6 +78,25 @@ class PSORLNS_Optimizer(Learnable_Optimizer):
 
     # initialize GPSO environment
     def initialize_particles(self, problem):
+        """
+        # Introduction
+        Initializes the particles for the PSO (Particle Swarm Optimization) algorithm by generating random positions and velocities within the problem's bounds, and computes initial costs and best values.
+        # Args:
+        - problem: An object representing the optimization problem, which must have attributes `lb` (lower bounds), `ub` (upper bounds), and be compatible with the `get_costs` method.
+        # Returns:
+        - None: Updates the `self.particles` attribute with initialized positions, velocities, costs, and best values.
+        # Side Effects:
+        - Sets `self.particles` to a dictionary containing:
+            - 'current_position': Initial positions of all particles.
+            - 'c_cost': Initial costs of all particles.
+            - 'pbest_position': Initial personal best positions.
+            - 'pbest': Initial personal best costs.
+            - 'gbest_position': Initial global best position.
+            - 'gbest_val': Initial global best cost.
+            - 'velocity': Initial velocities of all particles.
+            - 'pop_dist': Pairwise distance matrix of all particles.
+        """
+        
         # randomly generate the position and velocity
         rand_pos = self.rng.uniform(low = problem.lb, high = problem.ub, size = (self.ps, self.dim))
         rand_vel = self.rng.uniform(low = -self.max_velocity, high = self.max_velocity, size = (self.ps, self.dim))
@@ -69,6 +124,19 @@ class PSORLNS_Optimizer(Learnable_Optimizer):
 
     # the interface for environment reseting
     def init_population(self, problem):
+        """
+        # Introduction
+        Initializes the population of particles for the PSO-RLNS optimizer, sets up problem-specific parameters, and prepares logging and meta-data structures.
+        # Args:
+        - problem (object): An object representing the optimization problem, which must have attributes such as `maxfes`, `dim`, `ub`, and `lb`.
+        # Returns:
+        - np.ndarray: The initial observed state of the population, as returned by the `observe()` method.
+        # Notes:
+        - Resets or initializes several optimizer attributes, including function evaluation counters, velocity limits, and logging intervals.
+        - Initializes the particle population and their associated costs and statistics.
+        - Optionally stores meta-data if configured to do so.
+        """
+        
         self.max_fes = problem.maxfes
         self.log_interval =(self.max_fes // self.__config.n_logpoint)
         self.dim = problem.dim
@@ -134,6 +202,24 @@ class PSORLNS_Optimizer(Learnable_Optimizer):
         return reward
 
     def update(self, action, problem):
+        """
+        # Introduction
+        Updates the state of the PSO-RLNS optimizer for one iteration, applying particle swarm optimization and local neighborhood search strategies based on the provided actions and problem definition.
+        # Args:
+        - action (np.ndarray): An array of actions (typically integer indices) specifying the neighborhood size or strategy for each particle.
+        - problem (object): An object representing the optimization problem, which must provide lower and upper bounds (`lb`, `ub`) and a cost evaluation method.
+        # Returns:
+        - next_state (np.ndarray): The observed state of the population after the update (shape: [ps, 9]).
+        - reward (np.ndarray): The calculated reward for the current step, based on the improvement in cost.
+        - is_end (np.ndarray): A boolean array indicating whether the termination condition has been met for each particle.
+        - info (dict): Additional information (currently empty, reserved for future use).
+        # Notes:
+        - The method updates particle positions and velocities using a combination of PSO and RLNS-inspired rules.
+        - It maintains and updates the best-known positions and costs for each particle and the global best.
+        - Logging and meta-data collection are performed if enabled in the configuration.
+        - The function assumes that the optimizer's state (e.g., `self.particles`, `self.fes`, etc.) is managed externally and updated in-place.
+        """
+        
         is_end = [False] * self.ps
 
         # record the gbest_val in the begining

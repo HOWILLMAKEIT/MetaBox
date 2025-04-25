@@ -75,6 +75,7 @@ from .baseline.metabbo import (
     LES,
     L2T,
     MADAC,
+    L2L
 )
 
 

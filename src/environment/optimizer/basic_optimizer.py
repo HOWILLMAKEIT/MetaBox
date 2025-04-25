@@ -9,6 +9,19 @@ import numpy as np
 import torch
 import time
 class Basic_Optimizer:
+    """
+    Basic_Optimizer serves as an abstract base class for optimization algorithms. It provides common functionality such as random seed management for reproducibility across NumPy and PyTorch (CPU and GPU). Subclasses should implement the `run_episode` method to define the specific optimization process for a given problem.
+    - config (object): Configuration object containing optimizer settings, including the target device (e.g., 'cpu' or 'cuda').
+    # Attributes:
+    - rng_seed (int or None): The random seed used for reproducibility.
+    - rng (np.random.RandomState): NumPy random number generator initialized with the seed.
+    - rng_cpu (torch.Generator): PyTorch CPU random number generator initialized with the seed.
+    - rng_gpu (torch.Generator or None): PyTorch GPU random number generator initialized with the seed if device is not 'cpu'.
+    # Methods:
+    - seed(seed=None): Sets the random seed for NumPy and PyTorch (CPU/GPU) generators.
+    - run_episode(problem): Abstract method to execute a single optimization episode; must be implemented by subclasses.
+    - NotImplementedError: If `run_episode` is called directly on the base class.
+    """
     def __init__(self, config):
         self.__config = config
         self.rng_seed = None

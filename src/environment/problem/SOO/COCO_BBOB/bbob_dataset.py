@@ -84,7 +84,7 @@ class BBOB_Dataset(Dataset):
                 instance_list.append(instance)
                 continue # all 优先级最高
 
-            if user_test_list is None and user_test_list is None and difficulty is not None:
+            if user_train_list is None and user_test_list is None and difficulty is not None:
                 if (difficulty == 'easy' and id not in small_set_func_id) or (difficulty == 'difficult' and id in small_set_func_id):
                     train_set.append(instance)
                 else:

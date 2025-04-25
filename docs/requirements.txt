@@ -10,3 +10,4 @@ sphinx_markdown_tables
 myst-parser
 sphinx_copybutton
 shibuya
+myst_nb

@@ -131,7 +131,7 @@ class DTLZ1_Torch(DTLZ_Torch):
 
         return th.column_stack(f)
 
-    def eval(self, x, *args, **kwargs):
+    def func(self, x, *args, **kwargs):
         if x.dim() == 1:
             x = x.unsqueeze(0)
         X_, X_M = x[:, :self.n_obj - 1], x[:, self.n_obj - 1:]
@@ -150,7 +150,7 @@ class DTLZ2_Torch(DTLZ_Torch):
         super().__init__(n_var=n_var, n_obj=n_obj, **kwargs)
 
 
-    def eval(self, x, *args, **kwargs):
+    def func(self, x, *args, **kwargs):
         if x.dim() == 1:
             x = x.unsqueeze(0)
         X_, X_M = x[:, :self.n_obj - 1], x[:, self.n_obj - 1:]
@@ -169,7 +169,7 @@ class DTLZ3_Torch(DTLZ_Torch):
     def __init__(self, n_var=10, n_obj=3, **kwargs):
         super().__init__(n_var=n_var, n_obj=n_obj, **kwargs)
 
-    def eval(self, x, *args, **kwargs):
+    def func(self, x, *args, **kwargs):
         if x.dim() == 1:
             x = x.unsqueeze(0)
         X_, X_M = x[:, :self.n_obj - 1], x[:, self.n_obj - 1:]
@@ -191,7 +191,7 @@ class DTLZ4_Torch(DTLZ_Torch):
         self.d = d
 
 
-    def eval(self, x,  *args, **kwargs):
+    def func(self, x,  *args, **kwargs):
         if x.dim() == 1:
             x = x.unsqueeze(0)
         X_, X_M = x[:, :self.n_obj - 1], x[:, self.n_obj - 1:]
@@ -211,7 +211,7 @@ class DTLZ5_Torch(DTLZ_Torch):
         super().__init__(n_var=n_var, n_obj=n_obj, **kwargs)
 
 
-    def eval(self, x, *args, **kwargs):
+    def func(self, x, *args, **kwargs):
         if x.dim() == 1:
             x = x.unsqueeze(0)
         X_, X_M = x[:, :self.n_obj - 1], x[:, self.n_obj - 1:]
@@ -237,7 +237,7 @@ class DTLZ6_Torch(DTLZ_Torch):
         super().__init__(n_var=n_var, n_obj=n_obj, **kwargs)
 
 
-    def eval(self, x, *args, **kwargs):
+    def func(self, x, *args, **kwargs):
         if x.dim() == 1:
             x = x.unsqueeze(0)
         X_, X_M = x[:, :self.n_obj - 1], x[:, self.n_obj - 1:]
@@ -264,7 +264,7 @@ class DTLZ7_Torch(DTLZ_Torch):
         super().__init__(n_var=n_var, n_obj=n_obj, **kwargs)
 
 
-    def eval(self, x,*args, **kwargs):
+    def func(self, x,*args, **kwargs):
         if x.dim() == 1:
             x = x.unsqueeze(0)
         f = []
@@ -306,13 +306,13 @@ if __name__ == '__main__':
     dtlz5 = DTLZ5_Torch(n_var=10, n_obj=5)
     dtlz6 = DTLZ6_Torch(n_var=10, n_obj=5)
     dtlz7 = DTLZ7_Torch(n_var=10, n_obj=5)
-    print(dtlz1.eval(x))
-    print(dtlz2.eval(x))
-    print(dtlz3.eval(x))
-    print(dtlz4.eval(x))
-    print(dtlz5.eval(x))
-    print(dtlz6.eval(x))
-    print(dtlz7.eval(x))
+    print(dtlz1.func(x))
+    print(dtlz2.func(x))
+    print(dtlz3.func(x))
+    print(dtlz4.func(x))
+    print(dtlz5.func(x))
+    print(dtlz6.func(x))
+    print(dtlz7.func(x))
     s1=dtlz1.get_ref_set()
     s2=dtlz2.get_ref_set()
     s3=dtlz3.get_ref_set()

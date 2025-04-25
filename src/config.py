@@ -2,13 +2,13 @@ import argparse
 import time
 import os
 import subprocess, sys
-
+import torch
 def Config(user_config, datasets_dir = None):
     default_config = get_config()
     for key, value in user_config.items():
         if hasattr(default_config, key):
             setattr(default_config, key, value)
-
+    torch.set_default_dtype(torch.float64)
     # 判断是不是 HPO-B 任务
     is_hpo_b = 'hpo-b' in default_config.train_problem or 'hpo-b' in default_config.test_problem
 

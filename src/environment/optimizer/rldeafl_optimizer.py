@@ -40,6 +40,48 @@ class select_crossover:
         return operator_class
 
 class RLDEAFL_Optimizer(Learnable_Optimizer):
+    """
+    # Introduction:
+    RLDEAFL_Optimizer is a reinforcement learning-based Differential Evolution with Adaptive Feature Learning optimizer. It is designed to solve continuous optimization problems by adaptively selecting mutation and crossover operators using reinforcement learning strategies. The optimizer maintains a population of candidate solutions, applies evolutionary operators, and tracks the best solution found during the optimization process.
+    # Paper:
+    [Reinforcement Learning-based Self-adaptive Differential Evolution through Automated Landscape Feature Learning](https://arxiv.org/abs/2503.18061)
+    # Implementation:
+    [RLDEAFL](https://github.com/MetaEvo/RLDE-AFL)
+    # Attributes:
+    - __config (object): Stores the configuration object.
+    - __mu_operator (int): Number of mutation operators available.
+    - __cr_operator (int): Number of crossover operators available.
+    - __n_mutation (int): Number of mutation parameters.
+    - __n_crossover (int): Number of crossover parameters.
+    - __NP (int): Population size.
+    - __dim (int): Dimensionality of the problem.
+    - max_fes (int): Maximum number of function evaluations.
+    - __reward_ratio (float): Scaling factor for reward calculation.
+    - __mu_selector (object): Mutation operator selector.
+    - __cr_selector (object): Crossover operator selector.
+    - log_index (int): Current log index for tracking progress.
+    - log_interval (int): Interval for logging progress.
+    - fes (int): Current number of function evaluations.
+    - current_vector (np.ndarray): Current population of solutions.
+    - current_fitness (np.ndarray): Fitness values of the current population.
+    - gbest_val (float): Best fitness value found so far.
+    - __gbest_index (int): Index of the best solution in the population.
+    - __gbest_vector (np.ndarray): Best solution vector found so far.
+    - cost (list): History of best fitness values for logging.
+    - __init_gbest (float): Initial best fitness value.
+    - meta_X (list): History of population vectors (if meta-data is enabled).
+    - meta_Cost (list): History of population fitness values (if meta-data is enabled).
+    - __archive (np.ndarray): Archive of previous solutions for diversity.
+    # Methods:
+    - __init__(self, config): Initializes the optimizer with the given configuration.
+    - __str__(self): Returns the string representation of the optimizer.
+    - get_costs(self, position, problem): Calculates the costs of given solutions for the problem.
+    - observe(self): Returns the current observation/state of the optimizer.
+    - init_population(self, problem): Initializes the population and related attributes.
+    - __update_archive(self, old_id): Updates the archive with a given solution.
+    - update(self, action, problem): Updates the population based on actions, applies operators, evaluates new solutions, and returns observation, reward, done flag, and info.
+    - Exceptions may be raised if the action array is malformed, operator selection fails, or if there are issues with the problem evaluation.
+    """
     def __init__(self, config):
         super().__init__(config)
         self.__config = config
@@ -121,6 +163,22 @@ class RLDEAFL_Optimizer(Learnable_Optimizer):
             self.__archive[self.rng.randint(self.__archive.shape[0])] = self.current_vector[old_id]
 
     def update(self, action, problem):
+        """
+        # Introduction
+        Updates the optimizer's population based on the provided actions, applies mutation and crossover operators, evaluates new solutions, updates the archive, and tracks the best solution found so far.
+        # Args:
+        - action (np.ndarray): An array representing the actions to be taken, including mutation and crossover operator indices and their parameters for each individual in the population.
+        - problem (object): The optimization problem instance, which should provide methods for evaluating solutions and contain problem-specific attributes such as bounds and optimum.
+        # Returns:
+        - tuple: A tuple containing:
+            - observation (np.ndarray): The current observation/state after the update.
+            - reward (float): The reward computed based on the improvement in the global best value.
+            - is_done (bool): A flag indicating whether the optimization process has reached its termination condition.
+            - info (dict): An empty dictionary reserved for additional information (for compatibility).
+        # Raises:
+        - None explicitly, but may raise exceptions if the action array is malformed or if operator selection fails.
+        """
+        
         _, n_action = action.shape
         mutation_operator = action[:, 0]
         crossover_operator = action[:, 1]

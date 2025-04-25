@@ -41,7 +41,7 @@ class ZDT(Basic_Problem):
 
 class ZDT1(ZDT):
 
-    def eval(self, x, *args, **kwargs):
+    def func(self, x, *args, **kwargs):
         if x.ndim == 1:
             x = np.expand_dims(x, axis = 0)
         f1 = x[:, 0]
@@ -61,7 +61,7 @@ class ZDT1(ZDT):
 
 class ZDT2(ZDT):
 
-    def eval(self, x, *args, **kwargs):
+    def func(self, x, *args, **kwargs):
         if x.ndim == 1:
             x = np.expand_dims(x, axis = 0)
         f1 = x[:, 0]
@@ -82,7 +82,7 @@ class ZDT2(ZDT):
 
 class ZDT3(ZDT):
 
-    def eval(self, x, *args, **kwargs):
+    def func(self, x, *args, **kwargs):
         if x.ndim == 1:
             x = np.expand_dims(x, axis = 0)
         f1 = x[:, 0]
@@ -114,7 +114,7 @@ class ZDT4(ZDT):
         self.ub[0] = 1.0
         # self.func = self._evaluate
 
-    def eval(self, x, *args, **kwargs):
+    def func(self, x, *args, **kwargs):
         if x.ndim == 1:
             x = np.expand_dims(x, axis = 0)
         f1 = x[:, 0]
@@ -144,7 +144,7 @@ class ZDT5(ZDT):
         self.normalize = normalize
         super().__init__(n_var = (30 + n * (m - 1)), **kwargs)
 
-    def eval(self, x, *args, **kwargs):
+    def func(self, x, *args, **kwargs):
         if x.ndim == 1:
             x = np.expand_dims(x, axis = 0)
         x = x.astype(float)
@@ -180,7 +180,7 @@ class ZDT6(ZDT):
     def __init__(self, n_var = 10, **kwargs):
         super().__init__(n_var = n_var, **kwargs)
 
-    def eval(self, x, *args, **kwargs):
+    def func(self, x, *args, **kwargs):
         if x.ndim == 1:
             x = np.expand_dims(x, axis = 0)
         f1 = 1 - np.exp(-4 * x[:, 0]) * np.power(np.sin(6 * np.pi * x[:, 0]), 6)

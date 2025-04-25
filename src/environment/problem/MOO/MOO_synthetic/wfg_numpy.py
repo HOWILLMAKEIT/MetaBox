@@ -168,7 +168,7 @@ class WFG1(WFG):
         t.append(_reduction_weighted_sum(x[:, k:n], w[k:n]))
         return np.column_stack(t)
 
-    def eval(self, x, *args, **kwargs):
+    def func(self, x, *args, **kwargs):
         if x.ndim == 1:
             x = np.expand_dims(x, axis = 0)
         y = x / self.ub
@@ -240,7 +240,7 @@ class WFG2(WFG):
 
         return np.column_stack(t)
 
-    def eval(self, x, *args, **kwargs):
+    def func(self, x, *args, **kwargs):
         if x.ndim == 1:
             x = np.expand_dims(x, axis = 0)
         y = x / self.ub
@@ -289,7 +289,7 @@ class WFG3(WFG):
         super().validate(l, k, n_obj)
         validate_wfg2_wfg3(l)
 
-    def eval(self, x, *args, **kwargs):
+    def func(self, x, *args, **kwargs):
         if x.ndim == 1:
             x = np.expand_dims(x, axis = 0)
         y = x / self.ub
@@ -325,7 +325,7 @@ class WFG4(WFG):
         t.append(_reduction_weighted_sum_uniform(x[:, k:]))
         return np.column_stack(t)
 
-    def eval(self, x, *args, **kwargs):
+    def func(self, x, *args, **kwargs):
         if x.ndim == 1:
             x = np.expand_dims(x, axis = 0)
         y = x / self.ub
@@ -357,7 +357,7 @@ class WFG5(WFG):
     def t1(x):
         return _transformation_param_deceptive(x, A = 0.35, B = 0.001, C = 0.05)
 
-    def eval(self, x, *args, **kwargs):
+    def func(self, x, *args, **kwargs):
         if x.ndim == 1:
             x = np.expand_dims(x, axis = 0)
         y = x / self.ub
@@ -392,7 +392,7 @@ class WFG6(WFG):
         t.append(_reduction_non_sep(x[:, k:], n - k))
         return np.column_stack(t)
 
-    def eval(self, x, *args, **kwargs):
+    def func(self, x, *args, **kwargs):
         if x.ndim == 1:
             x = np.expand_dims(x, axis = 0)
         y = x / self.ub
@@ -422,7 +422,7 @@ class WFG7(WFG):
             x[:, i] = _transformation_param_dependent(x[:, i], aux)
         return x
 
-    def eval(self, x, *args, **kwargs):
+    def func(self, x, *args, **kwargs):
         if x.ndim == 1:
             x = np.expand_dims(x, axis = 0)
         y = x / self.ub
@@ -454,7 +454,7 @@ class WFG8(WFG):
             ret.append(_transformation_param_dependent(x[:, i], aux, A = 0.98 / 49.98, B = 0.02, C = 50.0))
         return np.column_stack(ret)
 
-    def eval(self, x, *args, **kwargs):
+    def func(self, x, *args, **kwargs):
         if x.ndim == 1:
             x = np.expand_dims(x, axis = 0)
         y = x / self.ub
@@ -513,7 +513,7 @@ class WFG9(WFG):
         t.append(_reduction_non_sep(x[:, k:], n - k))
         return np.column_stack(t)
 
-    def eval(self, x, *args, **kwargs):
+    def func(self, x, *args, **kwargs):
         if x.ndim == 1:
             x = np.expand_dims(x, axis = 0)
         y = x / self.ub

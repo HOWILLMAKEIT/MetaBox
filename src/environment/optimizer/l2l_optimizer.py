@@ -77,6 +77,10 @@ class L2L_Optimizer(Learnable_Optimizer):
         self.__fes=0
         self.cost=[]
         self.__best=None
+
+        if self.__config.full_meta_data:
+            self.meta_X = []
+            self.meta_Cost = []
         
 
     def update(self,action,problem):
@@ -98,6 +102,7 @@ class L2L_Optimizer(Learnable_Optimizer):
         """
         
         x=action
+        pre_best = self.__best
         is_rollout=False
         if type(x) is np.ndarray:
             x=np_scale(x,problem.lb,problem.ub)
@@ -112,16 +117,25 @@ class L2L_Optimizer(Learnable_Optimizer):
             y=problem.eval(x)-problem.optimum
         if self.__best is None:
             self.__best=y.item()
+            self.__init_best = self.__best
+            pre_best = self.__best
         elif y<self.__best:
             self.__best=y.item()
         self.cost.append(self.__best)
         self.__fes+=1
 
+        reward = (pre_best - self.__best) / self.__init_best
+
+        if self.__config.full_meta_data:
+            if type(x) is np.ndarray:
+                self.meta_X.append(x.copy())
+            else:
+                self.meta_X.append([x.clone().detach().cpu().data.numpy()])
+            self.meta_Cost.append([y.item()])
 
         is_done=False
-        if problem.optimum is not None:
-            is_done=True
         if self.__fes>=100:
             is_done=True
-        return y,0,is_done
+        info = {}
+        return y,reward,is_done, info
     
