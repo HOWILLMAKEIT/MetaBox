@@ -30,7 +30,7 @@ class OPRO_Optimizer(Learnable_Optimizer):
         self.fes=0
         self.best=None
     #     init population here and return the best popsize pop when step
-        self.population = np.random.uniform(
+        self.population = self.rng.random.uniform(
             low=problem.lb, high=problem.ub, size=(self.pop_size, problem.dim)
         )
         y = problem.func(self.population)
@@ -51,10 +51,11 @@ class OPRO_Optimizer(Learnable_Optimizer):
         return self.old_value_pairs
     def update(self,action,problem):
         new_thetas = action
+
         if len(new_thetas) > 0:
             new_thetas = np.stack(new_thetas)
             # evaluate the new theta
-            new_y = problem.func(new_thetas)
+            new_y = problem.eval(new_thetas)
             # update the best theta and y
             cur_best_theta = new_thetas[np.argmin(new_y)]
             cur_best_y = np.min(new_y)
@@ -71,11 +72,12 @@ class OPRO_Optimizer(Learnable_Optimizer):
                 for i in range(len(new_thetas)):
                     gen_meta_cost.append(new_y[i])
                     gen_meta_X.append(new_thetas[i])
-                self.meta_Cost.append(gen_meta_cost.copy())
-                self.meta_X.append(gen_meta_X.copy())
+                self.meta_Cost.append(np.array(gen_meta_cost).copy())
+                self.meta_X.append(np.array(gen_meta_X).copy())
 
         self.cost.append(self.best)
-        self.fes+= len(new_thetas)
+        self.fes += len(new_thetas)
 
+        info = {}
 
-        return self.old_value_pairs, 0, False
+        return self.old_value_pairs, 0, False, info
