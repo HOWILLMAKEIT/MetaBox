@@ -28,7 +28,7 @@ def construct_problem_set(config):
     train_set = get_problem_set(config, config.train_problem, config.train_difficulty, config.user_train_problem_list, config.user_test_problem_list)[0]
     test_set = get_problem_set(config, config.test_problem, config.test_difficulty, config.user_train_problem_list, config.user_test_problem_list)[1]
     config.dim = max(train_set.maxdim, test_set.maxdim)
-    return config, train_set, test_set
+    return config, (train_set, test_set)
 
 
 def get_problem_set(config, problem, difficulty, train_list, test_list):
