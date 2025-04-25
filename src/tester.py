@@ -41,7 +41,8 @@ from .environment.optimizer import (
     PSORLNS_Optimizer,
     L2T_Optimizer,
     MADAC_Optimizer,
-    LGA_Optimizer
+    LGA_Optimizer,
+    OPRO_Optimizer
 )
 
 from .baseline.bbo import (
@@ -81,7 +82,8 @@ from .baseline.metabbo import (
     LES,
     L2T,
     MADAC,
-    RNNOPT
+    RNNOPT,
+    OPRO
 )
 
 def cal_t0(dim, fes):

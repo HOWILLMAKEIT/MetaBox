@@ -21,3 +21,4 @@ from .les import LES
 from .l2t import L2T
 from .madac import MADAC
 from .rnnopt import RNNOPT
+from .opro import OPRO
