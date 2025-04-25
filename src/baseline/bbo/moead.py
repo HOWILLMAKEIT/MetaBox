@@ -6,9 +6,9 @@ import sys
 
 from operator import itemgetter
 from scipy.spatial.distance import cdist
-from environment.optimizer.basic_optimizer import Basic_Optimizer
+from ...environment.optimizer.basic_optimizer import Basic_Optimizer
 # from baseline.bbo.moo_utils import *
-from environment.problem.MOO.MOO_synthetic.dtlz_numpy import *
+from ...environment.problem.MOO.MOO_synthetic.dtlz_numpy import *
 
 
 

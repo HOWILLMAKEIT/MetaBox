@@ -13,7 +13,7 @@ def scale(x, lb, ub):
     return x
 
 
-class L2L(Basic_Agent):
+class RNNOPT(Basic_Agent):
     def __init__(self, config):
         super().__init__(config)
         config.lr = 1e-5
@@ -35,7 +35,7 @@ class L2L(Basic_Agent):
         self.cur_checkpoint = +1
 
     def __str__(self):
-        return "L2L"
+        return "RNNOPT"
 
     def set_network(self, networks: dict, learning_rates: float):
         Network_name = []

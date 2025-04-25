@@ -34,7 +34,7 @@ def np_scale(x,lb,ub):
     x=lb+(ub-lb)*x
     return x
 
-class L2L_Optimizer(Learnable_Optimizer):
+class RNNOPT_Optimizer(Learnable_Optimizer):
     """
     # Introduction
     L2L_Optimizer is a learnable optimizer class that manages the optimization process for a given problem, tracking the best solution found and the cost history. It supports both rollout and standard evaluation modes, and terminates after a fixed number of function evaluations or when the optimum is known.
@@ -60,7 +60,10 @@ class L2L_Optimizer(Learnable_Optimizer):
     def __init__(self, config):
         super().__init__(config)
         self.__config = config
-    
+
+    def __str__(self):
+        return "RNN_Optimizer"
+
     def init_population(self, problem):
         """
         # Introduction

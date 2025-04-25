@@ -20,4 +20,4 @@ from .psorlns import PSORLNS
 from .les import LES
 from .l2t import L2T
 from .madac import MADAC
-from .l2l import L2L
+from .rnnopt import RNNOPT

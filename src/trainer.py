@@ -22,7 +22,7 @@ from .environment.optimizer import (
     QLPSO_Optimizer,
     RLEPSO_Optimizer,
     RLPSO_Optimizer,
-    L2L_Optimizer,
+    RNNOPT_Optimizer,
     GLEET_Optimizer,
     RLDAS_Optimizer,
     LES_Optimizer,
@@ -75,7 +75,7 @@ from .baseline.metabbo import (
     LES,
     L2T,
     MADAC,
-    L2L
+    RNNOPT
 )
 
 

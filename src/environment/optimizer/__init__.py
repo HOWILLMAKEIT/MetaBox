@@ -22,7 +22,7 @@ from .rlemmo_optimizer import RLEMMO_Optimizer
 from .glhf_optimizer import GLHF_Optimizer
 from .b2opt_optimizer import B2OPT_Optimizer
 
-from .l2l_optimizer import L2L_Optimizer
+from .rnnopt_optimizer import RNNOPT_Optimizer
 from .les_optimizer import LES_Optimizer
 from .lga_optimizer import LGA_Optimizer
 from .psorlns_optimizer import PSORLNS_Optimizer

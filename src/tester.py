@@ -26,7 +26,7 @@ from .environment.optimizer import (
     QLPSO_Optimizer,
     RLEPSO_Optimizer,
     RLPSO_Optimizer,
-    L2L_Optimizer,
+    RNNOPT_Optimizer,
     GLEET_Optimizer,
     RLDAS_Optimizer,
     LES_Optimizer,
@@ -81,7 +81,7 @@ from .baseline.metabbo import (
     LES,
     L2T,
     MADAC,
-    L2L
+    RNNOPT
 )
 
 def cal_t0(dim, fes):
@@ -350,8 +350,8 @@ class MetaBBO_TestUnit():
         return res
 
 class Tester(object):
-    def __init__(self, config, user_agents = None, user_optimizers = None, user_datasets = None):
-        self.key_list = config.agent
+    def __init__(self, config, user_agents = [], user_loptimizers = [], user_toptimizers = [], user_datasets = None):
+        # self.key_list = config.agent
         self.log_dir = config.test_log_dir
         if not os.path.exists(self.log_dir):
             os.makedirs(self.log_dir)
@@ -362,11 +362,13 @@ class Tester(object):
         if config.test_problem in ['bbob-surrogate-10D', 'bbob-surrogate-5D', 'bbob-surrogate-2D']:
             config.is_train = False
 
-        if user_datasets is None:
-            self.train_set, self.test_set = construct_problem_set(self.config)
-        else:
-            self.train_set, self.test_set = user_datasets(config)
-        self.config.dim = max(self.train_set.maxdim, self.test_set.maxdim)
+        _, self.test_set = user_datasets
+
+        # if user_datasets is None:
+        #     self.train_set, self.test_set = construct_problem_set(self.config)
+        # else:
+        #     self.train_set, self.test_set = user_datasets(config)
+        # self.config.dim = max(self.train_set.maxdim, self.test_set.maxdim)
 
         # initialize the dataframe for logging
         self.test_results = {'cost': {},
@@ -387,16 +389,14 @@ class Tester(object):
 
         # 先append 用户的
         id = 0
-        for agent in user_agents:
+        for agent, opt in zip(user_agents, user_loptimizers):
             self.agent_for_cp.append(copy.deepcopy(agent))
-            self.l_optimizer_for_cp.append(copy.deepcopy(agent.optimizer))
+            self.l_optimizer_for_cp.append(copy.deepcopy(opt))
             self.agent_name_list.append(f"{id}_{agent.__str__()}")
             id += 1
 
-        for opt in user_optimizers:
+        for opt in user_toptimizers:
             self.t_optimizer_for_cp.append(copy.deepcopy(opt))
-
-
 
         # 再append 我们的
         # for baseline in self.config.baselines:
