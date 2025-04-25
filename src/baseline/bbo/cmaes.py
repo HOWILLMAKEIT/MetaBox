@@ -5,15 +5,19 @@ import time
 import warnings
 import math
 
+
+# please refer:https://pypop.readthedocs.io/en/latest/applications.html
+# this .py display pypop7-SHADE
 class CMAES(Basic_Optimizer):
     def __init__(self, config):
         super().__init__(config)
-        config.NP = 50
+        config.NP = 100
         self.__config = config
 
         self.log_interval = config.log_interval
         self.n_logpoint = config.n_logpoint
         self.full_meta_data = config.full_meta_data
+        self.__FEs = 0
 
     def __str__(self):
         return "CMAES"
@@ -22,7 +26,6 @@ class CMAES(Basic_Optimizer):
         cost = []
         self.meta_X = []
         self.meta_Cost = []
-        index = 1
 
         def problem_eval(x):
             if problem.optimum is None:
@@ -35,27 +38,45 @@ class CMAES(Basic_Optimizer):
             warnings.simplefilter("ignore")
             cma.evolution_strategy._CMASolutionDict = cma.evolution_strategy._CMASolutionDict_empty
             es = cma.CMAEvolutionStrategy(np.ones(problem.dim), (problem.ub - problem.lb) * 0.3,
-                                          {'popsize':self.__config.NP,
+                                          {'popsize': self.__config.NP,
                                            'bounds': [problem.lb, problem.ub],
                                            'maxfevals': self.__config.maxFEs, 'tolfun': 1e-20, 'tolfunhist': 0})
+        done = False
+        X_batch = es.ask()  # initial population
+        y = problem_eval(X_batch)
+        self.__FEs += self.__config.NP
+        if self.full_meta_data:
+            self.meta_X.append(np.array(X_batch.copy()))
+            self.meta_Cost.append(np.array(y.copy()))
+        index = 1
+        cost.append(np.min(y).copy())
 
-        while not es.stop():
+        while not done:
+            es.tell(X_batch, y)
             X_batch = es.ask()
             y = problem_eval(X_batch)
+            self.__FEs += self.__config.NP
             if self.full_meta_data:
                 self.meta_X.append(np.array(X_batch.copy()))
                 self.meta_Cost.append(np.array(y.copy()))
             gbest = np.min(y)
-            es.tell(X_batch, y)
-            if es.result[3] >= index * self.log_interval:
+
+            if self.__FEs >= index * self.log_interval:
                 index += 1
                 cost.append(gbest)
 
-            if len(cost) >= self.n_logpoint + 1:
-                cost[-1] = gbest
+            if problem.optimum is None:
+                done = self.__FEs >= self.__config.maxFEs
             else:
-                while len(cost) < self.n_logpoint + 1:
-                    cost.append(gbest)
+                done = self.__FEs >= self.__config.maxFEs
+
+            if done:
+                if len(cost) >= self.__config.n_logpoint + 1:
+                    cost[-1] = gbest
+                else:
+                    while len(cost) < self.__config.n_logpoint + 1:
+                        cost.append(gbest)
+                break
 
         results = {'cost': cost, 'fes': es.result[3]}
 
