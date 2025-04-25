@@ -681,11 +681,11 @@ class MyAgent(basic_agent)
     # Specific Operation
 ```
 
-The procedure can be referred to in .
+The procedure can be referred to in [Create your own agent](#12-create-your-own-agent).
 
 2️⃣ Create the Optimizer
 
-The procedure can be referred to in .
+The procedure can be referred to in [Create your own optimizer](#2-create-your-own-optimizer).
 
 
 ### 2. parrallel
