@@ -149,11 +149,6 @@ class VDN_Agent(Basic_Agent):
     def get_step(self):
         return self.learning_time
 
-    def get_step(self):
-        return self.learning_time
-
-    def get_step(self):
-        return self.learning_time
 
     def update_setting(self, config):
         self.config.max_learning_step = config.max_learning_step
@@ -311,7 +306,7 @@ class VDN_Agent(Basic_Agent):
                 env_metadata = env.get_env_attr('metadata')
                 results['metadata'] = env_metadata
             for key in required_info.keys():
-                results[key] = getattr(env, required_info[key])
+                results[key] = env.get_env_attr(env, required_info[key])
             return results
 
     def rollout_batch_episode(self,
