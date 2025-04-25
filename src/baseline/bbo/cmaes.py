@@ -11,7 +11,7 @@ import math
 class CMAES(Basic_Optimizer):
     def __init__(self, config):
         super().__init__(config)
-        config.NP = 100
+        config.NP = 50
         self.__config = config
 
         self.log_interval = config.log_interval
