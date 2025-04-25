@@ -13,20 +13,13 @@ class NLSHADELBC(Basic_Optimizer):
         super(NLSHADELBC, self).__init__(config)
         self.__pb = 0.4  # rate of best individuals in mutation
         self.__pa = 0.5  # rate of selecting individual from archive
-        self.__dim = 10  # dimension of problem
         self.__m = 1.5
         self.__p_iniF = 3.5
         self.__p_iniCr = 1.0
         self.__p_fin = 1.5
         self.__Nmin = 4  # the lowerbound of population size
-        self.__Nmax = 23 * self.__dim
-        self.__NP = self.__Nmax  # the population size
-        self.__NA = self.__NP  # the size of archive(collection of replaced individuals)
-        self.__H = 20 * self.__dim
-        self.__cost = np.zeros(self.__NP)  # the cost of individuals
+
         self.__archive = np.array([])  # the archive(collection of replaced individuals)
-        self.__MF = np.ones(self.__H) * 0.5  # the set of step length of DE
-        self.__MCr = np.ones(self.__H) * 0.9  # the set of crossover rate of DE
         self.__k = 0  # the index of updating element in MF and MCr
         self.__MaxFEs = config.maxFEs
         self.__FEs = 0
@@ -34,10 +27,10 @@ class NLSHADELBC(Basic_Optimizer):
         self.__n_logpoint = config.n_logpoint
         self.log_interval = config.log_interval
         self.full_meta_data = config.full_meta_data
-        
+
     def __str__(self):
         return 'NLSHADELBC'
-    
+
     def __evaluate(self, problem, u):
         if problem.optimum is None:
             cost = problem.eval(u)
@@ -154,9 +147,12 @@ class NLSHADELBC(Basic_Optimizer):
             self.__archive = self.__archive[:A]
 
     def __init_population(self, problem):
+        self.__dim = problem.dim
         self.__Nmax = 23 * problem.dim
         self.__H = 20 * problem.dim
         self.__NP = 23 * problem.dim
+        self.__MF = np.ones(self.__H) * 0.5  # the set of step length of DE
+        self.__MCr = np.ones(self.__H) * 0.9  # the set of crossover rate of DE
         self.__population = self.rng.rand(self.__NP, problem.dim) * (problem.ub - problem.lb) + problem.lb
         self.__cost = self.__evaluate(problem, self.__population)
         self.__FEs = self.__NP
@@ -167,6 +163,8 @@ class NLSHADELBC(Basic_Optimizer):
         self.gbest = np.min(self.__cost)
         self.log_index = 1
         self.cost = [self.gbest]
+        self.__NA = self.__NP  # the size of archive(collection of replaced individuals)
+        self.__H = 20 * self.__dim
 
     # step method for ensemble, optimize population for a few times
     def __update(self,
@@ -287,7 +285,7 @@ class NLSHADELBC(Basic_Optimizer):
             self.meta_Cost = []
             self.meta_X = []
         self.__init_population(problem)
-        
+
         while self.__FEs < self.__MaxFEs:
             self.__update(problem)
 
@@ -298,7 +296,7 @@ class NLSHADELBC(Basic_Optimizer):
         results = {'cost': self.cost, 'fes': self.__FEs}
 
         if self.full_meta_data:
-            metadata = {'X':self.meta_X, 'Cost':self.meta_Cost}
+            metadata = {'X': self.meta_X, 'Cost':self.meta_Cost}
             results['metadata'] = metadata
         # 与agent一致，去除return，加上metadata
         return results
