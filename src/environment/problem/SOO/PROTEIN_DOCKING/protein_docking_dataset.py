@@ -80,7 +80,7 @@ class Protein_Docking_Dataset(Dataset):
             train_proteins_set.extend(permutated[:n_train_proteins])
             test_proteins_set.extend(permutated[n_train_proteins:])
         # construct problem instances
-        data_folder = 'environment.problem.SOO.PROTEIN_DOCKING.datafile'
+        data_folder = 'metaevobox.environment.problem.SOO.PROTEIN_DOCKING.datafile'
         train_set = []
         test_set = []
         instance_list = []
@@ -88,13 +88,15 @@ class Protein_Docking_Dataset(Dataset):
             tmp_set = []
             for j in range(Protein_Docking_Dataset.n_start_points):
                 problem_id = id + '_' + str(j + 1)
-                with pkg_resources.path(data_folder, problem_id) as f:
-                    coor_init = np.loadtxt(f / 'coor_init')
-                    q = np.loadtxt(f / 'q')
-                    e = np.loadtxt(f / 'e')
-                    r = np.loadtxt(f / 'r')
-                    basis = np.loadtxt(f / 'basis')
-                    eigval = np.loadtxt(f / 'eigval')
+
+                f = pkg_resources.files(data_folder).joinpath(problem_id)
+                coor_init = np.loadtxt(f.joinpath('coor_init').open('r'))
+                q = np.loadtxt(f.joinpath('q').open('r'))
+                e = np.loadtxt(f.joinpath('e').open('r'))
+                r = np.loadtxt(f.joinpath('r').open('r'))
+                basis = np.loadtxt(f.joinpath('basis').open('r'))
+                eigval = np.loadtxt(f.joinpath('eigval').open('r'))
+
 
                 q = np.tile(q, (1, 1))
                 e = np.tile(e, (1, 1))

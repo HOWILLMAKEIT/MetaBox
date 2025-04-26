@@ -1,6 +1,7 @@
 import numpy as np
 from torch.utils.data import Dataset
-
+from .cec2013lsgo_numpy import *
+from .cec2013lsgo_torch import *
 class CEC2013LSGO_Dataset(Dataset):
     """
     # Introduction

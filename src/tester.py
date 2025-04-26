@@ -795,7 +795,7 @@ class Tester(object):
         else:
             raise ValueError(problem + ' is not defined!')
 
-    def mgd_test(self, user_from, user_to, user_opt):
+    def mgd_test(self, user_from, user_to, user_opt, user_datasets):
         """
         todo:重写注释
         # Introduction
@@ -824,7 +824,7 @@ class Tester(object):
         if config.problem in ['bbob-surrogate-10D','bbob-surrogate-5D','bbob-surrogate-2D']:
             config.is_train = False
 
-        _, test_set = construct_problem_set(config)
+        _, test_set = user_datasets
         self.test_set = test_set
         # get agents
         # with open('model.json', 'r', encoding = 'utf-8') as f:
@@ -852,7 +852,7 @@ class Tester(object):
                              'T2': {},
                              }
         self.meta_data_results = {}
-        agent_name_list = [f'{config.agent}_from', f'{config.agent}_to']
+        agent_name_list = [f'{agent_name}_from', f'{agent_name}_to']
         l_optimizer_cp = []
         for agent_name in agent_name_list:
             opt = copy.deepcopy(l_optimizer)

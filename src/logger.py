@@ -107,7 +107,8 @@ class Basic_Logger:
             std_data[agent] = np.mean(std_data[agent], 0)
         return avg_data, std_data
 
-    def data_wrapper_cost_rollout(self, data):
+    @staticmethod
+    def data_wrapper_cost_rollout(data):
         res = np.array(data)
         return res[:, -1]
     
