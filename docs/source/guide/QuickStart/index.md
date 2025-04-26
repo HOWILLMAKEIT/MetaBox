@@ -112,11 +112,8 @@ trainer = Trainer(user_config, agent, optimizer, dataset)
 trainer.train()
 ```
 
-<!-- > [!TIP]
-> **Train your algorithm on MetaBox** — refer to  **Gallery > Config** for details. -->
-
-```{tip} **Train your algorithm on MetaBox** — refer to  **Gallery > Config** for details.
-
+```{tip}
+**Train your algorithm on MetaBox** — refer to  **Gallery > Config** for details.
 ```
 
 ### 2. Test one MetaBox's algorithm on MetaBox's one Dataset
@@ -173,10 +170,6 @@ opt = GLEET_Optimizer(config)
 tester = Tester(config, user_agents: [agent], user_loptimizers: [opt], user_toprimizers：[CMAES], user_datasets = dataset)
 tester.test()
 ```
-
-<!-- > [!TIP]
-> **Test your algorithm on MetaBox** — refer to  **Gallery > Config** for details.\
-> **Test two or more algorithms** — refer to  **Gallery > Config** for details. -->
 
 ```{tip} **Test your algorithm on MetaBox** — refer to  **Gallery > Config** for details.\
 **Test two or more algorithms** — refer to  **Gallery > Config** for details.
