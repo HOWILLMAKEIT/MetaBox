@@ -18,7 +18,6 @@ Core_Concept
 ```bash
 conda create -n metabox_env python=3.11.5 -y
 conda activate metabox_env
-pip install -r requirements.txt
 pip install metabox
 ```
 
