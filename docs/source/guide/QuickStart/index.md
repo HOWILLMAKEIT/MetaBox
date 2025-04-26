@@ -16,9 +16,9 @@ Core_Concept
 ## Installation
 
 ```bash
-conda create -n metabox_env python=3.11.5 -y
-conda activate metabox_env
-pip install metabox
+conda create -n metaevobox_env python=3.11.5 -y
+conda activate metaevobox_env
+pip install metaevobox
 ```
 
 ## MetaBBO's Core Concept
@@ -73,10 +73,10 @@ Here's my admonition content
 🧪 General Training Code
 
 ```python
-from metabox import Trainer, Config
-from metabox.baseline.metabbo import XXX
-from metabox.baseline.metabbo import XXX_Optimizer
-from metabox.environment.problem.utils import construct_problem_set
+from metaevobox import Trainer, Config
+from metaevobox.baseline.metabbo import XXX
+from metaevobox.baseline.metabbo import XXX_Optimizer
+from metaevobox.environment.problem.utils import construct_problem_set
 
 user_config = {"train_problem": "xxx",
                    "train_difficulty": "xxx"
@@ -94,10 +94,10 @@ trainer.train()
 🎯 Example: Train GLEET on COCO's BBOB (10D, easy)
 
 ```python
-from metabox import Trainer, Config
-from metabox.baseline.metabbo import GLEET
-from metabox.baseline.metabbo import GLEET_Optimizer
-from metabox.environment.problem.utils import construct_problem_set
+from metaevobox import Trainer, Config
+from metaevobox.baseline.metabbo import GLEET
+from metaevobox.baseline.metabbo import GLEET_Optimizer
+from metaevobox.environment.problem.utils import construct_problem_set
 
 user_config = {"train_problem": "bbob-10D",
                "train_difficulty": "easy"
@@ -132,8 +132,8 @@ Numerous configurable options are available — refer to **Gallery > Config** fo
 🧪 General Tester Code
 
 ```python
-from metabox import Tester, Config
-from metabox.environment.problem.utils import construct_problem_set
+from metaevobox import Tester, Config
+from metaevobox.environment.problem.utils import construct_problem_set
 user_config = {"test_problem": "xxx",
                "test_difficulty": "xxx"
                "baseline": ["xxx"]
@@ -148,8 +148,8 @@ tester.test()
 🎯 Example: Test GLEET on COCO's BBOB (10D, easy)
 
 ```python
-from metabox import Tester, Config
-from metabox.environment.problem.utils import construct_problem_set
+from metaevobox import Tester, Config
+from metaevobox.environment.problem.utils import construct_problem_set
 
 user_config = {"train_problem": "bbob-10D",
                 "train_difficulty": "easy",
