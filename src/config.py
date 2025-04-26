@@ -112,9 +112,6 @@ def get_config(args=None):
     parser.add_argument('--mgd_test', default=None, action='store_true', help='switch to mgd_test mode')
     parser.add_argument('--mte_test', default=None, action='store_true', help='switch to mte_test mode')
 
-    parser.add_argument('--task_cnt', type=int, default=10, help='number of tasks in multitask') #for multitask
-    parser.add_argument('--generation', type=int, default=250, help='total generations for L2O') #for multitask
-
     parser.add_argument('--full_meta_data', type=bool, default=True, help='store the metadata')
     # Training parameters
     parser.add_argument('--max_learning_step', type=int, default=1500000, help='the maximum learning step for training')

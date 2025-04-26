@@ -191,7 +191,7 @@ class L2T_Optimizer(Learnable_Optimizer):
         self.dim = config.dim = 50
         self.generation = 0
         self.pop_cnt = 50
-        self.total_generation = config.generation
+        self.total_generation = 250
 
         self.flag_improved = np.array([0 for _ in range(self.task_cnt)], dtype=np.float32)
         self.stagnation = np.array([0 for _ in range(self.task_cnt)], dtype=np.float32) 

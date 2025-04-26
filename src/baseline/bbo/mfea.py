@@ -78,6 +78,7 @@ class MFEA(Basic_Optimizer):
         self.__config = config
         self.log_interval = config.log_interval
         self.full_meta_data = config.full_meta_data
+        self.total_generation = 250
 
         self.cost = None
         self._fes = None
@@ -201,7 +202,7 @@ class MFEA(Basic_Optimizer):
                 self.log_index += 1
                 self.cost.append(copy.deepcopy(best_fitness))
 
-            done = self._fes >= self.__config.maxFEs or generation >= self.__config.generation
+            done = self._fes >= self.__config.maxFEs or generation >= self.total_generation
 
             if done:
                 if len(self.cost) >= self.__config.n_logpoint + 1:
