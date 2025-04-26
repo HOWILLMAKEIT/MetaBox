@@ -421,7 +421,7 @@ class F9_Torch(CFunction): # CF1
         self._CFunction__lambda_ = np.array([1.0, 1.0, 8.0, 8.0, 1.0 / 5.0, 1.0 / 5.0])
 
         # Load optima
-        folder_package = 'environment.problem.MMO.CEC2013MMO.datafile'
+        folder_package = 'metaevobox.environment.problem.MMO.CEC2013MMO.datafile'
         optima_file = pkg_resources.files(folder_package).joinpath('optima.dat')
 
         with optima_file.open('r') as f:
@@ -473,7 +473,7 @@ class F10_Torch(CFunction): # CF2
         )
 
         # Load optima
-        folder_package = 'environment.problem.MMO.CEC2013MMO.datafile'
+        folder_package = 'metaevobox.environment.problem.MMO.CEC2013MMO.datafile'
         optima_file = pkg_resources.files(folder_package).joinpath('optima.dat')
 
         with optima_file.open('r') as f:
@@ -524,7 +524,7 @@ class F11_Torch(CFunction): # CF3
         self._CFunction__lambda_ = np.array([1.0 / 4.0, 1.0 / 10.0, 2.0, 1.0, 2.0, 5.0])
 
         # Load optima
-        folder_package = 'environment.problem.MMO.CEC2013MMO.datafile'
+        folder_package = 'metaevobox.environment.problem.MMO.CEC2013MMO.datafile'
         optima_file = pkg_resources.files(folder_package).joinpath('optima.dat')
 
         with optima_file.open('r') as f:
@@ -540,7 +540,7 @@ class F11_Torch(CFunction): # CF3
 
         # Load M_: Rotation matrices
         if dim == 2 or dim == 3 or dim == 5 or dim == 10 or dim == 20:
-            folder_package = 'environment.problem.MMO.CEC2013MMO.datafile'
+            folder_package = 'metaevobox.environment.problem.MMO.CEC2013MMO.datafile'
             fname = pkg_resources.files(folder_package).joinpath(f'CF3_M_D{dim}.dat')
             # fname = path.join(path.dirname(__file__), 'datafile') + "/CF3_M_D" + str(dim) + ".dat"
             self._CFunction__load_rotmat(fname)
@@ -583,7 +583,7 @@ class F12_Torch(CFunction): # CF4
         )
 
         # Load optima
-        folder_package = 'environment.problem.MMO.CEC2013MMO.datafile'
+        folder_package = 'metaevobox.environment.problem.MMO.CEC2013MMO.datafile'
         optima_file = pkg_resources.files(folder_package).joinpath('optima.dat')
 
         with optima_file.open('r') as f:
@@ -598,7 +598,7 @@ class F12_Torch(CFunction): # CF4
 
         # Load M_: Rotation matrices
         if dim == 2 or dim == 3 or dim == 5 or dim == 10 or dim == 20:
-            folder_package = 'environment.problem.MMO.CEC2013MMO.datafile'
+            folder_package = 'metaevobox.environment.problem.MMO.CEC2013MMO.datafile'
             fname = pkg_resources.files(folder_package).joinpath(f'CF4_M_D{dim}.dat')
             # fname = path.join(path.dirname(__file__), 'datafile') + "/CF4_M_D" + str(dim) + ".dat"
             self._CFunction__load_rotmat(fname)

@@ -76,7 +76,7 @@ class CEC2013LSGO_Torch_Problem(Basic_Problem_Torch):
         
         # 设置默认的数据类型
         torch.set_default_dtype(torch.float64)
-        self.data_dir = "environment/problem/SOO/CEC2013LSGO/datafile" # 数据文件夹
+        self.data_dir = "metaevobox.environment.problem.SOO.CEC2013LSGO.datafile" # 数据文件夹
 
         # 子空间的维度大小, 先提供了三种子空间的维度大小
         self.min_dim = 25

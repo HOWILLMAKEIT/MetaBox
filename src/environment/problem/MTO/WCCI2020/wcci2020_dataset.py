@@ -124,7 +124,7 @@ class WCCI2020_Dataset(Dataset):
                 id = (task_id-1) % len(choice_functions)
                 func_id = choice_functions[id]
 
-                folder_package = f"environment.problem.MTO.WCCI2020.datafile.benchmark_{task_ID + 1}"
+                folder_package = f"metaevobox.environment.problem.MTO.WCCI2020.datafile.benchmark_{task_ID + 1}"
                 shift_file_path = pkg_resources.files(folder_package).joinpath(f'bias_{task_id}')
                 rotate_file_path = pkg_resources.files(folder_package).joinpath(f'matrix_{task_id}')
                 # folder_dir = os.path.join(os.path.dirname(__file__),'datafile',f'benchmark_{task_ID+1}')

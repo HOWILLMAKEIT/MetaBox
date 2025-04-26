@@ -86,7 +86,7 @@ class CEC2017MTO_Dataset(Dataset):
         if difficulty not in ['easy', 'difficult', 'all', None]:
             raise ValueError(f'{difficulty} difficulty is invalid.')
         
-        folder_dir = 'environment.problem.MTO.CEC2017MTO.datafile'
+        folder_dir = 'metaevobox.environment.problem.MTO.CEC2017MTO.datafile'
         func_id = [i for i in range(0, 9)]
         if difficulty == 'easy':
             train_id = [0, 1, 2, 3, 4, 5]

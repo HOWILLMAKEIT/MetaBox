@@ -74,7 +74,7 @@ class bbob_surrogate_model(Basic_Problem):
         self.optimum = None
 
         # base_dir = path.dirname(path.dirname(path.dirname(path.abspath(__file__))))
-        base_dir = 'environment.problem.SOO.COCO_BBOB.datafile'
+        base_dir = 'metaevobox.environment.problem.SOO.COCO_BBOB.datafile'
 
         if dim == 2:
 
