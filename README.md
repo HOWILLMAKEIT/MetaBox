@@ -1,6 +1,5 @@
-# *Attention everyone！！！！！！, MetaBox v2.0.0 is coming!* 
-
-## <ins>*Now we have changed the default branch from the original v1.0.0 to v2.0.0. For users of v1.0.0, change the branch back to get old version directly. For users who wish to explore the fully new features of v2.0.0, we will make v2.0.0 documentation available online soon (before 2025.4.25). We welcome you to explore the new features in v2.0.0 such as the parallel training/inference, more flexible customization and comprehensive baseline gallery. Hope everyone could enjoy learning and using MetaBBO with high efficiency*</ins>!!!
+# MetaBox-v2: Benchmarking Meta-Black-Box Optimization under Diverse Optimization Scenarios with Efficiency and Flexibility 
+we propose MetaBox 2.0 version (MetaBox-v2) as a major upgradation of [MetaBox-v1](). MetaBox-v2 now supports plentiful optimization scenarios to embrace users from single-objective optimization, multi-objective optimization, multi-modal optimization, multi-task optimization and etc. Correspondingly, **11 optimization problem sets** (synthetic + realistic) and **36 baseline methods** (traditional optimizers + up-to-date MetaBBOs) are reproduced within MetaBox-v2 to assist various research ideas and comprehensive comparison. To address MetaBBO's inherent efficiency issue, we have optimized low-level implementation of MetaBox-v2 to support paralleled meta-training and evaluation, which reduces the running cost from days to hours.
 
 
 
