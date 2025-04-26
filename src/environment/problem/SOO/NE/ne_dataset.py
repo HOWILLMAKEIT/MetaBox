@@ -7,8 +7,6 @@ from .evox_ne import *
 
 class NE_Dataset(Dataset):
     """
-    # Introduction
-    NE_Dataset is a dataset wrapper for neural environment (NE) problems, supporting batching, shuffling, and flexible dataset generation for training and testing. It is designed to facilitate experiments with different problem difficulties and user-defined splits.
     # Args:
     - data (list): A list of NE_Problem instances or similar data objects.
     - batch_size (int, optional): Number of samples per batch. Defaults to 1.

@@ -53,8 +53,6 @@ model_depth = [
 
 class NE_Problem(Basic_Problem):
     """
-    # NE_Problem
-    A neural evolution problem class for optimizing neural network policies in Brax environments.
     # Introduction
     `NE_Problem` sets up a neural network-based optimization problem for a given Brax environment. It initializes the environment, neural network model, and evaluation mechanism, and provides a function to evaluate batches of neural network parameters.
     # Args:

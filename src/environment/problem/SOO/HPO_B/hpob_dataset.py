@@ -10,7 +10,6 @@ import xgboost as xgb
 class HPOB_Dataset(Dataset):
     """
     # HPOB_Dataset
-    A dataset class for handling HPO-B (Hyperparameter Optimization Benchmark) problems, supporting batching, shuffling, and dataset splitting for meta-learning and benchmarking tasks.
     # Args:
     - data (list): A list of HPOB_Problem instances or similar objects representing individual optimization problems.
     - batch_size (int, optional): The number of problems per batch. Defaults to 1.

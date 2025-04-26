@@ -8,8 +8,6 @@ import time
 
 class Protein_Docking_Numpy_Problem(Basic_Problem):
     """
-    # Protein_Docking_Numpy_Problem
-    Represents a protein docking optimization problem using a reduced coordinate system and numpy operations. This class is designed to evaluate the energy of protein-protein interfaces based on atomic coordinates and interaction parameters.
     # Args:
     - coor_init (np.ndarray): Initial coordinates of the interface atoms, shape [n_atoms, 3].
     - q (np.ndarray): Charge interaction matrix, shape [n_atoms, n_atoms].
