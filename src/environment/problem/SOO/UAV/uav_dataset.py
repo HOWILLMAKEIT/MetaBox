@@ -6,8 +6,6 @@ import pickle
 
 class UAV_Dataset(Dataset):
     """
-    # UAV_Dataset
-    A dataset class for handling UAV (Unmanned Aerial Vehicle) environment instances, supporting batching, shuffling, and custom train/test splits for machine learning tasks.
     # Args:
     - data (list): List of environment instances or data samples.
     - batch_size (int, optional): Number of samples per batch. Defaults to 1.

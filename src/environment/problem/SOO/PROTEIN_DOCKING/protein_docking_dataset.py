@@ -8,8 +8,6 @@ from .protein_docking import Protein_Docking_Torch_Problem, Protein_Docking_Nump
 import importlib.resources as pkg_resources
 class Protein_Docking_Dataset(Dataset):
     """
-    # Protein_Docking_Dataset
-    A dataset class for handling protein docking problem instances, supporting batching, shuffling, and dataset splitting for training and testing.
     # Attributes:
     - proteins_set (dict): Dictionary containing protein IDs categorized by difficulty ('rigid', 'medium', 'difficult').
     - n_start_points (int): Number of starting models per protein (default: 10).
