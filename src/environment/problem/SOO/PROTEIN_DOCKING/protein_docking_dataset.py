@@ -5,6 +5,7 @@ from torch.utils.data import Dataset
 from ....problem.basic_problem import Basic_Problem
 import time
 from .protein_docking import Protein_Docking_Torch_Problem, Protein_Docking_Numpy_Problem
+import importlib.resources as pkg_resources
 class Protein_Docking_Dataset(Dataset):
     """
     # Protein_Docking_Dataset
@@ -59,6 +60,8 @@ class Protein_Docking_Dataset(Dataset):
     def get_datasets(version,
                      train_batch_size=1,
                      test_batch_size=1,
+                     user_train_list = None,
+                     user_test_list = None,
                      difficulty='easy',
                      dataset_seed=1035):
         # apart train set and test set
@@ -67,30 +70,33 @@ class Protein_Docking_Dataset(Dataset):
         elif difficulty == 'difficult':
             train_set_ratio = 0.25
         else:
-            raise ValueError
-        if dataset_seed > 0:
-            np.random.seed(dataset_seed)
+            train_set_ratio = 0 # 全在test上
+        rng = np.random.RandomState(dataset_seed)
         train_proteins_set = []
         test_proteins_set = []
         for key in Protein_Docking_Dataset.proteins_set.keys():
-            permutated = np.random.permutation(Protein_Docking_Dataset.proteins_set[key])
+            permutated = rng.permutation(Protein_Docking_Dataset.proteins_set[key])
             n_train_proteins = max(1, min(int(len(permutated) * train_set_ratio), len(permutated) - 1))
             train_proteins_set.extend(permutated[:n_train_proteins])
             test_proteins_set.extend(permutated[n_train_proteins:])
         # construct problem instances
-        data = []
-        base_dir = path.dirname(path.abspath(__file__))
-        data_folder = path.join(base_dir, 'datafile')
-        for i in train_proteins_set + test_proteins_set:
+        data_folder = 'environment.problem.SOO.PROTEIN_DOCKING.datafile'
+
+
+        train_set = []
+        test_set = []
+        instance_list = []
+        for id in train_proteins_set + test_proteins_set:
+            tmp_set = []
             for j in range(Protein_Docking_Dataset.n_start_points):
-                problem_id = i + '_' + str(j + 1)
-                data_dir = path.join(data_folder, problem_id)
-                coor_init = np.loadtxt(data_dir + '/coor_init')
-                q = np.loadtxt(data_dir + '/q')
-                e = np.loadtxt(data_dir + '/e')
-                r = np.loadtxt(data_dir + '/r')
-                basis = np.loadtxt(data_dir + '/basis')
-                eigval = np.loadtxt(data_dir + '/eigval')
+                problem_id = id + '_' + str(j + 1)
+                with pkg_resources.path(data_folder, problem_id) as f:
+                    coor_init = np.loadtxt(f / 'coor_init')
+                    q = np.loadtxt(f / 'q')
+                    e = np.loadtxt(f / 'e')
+                    r = np.loadtxt(f / 'r')
+                    basis = np.loadtxt(f / 'basis')
+                    eigval = np.loadtxt(f / 'eigval')
 
                 q = np.tile(q, (1, 1))
                 e = np.tile(e, (1, 1))
@@ -100,13 +106,39 @@ class Protein_Docking_Dataset(Dataset):
                 e = np.sqrt(np.matmul(e.T, e))
                 r = (r + r.T) / 2
                 if version == 'protein':
-                    data.append(Protein_Docking_Numpy_Problem(coor_init, q, e, r, basis, eigval, problem_id))
+                    tmp_set.append(Protein_Docking_Numpy_Problem(coor_init, q, e, r, basis, eigval, problem_id))
                 elif version == 'protein-torch':
-                    data.append(Protein_Docking_Torch_Problem(coor_init, q, e, r, basis, eigval, problem_id))
+                    tmp_set.append(Protein_Docking_Torch_Problem(coor_init, q, e, r, basis, eigval, problem_id))
                 else:
                     raise ValueError(f'{version} version is invalid or is not supported yet.')
-        n_train_instances = len(train_proteins_set) * Protein_Docking_Dataset.n_start_points
-        return Protein_Docking_Dataset(data[:n_train_instances], train_batch_size), Protein_Docking_Dataset(data[n_train_instances:], test_batch_size)
+            if difficulty == "all":
+                instance_list.extend(tmp_set)
+            if user_train_list is None and user_test_list is None:
+                if id in train_proteins_set:
+                    train_set.extend(tmp_set)
+                elif id in test_proteins_set:
+                    test_set.extend(tmp_set)
+            else:
+                if user_train_list is not None and user_test_list is not None:
+                    if id in user_train_list:
+                        train_set.extend(tmp_set)
+                    if id in user_test_list:
+                        test_set.extend(tmp_set)
+                elif user_train_list is not None:
+                    if id in user_train_list:
+                        train_set.extend(tmp_set)
+                    else:
+                        test_set.extend(tmp_set)
+                elif user_test_list is not None:
+                    if id in user_test_list:
+                        test_set.extend(tmp_set)
+                    else:
+                        train_set.extend(tmp_set)
+        if difficulty == 'all':
+            train_set = instance_list.copy()
+            test_set = instance_list.copy()
+
+        return Protein_Docking_Dataset(train_set, train_batch_size), Protein_Docking_Dataset(test_set, test_batch_size)
 
     def __getitem__(self, item):
         

@@ -161,8 +161,9 @@ class B2OPT(Basic_Agent):
 
         self.learning_time = 0
         self.cur_checkpoint = 0
-        super().__init__(self.config)
 
+        self.config.agent_save_dir = self.config.agent_save_dir + self.__str__() + '/' + self.config.run_time + '/'
+        super().__init__(self.config)
         save_class(self.config.agent_save_dir, 'checkpoint-' + str(self.cur_checkpoint), self)
         self.cur_checkpoint += 1
 

@@ -25,6 +25,7 @@ class QLPSO(QLearning_Agent):
         # self.__global_ls = 0  # a counter of accumulated learned steps
         self.device = self.config.device
         # self.__cur_checkpoint = 0
+        self.config.agent_save_dir = self.config.agent_save_dir + self.__str__() + '/' + self.config.run_time + '/'
         super().__init__(self.config)
 
     def __str__(self):

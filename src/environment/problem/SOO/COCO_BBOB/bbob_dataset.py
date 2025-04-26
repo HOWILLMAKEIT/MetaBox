@@ -128,7 +128,7 @@ class BBOB_Dataset(Dataset):
                 if user_train_list is not None and user_test_list is not None:
                     if (id in user_train_list):
                         train_set.append(instance)
-                    elif (id in user_test_list):
+                    if (id in user_test_list):
                         test_set.append(instance)
                 elif user_train_list is not None:
                     # 如果只选择了train，不在train的都去test，不然用户自己选

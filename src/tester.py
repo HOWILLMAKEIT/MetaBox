@@ -390,8 +390,11 @@ class Tester(object):
         self.t_optimizer_for_cp = []
 
         # 先append 用户的
-        name_count = dict()
+        user_agents = user_agents if isinstance(user_agents, list) else [user_agents]
+        user_loptimizers = user_loptimizers if isinstance(user_loptimizers, list) else [user_loptimizers]
+        user_toptimizers = user_toptimizers if isinstance(user_toptimizers, list) else [user_toptimizers]
 
+        name_count = dict()
         for id, agent in enumerate(user_agents):
             name = agent.__str__()
             self.agent_for_cp.append(copy.deepcopy(agent))
@@ -427,35 +430,6 @@ class Tester(object):
             setattr(opt, "test_name", name)
             self.t_optimizer_for_cp.insert(0, copy.deepcopy(opt))
 
-        # 再append 我们的
-        # for baseline in self.config.baselines:
-        #     self.agent_name_list.append(f"{id}_{baseline}")
-        #
-        #     # todo 这里得补个hugging face上来
-        #
-        #     id += 1
-
-        # with open('model.json', 'r', encoding = 'utf-8') as f:
-        #     json_data = json.load(f)
-        # for key in self.key_list:
-        #     if key not in json_data.keys():
-        #         raise KeyError(f"Missing key '{key}' in model.json")
-        #
-        #     # get key
-        #     baseline = json_data[key]
-        #     if "Agent" in baseline.keys():
-        #         agent_name = baseline["Agent"]
-        #         l_optimizer = baseline['Optimizer']
-        #         dir = baseline['dir']
-        #         # get agent
-        #         self.agent_name_list.append(key)
-        #         with open(dir, 'rb') as f:
-        #             self.agent_for_cp.append(pickle.load(f))
-        #         self.l_optimizer_for_cp.append(eval(l_optimizer)(copy.deepcopy(config)))
-        #
-        #     else:
-        #         t_optimizer = baseline['Optimizer']
-        #         self.t_optimizer_for_cp.append(eval(t_optimizer)(copy.deepcopy(config)))
         # logging
         if len(self.agent_for_cp) == 0:
             print('None of learnable agent')

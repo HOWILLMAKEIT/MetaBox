@@ -230,8 +230,8 @@ class Trainer(object):
         elif self.config.train_mode == "multi":
             self.train_set.batch_size = bs
 
-        epoch_seed = self.config.epoch_seed
-        id_seed = self.config.id_seed
+        epoch_seed = 100
+        id_seed = 5
         seed = self.config.seed
 
         checkpoint_time0 = time.time()

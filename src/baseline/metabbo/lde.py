@@ -58,7 +58,7 @@ class LDE(REINFORCE_Agent):
         # origin LDE doesn't have clip
         self.config.max_grad_norm = math.inf
         self.device = self.config.device
-
+        self.config.agent_save_dir = self.config.agent_save_dir + self.__str__() + '/' + self.config.run_time + '/'
         super().__init__(self.config, {'model': model}, [self.config.lr_model])
 
     def __str__(self):

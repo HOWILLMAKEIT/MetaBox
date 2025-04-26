@@ -86,7 +86,7 @@ class RLEPSO(PPO_Agent):
 
         # figure out the critic
         critic = Critic(config)
-
+        self.config.agent_save_dir = self.config.agent_save_dir + self.__str__() + '/' + self.config.run_time + '/'
         super().__init__(self.config, {'actor': actor, 'critic': critic}, self.config.lr)
 
     def __str__(self):
