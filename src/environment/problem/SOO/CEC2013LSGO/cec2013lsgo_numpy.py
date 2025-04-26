@@ -1,5 +1,6 @@
 from ....problem.basic_problem import Basic_Problem
 import numpy as np
+import importlib.resources as pkg_resources
 
 class CEC2013LSGO_Numpy_Problem(Basic_Problem):
     """
@@ -79,7 +80,7 @@ class CEC2013LSGO_Numpy_Problem(Basic_Problem):
     def __init__(self):
         
         # 设置默认的数据类型
-        self.data_dir = "environment/problem/SOO/CEC2013LSGO/datafile" # 数据文件夹
+        self.data_dir = "environment.problem.SOO.CEC2013LSGO.datafile" # 数据文件夹
 
         # 子空间的维度大小, 先提供了三种子空间的维度大小
         self.min_dim = 25
@@ -115,10 +116,12 @@ class CEC2013LSGO_Numpy_Problem(Basic_Problem):
     # 读取Ovector
     def readOvector(self):
         d = np.zeros(self.dim)
-        file_path = f"{self.data_dir}/F{self.ID}-xopt.txt"
-        
+        file_name = f"F{self.ID}-xopt.txt"
+
+        file_path = pkg_resources.files(self.data_dir).joinpath(file_name)
+
         try:
-            with open(file_path, 'r') as file:
+            with file_path.open('r') as file:
                 c = 0
                 for line in file:
                     values = line.strip().split(',')
@@ -134,10 +137,12 @@ class CEC2013LSGO_Numpy_Problem(Basic_Problem):
     # 读取OvectorVec，根据子空间的大小分割，得到一个向量数组
     def readOvectorVec(self):
         d = [np.zeros(self.s[i]) for i in range(self.s_size)]
-        file_path = f"{self.data_dir}/F{self.ID}-xopt.txt"
+        file_name = f"F{self.ID}-xopt.txt"
+
+        file_path = pkg_resources.files(self.data_dir).joinpath(file_name)
 
         try:
-            with open(file_path, 'r') as file:
+            with file_path.open('r') as file:
                 c = 0  # index over 1 to dim
                 i = -1  # index over 1 to s_size
                 up = 0  # current upper bound for one group
@@ -160,10 +165,12 @@ class CEC2013LSGO_Numpy_Problem(Basic_Problem):
     # 读取PermVector
     def readPermVector(self):
         d = np.zeros(self.dim, dtype=int)
-        file_path = f"{self.data_dir}/F{self.ID}-p.txt"
+        file_name = f"F{self.ID}-p.txt"
+
+        file_path = pkg_resources.files(self.data_dir).joinpath(file_name)
         
         try:
-            with open(file_path, 'r') as file:
+            with file_path.open('r') as file:
                 c = 0
                 for line in file:
                     values = line.strip().split(',')
@@ -179,10 +186,12 @@ class CEC2013LSGO_Numpy_Problem(Basic_Problem):
     # 读取R，即为各个子空间的向量
     def readR(self, sub_dim):
         m = np.zeros((sub_dim, sub_dim))
-        file_path = f"{self.data_dir}/F{self.ID}-R{sub_dim}.txt"
+        file_name = f"F{self.ID}-R{sub_dim}.txt"
+
+        file_path = pkg_resources.files(self.data_dir).joinpath(file_name)
 
         try:
-            with open(file_path, 'r') as file:
+            with file_path.open('r') as file:
                 i = 0
                 for line in file:
                     values = line.strip().split(',')
@@ -197,10 +206,11 @@ class CEC2013LSGO_Numpy_Problem(Basic_Problem):
     # 读取S，即为各个子问题的维度
     def readS(self, num):
         self.s = np.zeros(num, dtype=int)
-        file_path = f"{self.data_dir}/F{self.ID}-s.txt"
+        file_name = f"F{self.ID}-s.txt"
 
+        file_path = pkg_resources.files(self.data_dir).joinpath(file_name)
         try:
-            with open(file_path, 'r') as file:
+            with file_path.open('r') as file:
                 c = 0
                 for line in file:
                     self.s[c] = int(float(line.strip()))
@@ -213,10 +223,12 @@ class CEC2013LSGO_Numpy_Problem(Basic_Problem):
     # 读取W
     def readW(self, num):
         self.w = np.zeros(num)
-        file_path = f"{self.data_dir}/F{self.ID}-w.txt"
+        file_name = f"F{self.ID}-w.txt"
+
+        file_path = pkg_resources.files(self.data_dir).joinpath(file_name)
 
         try:
-            with open(file_path, 'r') as file:
+            with file_path.open('r') as file:
                 c = 0
                 for line in file:
                     self.w[c] = float(line.strip())

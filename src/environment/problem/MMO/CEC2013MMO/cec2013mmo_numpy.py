@@ -3,7 +3,7 @@ import numpy as np
 import math
 from os import path
 MINMAX = -1 
-
+import importlib.resources as pkg_resources
 class CEC2013MMO_Numpy_Problem(Basic_Problem):
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
         self.dim = dim
@@ -134,7 +134,7 @@ class CFunction(CEC2013MMO_Numpy_Problem):
     def __load_rotmat(self, fname):
         self.__M_ = []
 
-        with open(fname, "r") as f:
+        with fname.open('r') as f:
             tmp = np.zeros((self.dim, self.dim))
             cline = 0
             ctmp = 0
@@ -385,7 +385,13 @@ class F9(CFunction): # CF1
         self._CFunction__lambda_ = np.array([1.0, 1.0, 8.0, 8.0, 1.0 / 5.0, 1.0 / 5.0])
 
         # Load optima
-        o = np.loadtxt(path.join(path.dirname(__file__), 'datafile') + "/optima.dat")
+        folder_package = 'environment.problem.MMO.CEC2013MMO.datafile'
+        optima_file = pkg_resources.files(folder_package).joinpath('optima.dat')
+
+        with optima_file.open('r') as f:
+            o = np.loadtxt(f)
+
+        # o = np.loadtxt(path.join(path.dirname(__file__), 'datafile') + "/optima.dat")
         if o.shape[1] >= dim:
             self._CFunction__O_ = o[: self._CFunction__nofunc_, :dim]
         else:  # randomly initialize
@@ -431,7 +437,13 @@ class F10(CFunction): # CF2
         )
 
         # Load optima
-        o = np.loadtxt(path.join(path.dirname(__file__), 'datafile') + "/optima.dat")
+        folder_package = 'environment.problem.MMO.CEC2013MMO.datafile'
+        optima_file = pkg_resources.files(folder_package).joinpath('optima.dat')
+
+        with optima_file.open('r') as f:
+            o = np.loadtxt(f)
+
+        # o = np.loadtxt(path.join(path.dirname(__file__), 'datafile') + "/optima.dat")
         if o.shape[1] >= dim:
             self._CFunction__O_ = o[: self._CFunction__nofunc_, :dim]
         else:  # randomly initialize
@@ -477,7 +489,13 @@ class F11(CFunction): # CF3
         self._CFunction__lambda_ = np.array([1.0 / 4.0, 1.0 / 10.0, 2.0, 1.0, 2.0, 5.0])
 
         # Load optima
-        o = np.loadtxt(path.join(path.dirname(__file__), 'datafile') + "/optima.dat")
+        folder_package = 'environment.problem.MMO.CEC2013MMO.datafile'
+        optima_file = pkg_resources.files(folder_package).joinpath('optima.dat')
+
+        with optima_file.open('r') as f:
+            o = np.loadtxt(f)
+
+        # o = np.loadtxt(path.join(path.dirname(__file__), 'datafile') + "/optima.dat")
         if o.shape[1] >= dim:
             self._CFunction__O_ = o[: self._CFunction__nofunc_, :dim]
         else:  # randomly initialize
@@ -487,7 +505,9 @@ class F11(CFunction): # CF3
 
         # Load M_: Rotation matrices
         if dim == 2 or dim == 3 or dim == 5 or dim == 10 or dim == 20:
-            fname = path.join(path.dirname(__file__), 'datafile') + "/CF3_M_D" + str(dim) + ".dat"
+            folder_package = 'environment.problem.MMO.CEC2013MMO.datafile'
+            fname = pkg_resources.files(folder_package).joinpath(f'CF3_M_D{dim}.dat')
+            # fname = path.join(path.dirname(__file__), 'datafile') + "/CF3_M_D" + str(dim) + ".dat"
             self._CFunction__load_rotmat(fname)
         else:
             # M_ Identity matrices 
@@ -528,7 +548,13 @@ class F12(CFunction): # CF4
         )
 
         # Load optima
-        o = np.loadtxt(path.join(path.dirname(__file__), 'datafile') + "/optima.dat")
+        folder_package = 'environment.problem.MMO.CEC2013MMO.datafile'
+        optima_file = pkg_resources.files(folder_package).joinpath('optima.dat')
+
+        with optima_file.open('r') as f:
+            o = np.loadtxt(f)
+
+        # o = np.loadtxt(path.join(path.dirname(__file__), 'datafile') + "/optima.dat")
         if o.shape[1] >= dim:
             self._CFunction__O_ = o[: self._CFunction__nofunc_, :dim]
         else:  # randomly initialize
@@ -538,7 +564,9 @@ class F12(CFunction): # CF4
 
         # Load M_: Rotation matrices
         if dim == 2 or dim == 3 or dim == 5 or dim == 10 or dim == 20:
-            fname = path.join(path.dirname(__file__), 'datafile') + "/CF4_M_D" + str(dim) + ".dat"
+            folder_package = 'environment.problem.MMO.CEC2013MMO.datafile'
+            fname = pkg_resources.files(folder_package).joinpath(f'CF4_M_D{dim}.dat')
+            # fname = path.join(path.dirname(__file__), 'datafile') + "/CF4_M_D" + str(dim) + ".dat"
             self._CFunction__load_rotmat(fname)
         else:
             # M_ Identity matrices

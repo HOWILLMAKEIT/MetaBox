@@ -81,8 +81,6 @@ class Protein_Docking_Dataset(Dataset):
             test_proteins_set.extend(permutated[n_train_proteins:])
         # construct problem instances
         data_folder = 'environment.problem.SOO.PROTEIN_DOCKING.datafile'
-
-
         train_set = []
         test_set = []
         instance_list = []
@@ -105,9 +103,9 @@ class Protein_Docking_Dataset(Dataset):
                 q = np.matmul(q.T, q)
                 e = np.sqrt(np.matmul(e.T, e))
                 r = (r + r.T) / 2
-                if version == 'protein':
+                if version == 'numpy':
                     tmp_set.append(Protein_Docking_Numpy_Problem(coor_init, q, e, r, basis, eigval, problem_id))
-                elif version == 'protein-torch':
+                elif version == 'torch':
                     tmp_set.append(Protein_Docking_Torch_Problem(coor_init, q, e, r, basis, eigval, problem_id))
                 else:
                     raise ValueError(f'{version} version is invalid or is not supported yet.')

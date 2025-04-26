@@ -1,6 +1,6 @@
 from ....problem.basic_problem import Basic_Problem_Torch
 import torch
-
+import importlib.resources as pkg_resources
 class CEC2013LSGO_Torch_Problem(Basic_Problem_Torch):
     """
     # CEC2013LSGO_Torch_Problem
@@ -112,10 +112,12 @@ class CEC2013LSGO_Torch_Problem(Basic_Problem_Torch):
     # 读取Ovector
     def readOvector(self):
         d = torch.zeros(self.dim)
-        file_path = f"{self.data_dir}/F{self.ID}-xopt.txt"
-        
+        file_name = f"F{self.ID}-xopt.txt"
+
+        file_path = pkg_resources.files(self.data_dir).joinpath(file_name)
+
         try:
-            with open(file_path, 'r') as file:
+            with file_path.open('r') as file:
                 c = 0
                 for line in file:
                     values = line.strip().split(',')
@@ -125,16 +127,18 @@ class CEC2013LSGO_Torch_Problem(Basic_Problem_Torch):
                             c += 1
         except FileNotFoundError:
             print(f"Cannot open the datafile '{file_path}'")
-        
+
         return d
-    
+
     # 读取OvectorVec，根据子空间的大小分割，得到一个向量数组
     def readOvectorVec(self):
         d = [torch.zeros(self.s[i]) for i in range(self.s_size)]
-        file_path = f"{self.data_dir}/F{self.ID}-xopt.txt"
+        file_name = f"F{self.ID}-xopt.txt"
+
+        file_path = pkg_resources.files(self.data_dir).joinpath(file_name)
 
         try:
-            with open(file_path, 'r') as file:
+            with file_path.open('r') as file:
                 c = 0  # index over 1 to dim
                 i = -1  # index over 1 to s_size
                 up = 0  # current upper bound for one group
@@ -153,14 +157,16 @@ class CEC2013LSGO_Torch_Problem(Basic_Problem_Torch):
             print(f"Cannot open the OvectorVec datafiles '{file_path}'")
 
         return d
-    
+
     # 读取PermVector
     def readPermVector(self):
         d = torch.zeros(self.dim, dtype=int)
-        file_path = f"{self.data_dir}/F{self.ID}-p.txt"
-        
+        file_name = f"F{self.ID}-p.txt"
+
+        file_path = pkg_resources.files(self.data_dir).joinpath(file_name)
+
         try:
-            with open(file_path, 'r') as file:
+            with file_path.open('r') as file:
                 c = 0
                 for line in file:
                     values = line.strip().split(',')
@@ -170,16 +176,18 @@ class CEC2013LSGO_Torch_Problem(Basic_Problem_Torch):
                             c += 1
         except FileNotFoundError:
             print(f"Cannot open the datafile '{file_path}'")
-        
+
         return d
-    
+
     # 读取R，即为各个子空间的向量
     def readR(self, sub_dim):
         m = torch.zeros((sub_dim, sub_dim))
-        file_path = f"{self.data_dir}/F{self.ID}-R{sub_dim}.txt"
+        file_name = f"F{self.ID}-R{sub_dim}.txt"
+
+        file_path = pkg_resources.files(self.data_dir).joinpath(file_name)
 
         try:
-            with open(file_path, 'r') as file:
+            with file_path.open('r') as file:
                 i = 0
                 for line in file:
                     values = line.strip().split(',')
@@ -188,39 +196,41 @@ class CEC2013LSGO_Torch_Problem(Basic_Problem_Torch):
                     i += 1
         except FileNotFoundError:
             print(f"Cannot open the datafile '{file_path}'")
-        
+
         return m
 
     # 读取S，即为各个子问题的维度
     def readS(self, num):
         self.s = torch.zeros(num, dtype=int)
-        file_path = f"{self.data_dir}/F{self.ID}-s.txt"
+        file_name = f"F{self.ID}-s.txt"
 
+        file_path = pkg_resources.files(self.data_dir).joinpath(file_name)
         try:
-            with open(file_path, 'r') as file:
+            with file_path.open('r') as file:
                 c = 0
                 for line in file:
                     self.s[c] = int(float(line.strip()))
                     c += 1
         except FileNotFoundError:
             print(f"Cannot open the datafile '{file_path}'")
-        
         return self.s
 
     # 读取W
     def readW(self, num):
         self.w = torch.zeros(num)
-        file_path = f"{self.data_dir}/F{self.ID}-w.txt"
+        file_name = f"F{self.ID}-w.txt"
+
+        file_path = pkg_resources.files(self.data_dir).joinpath(file_name)
 
         try:
-            with open(file_path, 'r') as file:
+            with file_path.open('r') as file:
                 c = 0
                 for line in file:
                     self.w[c] = float(line.strip())
                     c += 1
         except FileNotFoundError:
             print(f"Cannot open the datafile '{file_path}'")
-        
+
         return self.w
 
     # 向量乘矩阵

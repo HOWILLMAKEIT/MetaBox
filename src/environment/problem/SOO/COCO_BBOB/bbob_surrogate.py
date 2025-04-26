@@ -5,7 +5,7 @@ from os import path
 from torch.utils.data import Dataset
 import time
 import torch.nn as nn
-
+import importlib.resources as pkg_resources
 # MLP
 class MLP(nn.Module):
     def __init__(self, input_dim):
@@ -74,47 +74,56 @@ class bbob_surrogate_model(Basic_Problem):
         self.optimum = None
 
         # base_dir = path.dirname(path.dirname(path.dirname(path.abspath(__file__))))
-        base_dir = path.dirname(path.abspath(__file__))
+        base_dir = 'environment.problem.SOO.COCO_BBOB.datafile'
 
         if dim == 2:
 
             if func_id in [1, 6, 8, 9, 12, 14, 19, 20, 23]:
-                self.model = KAN.loadckpt(
-                    path.join(base_dir, f'datafile/Dim{dim}/KAN/{self.instance}/model'))
+
+                model_dir = f'Dim{dim}/KAN/{self.instance}/model'
+                model_path = pkg_resources.files(base_dir).joinpath(model_dir)
+                self.model = KAN.loadckpt(str(model_path))
             # elif func_id in [2, 3, 4, 5, 7, 10, 11, 13, 15, 16, 17, 18, 21, 22, 23]:
             else:
                 self.model = MLP(dim)
-                self.model.load_state_dict(
-                    torch.load(path.join(base_dir,
-                                         f'datafile/Dim{dim}/MLP/{self.instance}/model.pth'))
-                )
 
+                model_file = f'Dim{dim}/MLP/{self.instance}/model.pth'
+                model_path = pkg_resources.files(base_dir).joinpath(model_file)
+
+                with model_path.open('rb') as f:
+                    self.model.load_state_dict(torch.load(f))
 
         elif dim == 5:
 
             if func_id in [1, 2, 4, 6, 8, 9, 11, 12, 14, 20, 23]:
-                self.model = KAN.loadckpt(
-                    path.join(base_dir, f'datafile/Dim{dim}/KAN/{self.instance}/model'))
+                model_dir = f'Dim{dim}/KAN/{self.instance}/model'
+                model_path = pkg_resources.files(base_dir).joinpath(model_dir)
+                self.model = KAN.loadckpt(str(model_path))
             else:
                 self.model = MLP(dim)
-                self.model.load_state_dict(
-                    torch.load(path.join(base_dir,
-                                         f'datafile/Dim{dim}/MLP/{self.instance}/model.pth'))
-                )
+
+                model_file = f'Dim{dim}/MLP/{self.instance}/model.pth'
+                model_path = pkg_resources.files(base_dir).joinpath(model_file)
+
+                with model_path.open('rb') as f:
+                    self.model.load_state_dict(torch.load(f))
+
 
         elif dim == 10:
 
             if func_id in [1, 2, 4, 6, 9, 12, 14, 23]:
-                self.model = KAN.loadckpt(
-                    path.join(base_dir, f'datafile/Dim{dim}/KAN/{self.instance}/model'))
+                model_dir = f'Dim{dim}/KAN/{self.instance}/model'
+                model_path = pkg_resources.files(base_dir).joinpath(model_dir)
+                self.model = KAN.loadckpt(str(model_path))
             # elif func_id in [2, 5, 8, 9, 11, 16, 17, 18, 19, 20, 21, 22]:
             else:
                 self.model = MLP(dim)
-                self.model.load_state_dict(
-                    torch.load(path.join(base_dir,
-                                         f'datafile/Dim{dim}/MLP/{self.instance}/model.pth'))
-                )
 
+                model_file = f'Dim{dim}/MLP/{self.instance}/model.pth'
+                model_path = pkg_resources.files(base_dir).joinpath(model_file)
+
+                with model_path.open('rb') as f:
+                    self.model.load_state_dict(torch.load(f))
 
         else:
             raise ValueError(f'training on dim{dim} is not supported yet.')

@@ -4,11 +4,12 @@ import numpy as np
 from torch.utils.data import Dataset
 import os
 import scipy.io as sio
-
+import importlib.resources as pkg_resources
 
 def mat2np(path):
-        data = sio.loadmat(path)
-        return data
+    with path.open('rb') as f:
+        data = sio.loadmat(f)
+    return data
 
 
 class CEC2017MTO_Tasks():
@@ -85,7 +86,7 @@ class CEC2017MTO_Dataset(Dataset):
         if difficulty not in ['easy', 'difficult', 'all', None]:
             raise ValueError(f'{difficulty} difficulty is invalid.')
         
-        folder_dir = os.path.join(os.path.dirname(__file__),'datafile')
+        folder_dir = 'environment.problem.MTO.CEC2017MTO.datafile'
         func_id = [i for i in range(0, 9)]
         if difficulty == 'easy':
             train_id = [0, 1, 2, 3, 4, 5]
@@ -105,9 +106,10 @@ class CEC2017MTO_Dataset(Dataset):
         for task_ID in func_id:
             Tasks = []
             if task_ID == 0:
-                file_dir = os.path.join(folder_dir,'CI_H.mat')
+                file_name = 'CI_H.mat'
+                file_path = pkg_resources.files(folder_dir).joinpath(file_name)
                 keys = ['GO_Task1', 'GO_Task2', 'Rotation_Task1', 'Rotation_Task2']
-                data = mat2np(file_dir)
+                data = mat2np(file_path)
                 if version == 'numpy':
                     task1 = Griewank(50, data[keys[0]], data[keys[2]])
                     task2 = Rastrigin(50, data[keys[1]], data[keys[3]])
@@ -117,9 +119,10 @@ class CEC2017MTO_Dataset(Dataset):
                 Tasks = [task1, task2]
 
             if task_ID == 1:
-                file_dir = os.path.join(folder_dir,'CI_M.mat')
+                file_name = 'CI_M.mat'
+                file_path = pkg_resources.files(folder_dir).joinpath(file_name)
                 keys = ['GO_Task1', 'GO_Task2', 'Rotation_Task1', 'Rotation_Task2']
-                data = mat2np(file_dir)
+                data = mat2np(file_path)
                 if version == 'numpy':
                     task1 = Ackley(50, data[keys[0]], data[keys[2]])
                     task2 = Rastrigin(50, data[keys[1]], data[keys[3]])
@@ -129,9 +132,10 @@ class CEC2017MTO_Dataset(Dataset):
                 Tasks = [task1, task2]
 
             if task_ID == 2:
-                file_dir = os.path.join(folder_dir,'CI_L.mat')
+                file_name = 'CI_L.mat'
+                file_path = pkg_resources.files(folder_dir).joinpath(file_name)
                 keys = ['GO_Task1', None, 'Rotation_Task1',None]
-                data = mat2np(file_dir)
+                data = mat2np(file_path)
                 if version == 'numpy':
                     task1 = Ackley(50, data[keys[0]], data[keys[2]])
                     task2 = Schwefel(50)
@@ -141,9 +145,10 @@ class CEC2017MTO_Dataset(Dataset):
                 Tasks = [task1, task2]
 
             if task_ID == 3:
-                file_dir = os.path.join(folder_dir,'PI_H.mat')
+                file_name = 'PI_H.mat'
+                file_path = pkg_resources.files(folder_dir).joinpath(file_name)
                 keys = ['GO_Task1', 'GO_Task2', 'Rotation_Task1', None]
-                data = mat2np(file_dir)
+                data = mat2np(file_path)
                 if version == 'numpy':
                     task1 = Rastrigin(50, data[keys[0]], data[keys[2]])
                     task2 = Sphere(50, data[keys[1]])
@@ -153,9 +158,10 @@ class CEC2017MTO_Dataset(Dataset):
                 Tasks = [task1, task2]
 
             if task_ID == 4:
-                file_dir = os.path.join(folder_dir,'PI_M.mat')
+                file_name = 'PI_M.mat'
+                file_path = pkg_resources.files(folder_dir).joinpath(file_name)
                 keys = ['GO_Task1',None, 'Rotation_Task1', None]
-                data = mat2np(file_dir)
+                data = mat2np(file_path)
                 if version == 'numpy':
                     task1 = Ackley(50, data[keys[0]], data[keys[2]])
                     task2 = Rosenbrock(50)
@@ -165,9 +171,10 @@ class CEC2017MTO_Dataset(Dataset):
                 Tasks = [task1, task2]
 
             if task_ID == 5:
-                file_dir = os.path.join(folder_dir,'PI_L.mat')
+                file_name = 'PI_L.mat'
+                file_path = pkg_resources.files(folder_dir).joinpath(file_name)
                 keys = ['GO_Task1', 'GO_Task2', 'Rotation_Task1', 'Rotation_Task2']
-                data = mat2np(file_dir)
+                data = mat2np(file_path)
                 if version == 'numpy':
                     task1 = Ackley(50, data[keys[0]], data[keys[2]])
                     task2 = Weierstrass(25, data[keys[1]], data[keys[3]])
@@ -177,9 +184,10 @@ class CEC2017MTO_Dataset(Dataset):
                 Tasks = [task1, task2]
 
             if task_ID == 6:
-                file_dir = os.path.join(folder_dir,'NI_H.mat')
+                file_name = 'NI_H.mat'
+                file_path = pkg_resources.files(folder_dir).joinpath(file_name)
                 keys = [None, 'GO_Task2', None, 'Rotation_Task2']
-                data = mat2np(file_dir)
+                data = mat2np(file_path)
                 if version == 'numpy':
                     task1 = Rosenbrock(50)
                     task2 = Rastrigin(50, data[keys[1]], data[keys[3]])
@@ -189,9 +197,10 @@ class CEC2017MTO_Dataset(Dataset):
                 Tasks = [task1, task2]
             
             if task_ID == 7:
-                file_dir = os.path.join(folder_dir,'NI_M.mat')
+                file_name = 'NI_M.mat'
+                file_path = pkg_resources.files(folder_dir).joinpath(file_name)
                 keys = ['GO_Task1', 'GO_Task2', 'Rotation_Task1', 'Rotation_Task2']
-                data = mat2np(file_dir)
+                data = mat2np(file_path)
                 if version == 'numpy':
                     task1 = Griewank(50, data[keys[0]], data[keys[2]])
                     task2 = Weierstrass(50, data[keys[1]], data[keys[3]])
@@ -201,9 +210,10 @@ class CEC2017MTO_Dataset(Dataset):
                 Tasks = [task1, task2]
 
             if task_ID == 8:
-                file_dir = os.path.join(folder_dir,'NI_L.mat')
+                file_name = 'NI_L.mat'
+                file_path = pkg_resources.files(folder_dir).joinpath(file_name)
                 keys = ['GO_Task1',None, 'Rotation_Task1',None]
-                data = mat2np(file_dir)
+                data = mat2np(file_path)
                 if version == 'numpy':
                     task1 = Rastrigin(50, data[keys[0]], data[keys[2]])
                     task2 = Schwefel(50)
