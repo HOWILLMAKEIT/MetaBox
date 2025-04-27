@@ -75,8 +75,8 @@ We sincerely suggest researchers with interests to check out **[Online Documenta
       <td>bbob-surrogate includes 72 problem instances, each of which is a surrogate model. In specific, it can be divided into 3 subsets: bbob-surrogate-2D, bbob-surrogate-5D and bbob-surrogate-10D, each of which corresponds to 24 bbob problems. We first train KAN or MLP networks to fit 24 black box functions from bbob, then use the one with more accuracy as the surrogate model. This set is mainly developed for users who aims at exploring the potential of surrogate model in MetaBBO.</td>
     </tr>
     <td align="center">hpo-b</td>
-      <td><a href="#">Paper</a></td>
-      <td><a href="#">Code</a></td>
+      <td><a href="https://arxiv.org/pdf/2106.06257">Paper</a></td>
+      <td><a href="https://github.com/machinelearningnuremberg/HPO-B">Code</a></td>
       <td>HPO-B is an autoML hyper-parameter optimization benchmark which includes a wide range of hyperparameter optimization tasks for 16 different model types (e.g., SVM, XGBoost, etc.), resulting in a total of 935 problem instances. The dimension of these problem instances range from 2 to 16. We also note that HPO-B represents problems with ill-conditioned landscape such as huge flattern.</td>
     </tr>
     <tr>
@@ -87,14 +87,14 @@ We sincerely suggest researchers with interests to check out **[Online Documenta
     </tr>
     <tr>
       <td align="center">ne<br>(large-scale)</td>
-      <td><a href="#">Paper</a></td>
-      <td><a href="#">Code</a></td>
+      <td><a href="https://ieeexplore.ieee.org/abstract/document/10499977">Paper</a></td>
+      <td><a href="https://github.com/EMI-Group/evox">Code</a></td>
       <td>This problem set is based on the neuroevolution interfaces in <a href="https://evox.readthedocs.io/en/latest/examples/brax.html">EvoX</a>. The goal is to optimize the parameters of neural network-based RL agents for a series of Robotic Control tasks. We pre-define 11 control tasks (e.g., swimmer, ant, walker2D etc.), and 6 MLP structures with 0~5 hidden layers. The combinations of task & network structure result in 66 problem instances, which feature extremely high-dimensional problems (>=1000D).</td>
     </tr>
     <tr>
       <td align="center">protein</td>
-      <td><a href="#">Paper</a></td>
-      <td><a href="#">Code</a></td>
+      <td><a href="https://onlinelibrary.wiley.com/doi/abs/10.1002/prot.22830">Paper</a></td>
+      <td><a href="https://zlab.wenglab.org/benchmark/">Code</a></td>
       <td>Protein-docking benchmark, where the objective is to minimize the Gibbs free energy resulting from protein-protein interaction between a given complex and any other conformation. We select 28 protein complexes and randomly initialize 10 starting points for each complex, resulting in 280 problem instances. To simplify the problem structure, we only optimize 12 interaction points in a complex instance (12D problem).</td>
     </tr>
     <tr>
