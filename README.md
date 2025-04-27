@@ -72,7 +72,7 @@ We sincerely suggest researchers with interests to check out **[Online Documenta
       <td align="center">bbob-surrogate</td>
       <td><a href="https://arxiv.org/abs/2503.18060">Paper</a></td>
       <td><a href="https://github.com/GMC-DRL/Surr-RLDE">Code</a></td>
-      <td>BBOB-Surrogate includes 72 optimization problems across three dimensions (2, 5, 10), with each dimension containing 24 problems, where each problem is a surrogate model trained using a KAN or MLP network to fit 24 black box functions from the COCO-BBOB benchmark.</td>
+      <td>bbob-surrogate includes 72 problem instances, each of which is a surrogate model. In specific, it can be divided into 3 subsets: bbob-surrogate-2D, bbob-surrogate-5D and bbob-surrogate-10D, each of which corresponds to 24 bbob problems. We first train KAN or MLP networks to fit 24 black box functions from bbob, then use the one with more accuracy as the surrogate model. This set is mainly developed for users who aims at exploring the potential of surrogate model in MetaBBO.</td>
     </tr>
     <td align="center">hpo-b</td>
       <td><a href="#">Paper</a></td>
