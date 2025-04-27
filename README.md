@@ -44,8 +44,9 @@ pip install metaevobox
 ### High-level Development Usage
 We sincerely suggest researchers with interests to check out **[Online Documentation](https://metaboxdoc.readthedocs.io/en/latest/index.html)** for further flexible usege of MetaBox-v2, such as implementing your own MetaBBO, customized experimental design & analysis, using pre-collected metadata and seamless API calling with other famous optimization repos.
 
+
 <details>
-<summary><h2>Available Optimization Problem Sets in MetaBox-v2</h2></summary>
+<summary><h2>Available Optimization Problem Set in MetaBox</h2></summary>
 
 <table>
   <thead>
@@ -62,15 +63,8 @@ We sincerely suggest researchers with interests to check out **[Online Documenta
   </thead>
   <tbody>
     <tr>
-      <td rowspan="6" align="center">Single-Objective Optimization</td> <!-- Center the Type column -->
-      <td align="center">COCO-BBOB-10D</td>
-      <td><a href="#">Paper</a></td>
-      <td><a href="#">Code</a></td>
-      <td>A problem set for single-objective optimization with benchmark problems.</td>
-    </tr>
-    <tr>
-      
-      <td align="center">COCO-BBOB-30D</td>
+      <td rowspan="7" align="center">Single-Objective Optimization</td> <!-- Center the Type column -->
+      <td align="center">COCO-BBOB</td>
       <td><a href="#">Paper</a></td>
       <td><a href="#">Code</a></td>
       <td>A problem set for single-objective optimization with benchmark problems.</td>
@@ -79,13 +73,19 @@ We sincerely suggest researchers with interests to check out **[Online Documenta
       <td align="center">BBOB-Surrogate</td>
       <td><a href="https://arxiv.org/abs/2503.18060">Paper</a></td>
       <td><a href="https://github.com/GMC-DRL/Surr-RLDE">Code</a></td>
-      <td>Integration of surrogate modeling techniques for expensive objective functions.</td>
+      <td>BBOB-Surrogate includes 72 optimization problems across three dimensions (2, 5, 10), with each dimension containing 24 problems, where each problem is a surrogate model trained using a KAN or MLP network to fit 24 black box functions from the COCO-BBOB benchmark.</td>
     </tr>
     <tr>
       <td align="center">HPO-B</td>
       <td><a href="#">Paper</a></td>
       <td><a href="#">Code</a></td>
       <td>Problem set designed for hyperparameter optimization.</td>
+    </tr>
+    <tr>
+      <td align="center">UAV</td>
+      <td><a href="https://arxiv.org/abs/2501.14503">Paper</a></td>
+      <td><a href="https://zenodo.org/records/12793991">Code</a></td>
+      <td> UAV provides 56 terrain-based instances to reprensent a realistic Unmanned Aerial Vehicle(UAV) path planning problem. </td>
     </tr>
     <tr>
       <td align="center">Neuroevolution</td>
@@ -103,7 +103,26 @@ We sincerely suggest researchers with interests to check out **[Online Documenta
       <td align="center">CEC2013LSGO</td>
       <td><a href="https://al-roomi.org/multimedia/CEC_Database/CEC2015/LargeScaleGlobalOptimization/CEC2015_LargeScaleGO_TechnicalReport.pdf">Paper</a></td>
       <td><a href="https://github.com/dmolina/cec2013lsgo">Code</a></td>
-      <td>A large-scale benchmark suite for global optimization.</td>
+      <td>
+        CEC2013LSGO contains four major categories of large-scale problems:
+        <br>
+        <ol>
+          <li>Fully-separable functions (F1-F3)</li>
+          <li>Two types of partially separable functions:
+            <ol>
+              <li>Partially separable functions with a set of non-separable subcomponents and one fully-separable subcomponents (F4-F7)</li>
+              <li>Partially separable functions with only a set of non-separable subcomponents and no fully-separable subcomponent (F8-F11)</li>
+            </ol>
+          </li>
+          <li>Two types of overlapping functions:
+            <ol>
+              <li>Overlapping functions with conforming subcomponents (F12-F13)</li>
+              <li>Overlapping functions with conflicting subcomponents (F14)</li>
+            </ol>
+          </li>
+          <li>Fully-nonseparable functions (F15)</li>
+        </ol>
+      </td>
     </tr>
     <tr>
       <td rowspan="1" align="center">Multi-Objective Optimization</td> <!-- Center the Type column -->
@@ -115,34 +134,32 @@ We sincerely suggest researchers with interests to check out **[Online Documenta
         <a href="https://ieeexplore.ieee.org/abstract/document/1705400">WFG</a>
       </td>
       <td><a href="https://github.com/anyoptimization/pymoo">Code</a></td>
-      <td>Combines multiple objective optimization problems like ZDT, UF, DTLZ, and WFG.</td>
+      <td> MOO_Synthetic is composed of multiple MOO problem sets: ZDT, UF, DTLZ, WFG, a total of 187 problems. </td>
     </tr>
     <tr>
       <td rowspan="1" align="center">Multi-Model Optimization</td> <!-- Center the Type column -->
       <td align="center">CEC2013MMO</td>
       <td><a href="https://web.xidian.edu.cn/xlwang/files/20150312_175833.pdf">Paper</a></td>
       <td><a href="https://github.com/mikeagn/CEC2013">Code</a></td>
-      <td>A problem set for multi-modal optimization algorithms.</td>
+      <td> CEC2013MMO includes 20 functions covering different dimensions and the number of global optima. Among them, F1 to F5 are simple functions, F6 to F10 are scalable functions with many global optima, and F11 to F20 are composition functions with challenging landscapes.</td>
     </tr>
     <tr>
       <td rowspan="2" align="center">Multi-Task Optimization</td> <!-- Center the Type column -->
       <td align="center">CEC2017MTO</td>
       <td><a href="https://arxiv.org/abs/1706.03470">Paper</a></td>
       <td><a href="http://www.bdsc.site/websites/MTO/index.html">Code</a></td>
-      <td>Multi-task optimization benchmark for evaluating multitasking algorithms.</td>
+      <td> CEC2017MTO has 9 multi-task questions, each of which contains two basic questions. </td>
     </tr>
     <tr>
       <td align="center">WCCI2020</td>
       <td><a href="http://www.bdsc.site/websites/MTO_competition_2020/MTO_Competition_WCCI_2020.html">Paper</a></td>
       <td><a href="http://www.bdsc.site/websites/MTO/index.html">Code</a></td>
-      <td>Focuses on multi-task optimization problems with 50-dimensional tasks.</td>
+      <td> WCCI2020 comprises 10 multi-task problems, each integrating 50 uniformly 50-dimensional base tasks. </td>
     </tr>
   </tbody>
 </table>
 
 </details>
-
-
 
 ## Available BBO/MetaBBO Baselines in MetaBox
 
