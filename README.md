@@ -178,7 +178,11 @@ volume = {36}
 ```
 
 ## 😁Contact Us
-👨‍💻👩‍💻We are a research team mainly focus on Meta-Black-Box-Optimization (MetaBBO), which assists automated algorithm design for Evolutionary Computation. 
+<div align="center">
+<img src="https://github.com/MetaEvo/.github/blob/main/profile/logo.png" width="20%">
+</div>
+👨‍💻👩‍💻We are a research team mainly focus on Meta-Black-Box-Optimization (MetaBBO)
+     which assists automated algorithm design for Evolutionary Computation. 
 
 Here is our [homepage](https://metaevo.github.io/) and [github](https://github.com/MetaEvo). **🥰🥰🥰Please feel free to contact us—any suggestions are welcome!**
 
