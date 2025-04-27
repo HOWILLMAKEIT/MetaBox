@@ -77,7 +77,7 @@ We sincerely suggest researchers with interests to check out **[Online Documenta
     <td align="center">hpo-b</td>
       <td><a href="https://arxiv.org/pdf/2106.06257">Paper</a></td>
       <td><a href="https://github.com/machinelearningnuremberg/HPO-B">Code</a></td>
-      <td>HPO-B is an autoML hyper-parameter optimization benchmark which includes a wide range of hyperparameter optimization tasks for 16 different model types (e.g., SVM, XGBoost, etc.), resulting in a total of 935 problem instances. The dimension of these problem instances range from 2 to 16. We also note that HPO-B represents problems with ill-conditioned landscape such as huge flattern.</td>
+      <td>hpo-b is an autoML hyper-parameter optimization benchmark which includes a wide range of hyperparameter optimization tasks for 16 different model types (e.g., SVM, XGBoost, etc.), resulting in a total of 935 problem instances. The dimension of these problem instances range from 2 to 16. We also note that HPO-B represents problems with ill-conditioned landscape such as huge flattern.</td>
     </tr>
     <tr>
       <td align="center">uav</td>
@@ -95,7 +95,7 @@ We sincerely suggest researchers with interests to check out **[Online Documenta
       <td align="center">protein</td>
       <td><a href="https://onlinelibrary.wiley.com/doi/abs/10.1002/prot.22830">Paper</a></td>
       <td><a href="https://zlab.wenglab.org/benchmark/">Code</a></td>
-      <td>Protein-docking benchmark, where the objective is to minimize the Gibbs free energy resulting from protein-protein interaction between a given complex and any other conformation. We select 28 protein complexes and randomly initialize 10 starting points for each complex, resulting in 280 problem instances. To simplify the problem structure, we only optimize 12 interaction points in a complex instance (12D problem).</td>
+      <td>protein-docking benchmark, where the objective is to minimize the Gibbs free energy resulting from protein-protein interaction between a given complex and any other conformation. We select 28 protein complexes and randomly initialize 10 starting points for each complex, resulting in 280 problem instances. To simplify the problem structure, we only optimize 12 interaction points in a complex instance (12D problem).</td>
     </tr>
     <tr>
       <td align="center">lsgo<br>(large-scale)</td>
@@ -147,14 +147,14 @@ We sincerely suggest researchers with interests to check out **[Online Documenta
       <td align="center">mmo</td>
       <td><a href="https://web.xidian.edu.cn/xlwang/files/20150312_175833.pdf">Paper</a></td>
       <td><a href="https://github.com/mikeagn/CEC2013">Code</a></td>
-      <td> CEC2013MMO is specially crafeted for multi-modal optimization, which includes 20 synthetic problem instances covering various dimensions (1D~20D), each with varied number of (1 ~ 216) global optima. Among them, F1 to F5 are simple uni-modal functions, F6 to F10 are dimension-scalable functions with multiple global optima, and F11 to F20 are complex composition functions with challenging landscapes.</td>
+      <td> mmo is based on CEC2013LSGO benchmark and specially crafeted for multi-modal optimization, which includes 20 synthetic problem instances covering various dimensions (1D~20D), each with varied number of (1 ~ 216) global optima. Among them, F1 to F5 are simple uni-modal functions, F6 to F10 are dimension-scalable functions with multiple global optima, and F11 to F20 are complex composition functions with challenging landscapes.</td>
     </tr>
     <tr>
       <td rowspan="3" align="center">Multi-Task Optimization</td> <!-- Center the Type column -->
       <td align="center">cec2017mto</td>
       <td><a href="https://arxiv.org/abs/1706.03470">Paper</a></td>
       <td><a href="http://www.bdsc.site/websites/MTO/index.html">Code</a></td>
-      <td> CEC2017MTO comprises 9 multi-task problem instances, each of which contains two basic problems. Optional basic problems include Shpere, Rosenbrock, Ackley, Rastrigin, Griewank, Weierstrass and Schwefel, with dimension ranging from 25D~50D. </td>
+      <td> cec2017mto comprises 9 multi-task problem instances, each of which contains two basic problems. Optional basic problems include Shpere, Rosenbrock, Ackley, Rastrigin, Griewank, Weierstrass and Schwefel, with dimension ranging from 25D~50D. </td>
     </tr>
     <tr>
       <td align="center">wcci2020</td>
