@@ -221,7 +221,7 @@ class SubprocEnvWorker(EnvWorker):
             return obs
         
     def seed(self, seed: Optional[int] = None) -> Optional[List[int]]:
-        super().seed(seed)
+        # super().seed(seed)
         self.parent_remote.send(["seed", seed])
         return self.parent_remote.recv()
 

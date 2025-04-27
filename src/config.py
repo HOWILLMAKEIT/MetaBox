@@ -99,10 +99,19 @@ def init_config(config):
     if config.end_mode == 'epoch':
         config.max_learning_step = 1e9
 
-    if config.train_problem in ['protein', 'protein-torch']:
+    if 'protein' in config.train_problem or 'protein' in config.test_problem:
         config.dim = 12
-        config.maxFEs = 1000
+        config.maxFEs = 2000
         config.n_logpoint = 5
+    elif 'hpo-b' in config.train_problem or 'hpo-b' in config.test_problem:
+        config.maxFEs = 2000
+        config.n_logpoint = 5
+    elif 'uav' in config.train_problem or 'uav' in config.test_problem:
+        config.maxFEs = 2500
+        config.n_logpoint = 5
+    elif 'lsgo' in config.train_problem or 'lsgo' in config.test_problem:
+        config.maxFEs = 3e6
+
 
     config.run_time = f'{time.strftime("%Y%m%dT%H%M%S")}_{config.train_problem}_{config.train_difficulty}'
     config.test_log_dir = config.log_dir + 'test/' + config.run_time + '/'
@@ -158,7 +167,7 @@ def get_config(args=None):
 
     # ------------------------------ The Config of Testing Mode ------------------------------
     parser.add_argument('--test_batch_size', type = int, default = 1, help = 'batch size of test set')
-    parser.add_argument('--parallel_batch', type = str, default = 'Batch', choices = ['Full', 'Baseline_Problem', 'Problem_Testrun', 'Batch', 'Serial'],
+    parser.add_argument('--test_parallel_mode', type = str, default = 'Batch', choices = ['Full', 'Baseline_Problem', 'Problem_Testrun', 'Batch', 'Serial'],
                         help = 'the parellel processing mode for testing')
     parser.add_argument('--baselines', type = dict, default = None, help = 'the baselines for testing test')
     parser.add_argument('--test_run', type = int, default = 51, help = 'the run number of test')
@@ -166,7 +175,7 @@ def get_config(args=None):
 
     # ------------------------------ General Parameters ------------------------------
     parser.add_argument('--seed', type = int, default = 3849, help = 'Random seed for training and test to fixed agent')
-    parser.add_argument('--full_meta_data', type=bool, default=True, help='store the metadata')
+    parser.add_argument('--full_meta_data', type=bool, default=False, help='store the metadata')
     parser.add_argument('--log_dir', type=str, default='output/',
                         help='logging output')
     parser.add_argument('--maxFEs', type = int, default = 20000, help = 'maximum number of evaluation')

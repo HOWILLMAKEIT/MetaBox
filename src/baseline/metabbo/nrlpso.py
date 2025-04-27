@@ -83,7 +83,7 @@ class NRLPSO(QLearning_Agent):
                 save_class(self.config.agent_save_dir, 'checkpoint-' + str(self.cur_checkpoint), self)
                 self.cur_checkpoint += 1
 
-            if not self.config.no_tb and self.learning_time % int(self.config.log_step) == 0:
+            if not self.config.no_tb:
                 self.log_to_tb_train(tb_logger, self.learning_time,
                                      TD_error.mean(),
                                      _R, _reward,

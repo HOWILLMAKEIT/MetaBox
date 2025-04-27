@@ -3,7 +3,7 @@
 # from pypop7.optimizers.cem import *
 # from pypop7.optimizers.cem import *
 # from pypop7.optimizers.core import *
-from pypop7.optimizers.de import SHADE 
+from pypop7.optimizers.de import SHADE as PYPOP7SHADE
 # from pypop7.optimizers.ds import *
 # from pypop7.optimizers.eda import *
 # from pypop7.optimizers.es import *
@@ -51,7 +51,7 @@ class SHADE(Basic_Optimizer):
                    'n_parents': self.__config.NP,
                    'seed_rng': self.rng_seed}
 
-        opt = SHADE(cost_fn, options)
+        opt = PYPOP7SHADE(cost_fn, options)
 
         opt.start_time = time.time()
         x, y, a = opt.initialize()

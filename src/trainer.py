@@ -13,6 +13,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 from .rl.utils import save_class
 from tensorboardX import SummaryWriter
+import pprint
 
 from .environment.optimizer import (
     DEDDQN_Optimizer,
@@ -207,6 +208,8 @@ class Trainer(object):
             None
         """
         print(f'start training: {self.config.run_time}')
+        print("following config:")
+        pprint.pprint(vars(self.config))
         is_end = False
         tb_logger = None
         start_time = time.time()

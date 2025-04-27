@@ -329,8 +329,8 @@ class CEC2013LSGO_Numpy_Problem(Basic_Problem):
         return s2
 
     def rosenbrock(self,x):
-        x0 = x[:,:x.size(1)-1]
-        x1 = x[:,1:x.size(1)]
+        x0 = x[:,:x.shape[1]-1]
+        x1 = x[:,1:x.shape[1]]
         t = x0**2 - x1
         s = np.sum(100.0 * t**2 + (x0 - 1.0)**2,-1)
         return s
@@ -503,7 +503,7 @@ class F5(CEC2013LSGO_Numpy_Problem):
     def __str__(self):
         return '7-nonseparable, 1-separable Shifted and Rotated Rastrigin'
 
-    def compute(self, x):
+    def func(self, x):
    
         result = np.zeros(x.shape[0])
 
@@ -551,7 +551,7 @@ class F6(CEC2013LSGO_Numpy_Problem):
     def __str__(self):
         return '7-nonseparable, 1-separable Shifted and Rotated Ackley'
 
-    def compute(self, x):
+    def func(self, x):
 
         result = np.zeros(x.shape[0])
 
@@ -600,7 +600,7 @@ class F7(CEC2013LSGO_Numpy_Problem):
         return '7-nonseparable, 1-separable Shifted Schwefel'
 
 
-    def compute(self, x):
+    def func(self, x):
 
         result = np.zeros(x.shape[0])
 
@@ -647,7 +647,7 @@ class F8(CEC2013LSGO_Numpy_Problem):
     def __str__(self):
         return '20-nonseparable Shifted and Rotated Elliptic'
 
-    def compute(self, x):
+    def func(self, x):
 
         result = np.zeros(x.shape[0])
 
@@ -686,7 +686,7 @@ class F9(CEC2013LSGO_Numpy_Problem):
     def __str__(self):
         return '20-nonseparable Shifted and Rotated Rastrigin'
     
-    def compute(self, x):
+    def func(self, x):
 
         result = np.zeros(x.shape[0])
 
@@ -728,7 +728,7 @@ class F10(CEC2013LSGO_Numpy_Problem):
         return '20-nonseparable Shifted and Rotated Ackley'
 
 
-    def compute(self, x):
+    def func(self, x):
 
         result = np.zeros(x.shape[0])
 
@@ -769,7 +769,7 @@ class F11(CEC2013LSGO_Numpy_Problem):
     def __str__(self):
         return '20-nonseparable Shifted Schwefel'
 
-    def compute(self, x):
+    def func(self, x):
 
         result = np.zeros(x.shape[0])
 
@@ -800,7 +800,7 @@ class F12(CEC2013LSGO_Numpy_Problem):
     def __str__(self):
         return '20-nonseparable Shifted Schwefel'
 
-    def compute(self, x):
+    def func(self, x):
 
         result = np.zeros(x.shape[0])
 
@@ -834,7 +834,7 @@ class F13(CEC2013LSGO_Numpy_Problem):
     def __str__(self):
         return 'Shifted Schwefel’s Function with Conforming Overlapping Subcomponents'
 
-    def compute(self, x):
+    def func(self, x):
 
         result = np.zeros(x.shape[0])
 
@@ -876,9 +876,9 @@ class F14(CEC2013LSGO_Numpy_Problem):
     def __str__(self):
         return 'Shifted Schwefel’s Function with Conflicting Overlapping Subcomponents'
         
-    def compute(self, x):
+    def func(self, x):
 
-        result = np.zeros(x.size(0))
+        result = np.zeros(x.shape[0])
 
         c=0
 
@@ -906,7 +906,7 @@ class F15(CEC2013LSGO_Numpy_Problem):
     def __str__(self):
         return 'Shifted Schwefel’s Function with Conflicting Overlapping Subcomponents'
     
-    def compute(self, x):      
+    def func(self, x):
 
         result = np.zeros(x.shape[0])
 

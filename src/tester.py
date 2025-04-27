@@ -354,30 +354,30 @@ class MetaBBO_TestUnit():
 
 
 def get_baseline(config):
-    user_agents=[]
-    user_loptimizers=[]
-    user_toptimizers=[]
+    agents_for_cp=[]
+    agents_optimizers_for_cp=[]
+    traditional_optimizers_for_cp=[]
     baselines = config.baselines
     assert baselines is not None
     for bsl in baselines.keys():
         if 'agent' in baselines[bsl].keys():  # metabbo
-            user_loptimizers.append(baselines[bsl]['optimizer'](config))
-            if 'dir' in baselines[bsl].keys() and baselines[bsl]['dir'] is not None:
-                with open(os.path.join(os.getcwd(), baselines[bsl]['dir']), 'rb') as f:
-                    user_agents.append(pickle.load(f, fix_imports=False))
+            agents_optimizers_for_cp.append(baselines[bsl]['optimizer'](config))
+            if 'model_load_path' in baselines[bsl].keys() and baselines[bsl]['model_load_path'] is not None:
+                with open(os.path.join(os.getcwd(), baselines[bsl]['model_load_path']), 'rb') as f:
+                    agents_for_cp.append(pickle.load(f, fix_imports=False))
             else:
                 base_dir = f'metaevobox.model.{config.test_problem}.{config.test_difficulty}'
                 model_path = pkg_resources.files(base_dir).joinpath(f"{baselines[bsl]['agent']}.pkl")
                 with model_path.open('rb') as f:
-                    user_agents.append(pickle.load(f))
+                    agents_for_cp.append(pickle.load(f))
         else:  # bbo
-            user_toptimizers.append(baselines[bsl]['optimizer'](config))
+            traditional_optimizers_for_cp.append(baselines[bsl]['optimizer'](config))
     config.baselines = None
-    return user_agents, user_loptimizers, user_toptimizers, config
+    return (agents_for_cp, agents_optimizers_for_cp, traditional_optimizers_for_cp), config
 
 
 class Tester(object):
-    def __init__(self, config, user_agents = [], user_loptimizers = [], user_toptimizers = [], user_datasets = None):
+    def __init__(self, config, baselines, user_datasets = None):
         # self.key_list = config.agent
         self.log_dir = config.test_log_dir
         if not os.path.exists(self.log_dir):
@@ -413,12 +413,13 @@ class Tester(object):
         self.t_optimizer_for_cp = []
 
         # 先append 用户的
-        user_agents = user_agents if isinstance(user_agents, list) else [user_agents]
-        user_loptimizers = user_loptimizers if isinstance(user_loptimizers, list) else [user_loptimizers]
-        user_toptimizers = user_toptimizers if isinstance(user_toptimizers, list) else [user_toptimizers]
+        agents_for_cp, agents_optimizers_for_cp, traditional_optimizers_for_cp = baselines
+        agents_for_cp = agents_for_cp if isinstance(agents_for_cp, list) else [agents_for_cp]
+        agents_optimizers_for_cp = agents_optimizers_for_cp if isinstance(agents_optimizers_for_cp, list) else [agents_optimizers_for_cp]
+        traditional_optimizers_for_cp = traditional_optimizers_for_cp if isinstance(traditional_optimizers_for_cp, list) else [traditional_optimizers_for_cp]
 
         name_count = dict()
-        for id, agent in enumerate(user_agents):
+        for id, agent in enumerate(agents_for_cp):
             name = agent.__str__()
             self.agent_for_cp.append(copy.deepcopy(agent))
             self.agent_name_list.append(name)
@@ -427,7 +428,7 @@ class Tester(object):
             else:
                 name_count[name].append(id)
         metabbo = []
-        for id, opt in enumerate(user_loptimizers):
+        for id, opt in enumerate(agents_optimizers_for_cp):
             name = self.agent_name_list[id]
             if len(name_count[name]) > 1:
                 for i in range(1, len(name_count[name])):
@@ -438,15 +439,15 @@ class Tester(object):
             self.l_optimizer_for_cp.append(copy.deepcopy(opt))
 
         name_count = dict()
-        for id, opt in enumerate(user_toptimizers):
+        for id, opt in enumerate(traditional_optimizers_for_cp):
             name = opt.__str__()
             if name not in name_count:
                 name_count[name] = 0
             else:
                 name_count[name] += 1
         bbo = []
-        for id in reversed(range(len(user_toptimizers))):
-            opt = user_toptimizers[id]
+        for id in reversed(range(len(traditional_optimizers_for_cp))):
+            opt = traditional_optimizers_for_cp[id]
             name = opt.__str__()
             count = name_count[name]
             if count:
@@ -464,10 +465,14 @@ class Tester(object):
             pass
         else:
             if "CMAES" not in name_count:
-                self.t_optimizer_for_cp.append(CMAES(self.config))
+                cmaes = CMAES(self.config)
+                setattr(cmaes, "test_name", "CMAES")
+                self.t_optimizer_for_cp.append(cmaes)
 
             if "Random_search" not in name_count:
-                self.t_optimizer_for_cp.append(Random_search(self.config))
+                rs = Random_search(self.config)
+                setattr(rs, "test_name", "Random_search")
+                self.t_optimizer_for_cp.append(rs)
 
         # logging
         if len(self.agent_for_cp) == 0:
@@ -573,13 +578,14 @@ class Tester(object):
         
         # todo 第三种 并行是 agent * bs 个问题 * run
         print(f'start testing: {self.config.run_time}')
-        parallel_batch = self.config.parallel_batch  # 'Full', 'Baseline_Problem', 'Problem_Testrun', 'Batch'
+        print(f"following config: {self.config}")
+        test_parallel_mode = self.config.test_parallel_mode  # 'Full', 'Baseline_Problem', 'Problem_Testrun', 'Batch'
         test_run = self.config.test_run
         seed_list = list(range(1, test_run + 1)) # test_run
         num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
 
         test_start_time = time.perf_counter()
-        if parallel_batch == 'Full':
+        if test_parallel_mode == 'Full':
             testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent), PBO_Env(copy.deepcopy(p), copy.deepcopy(optimizer)), seed) for (agent, optimizer) in zip(self.agent_for_cp, self.l_optimizer_for_cp)
                                                                                                                                for p in self.test_set.data
                                                                                                                                for seed in seed_list]
@@ -591,7 +597,7 @@ class Tester(object):
             self.record_test_data(meta_test_data)
             self.meta_data_results = store_meta_data(self.log_dir, self.meta_data_results)
                 
-        elif parallel_batch == 'Baseline_Problem':
+        elif test_parallel_mode == 'Baseline_Problem':
             pbar = tqdm(total=len(seed_list), desc="Baseline_Problem Testing")
             for seed in seed_list:
                 testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent), PBO_Env(copy.deepcopy(p), copy.deepcopy(optimizer)), seed) for (agent, optimizer) in zip(self.agent_for_cp, self.l_optimizer_for_cp)
@@ -607,7 +613,7 @@ class Tester(object):
                 pbar.update()
             pbar.close()
                 
-        elif parallel_batch == 'Problem_Testrun':
+        elif test_parallel_mode == 'Problem_Testrun':
             pbar = tqdm(total=len(self.agent_for_cp) + len(self.t_optimizer_for_cp), desc="Problem_Testrun Testing")
             for (agent, optimizer) in zip(self.agent_for_cp, self.l_optimizer_for_cp):
                 pbar.set_description(f"Problem_Testrun Testing {agent.__str__()}")
@@ -630,7 +636,7 @@ class Tester(object):
                 pbar.update()
             pbar.close()
                 
-        elif parallel_batch == 'Batch':
+        elif test_parallel_mode == 'Batch':
             pbar_len = (len(self.agent_for_cp) + len(self.t_optimizer_for_cp)) * np.ceil(self.test_set.N / self.config.test_batch_size) * self.config.test_run
             pbar = tqdm(total=pbar_len, desc="Batch Testing")
             for (agent, optimizer) in zip(self.agent_for_cp, self.l_optimizer_for_cp):
@@ -655,7 +661,7 @@ class Tester(object):
                     self.meta_data_results = store_meta_data(self.log_dir, self.meta_data_results)
             pbar.close()
 
-        elif parallel_batch == "Serial":
+        elif test_parallel_mode == "Serial":
             pbar_len = (len(self.agent_for_cp) + len(self.t_optimizer_for_cp)) * self.test_set.N * self.config.test_run
             pbar = tqdm(total = pbar_len, desc = "Serial Testing")
             for (agent, optimizer) in zip(self.agent_for_cp, self.l_optimizer_for_cp):
@@ -922,10 +928,10 @@ class Tester(object):
         # begin mgd_test
 
         test_run = self.config.test_run
-        parallel_batch = self.config.parallel_batch
+        test_parallel_mode = self.config.test_parallel_mode
         seed_list = list(range(1, test_run + 1))
 
-        if parallel_batch == 'Full':
+        if test_parallel_mode == 'Full':
             testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent_from), PBO_Env(copy.deepcopy(p), copy.deepcopy(l_optimizer_cp[0])), seed) for p in test_set.data for seed in seed_list]
             testunit_list += [MetaBBO_TestUnit(copy.deepcopy(agent_to), PBO_Env(copy.deepcopy(p), copy.deepcopy(l_optimizer_cp[1])), seed) for p in test_set.data for seed in seed_list]
 
@@ -934,7 +940,7 @@ class Tester(object):
             self.record_test_data(meta_test_data)
             self.meta_data_results = store_meta_data(self.log_dir, self.meta_data_results)
 
-        elif parallel_batch == 'Baseline_Problem':
+        elif test_parallel_mode == 'Baseline_Problem':
             pbar = tqdm(total = len(seed_list), desc = "Baseline_Problem Testing")
             for seed in seed_list:
                 testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent_from), PBO_Env(copy.deepcopy(p), copy.deepcopy(l_optimizer_cp[0])), seed) for p in test_set.data]
@@ -946,7 +952,7 @@ class Tester(object):
                 pbar.update()
             pbar.close()
 
-        elif parallel_batch == 'Problem_Testrun':
+        elif test_parallel_mode == 'Problem_Testrun':
             pbar_len = 2
             pbar = tqdm(total = pbar_len, desc = "Problem_Testrun Testing")
             pbar.set_description(f"Problem_Testrun Testing from {agent_from.__str__()} to {agent_to.__str__()}")
@@ -969,7 +975,7 @@ class Tester(object):
             pbar.update()
             pbar.close()
 
-        elif parallel_batch == 'Batch':
+        elif test_parallel_mode == 'Batch':
             pbar_len = 2 * np.ceil(test_set.N / config.test_batch_size) * test_run
             pbar = tqdm(total = pbar_len, desc = "Batch Testing")
             for ip, problem in enumerate(test_set):
@@ -992,7 +998,7 @@ class Tester(object):
                 self.meta_data_results = store_meta_data(self.log_dir, self.meta_data_results)
             pbar.close()
 
-        elif parallel_batch == 'Serial':
+        elif test_parallel_mode == 'Serial':
             pbar_len = 2 * test_set.N * self.config.test_run
             pbar = tqdm(total = pbar_len, desc = "Serial Testing")
             for ip, problem in enumerate(test_set.data):
@@ -1192,7 +1198,7 @@ def rollout_batch(config, rollout_dir, rollout_opt, rollout_datasets, log = True
     - None: The function saves the rollout results and metadata to disk but does not return any value.
     # Raises:
     - KeyError: If the specified agent key is missing in the `model.json` file.
-    - NotImplementedError: If the specified parallelization mode in `config.parallel_batch` is not supported.
+    - NotImplementedError: If the specified parallelization mode in `config.test_parallel_mode` is not supported.
     """
     
     print(f'start rollout: {config.run_time}')
@@ -1201,7 +1207,7 @@ def rollout_batch(config, rollout_dir, rollout_opt, rollout_datasets, log = True
 
     config.dim = max(train_set.maxdim, test_set.maxdim)
 
-    parallel_batch = config.parallel_batch
+    test_parallel_mode = config.test_parallel_mode
 
     agents = []
     optimizer_for_rollout = []
@@ -1253,7 +1259,7 @@ def rollout_batch(config, rollout_dir, rollout_opt, rollout_datasets, log = True
     pbar_len = int(np.ceil(test_set.N * n_checkpoint / test_set.batch_size))
     seed_list = list(range(1, config.rollout_run + 1))
 
-    if parallel_batch == 'Full':
+    if test_parallel_mode == 'Full':
         testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent), PBO_Env(copy.deepcopy(p), copy.deepcopy(optimizer)), seed, ckp) for (ckp, agent, optimizer) in zip(checkpoints, agents, optimizer_for_rollout)
                                                                                                                             for p in test_set.data
                                                                                                                             for seed in seed_list]
@@ -1261,7 +1267,7 @@ def rollout_batch(config, rollout_dir, rollout_opt, rollout_datasets, log = True
         meta_test_data = MetaBBO_test.rollout()
         rollout_results, meta_data_results = record_data(meta_test_data, test_set, agent_for_rollout, checkpoints, rollout_results, meta_data_results, config)
         meta_data_results = store_meta_data(config.rollout_log_dir, meta_data_results)
-    elif parallel_batch == 'Baseline_Problem':
+    elif test_parallel_mode == 'Baseline_Problem':
         pbar = tqdm(total=len(seed_list), desc="Baseline_Problem Rollouting")
         for seed in seed_list:
             testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent), PBO_Env(copy.deepcopy(p), copy.deepcopy(optimizer)), seed, ckp) for (ckp, agent, optimizer) in zip(checkpoints, agents, optimizer_for_rollout)
@@ -1274,7 +1280,7 @@ def rollout_batch(config, rollout_dir, rollout_opt, rollout_datasets, log = True
             pbar.update()
         pbar.close()
             
-    elif parallel_batch == 'Problem_Testrun':
+    elif test_parallel_mode == 'Problem_Testrun':
         pbar = tqdm(total=len(agents), desc="Problem_Testrun Rollouting")
         for (ckp, agent, optimizer) in zip(checkpoints, agents, optimizer_for_rollout):
             pbar.set_description(f"Problem_Testrun Rollouting Checkpoint {ckp}")
@@ -1288,7 +1294,7 @@ def rollout_batch(config, rollout_dir, rollout_opt, rollout_datasets, log = True
             pbar.update()
         pbar.close()
             
-    elif parallel_batch == 'Batch':
+    elif test_parallel_mode == 'Batch':
         pbar_len = len(agents)  * np.ceil(test_set.N / config.test_batch_size) * config.test_run
         pbar = tqdm(total=pbar_len, desc="Batch Rollouting")
         for (ckp, agent, optimizer) in zip(checkpoints, agents, optimizer_for_rollout):
