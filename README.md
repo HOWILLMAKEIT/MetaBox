@@ -42,7 +42,7 @@ pip install metaevobox
 #### Test BBO/MetaBBO baselines
 
 ### High-level Development Usage
-We sincerely suggest researchers with interests to check out **[Online Documentation](https://metaboxdoc.readthedocs.io/en/latest/index.html)** for further flexible usege of MetaBox-v2.
+We sincerely suggest researchers with interests to check out **[Online Documentation](https://metaboxdoc.readthedocs.io/en/latest/index.html)** for further flexible usege of MetaBox-v2, such as implementing your own MetaBBO, customized experimental design & analysis, using pre-collected metadata and seamless API calling with other famous optimization repos.
 
 ## Available Optimization Problem Set in MetaBox
 <details>
