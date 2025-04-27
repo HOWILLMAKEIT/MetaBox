@@ -1,8 +1,8 @@
 <h1 align="center">
   <span style="font-size: 2.2em">⭐ MetaBox-v2 ⭐</span><br/>
   <div style="font-size: 0.9em; margin-top: 12px">
-    Benchmarking Meta-Black-Box Optimization<br/>
-    under Diverse Optimization Scenarios with Efficiency and Flexibility
+    Benchmarking Meta-Black-Box Optimization under<br/>
+    Diverse Optimization Scenarios with Efficiency and Flexibility
   </div>
 </h1>
 
