@@ -1060,11 +1060,11 @@ class Basic_Logger:
 
         agent_for_rollout = self.config.agent_for_rollout
 
-        norm = self.config.plot_smooth + 1
+        norm = 0.8 + 1
         for i in range(1, y.shape[0]):
-            a = a * self.config.plot_smooth + y[i]
+            a = a * 0.8 + y[i]
             s[i] = a / norm if norm > 0 else a
-            norm *= self.config.plot_smooth
+            norm *= 0.8
             norm += 1
         if agent_for_rollout not in self.color_arrangement.keys():
             self.color_arrangement[agent_for_rollout] = colors[self.arrange_index]
@@ -1097,11 +1097,11 @@ class Basic_Logger:
         #     y = means[agent]
         #     s = np.zeros(y.shape[0])
         #     a = s[0] = y[0]
-        #     norm = self.config.plot_smooth + 1
+        #     norm = 0.8 + 1
         #     for i in range(1, y.shape[0]):
-        #         a = a * self.config.plot_smooth + y[i]
+        #         a = a * 0.8 + y[i]
         #         s[i] = a / norm if norm > 0 else a
-        #         norm *= self.config.plot_smooth
+        #         norm *= 0.8
         #         norm += 1
         #     if agent not in self.color_arrangement.keys():
         #         self.color_arrangement[agent] = colors[self.arrange_index]
@@ -1636,11 +1636,11 @@ class MOO_Logger(Basic_Logger):
             y = means[agent]
             s = np.zeros(y.shape[0])
             a = s[0] = y[0]
-            norm = self.config.plot_smooth + 1
+            norm = 0.8 + 1
             for i in range(1, y.shape[0]):
-                a = a * self.config.plot_smooth + y[i]
+                a = a * 0.8 + y[i]
                 s[i] = a / norm if norm > 0 else a
-                norm *= self.config.plot_smooth
+                norm *= 0.8
                 norm += 1
             if agent not in self.color_arrangement.keys():
                 self.color_arrangement[agent] = colors[self.arrange_index]
@@ -2362,11 +2362,11 @@ class MTO_Logger(Basic_Logger):
 
         agent_for_rollout = self.config.agent_for_rollout
 
-        norm = self.config.plot_smooth + 1
+        norm = 0.8 + 1
         for i in range(1, y.shape[0]):
-            a = a * self.config.plot_smooth + y[i]
+            a = a * 0.8 + y[i]
             s[i] = a / norm if norm > 0 else a
-            norm *= self.config.plot_smooth
+            norm *= 0.8
             norm += 1
         if agent_for_rollout not in self.color_arrangement.keys():
             self.color_arrangement[agent_for_rollout] = colors[self.arrange_index]
