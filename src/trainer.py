@@ -50,7 +50,7 @@ from .baseline.bbo import (
     SAHLPSO,
     CMAES,
     Random_search,
-    PYPOP7,
+    SHADE,
     MOEAD,
     MFEA
 )

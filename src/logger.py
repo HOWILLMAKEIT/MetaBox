@@ -318,27 +318,27 @@ class Basic_Logger:
         for problem in problems:
             blobj_problem = results['cost'][problem]['CMAES']  # 51 * record_length
             objs = []
-            for run in range(self.config.test_run):
+            for run in range(len(blobj_problem)):
                 objs.append(blobj_problem[run][-1])
-            cmaes_obj[problem] = sum(objs) / self.config.test_run
+            cmaes_obj[problem] = sum(objs) / len(blobj_problem)
 
         # calculate baseline2 random_search
         rs_obj = {}
         for problem in problems:
             blobj_problem = results['cost'][problem]['Random_search']  # 51 * record_length
             objs = []
-            for run in range(self.config.test_run):
+            for run in range(len(blobj_problem)):
                 objs.append(blobj_problem[run][-1])
-            rs_obj[problem] = sum(objs) / self.config.test_run
+            rs_obj[problem] = sum(objs) / len(blobj_problem)
 
         # calculate each Obj
         for problem in problems:
             for optimizer in optimizers:
                 obj_problem_optimizer = results['cost'][problem][optimizer]
                 objs_ = []
-                for run in range(self.config.test_run):
+                for run in range(len(obj_problem_optimizer)):
                     objs_.append(obj_problem_optimizer[run][-1])
-                avg_obj = sum(objs_)/self.config.test_run
+                avg_obj = sum(objs_) / len(obj_problem_optimizer)
                 std_obj = np.std(objs_)
                 df_results.loc[optimizer, (problem, 'Obj')] = np.format_float_scientific(avg_obj, precision=3, exp_digits=1) + "(" + np.format_float_scientific(std_obj, precision=3, exp_digits=1) + ")"
                 # calculate each Gap

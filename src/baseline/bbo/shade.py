@@ -18,7 +18,7 @@ import time
 
 # please refer:https://pypop.readthedocs.io/en/latest/applications.html
 # this .py display pypop7-SHADE
-class PYPOP7(Basic_Optimizer):
+class SHADE(Basic_Optimizer):
     def __init__(self, config):
         super().__init__(config)
         config.NP = 50
@@ -29,7 +29,7 @@ class PYPOP7(Basic_Optimizer):
         self.full_meta_data = config.full_meta_data
 
     def __str__(self):
-        return "PYPOP7"
+        return "SHADE"
 
     def run_episode(self, problem):
         cost = []

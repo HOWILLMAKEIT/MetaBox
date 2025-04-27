@@ -57,7 +57,7 @@ from .baseline.bbo import (
     SAHLPSO,
     CMAES,
     Random_search,
-    PYPOP7,
+    SHADE,
     MOEAD,
     MFEA
 )
@@ -539,7 +539,7 @@ class Tester(object):
                         self.initialize_record(key)
                     self.test_results[key][item['problem_name']][item['agent_name']].append(item[key])            
 
-    def test(self, ):
+    def test(self, log = True):
         """
         # Introduction
         Runs tests on agents and optimizers using different parallelization strategies and records the results.
@@ -708,6 +708,16 @@ class Tester(object):
         with open(self.log_dir + f'/test_results.pkl', 'wb') as f:
             pickle.dump(self.test_results, f, -1)
 
+        if log:
+            if self.config.train_problem in ['mmo', 'mmo-torch']:
+                logger = MMO_Logger(self.config)
+            elif self.config.train_problem in ['wcci2020', 'cec2017mto']:
+                logger = MTO_Logger(self.config)
+            elif self.config.train_problem in ['moo-synthetic', 'mmo-uav']:
+                logger = MOO_Logger(self.config)
+            else:
+                logger = Basic_Logger(self.config)
+            logger.post_processing_test_statics(self.config.test_log_dir)
 
     def test_for_random_search(self):
         """
@@ -1152,7 +1162,7 @@ class Tester(object):
         plt.savefig(f'{config.mte_test_log_dir}/MTE_{agent}.png', bbox_inches='tight')
 
 
-def rollout_batch(config, rollout_dir, rollout_opt, rollout_datasets):
+def rollout_batch(config, rollout_dir, rollout_opt, rollout_datasets, log = True):
     """
     todo:重写注释
     # Introduction
@@ -1283,4 +1293,16 @@ def rollout_batch(config, rollout_dir, rollout_opt, rollout_datasets):
         os.makedirs(log_dir)
     with open(log_dir + 'rollout.pkl', 'wb') as f:
         pickle.dump(rollout_results, f, -1)
+
+    if log:
+        if config.test_problem in ['mmo', 'mmo-torch']:
+            logger = MMO_Logger(config)
+        elif config.test_problem in ['wcci2020', 'cec2017mto']:
+            logger = MTO_Logger(config)
+        elif config.test_problem in ['moo-synthetic', 'mmo-uav']:
+            logger = MOO_Logger(config)
+        else:
+            logger = Basic_Logger(config)
+        logger.post_processing_rollout_statics(config.rollout_log_dir)
+
 
