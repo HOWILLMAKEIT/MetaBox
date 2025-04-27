@@ -11,10 +11,6 @@
 [![NeurIPS](https://img.shields.io/badge/NeurIPS-2023-b31b1b.svg)]([https://proceedings.neurips.cc/paper_files/paper/2023/hash/232eee8ef411a0a316efa298d7be3c2b-Abstract-Datasets_and_Benchmarks.html]) **MetaBox-v1 has been accepted as an oral presentation at NeurIPS 2023!**
 
 <div align="center">
-<img src="https://github.com/MetaEvo/MetaBox/blob/v2.0.0/docs/source/_static/MetaBOX-NEW.png" width="80%">
-</div>
-
-<div align="center">
 <img src="https://github.com/MetaEvo/MetaBox/blob/v2.0.0/docs/source/_static/MetaBOX-features.png" width="99%">
 </div>
 
@@ -70,6 +66,47 @@ tensorboard --logdir=./
 ```
 
 #### Test BBO/MetaBBO baselines
+```python
+from metaevobox import Config, Tester, get_baseline
+# import meta-level agent of MetaBBO you want to meta-train
+from metaevobox.baseline.metabbo import GLEET
+# import low-level BBO optimizer of MetaBBO you want to meta-train
+from metaevobox.environment.optimizer import GLEET_Optimizer
+# import other baselines you want to compare with your MetaBBO\
+from metaevobox.baseline.bbo import CMAES, SHADE
+# import the problem set you want to train your MetaBBO
+from metaevobox.environment.problem.utils import construct_problem_set
+
+# specify your configuration
+config = {
+    'test_problem':'bbob-10D', 
+    'test_batch_size':16,
+    'test_difficulty':'difficult', # this is a train-test split mode
+    'baselines':{
+        # your MetaBBO
+        'GLEET':{
+            'agent': 'GLEET',
+            'optimizer': GLEET_Optimizer,
+            'dir': None, # by default is None, we will load a built-in pre-trained checkpoint for you.
+        },
+
+        # Other baselines to compare              
+        'SHADE':{'optimizer': SHADE},
+        'CMAES':{'optimizer':CMAES},
+    },
+}
+
+config = Config(config)
+# load test dataset
+config, datasets = construct_problem_set(config)
+# initialize all baselines to compare (yours + others)
+agents_for_cp, agents_optimizers_for_cp, traditional_optimizers_for_cp, config = get_baseline(config)
+# initialize tester
+tester = Tester(config, agents_for_cp, agents_optimizers_for_cp, traditional_optimizers_for_cp, datasets)
+# test
+tester.test()
+```
+By default, MetaBox would automatically generate various visualized experimental results in your_dir/output/test/, enjoy these useful analysis results!
 
 ### High-level Development Usage
 We sincerely suggest researchers with interests to check out **[Online Documentation](https://metaboxdoc.readthedocs.io/en/latest/index.html)** for further flexible usege of MetaBox-v2, such as implementing your own MetaBBO, customized experimental design & analysis, using pre-collected metadata and seamless API calling with other famous optimization repos.
