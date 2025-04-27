@@ -39,6 +39,36 @@ pip install metaevobox
 ```
 ### Common Usage
 #### Train a MetaBBO baseline
+create your_dir, then create a your_train.py file in your_dir, write following codes into your_train.py.
+```python
+from metaevobox import Config, Trainer
+# import meta-level agent of MetaBBO you want to meta-train
+from metaevobox.baseline.metabbo import GLEET
+# import low-level BBO optimizer of MetaBBO you want to meta-train
+from metaevobox.environment.optimizer import GLEET_Optimizer
+# import the problem set you want to train your MetaBBO
+from metaevobox.environment.problem.utils import construct_problem_set
+
+# put user-specific configuration
+config = {'train_problem': 'bbob-10D', 
+          'train_batch_size': 16,
+          'train_parallel_mode':'subproc', # choose parallel training mode
+          }
+config = Config(config)
+# construct dataset
+config, datasets = construct_problem_set(config)
+# initialize your MetaBBO's meta-level agent & low-level optimizer
+gleet = GLEET(config)
+gleet_opt = GLEET_Optimizer(config)
+trainer = Trainer(config, gleet, gleet_opt, datasets)
+trainer.train()
+```
+If you want to check out the visualized information of the training progress, run following code to start training logger.
+```bash
+cd your_dir/output/tensorboard
+tensorboard --logdir=./
+```
+
 #### Test BBO/MetaBBO baselines
 
 ### High-level Development Usage
