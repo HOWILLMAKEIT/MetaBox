@@ -47,10 +47,95 @@ We sincerely suggest researchers with interests to check out **[Online Documenta
 <details>
 <summary><h2>Available Optimization Problem Set in MetaBox</h2></summary>
 
-- [COCO-BB08](#coco-bb08)
-- [BB08-Surrogate](#bb08-surrogate)
+<table>
+  <thead>
+    <tr>
+      <th rowspan="2" align="center">Type</th> <!-- Center the Type column -->
+      <th colspan="3" align="center">Problem Set</th> <!-- Center the Problem Set columns -->
+      <th rowspan="2" align="center">Description</th> <!-- Center the Description column -->
+    </tr>
+    <tr>
+      <th align="center">Name</th>
+      <th align="center">Paper</th>
+      <th align="center">Code</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td rowspan="6" align="center">Single-Objective Optimization</td> <!-- Center the Type column -->
+      <td align="center">COCO-BBOB</td>
+      <td><a href="#">Paper</a></td>
+      <td><a href="#">Code</a></td>
+      <td>A problem set for single-objective optimization with benchmark problems.</td>
+    </tr>
+    <tr>
+      <td align="center">BBOB-Surrogate</td>
+      <td><a href="https://arxiv.org/abs/2503.18060">Paper</a></td>
+      <td><a href="https://github.com/GMC-DRL/Surr-RLDE">Code</a></td>
+      <td>Integration of surrogate modeling techniques for expensive objective functions.</td>
+    </tr>
+    <tr>
+      <td align="center">HPO-B</td>
+      <td><a href="#">Paper</a></td>
+      <td><a href="#">Code</a></td>
+      <td>Problem set designed for hyperparameter optimization.</td>
+    </tr>
+    <tr>
+      <td align="center">Neuroevolution</td>
+      <td><a href="#">Paper</a></td>
+      <td><a href="#">Code</a></td>
+      <td>Problem set for optimization through neuroevolutionary techniques.</td>
+    </tr>
+    <tr>
+      <td align="center">Protein-Docking</td>
+      <td><a href="#">Paper</a></td>
+      <td><a href="#">Code</a></td>
+      <td>Focuses on protein structure docking in computational biology.</td>
+    </tr>
+    <tr>
+      <td align="center">CEC2013LSGO</td>
+      <td><a href="https://al-roomi.org/multimedia/CEC_Database/CEC2015/LargeScaleGlobalOptimization/CEC2015_LargeScaleGO_TechnicalReport.pdf">Paper</a></td>
+      <td><a href="https://github.com/dmolina/cec2013lsgo">Code</a></td>
+      <td>A large-scale benchmark suite for global optimization.</td>
+    </tr>
+    <tr>
+      <td rowspan="1" align="center">Multi-Objective Optimization</td> <!-- Center the Type column -->
+      <td align="center">MOO-Synthetic</td>
+      <td>
+        <a href="https://ieeexplore.ieee.org/abstract/document/6787994">ZDT</a><br>
+        <a href="https://www.al-roomi.org/multimedia/CEC_Database/CEC2009/MultiObjectiveEA/CEC2009_MultiObjectiveEA_TechnicalReport.pdf">UF</a><br>
+        <a href="https://ieeexplore.ieee.org/abstract/document/1007032">DTLZ</a><br>
+        <a href="https://ieeexplore.ieee.org/abstract/document/1705400">WFG</a>
+      </td>
+      <td><a href="https://github.com/anyoptimization/pymoo">Code</a></td>
+      <td>Combines multiple objective optimization problems like ZDT, UF, DTLZ, and WFG.</td>
+    </tr>
+    <tr>
+      <td rowspan="1" align="center">Multi-Model Optimization</td> <!-- Center the Type column -->
+      <td align="center">CEC2013MMO</td>
+      <td><a href="https://web.xidian.edu.cn/xlwang/files/20150312_175833.pdf">Paper</a></td>
+      <td><a href="https://github.com/mikeagn/CEC2013">Code</a></td>
+      <td>A problem set for multi-modal optimization algorithms.</td>
+    </tr>
+    <tr>
+      <td rowspan="2" align="center">Multi-Task Optimization</td> <!-- Center the Type column -->
+      <td align="center">CEC2017MTO</td>
+      <td><a href="https://arxiv.org/abs/1706.03470">Paper</a></td>
+      <td><a href="http://www.bdsc.site/websites/MTO/index.html">Code</a></td>
+      <td>Multi-task optimization benchmark for evaluating multitasking algorithms.</td>
+    </tr>
+    <tr>
+      <td align="center">WCCI2020</td>
+      <td><a href="http://www.bdsc.site/websites/MTO_competition_2020/MTO_Competition_WCCI_2020.html">Paper</a></td>
+      <td><a href="http://www.bdsc.site/websites/MTO/index.html">Code</a></td>
+      <td>Focuses on multi-task optimization problems with 50-dimensional tasks.</td>
+    </tr>
+  </tbody>
+</table>
 
 </details>
+
+
 
 ## Available BBO/MetaBBO Baselines in MetaBox
 
