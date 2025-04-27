@@ -132,7 +132,7 @@ We sincerely suggest researchers with interests to check out **[Online Documenta
         <a href="https://ieeexplore.ieee.org/abstract/document/1705400">WFG</a>
       </td>
       <td><a href="https://github.com/anyoptimization/pymoo">Code</a></td>
-      <td> MOO_Synthetic is composed of multiple MOO problem sets: ZDT, UF, DTLZ, WFG, a total of 187 problems. </td>
+      <td> moo-synthetic is constructed by mixing 4 well-known multi-objective problem sets: ZDT, UF, DTLZ and WFG. In total, we have constructed 187 problem instances. Their objective numbers range from 2~10, dimensions range from 2D~38D. </td>
    </tr> 
    <tr>
       <td align="center">moo-uav</td>
@@ -140,7 +140,7 @@ We sincerely suggest researchers with interests to check out **[Online Documenta
         <a href="https://ieeexplore.ieee.org/abstract/document/6787994">paper</a><br>
       </td>
       <td><a href="https://github.com/anyoptimization/pymoo">Code</a></td>
-      <td> We decompose the objective value of instances in uav into 3 separate objectives, which results in 56 30D realistic multi-objective problem instances. </td>
+      <td> We decompose the objective value of instances in uav into 3 separate objectives, which results in 56 30D realistic 3-objective problem instances. </td>
     </tr>
     <tr>
       <td rowspan="1" align="center">Multi-Model Optimization</td> <!-- Center the Type column -->
@@ -154,7 +154,7 @@ We sincerely suggest researchers with interests to check out **[Online Documenta
       <td align="center">cec2017mto</td>
       <td><a href="https://arxiv.org/abs/1706.03470">Paper</a></td>
       <td><a href="http://www.bdsc.site/websites/MTO/index.html">Code</a></td>
-      <td> CEC2017MTO comprises 9 multi-task problem instances, each of which contains two basic problems. Optional basic problems include Shpere, Rosenbrock, Ackley, Rastrigin, Griewank, Weierstrass and Schwefel, with dimension ranging from 25D~50D </td>
+      <td> CEC2017MTO comprises 9 multi-task problem instances, each of which contains two basic problems. Optional basic problems include Shpere, Rosenbrock, Ackley, Rastrigin, Griewank, Weierstrass and Schwefel, with dimension ranging from 25D~50D. </td>
     </tr>
     <tr>
       <td align="center">wcci2020</td>
