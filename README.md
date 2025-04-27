@@ -87,7 +87,7 @@ config = {
         'GLEET':{
             'agent': 'GLEET',
             'optimizer': GLEET_Optimizer,
-            'dir': None, # by default is None, we will load a built-in pre-trained checkpoint for you.
+            'model_load_path': None, # by default is None, we will load a built-in pre-trained checkpoint for you.
         },
 
         # Other baselines to compare              
@@ -100,9 +100,9 @@ config = Config(config)
 # load test dataset
 config, datasets = construct_problem_set(config)
 # initialize all baselines to compare (yours + others)
-agents_for_cp, agents_optimizers_for_cp, traditional_optimizers_for_cp, config = get_baseline(config)
+baselines, config = get_baseline(config)
 # initialize tester
-tester = Tester(config, agents_for_cp, agents_optimizers_for_cp, traditional_optimizers_for_cp, datasets)
+tester = Tester(config, baselines, datasets)
 # test
 tester.test()
 ```
