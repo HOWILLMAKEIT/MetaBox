@@ -368,7 +368,7 @@ def get_baseline(config):
             else:
                 base_dir = f'metaevobox.model.{config.test_problem}.{config.test_difficulty}'
                 model_path = pkg_resources.files(base_dir).joinpath(f"{baselines[bsl]['agent']}.pkl")
-                with open(model_path, 'rb') as f:
+                with model_path.open('rb') as f:
                     user_agents.append(pickle.load(f))
         else:  # bbo
             user_toptimizers.append(baselines[bsl]['optimizer'](config))
