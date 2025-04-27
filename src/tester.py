@@ -366,7 +366,7 @@ def get_baseline(config):
                 with open(os.path.join(os.getcwd(), baselines[bsl]['dir']), 'rb') as f:
                     user_agents.append(pickle.load(f, fix_imports=False))
             else:
-                base_dir = f'metaevobox.agent_model.{config.test_problem}.{config.test_difficulty}'
+                base_dir = f'metaevobox.model.{config.test_problem}.{config.test_difficulty}'
                 model_path = pkg_resources.files(base_dir).joinpath(f"{baselines[bsl]['agent']}.pkl")
                 with open(model_path, 'rb') as f:
                     user_agents.append(pickle.load(f))
