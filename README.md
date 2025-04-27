@@ -75,11 +75,10 @@ We sincerely suggest researchers with interests to check out **[Online Documenta
       <td><a href="https://github.com/GMC-DRL/Surr-RLDE">Code</a></td>
       <td>BBOB-Surrogate includes 72 optimization problems across three dimensions (2, 5, 10), with each dimension containing 24 problems, where each problem is a surrogate model trained using a KAN or MLP network to fit 24 black box functions from the COCO-BBOB benchmark.</td>
     </tr>
-    <tr>
-      <td align="center">HPO-B</td>
+    <td align="center">HPO-B</td>
       <td><a href="#">Paper</a></td>
       <td><a href="#">Code</a></td>
-      <td>Problem set designed for hyperparameter optimization.</td>
+      <td>HPO-B is an autoML hyper-parameter optimization benchmark which includes a wide range of hyperparameter optimization tasks for 16 different model types (e.g., SVM, XGBoost, etc.), resulting in a total of 935 problem instances.</td>
     </tr>
     <tr>
       <td align="center">UAV</td>
@@ -97,7 +96,7 @@ We sincerely suggest researchers with interests to check out **[Online Documenta
       <td align="center">Protein-Docking</td>
       <td><a href="#">Paper</a></td>
       <td><a href="#">Code</a></td>
-      <td>Focuses on protein structure docking in computational biology.</td>
+      <td>Protein-docking benchmark, where the objective is to minimize the Gibbs free energy resulting from protein-protein interaction between a given complex and any other conformation. We select 28 protein complexes and randomly initialize 10 starting points for each complex, resulting in 280 problem instances.</td>
     </tr>
     <tr>
       <td align="center">CEC2013LSGO</td>
