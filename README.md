@@ -54,10 +54,6 @@ We sincerely suggest researchers with interests to check out **[Online Documenta
 
 ## Available BBO/MetaBBO Baselines in MetaBox
 
-## Researches that used MetaBox
-
-
-
 ## Citing MetaBox
 
 The PDF version of the paper is available [here](https://arxiv.org/abs/2310.08252). If you find our MetaBox useful, please cite it in your publications or projects.
