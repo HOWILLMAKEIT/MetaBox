@@ -140,7 +140,7 @@ We sincerely suggest researchers with interests to check out **[Online Documenta
       <td align="center">CEC2013MMO</td>
       <td><a href="https://web.xidian.edu.cn/xlwang/files/20150312_175833.pdf">Paper</a></td>
       <td><a href="https://github.com/mikeagn/CEC2013">Code</a></td>
-      <td> CEC2013MMO includes 20 functions covering different dimensions and the number of global optima. Among them, F1 to F5 are simple functions, F6 to F10 are scalable functions with many global optima, and F11 to F20 are composition functions with challenging landscapes.</td>
+      <td> CEC2013MMO is specially crafeted for multi-modal optimization, which includes 20 synthetic problem instances covering various dimensions (1D~20D), each with varied number of (1 ~ 216) global optima. Among them, F1 to F5 are simple uni-modal functions, F6 to F10 are dimension-scalable functions with multiple global optima, and F11 to F20 are complex composition functions with challenging landscapes.</td>
     </tr>
     <tr>
       <td rowspan="2" align="center">Multi-Task Optimization</td> <!-- Center the Type column -->
