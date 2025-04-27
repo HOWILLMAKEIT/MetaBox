@@ -83,7 +83,7 @@ We sincerely suggest researchers with interests to check out **[Online Documenta
       <td align="center">uav</td>
       <td><a href="https://arxiv.org/abs/2501.14503">Paper</a></td>
       <td><a href="https://zenodo.org/records/12793991">Code</a></td>
-      <td> UAV provides 56 terrain-based landscapes as realistic Unmanned Aerial Vehicle(UAV) path planning problems. The objective is to select given number of path nodes (x,y,z coordinates) from the 3D space, so the the UAV could fly as shortly as possible in a collision-free way. </td>
+      <td> uav provides 56 terrain-based landscapes as realistic Unmanned Aerial Vehicle(UAV) path planning problems, each of which is 30D. The objective is to select given number of path nodes (x,y,z coordinates) from the 3D space, so the the UAV could fly as shortly as possible in a collision-free way.  </td>
     </tr>
     <tr>
       <td align="center">ne<br>(large-scale)</td>
@@ -102,7 +102,7 @@ We sincerely suggest researchers with interests to check out **[Online Documenta
       <td><a href="https://al-roomi.org/multimedia/CEC_Database/CEC2015/LargeScaleGlobalOptimization/CEC2015_LargeScaleGO_TechnicalReport.pdf">Paper</a></td>
       <td><a href="https://github.com/dmolina/cec2013lsgo">Code</a></td>
       <td>
-        CEC2013LSGO contains four major categories of large-scale problems:
+        lsgo contains 20 large-scale problems instances (>=905D. <=1000D):
         <br>
         <ol>
           <li>Fully-separable functions (F1-F3)</li>
@@ -140,7 +140,7 @@ We sincerely suggest researchers with interests to check out **[Online Documenta
         <a href="https://ieeexplore.ieee.org/abstract/document/6787994">paper</a><br>
       </td>
       <td><a href="https://github.com/anyoptimization/pymoo">Code</a></td>
-      <td> MOO_Synthetic is composed of multiple MOO problem sets: ZDT, UF, DTLZ, WFG, a total of 187 problems. </td>
+      <td> We decompose the objective value of instances in uav into 3 separate objectives, which results in 56 30D realistic multi-objective problem instances. </td>
     </tr>
     <tr>
       <td rowspan="1" align="center">Multi-Model Optimization</td> <!-- Center the Type column -->
