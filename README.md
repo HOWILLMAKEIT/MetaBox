@@ -1,4 +1,11 @@
-# MetaBox-v2: Benchmarking Meta-Black-Box Optimization under Diverse Optimization Scenarios with Efficiency and Flexibility 
+<h1 align="center">
+  <span style="font-size: 2.2em">⭐ MetaBox-v2 ⭐</span><br/>
+  <div style="font-size: 0.9em; margin-top: 12px">
+    Benchmarking Meta-Black-Box Optimization<br/>
+    under Diverse Optimization Scenarios with Efficiency and Flexibility
+  </div>
+</h1>
+
 [![NeurIPS](https://img.shields.io/badge/NeurIPS-2023-b31b1b.svg)]([https://proceedings.neurips.cc/paper_files/paper/2023/hash/232eee8ef411a0a316efa298d7be3c2b-Abstract-Datasets_and_Benchmarks.html]) **MetaBox-v1 has been published at NeurIPS 2023！**
 
 we propose MetaBox 2.0 version (MetaBox-v2) as a major upgradation of [MetaBox-v1](https://github.com/MetaEvo/MetaBox/tree/v1.0.0). MetaBox-v2 now supports plentiful optimization scenarios to embrace users from single-objective optimization, multi-objective optimization, multi-modal optimization, multi-task optimization and etc. Correspondingly, **11 optimization problem sets** (synthetic + realistic) and **36 baseline methods** (traditional optimizers + up-to-date MetaBBOs) are reproduced within MetaBox-v2 to assist various research ideas and comprehensive comparison. To address MetaBBO's inherent efficiency issue, we have optimized low-level implementation of MetaBox-v2 to support parallel meta-training and evaluation, which reduces the running cost from days to hours. More importantly, we have optimized MetaBox-v2's sourcecode to support **sufficient development flexbility**, with clear and sound tutotials correspondingly. Enjoy your journey of learning and using MetaBBO from here!   
@@ -31,6 +38,12 @@ pip install metaevobox
 We sincerely suggest researchers with interests to check out **[Online Documentation](https://metaboxdoc.readthedocs.io/en/latest/index.html)** for further flexible usege of MetaBox-v2.
 
 ## Available Optimization Problem Set in MetaBox
+<details>
+<summary>Single-Objective Optimization</summary>
+
+- [COCO-BB08](#coco-bb08)
+- [BB08-Surrogate](#bb08-surrogate)
+</details>
 
 ## Available BBO/MetaBBO Baselines in MetaBox
 
