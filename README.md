@@ -44,12 +44,12 @@ pip install metaevobox
 ### High-level Development Usage
 We sincerely suggest researchers with interests to check out **[Online Documentation](https://metaboxdoc.readthedocs.io/en/latest/index.html)** for further flexible usege of MetaBox-v2, such as implementing your own MetaBBO, customized experimental design & analysis, using pre-collected metadata and seamless API calling with other famous optimization repos.
 
-## Available Optimization Problem Set in MetaBox
 <details>
-<summary>Single-Objective Optimization</summary>
+<summary><h1>Available Optimization Problem Set in MetaBox</h1></summary>
 
 - [COCO-BB08](#coco-bb08)
 - [BB08-Surrogate](#bb08-surrogate)
+
 </details>
 
 ## Available BBO/MetaBBO Baselines in MetaBox
