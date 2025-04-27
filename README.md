@@ -1,17 +1,24 @@
 # MetaBox-v2: Benchmarking Meta-Black-Box Optimization under Diverse Optimization Scenarios with Efficiency and Flexibility 
-[![NeurIPS](https://img.shields.io/badge/NeurIPS-2023-b31b1b.svg)]([https://proceedings.neurips.cc/paper_files/paper/2023/hash/232eee8ef411a0a316efa298d7be3c2b-Abstract-Datasets_and_Benchmarks.html]) **MetaBox has been published at NeurIPS 2023！**
+[![NeurIPS](https://img.shields.io/badge/NeurIPS-2023-b31b1b.svg)]([https://proceedings.neurips.cc/paper_files/paper/2023/hash/232eee8ef411a0a316efa298d7be3c2b-Abstract-Datasets_and_Benchmarks.html]) **MetaBox-v1 has been published at NeurIPS 2023！**
 
 we propose MetaBox 2.0 version (MetaBox-v2) as a major upgradation of [MetaBox-v1](https://github.com/MetaEvo/MetaBox/tree/v1.0.0). MetaBox-v2 now supports plentiful optimization scenarios to embrace users from single-objective optimization, multi-objective optimization, multi-modal optimization, multi-task optimization and etc. Correspondingly, **11 optimization problem sets** (synthetic + realistic) and **36 baseline methods** (traditional optimizers + up-to-date MetaBBOs) are reproduced within MetaBox-v2 to assist various research ideas and comprehensive comparison. To address MetaBBO's inherent efficiency issue, we have optimized low-level implementation of MetaBox-v2 to support parallel meta-training and evaluation, which reduces the running cost from days to hours. More importantly, we have optimized MetaBox-v2's sourcecode to support **sufficient development flexbility**, with clear and sound tutotials correspondingly. Enjoy your journey of learning and using MetaBBO from here!   
 
-## News
+<div align="center">
+<img src="https://github.com/MetaEvo/MetaBox/blob/v2.0.0/docs/source/_static/MetaBOX-NEW.png" width="80%">
+</div>
 
 ## Quick Start
 ### Installation
+
+> [!Important]
+> Below we install a cpu-version torch for you, if you need install any other versions, \
+> see [torch](https://pytorch.org/get-started) and replace the corresponding installation instruction below.
+
 ```bash
 ## create a venv
 conda create -n metaevobox_env python=3.11.5 -y
 conda activate metaevobox_env
-## install pytorch (below we install a cpu-version torch for you, if you need install any other versions, see https://pytorch.org/get-started and replace the corresponding installation instruction below.)
+## install pytorch
 pip install torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cpu
 ## install metabox
 pip install metaevobox
