@@ -85,7 +85,7 @@ We sincerely suggest researchers with interests to check out **[Online Documenta
       <td align="center">UAV</td>
       <td><a href="https://arxiv.org/abs/2501.14503">Paper</a></td>
       <td><a href="https://zenodo.org/records/12793991">Code</a></td>
-      <td> UAV provides 56 terrain-based instances to reprensent a realistic Unmanned Aerial Vehicle(UAV) path planning problem. </td>
+      <td> UAV provides 56 terrain-based landscapes as realistic Unmanned Aerial Vehicle(UAV) path planning problems. The objective is to select given number of path nodes (x,y,z coordinates) from the 3D space, so the the UAV could fly as shortly as possible in a collision-free way. </td>
     </tr>
     <tr>
       <td align="center">Neuroevolution</td>
