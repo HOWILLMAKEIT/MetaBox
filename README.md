@@ -63,42 +63,42 @@ We sincerely suggest researchers with interests to check out **[Online Documenta
   <tbody>
     <tr>
       <td rowspan="7" align="center">Single-Objective Optimization</td> <!-- Center the Type column -->
-      <td align="center">COCO-BBOB</td>
+      <td align="center">bbob</td>
       <td><a href="#">Paper</a></td>
       <td><a href="#">Code</a></td>
       <td>A problem set for single-objective optimization with benchmark problems.</td>
     </tr>
     <tr>
-      <td align="center">BBOB-Surrogate</td>
+      <td align="center">bbob-surrogate</td>
       <td><a href="https://arxiv.org/abs/2503.18060">Paper</a></td>
       <td><a href="https://github.com/GMC-DRL/Surr-RLDE">Code</a></td>
       <td>BBOB-Surrogate includes 72 optimization problems across three dimensions (2, 5, 10), with each dimension containing 24 problems, where each problem is a surrogate model trained using a KAN or MLP network to fit 24 black box functions from the COCO-BBOB benchmark.</td>
     </tr>
-    <td align="center">HPO-B</td>
+    <td align="center">hpo-b</td>
       <td><a href="#">Paper</a></td>
       <td><a href="#">Code</a></td>
       <td>HPO-B is an autoML hyper-parameter optimization benchmark which includes a wide range of hyperparameter optimization tasks for 16 different model types (e.g., SVM, XGBoost, etc.), resulting in a total of 935 problem instances. The dimension of these problem instances range from 2 to 16. We also note that HPO-B represents problems with ill-conditioned landscape such as huge flattern.</td>
     </tr>
     <tr>
-      <td align="center">UAV</td>
+      <td align="center">uav</td>
       <td><a href="https://arxiv.org/abs/2501.14503">Paper</a></td>
       <td><a href="https://zenodo.org/records/12793991">Code</a></td>
       <td> UAV provides 56 terrain-based landscapes as realistic Unmanned Aerial Vehicle(UAV) path planning problems. The objective is to select given number of path nodes (x,y,z coordinates) from the 3D space, so the the UAV could fly as shortly as possible in a collision-free way. </td>
     </tr>
     <tr>
-      <td align="center">Neuroevolution</td>
+      <td align="center">ne<br>(large-scale)</td>
       <td><a href="#">Paper</a></td>
       <td><a href="#">Code</a></td>
       <td>This problem set is based on the neuroevolution interfaces in <a href="https://evox.readthedocs.io/en/latest/examples/brax.html">EvoX</a>. The goal is to optimize the parameters of neural network-based RL agents for a series of Robotic Control tasks. We pre-define 11 control tasks (e.g., swimmer, ant, walker2D etc.), and 6 MLP structures with 0~5 hidden layers. The combinations of task & network structure result in 66 problem instances, which feature extremely high-dimensional problems (>=1000D).</td>
     </tr>
     <tr>
-      <td align="center">Protein-Docking</td>
+      <td align="center">protein</td>
       <td><a href="#">Paper</a></td>
       <td><a href="#">Code</a></td>
       <td>Protein-docking benchmark, where the objective is to minimize the Gibbs free energy resulting from protein-protein interaction between a given complex and any other conformation. We select 28 protein complexes and randomly initialize 10 starting points for each complex, resulting in 280 problem instances. To simplify the problem structure, we only optimize 12 interaction points in a complex instance (12D problem).</td>
     </tr>
     <tr>
-      <td align="center">CEC2013LSGO</td>
+      <td align="center">lsgo<br>(large-scale)</td>
       <td><a href="https://al-roomi.org/multimedia/CEC_Database/CEC2015/LargeScaleGlobalOptimization/CEC2015_LargeScaleGO_TechnicalReport.pdf">Paper</a></td>
       <td><a href="https://github.com/dmolina/cec2013lsgo">Code</a></td>
       <td>
@@ -123,8 +123,8 @@ We sincerely suggest researchers with interests to check out **[Online Documenta
       </td>
     </tr>
     <tr>
-      <td rowspan="1" align="center">Multi-Objective Optimization</td> <!-- Center the Type column -->
-      <td align="center">MOO-Synthetic</td>
+      <td rowspan="2" align="center">Multi-Objective Optimization</td> <!-- Center the Type column -->
+      <td align="center">moo-synthetic</td>
       <td>
         <a href="https://ieeexplore.ieee.org/abstract/document/6787994">ZDT</a><br>
         <a href="https://www.al-roomi.org/multimedia/CEC_Database/CEC2009/MultiObjectiveEA/CEC2009_MultiObjectiveEA_TechnicalReport.pdf">UF</a><br>
@@ -133,29 +133,37 @@ We sincerely suggest researchers with interests to check out **[Online Documenta
       </td>
       <td><a href="https://github.com/anyoptimization/pymoo">Code</a></td>
       <td> MOO_Synthetic is composed of multiple MOO problem sets: ZDT, UF, DTLZ, WFG, a total of 187 problems. </td>
+   </tr> 
+   <tr>
+      <td align="center">moo-uav</td>
+      <td>
+        <a href="https://ieeexplore.ieee.org/abstract/document/6787994">paper</a><br>
+      </td>
+      <td><a href="https://github.com/anyoptimization/pymoo">Code</a></td>
+      <td> MOO_Synthetic is composed of multiple MOO problem sets: ZDT, UF, DTLZ, WFG, a total of 187 problems. </td>
     </tr>
     <tr>
       <td rowspan="1" align="center">Multi-Model Optimization</td> <!-- Center the Type column -->
-      <td align="center">CEC2013MMO</td>
+      <td align="center">mmo</td>
       <td><a href="https://web.xidian.edu.cn/xlwang/files/20150312_175833.pdf">Paper</a></td>
       <td><a href="https://github.com/mikeagn/CEC2013">Code</a></td>
       <td> CEC2013MMO is specially crafeted for multi-modal optimization, which includes 20 synthetic problem instances covering various dimensions (1D~20D), each with varied number of (1 ~ 216) global optima. Among them, F1 to F5 are simple uni-modal functions, F6 to F10 are dimension-scalable functions with multiple global optima, and F11 to F20 are complex composition functions with challenging landscapes.</td>
     </tr>
     <tr>
       <td rowspan="3" align="center">Multi-Task Optimization</td> <!-- Center the Type column -->
-      <td align="center">CEC2017MTO</td>
+      <td align="center">cec2017mto</td>
       <td><a href="https://arxiv.org/abs/1706.03470">Paper</a></td>
       <td><a href="http://www.bdsc.site/websites/MTO/index.html">Code</a></td>
       <td> CEC2017MTO has 9 multi-task questions, each of which contains two basic questions. </td>
     </tr>
     <tr>
-      <td align="center">WCCI2020</td>
+      <td align="center">wcci2020</td>
       <td><a href="http://www.bdsc.site/websites/MTO_competition_2020/MTO_Competition_WCCI_2020.html">Paper</a></td>
       <td><a href="http://www.bdsc.site/websites/MTO/index.html">Code</a></td>
       <td> WCCI2020 comprises 10 multi-task problems, each integrating 50 uniformly 50-dimensional base tasks. </td>
     </tr>
     <tr>
-      <td align="center">augmented_wcci2020</td>
+      <td align="center">augmented-wcci2020</td>
       <td><a href="http://www.bdsc.site/websites/MTO_competition_2020/MTO_Competition_WCCI_2020.html">Paper</a></td>
       <td><a href="http://www.bdsc.site/websites/MTO/index.html">Code</a></td>
       <td> WCCI2020 comprises 10 multi-task problems, each integrating 50 uniformly 50-dimensional base tasks. </td>
