@@ -90,7 +90,7 @@ We sincerely suggest researchers with interests to check out **[Online Documenta
       <td align="center">Neuroevolution</td>
       <td><a href="#">Paper</a></td>
       <td><a href="#">Code</a></td>
-      <td>This problem set is based on the neuroevolution interfaces in <a href="https://evox.readthedocs.io/en/latest/examples/brax.html">EvoX</a>. The goal is to optimize the parameters of neural network-based RL agents for a series of Robotic Control tasks. We pre-define 11 control tasks (e.g., swimmer, ant, walker2D etc.), and 6 MLP structures with hidden layers from 0~5. The combinations of task & network structure result in 66 problem instances, which feature extremely high-dimensional problems (>=1000D).</td>
+      <td>This problem set is based on the neuroevolution interfaces in <a href="https://evox.readthedocs.io/en/latest/examples/brax.html">EvoX</a>. The goal is to optimize the parameters of neural network-based RL agents for a series of Robotic Control tasks. We pre-define 11 control tasks (e.g., swimmer, ant, walker2D etc.), and 6 MLP structures with 0~5 hidden layers. The combinations of task & network structure result in 66 problem instances, which feature extremely high-dimensional problems (>=1000D).</td>
     </tr>
     <tr>
       <td align="center">Protein-Docking</td>
