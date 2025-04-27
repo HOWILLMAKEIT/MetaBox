@@ -12,12 +12,13 @@ from .logger import *
 from .environment.parallelenv.parallelenv import ParallelEnv
 import json
 import torch
-import gym
+import gym, os
 from typing import Optional, Union, Literal, List
 from .environment.optimizer.basic_optimizer import Basic_Optimizer
 from .rl import Basic_Agent
 from .environment.problem.basic_problem import Basic_Problem
 from dill import dumps, loads
+import importlib.resources as pkg_resources
 from .environment.optimizer import (
     DEDDQN_Optimizer,
     DEDQN_Optimizer,
@@ -350,6 +351,29 @@ class MetaBBO_TestUnit():
         res['agent_name'] = agent_name
         res['problem_name'] = self.env.problem.__str__()
         return res
+
+
+def get_baseline(config):
+    user_agents=[]
+    user_loptimizers=[]
+    user_toptimizers=[]
+    baselines = config.baselines
+    assert baselines is not None
+    for bsl in baselines.keys():
+        if 'agent' in baselines[bsl].keys():  # metabbo
+            user_loptimizers.append(eval(baselines[bsl]['optimizer'])(config))
+            if 'dir' in baselines[bsl].keys() and baselines[bsl]['dir'] is not None:
+                with open(os.path.join(os.getcwd(), baselines[bsl]['dir']), 'rb') as f:
+                    user_agents.append(pickle.load(f, fix_imports=False))
+            else:
+                base_dir = f'metaevobox.agent_model.{config.test_problem}.{config.test_difficulty}'
+                model_path = pkg_resources.files(base_dir).joinpath(f"{baselines[bsl]['agent']}.pkl")
+                with open(model_path, 'rb') as f:
+                    user_agents.append(pickle.load(f))
+        else:  # bbo
+            user_toptimizers.append(eval(baselines[bsl]['optimizer'])(config))
+    return user_agents, user_loptimizers, user_toptimizers
+
 
 class Tester(object):
     def __init__(self, config, user_agents = [], user_loptimizers = [], user_toptimizers = [], user_datasets = None):

@@ -160,6 +160,7 @@ def get_config(args=None):
     parser.add_argument('--test_batch_size', type = int, default = 1, help = 'batch size of test set')
     parser.add_argument('--parallel_batch', type = str, default = 'Batch', choices = ['Full', 'Baseline_Problem', 'Problem_Testrun', 'Batch', 'Serial'],
                         help = 'the parellel processing mode for testing')
+    parser.add_argument('--baselines', type = dict, default = None, help = 'the baselines for testing test')
     parser.add_argument('--test_run', type = int, default = 51, help = 'the run number of test')
     parser.add_argument('--rollout_run', type = int, default = 10, help = 'The run number of rollout')
 
