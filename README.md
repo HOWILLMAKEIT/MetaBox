@@ -78,7 +78,7 @@ We sincerely suggest researchers with interests to check out **[Online Documenta
     <td align="center">HPO-B</td>
       <td><a href="#">Paper</a></td>
       <td><a href="#">Code</a></td>
-      <td>HPO-B is an autoML hyper-parameter optimization benchmark which includes a wide range of hyperparameter optimization tasks for 16 different model types (e.g., SVM, XGBoost, etc.), resulting in a total of 935 problem instances.</td>
+      <td>HPO-B is an autoML hyper-parameter optimization benchmark which includes a wide range of hyperparameter optimization tasks for 16 different model types (e.g., SVM, XGBoost, etc.), resulting in a total of 935 problem instances. The dimension of these problem instances range from 2 to 16. We also note that HPO-B represents problems with ill-conditioned landscape such as huge flattern.</td>
     </tr>
     <tr>
       <td align="center">UAV</td>
@@ -96,7 +96,7 @@ We sincerely suggest researchers with interests to check out **[Online Documenta
       <td align="center">Protein-Docking</td>
       <td><a href="#">Paper</a></td>
       <td><a href="#">Code</a></td>
-      <td>Protein-docking benchmark, where the objective is to minimize the Gibbs free energy resulting from protein-protein interaction between a given complex and any other conformation. We select 28 protein complexes and randomly initialize 10 starting points for each complex, resulting in 280 problem instances.</td>
+      <td>Protein-docking benchmark, where the objective is to minimize the Gibbs free energy resulting from protein-protein interaction between a given complex and any other conformation. We select 28 protein complexes and randomly initialize 10 starting points for each complex, resulting in 280 problem instances. To simplify the problem structure, we only optimize 12 interaction points in a complex instance (12D problem).</td>
     </tr>
     <tr>
       <td align="center">CEC2013LSGO</td>
