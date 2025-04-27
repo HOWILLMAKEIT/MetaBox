@@ -154,19 +154,19 @@ We sincerely suggest researchers with interests to check out **[Online Documenta
       <td align="center">cec2017mto</td>
       <td><a href="https://arxiv.org/abs/1706.03470">Paper</a></td>
       <td><a href="http://www.bdsc.site/websites/MTO/index.html">Code</a></td>
-      <td> CEC2017MTO has 9 multi-task questions, each of which contains two basic questions. </td>
+      <td> CEC2017MTO comprises 9 multi-task problem instances, each of which contains two basic problems. Optional basic problems include Shpere, Rosenbrock, Ackley, Rastrigin, Griewank, Weierstrass and Schwefel, with dimension ranging from 25D~50D </td>
     </tr>
     <tr>
       <td align="center">wcci2020</td>
       <td><a href="http://www.bdsc.site/websites/MTO_competition_2020/MTO_Competition_WCCI_2020.html">Paper</a></td>
       <td><a href="http://www.bdsc.site/websites/MTO/index.html">Code</a></td>
-      <td> WCCI2020 comprises 10 multi-task problems, each integrating 50 uniformly 50-dimensional base tasks. </td>
+      <td> wcci2020 comprises 10 multi-task problem instances, each of which contains 50 basic problems. Optional basic problems include Shpere, Rosenbrock, Ackley, Rastrigin, Griewank, Weierstrass and Schwefel, which are all 50D. </td>
     </tr>
     <tr>
       <td align="center">augmented-wcci2020</td>
       <td><a href="http://www.bdsc.site/websites/MTO_competition_2020/MTO_Competition_WCCI_2020.html">Paper</a></td>
       <td><a href="http://www.bdsc.site/websites/MTO/index.html">Code</a></td>
-      <td> WCCI2020 comprises 10 multi-task problems, each integrating 50 uniformly 50-dimensional base tasks. </td>
+      <td> augmented-wcci2020 comprises 127 multi-task problems, each of which optinally contains 1~7 basic problems. Optional basic problems include Shpere, Rosenbrock, Ackley, Rastrigin, Griewank, Weierstrass and Schwefel, which are all 50D. </td>
     </tr>
   </tbody>
 </table>
