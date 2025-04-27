@@ -361,8 +361,6 @@ class Tester(object):
         # if self.config.test_problem[-6:]=='-torch':
         #     self.config.test_problem=self.config.test_problem[:-6]
 
-        if config.test_problem in ['bbob-surrogate-10D', 'bbob-surrogate-5D', 'bbob-surrogate-2D']:
-            config.is_train = False
 
         _, self.test_set = user_datasets
 
@@ -710,9 +708,6 @@ class Tester(object):
         
         config = self.config
         # get entire problem set
-        if config.problem in ['bbob-surrogate-10D','bbob-surrogate-5D','bbob-surrogate-2D']:
-            config.is_train = False
-
         train_set, test_set = construct_problem_set(config)
         entire_set = train_set + test_set
         # get optimizer
@@ -821,8 +816,6 @@ class Tester(object):
         print(f'start MGD_test: {config.run_time}')
         # get test set
         num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
-        if config.problem in ['bbob-surrogate-10D','bbob-surrogate-5D','bbob-surrogate-2D']:
-            config.is_train = False
 
         _, test_set = user_datasets
         self.test_set = test_set
@@ -1151,8 +1144,6 @@ def rollout_batch(config, rollout_dir, rollout_opt, rollout_datasets):
     
     print(f'start rollout: {config.run_time}')
     num_gpus = 0 if config.device == 'cpu' else 1
-    if config.test_problem in ['bbob-surrogate-10D','bbob-surrogate-5D','bbob-surrogate-2D']:
-        config.is_train = False
     train_set, test_set = rollout_datasets
 
     config.dim = max(train_set.maxdim, test_set.maxdim)

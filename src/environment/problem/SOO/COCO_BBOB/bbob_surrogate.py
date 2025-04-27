@@ -230,7 +230,6 @@ class bbob_surrogate_Dataset(Dataset):
                      seed=3849, shifted=True, biased=True, rotated=True,
                      config=None, upperbound=5):
 
-        is_train = config.is_train
         if difficulty == None and user_test_list == None and user_train_list == None:
             raise ValueError('Please set difficulty or user_train_list and user_test_list.')
         if difficulty != 'easy' and difficulty != 'difficult' and difficulty != 'all' and difficulty is not None:
@@ -238,11 +237,11 @@ class bbob_surrogate_Dataset(Dataset):
         if difficulty in ['easy', 'difficult', 'all'] and user_test_list is not None and user_train_list is not None:
             raise ValueError('If you have specified the training/test set, the difficulty should be None.')
         if suit == 'bbob-surrogate-10D':
-            dim = 10
+            dim = config.dim = 10
         elif suit == 'bbob-surrogate-5D':
-            dim = 5
+            dim = config.dim = 5
         elif suit == 'bbob-surrogate-2D':
-            dim = 2
+            dim = config.dim = 2
         else:
             raise ValueError(f'{suit} is not supported yet.')
 
@@ -285,49 +284,34 @@ class bbob_surrogate_Dataset(Dataset):
                 bias = np.random.randint(1, 26) * 100
             else:
                 bias = 0
-            surrgate_instance = bbob_surrogate_model(dim, id, ub=ub, lb=lb, shift=shift, rotate=H, bias=bias, config=config)
+            surrogate_instance = bbob_surrogate_model(dim, id, ub=ub, lb=lb, shift=shift, rotate=H, bias=bias, config=config)
             bbob_instance = eval(f'F{id}')(dim=dim, shift=shift, rotate=H, bias=bias, lb=lb, ub=ub)
 
             if difficulty == 'all':
-                if is_train:
-                    train_set.append(surrgate_instance)
-                else:
-                    train_set.append(bbob_instance)
+                train_set.append(surrogate_instance)
                 test_set.append(bbob_instance)
                 continue
             if user_train_list is None and user_test_list is None and difficulty is not None:
                 if id in train_id:
-                    if is_train:
-                        train_set.append(surrgate_instance)
-                    else:
-                        train_set.append(bbob_instance)
+                    train_set.append(surrogate_instance)
                 else:
                     test_set.append(bbob_instance)
             else:
                 if user_train_list is not None and user_test_list is not None:
                     if id in train_id:
-                        if is_train:
-                            train_set.append(surrgate_instance)
-                        else:
-                            train_set.append(bbob_instance)
+                        train_set.append(surrogate_instance)
                     if id in test_id:
                         test_set.append(bbob_instance)
                 elif user_train_list is not None:
                     if id in train_id:
-                        if is_train:
-                            train_set.append(surrgate_instance)
-                        else:
-                            train_set.append(bbob_instance)
+                        train_set.append(surrogate_instance)
                     else:
                         test_set.append(bbob_instance)
                 elif user_test_list is not None:
                     if id in test_id:
                         test_set.append(bbob_instance)
                     else:
-                        if is_train:
-                            train_set.append(surrgate_instance)
-                        else:
-                            train_set.append(bbob_instance)
+                        train_set.append(surrogate_instance)
 
         return bbob_surrogate_Dataset(train_set, train_batch_size), bbob_surrogate_Dataset(test_set, test_batch_size)
 

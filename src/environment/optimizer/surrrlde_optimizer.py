@@ -2,7 +2,7 @@ import torch
 import numpy as np
 from collections import deque
 from .learnable_optimizer import Learnable_Optimizer
-
+from ..problem.SOO.COCO_BBOB.bbob_surrogate import bbob_surrogate_model
 
 class SurrRLDE_Optimizer(Learnable_Optimizer):
 	"""
@@ -144,7 +144,7 @@ class SurrRLDE_Optimizer(Learnable_Optimizer):
 		#(-5,5)
 		self.population = self.population.to(self.device)
 
-		if self.config.train_problem in ['bbob-surrogate-10D','bbob-surrogate-5D','bbob-surrogate-2D'] and self.config.is_train:
+		if isinstance(problem, bbob_surrogate_model):
 			# print(self.population.clone().to(self.device))
 			self.fitness = problem.eval(self.population.clone().to(self.device))
 
@@ -234,7 +234,7 @@ class SurrRLDE_Optimizer(Learnable_Optimizer):
 		mut_population = self.mutation(mut_way)
 		crossover_population = self.crossover(mut_population)
 
-		if self.config.train_problem in ['bbob-surrogate-10D', 'bbob-surrogate-5D','bbob-surrogate-2D'] and self.config.is_train:
+		if isinstance(problem, bbob_surrogate_model):
 			temp_fit = problem.eval(crossover_population.clone().to(self.device))
 		else:
 			if problem.optimum is None:

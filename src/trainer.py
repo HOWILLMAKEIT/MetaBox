@@ -112,9 +112,6 @@ class Trainer(object):
         """
         self.config = config
 
-        if self.config.train_problem in ['bbob-surrogate-10D','bbob-surrogate-5D','bbob-surrogate-2D']:
-            self.config.is_train = True
-
         if user_datasets is None:
             self.train_set, self.test_set = construct_problem_set(config)
         else:
