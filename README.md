@@ -45,7 +45,7 @@ pip install metaevobox
 We sincerely suggest researchers with interests to check out **[Online Documentation](https://metaboxdoc.readthedocs.io/en/latest/index.html)** for further flexible usege of MetaBox-v2, such as implementing your own MetaBBO, customized experimental design & analysis, using pre-collected metadata and seamless API calling with other famous optimization repos.
 
 <details>
-<summary><h2>Available Optimization Problem Set in MetaBox</h2></summary>
+<summary><h2>Available Optimization Problem Sets in MetaBox-v2</h2></summary>
 
 <table>
   <thead>
@@ -63,7 +63,14 @@ We sincerely suggest researchers with interests to check out **[Online Documenta
   <tbody>
     <tr>
       <td rowspan="6" align="center">Single-Objective Optimization</td> <!-- Center the Type column -->
-      <td align="center">COCO-BBOB</td>
+      <td align="center">COCO-BBOB-10D</td>
+      <td><a href="#">Paper</a></td>
+      <td><a href="#">Code</a></td>
+      <td>A problem set for single-objective optimization with benchmark problems.</td>
+    </tr>
+    <tr>
+      
+      <td align="center">COCO-BBOB-30D</td>
       <td><a href="#">Paper</a></td>
       <td><a href="#">Code</a></td>
       <td>A problem set for single-objective optimization with benchmark problems.</td>
