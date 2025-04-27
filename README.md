@@ -1,10 +1,12 @@
-<h1 align="center">
-  <span style="font-size: 2.2em">⭐ MetaBox-v2 ⭐</span><br/>
+<div align="center">
+<img src="https://github.com/MetaEvo/MetaBox/blob/v2.0.0/docs/source/_static/MetaBOX-title.png" width="50%">
+</div>
+<h2 align="center">
   <div style="font-size: 0.9em; margin-top: 12px">
-    Benchmarking Meta-Black-Box Optimization under Diverse<br/>
-    Optimization Scenarios with Efficiency and Flexibility
+    Benchmarking Meta-Black-Box Optimization under<br/>
+    Diverse Optimization Scenarios with Efficiency and Flexibility
   </div>
-</h1>
+</h2>
 
 [![NeurIPS](https://img.shields.io/badge/NeurIPS-2023-b31b1b.svg)]([https://proceedings.neurips.cc/paper_files/paper/2023/hash/232eee8ef411a0a316efa298d7be3c2b-Abstract-Datasets_and_Benchmarks.html]) **MetaBox-v1 has been published at NeurIPS 2023！**
 
