@@ -163,6 +163,22 @@ We sincerely suggest researchers with interests to check out **[Online Documenta
 
 ## Available BBO/MetaBBO Baselines in MetaBox
 
+|Baseline Name|Target Optimization Scenario|Type|Paper|Year|
+|---|---|---|---|---|
+|[Random_search](https://github.com/MetaEvo/MetaBox/blob/v2.0.0/src/baseline/bbo/random_search.py)|||||
+|[PSO](https://github.com/MetaEvo/MetaBox/blob/v2.0.0/src/baseline/bbo/pso.py)|Single-Objective Optimization|BBO|[Particle swarm optimization](https://ieeexplore.ieee.org/abstract/document/488968)|1995|
+|[DE](https://github.com/MetaEvo/MetaBox/blob/v2.0.0/src/baseline/bbo/de.py)|Single-Objective Optimization|BBO|[Differential Evolution – A Simple and Efficient Heuristic for Global Optimization over Continuous Spaces](https://dl.acm.org/doi/abs/10.1023/A%3A1008202821328)|1997|
+|[CMAES](https://github.com/MetaEvo/MetaBox/blob/v2.0.0/src/baseline/bbo/cmaes.py)|Single-Objective Optimization|BBO|[Completely Derandomized Self-Adaptation in Evolution Strategies](https://ieeexplore.ieee.org/document/6790628)|2001|
+|[SHADE](https://github.com/MetaEvo/MetaBox/blob/v2.0.0/src/baseline/bbo/shade.py)|Single-Objective Optimization|BBO|[Success-history based parameter adaptation for differential evolution](https://ieeexplore.ieee.org/document/6557555)|2013|
+|[GLPSO](https://github.com/MetaEvo/MetaBox/blob/v2.0.0/src/baseline/bbo/glpso.py)|Single-Objective Optimization|BBO|[Genetic Learning Particle Swarm Optimization](https://ieeexplore.ieee.org/abstract/document/7271066/)|2015|
+|[SDMSPSO](https://github.com/MetaEvo/MetaBox/blob/v2.0.0/src/baseline/bbo/sdmspso.py)|Single-Objective Optimization|BBO|[A Self-adaptive Dynamic Particle Swarm Optimizer](https://ieeexplore.ieee.org/document/7257290)|2015|
+|[SAHLPSO](https://github.com/MetaEvo/MetaBox/blob/v2.0.0/src/baseline/bbo/sahlpso.py)|Single-Objective Optimization|BBO|[Self-Adaptive two roles hybrid learning strategies-based particle swarm optimization](https://www.sciencedirect.com/science/article/pii/S0020025521006988)|2021|
+|[JDE21](https://github.com/MetaEvo/MetaBox/blob/v2.0.0/src/baseline/bbo/sahlpso.py)|Single-Objective Optimization|BBO|[Self-adaptive Differential Evolution Algorithm with Population Size Reduction for Single Objective Bound-Constrained Optimization: Algorithm j21](https://ieeexplore.ieee.org/document/9504782)|2021|
+|[MADDE](https://github.com/MetaEvo/MetaBox/blob/v2.0.0/src/baseline/bbo/madde.py)|Single-Objective Optimization|BBO|[Improving Differential Evolution through Bayesian Hyperparameter Optimization](https://ieeexplore.ieee.org/document/9504792)|2021|
+|[NLSHADELBC](https://github.com/MetaEvo/MetaBox/blob/v2.0.0/src/baseline/bbo/nlshadelbc.py)|Single-Objective Optimization|BBO|[NL-SHADE-LBC algorithm with linear parameter adaptation bias change for CEC 2022 Numerical Optimization](https://ieeexplore.ieee.org/abstract/document/9870295)|2022|
+|[MOEAD](https://github.com/MetaEvo/MetaBox/blob/v2.0.0/src/baseline/bbo/moead.py)|Multi-Objective Optimization|BBO|[MOEA/D: A Multiobjective Evolutionary Algorithm Based on Decomposition](https://ieeexplore.ieee.org/document/4358754)|2007|
+|[MFEA](https://github.com/MetaEvo/MetaBox/blob/v2.0.0/src/baseline/bbo/mfea.py)|Multi-Task Optimization|BBO|[# Multifactorial Evolution: Toward Evolutionary Multitasking](https://ieeexplore.ieee.org/abstract/document/7161358)|2016|
+
 ## Citing MetaBox
 
 The PDF version of the paper is available [here](https://arxiv.org/abs/2310.08252). If you find our MetaBox useful, please cite it in your publications or projects.
