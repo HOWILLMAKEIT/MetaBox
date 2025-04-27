@@ -64,9 +64,9 @@ We sincerely suggest researchers with interests to check out **[Online Documenta
     <tr>
       <td rowspan="7" align="center">Single-Objective Optimization</td> <!-- Center the Type column -->
       <td align="center">bbob</td>
-      <td><a href="#">Paper</a></td>
-      <td><a href="#">Code</a></td>
-      <td>A problem set for single-objective optimization with benchmark problems.</td>
+      <td><a href="https://arxiv.org/pdf/1603.08785">Paper</a></td>
+      <td><a href="https://github.com/numbbo/coco">Code</a></td>
+      <td>bbob is based on CoCo platform, which includes 96 representative single-objective synthetic problem instances. These instances all originate from the same group of 24 objective functions (CoCo-BBOB), which have been used in many papers and widely accepted as golden standard for evaluating the robustbess of an optimizer. In MetaBox-v2, bbob includes 4 subsets: bbob-10D, bbob-30D, bbob-noisy-10D and bbob-noisy-30D, each of them contains the 24 functions. "noisy" here indicates that the function's objective value is added with a gaussian noise before it is output, which significantly increase the solving difficulty. </td>
     </tr>
     <tr>
       <td align="center">bbob-surrogate</td>
