@@ -361,7 +361,7 @@ def get_baseline(config):
     assert baselines is not None
     for bsl in baselines.keys():
         if 'agent' in baselines[bsl].keys():  # metabbo
-            user_loptimizers.append(eval(baselines[bsl]['optimizer'])(config))
+            user_loptimizers.append(baselines[bsl]['optimizer'](config))
             if 'dir' in baselines[bsl].keys() and baselines[bsl]['dir'] is not None:
                 with open(os.path.join(os.getcwd(), baselines[bsl]['dir']), 'rb') as f:
                     user_agents.append(pickle.load(f, fix_imports=False))
@@ -371,8 +371,9 @@ def get_baseline(config):
                 with open(model_path, 'rb') as f:
                     user_agents.append(pickle.load(f))
         else:  # bbo
-            user_toptimizers.append(eval(baselines[bsl]['optimizer'])(config))
-    return user_agents, user_loptimizers, user_toptimizers
+            user_toptimizers.append(baselines[bsl]['optimizer'](config))
+    config.baselines = None
+    return user_agents, user_loptimizers, user_toptimizers, config
 
 
 class Tester(object):
