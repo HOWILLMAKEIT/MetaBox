@@ -90,7 +90,7 @@ We sincerely suggest researchers with interests to check out **[Online Documenta
       <td align="center">Neuroevolution</td>
       <td><a href="#">Paper</a></td>
       <td><a href="#">Code</a></td>
-      <td>Problem set for optimization through neuroevolutionary techniques.</td>
+      <td>This problem set is based on the neuroevolution interfaces in <a href="https://evox.readthedocs.io/en/latest/examples/brax.html">EvoX</a>. The goal is to optimize the parameters of neural network-based RL agents for a series of Robotic Control tasks. We pre-define 11 control tasks (e.g., swimmer, ant, walker2D etc.), and 6 MLP structures with hidden layers from 0~5. The combinations of task & network structure result in 66 problem instances, which feature extremely high-dimensional problems (>=1000D).</td>
     </tr>
     <tr>
       <td align="center">Protein-Docking</td>
@@ -143,7 +143,7 @@ We sincerely suggest researchers with interests to check out **[Online Documenta
       <td> CEC2013MMO is specially crafeted for multi-modal optimization, which includes 20 synthetic problem instances covering various dimensions (1D~20D), each with varied number of (1 ~ 216) global optima. Among them, F1 to F5 are simple uni-modal functions, F6 to F10 are dimension-scalable functions with multiple global optima, and F11 to F20 are complex composition functions with challenging landscapes.</td>
     </tr>
     <tr>
-      <td rowspan="2" align="center">Multi-Task Optimization</td> <!-- Center the Type column -->
+      <td rowspan="3" align="center">Multi-Task Optimization</td> <!-- Center the Type column -->
       <td align="center">CEC2017MTO</td>
       <td><a href="https://arxiv.org/abs/1706.03470">Paper</a></td>
       <td><a href="http://www.bdsc.site/websites/MTO/index.html">Code</a></td>
@@ -151,6 +151,12 @@ We sincerely suggest researchers with interests to check out **[Online Documenta
     </tr>
     <tr>
       <td align="center">WCCI2020</td>
+      <td><a href="http://www.bdsc.site/websites/MTO_competition_2020/MTO_Competition_WCCI_2020.html">Paper</a></td>
+      <td><a href="http://www.bdsc.site/websites/MTO/index.html">Code</a></td>
+      <td> WCCI2020 comprises 10 multi-task problems, each integrating 50 uniformly 50-dimensional base tasks. </td>
+    </tr>
+    <tr>
+      <td align="center">augmented_wcci2020</td>
       <td><a href="http://www.bdsc.site/websites/MTO_competition_2020/MTO_Competition_WCCI_2020.html">Paper</a></td>
       <td><a href="http://www.bdsc.site/websites/MTO/index.html">Code</a></td>
       <td> WCCI2020 comprises 10 multi-task problems, each integrating 50 uniformly 50-dimensional base tasks. </td>
