@@ -208,7 +208,6 @@ class Trainer(object):
         """
         print(f'start training: {self.config.run_time}')
         is_end = False
-        # todo tensorboard
         tb_logger = None
         start_time = time.time()
         if not self.config.no_tb:
@@ -248,7 +247,6 @@ class Trainer(object):
                     elif self.config.train_mode == "multi":
                         env_list = [PBO_Env(copy.deepcopy(p), copy.deepcopy(self.optimizer)) for p in problem] # bs
 
-                    # todo config add para
                     exceed_max_ls, train_meta_data = self.agent.train_episode(envs = env_list,
                                                                               seeds = seed_list,
                                                                               tb_logger = tb_logger,
@@ -309,7 +307,6 @@ class Trainer(object):
                 with open(self.config.agent_save_dir + "/checkpoint_log.txt", "a") as f:
                     f.write(f"Checkpoint {self.agent.cur_checkpoint}: {learn_step}; Time: {checkpoint_time_epoch} s\n")
 
-                # todo rollout
                 # 保存状态
                 # cpu_state = torch.random.get_rng_state()
                 # cuda_state = torch.cuda.get_rng_state()

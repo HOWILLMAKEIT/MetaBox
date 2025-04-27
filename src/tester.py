@@ -426,14 +426,15 @@ class Tester(object):
                 name_count[name] = [id]
             else:
                 name_count[name].append(id)
-
+        metabbo = []
         for id, opt in enumerate(user_loptimizers):
             name = self.agent_name_list[id]
             if len(name_count[name]) > 1:
-                for i in range(len(name_count[name])):
-                    updated_name = f"{i + 1}_" + name
+                for i in range(1, len(name_count[name])):
+                    updated_name = f"{i}_" + name
                     self.agent_name_list[name_count[name][i]] = updated_name
             setattr(opt, "test_name", self.agent_name_list[id])
+            metabbo.append(self.agent_name_list[id])
             self.l_optimizer_for_cp.append(copy.deepcopy(opt))
 
         name_count = dict()
@@ -443,15 +444,30 @@ class Tester(object):
                 name_count[name] = 0
             else:
                 name_count[name] += 1
+        bbo = []
         for id in reversed(range(len(user_toptimizers))):
             opt = user_toptimizers[id]
             name = opt.__str__()
             count = name_count[name]
             if count:
                 name_count[name] -= 1
-                name = f"{count + 1}_" + name
+                name = f"{count}_" + name
             setattr(opt, "test_name", name)
             self.t_optimizer_for_cp.insert(0, copy.deepcopy(opt))
+            bbo.insert(0, name)
+
+        if 'mmo' in self.config.test_problem:
+            pass
+        elif 'mto' in self.config.test_problem or 'wcci2020' in self.config.test_problem:
+            pass
+        elif 'moo' in self.config.test_problem:
+            pass
+        else:
+            if "CMAES" not in name_count:
+                self.t_optimizer_for_cp.append(CMAES(self.config))
+
+            if "Random_search" not in name_count:
+                self.t_optimizer_for_cp.append(Random_search(self.config))
 
         # logging
         if len(self.agent_for_cp) == 0:
@@ -459,7 +475,7 @@ class Tester(object):
         else:
             print(f'there are {len(self.agent_for_cp)} agent')
             for a, l_optimizer in zip(self.agent_name_list, self.l_optimizer_for_cp):
-                print(f'learnable_agent:{a},l_optimizer:{l_optimizer.test_name}')
+                print(f'learnable_agent:{a},l_optimizer:{l_optimizer.test_name} optimizer')
 
         if len(self.t_optimizer_for_cp) == 0:
             print('None of traditional optimizer')
@@ -467,6 +483,8 @@ class Tester(object):
             print(f'there are {len(self.t_optimizer_for_cp)} traditional optimizer')
             for t_optimizer in self.t_optimizer_for_cp:
                 print(f't_optimizer:{t_optimizer.test_name}')
+
+        self.config.baselines = {'metabbo': metabbo, 'bbo': bbo}
 
         for key in self.test_results.keys():
             self.initialize_record(key)
@@ -710,11 +728,11 @@ class Tester(object):
             pickle.dump(self.test_results, f, -1)
 
         if log:
-            if self.config.train_problem in ['mmo', 'mmo-torch']:
+            if 'mmo' in self.config.test_problem:
                 logger = MMO_Logger(self.config)
-            elif self.config.train_problem in ['wcci2020', 'cec2017mto']:
+            elif 'mto' in self.config.test_problem or 'wcci2020' in self.config.test_problem:
                 logger = MTO_Logger(self.config)
-            elif self.config.train_problem in ['moo-synthetic', 'mmo-uav']:
+            elif 'moo' in self.config.test_problem:
                 logger = MOO_Logger(self.config)
             else:
                 logger = Basic_Logger(self.config)
@@ -1296,14 +1314,15 @@ def rollout_batch(config, rollout_dir, rollout_opt, rollout_datasets, log = True
         pickle.dump(rollout_results, f, -1)
 
     if log:
-        if config.test_problem in ['mmo', 'mmo-torch']:
+        if 'mmo' in config.test_problem:
             logger = MMO_Logger(config)
-        elif config.test_problem in ['wcci2020', 'cec2017mto']:
+        elif 'mto' in config.test_problem or 'wcci2020' in config.test_problem:
             logger = MTO_Logger(config)
-        elif config.test_problem in ['moo-synthetic', 'mmo-uav']:
+        elif 'moo' in config.test_problem:
             logger = MOO_Logger(config)
         else:
             logger = Basic_Logger(config)
-        logger.post_processing_rollout_statics(config.rollout_log_dir)
+        logger.post_processing_test_statics(config.rollout_log_dir)
+
 
 

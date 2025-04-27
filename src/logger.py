@@ -1132,9 +1132,9 @@ class Basic_Logger:
         print('Post processing & drawing')
         with open(log_dir + 'test_results.pkl', 'rb') as f:
             results = pickle.load(f)
-            
-        metabbo = self.config.agent
-        bbo = self.config.t_optimizer
+
+        metabbo = results['config'].baselines['metabbo']
+        bbo = results['config'].baselines['bbo']
         
         if not os.path.exists(log_dir + 'tables/'):
             os.makedirs(log_dir + 'tables/')
