@@ -83,8 +83,6 @@ class UAV_Dataset(Dataset):
             test_diff = list(rng.choice(remaining_diff, test_diff_count, replace = False))
 
             test_id = test_diff
-        else:
-            raise ValueError(f'difficulty must be either easy or difficult or all.')
 
         instance_list = []
 

@@ -112,7 +112,7 @@ class Trainer(object):
             - Constructs the training and testing datasets based on the problem type.
         """
         self.config = config
-
+        self.config.run_time = f"{self.config.run_time}_{self.config.train_problem}_{self.config.train_difficulty}"
         if user_datasets is None:
             self.train_set, self.test_set = construct_problem_set(config)
         else:
@@ -160,7 +160,7 @@ class Trainer(object):
         - Saves logs as `.npy` files for later analysis.
         """
         
-        log_dir = self.config.log_dir + f'/train/{self.agent.__class__.__name__}/{self.config.run_time}/log/'
+        log_dir = self.config.log_dir + f'/train/{self.agent.__str__()}/{self.config.run_time}/log/'
         if not os.path.exists(log_dir):
             os.makedirs(log_dir)
         return_save = np.stack((steps, returns),  0)

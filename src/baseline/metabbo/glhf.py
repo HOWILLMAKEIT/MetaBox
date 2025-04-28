@@ -299,11 +299,8 @@ class GLHF(Basic_Agent):
 
         self.learning_time = 0
         self.cur_checkpoint = 0
-        self.config.agent_save_dir = self.config.agent_save_dir + self.__str__() + '/' + self.config.run_time + '/'
+        self.config.agent_save_dir = self.config.agent_save_dir + self.__str__() + '/' + self.config.train_name + '/'
         super().__init__(self.config)
-
-        save_class(self.config.agent_save_dir, 'checkpoint-' + str(self.cur_checkpoint), self)
-        self.cur_checkpoint += 1
 
     def __str__(self):
         return 'GLHF'
@@ -338,6 +335,9 @@ class GLHF(Basic_Agent):
                               crhdim = self.config.crhdim,
                               device = self.config.device).to(self.config.device)
             self.optimizer = torch.optim.Adam(self.Pom.parameters(), lr = self.config.lr)
+
+            save_class(self.config.agent_save_dir, 'checkpoint-' + str(self.cur_checkpoint), self)
+            self.cur_checkpoint += 1
 
         state = env.reset()  # 给 set 初始化
 

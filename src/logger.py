@@ -1027,7 +1027,7 @@ class Basic_Logger:
         plt.ylabel('AEI', fontsize=60)
         plt.savefig(output_dir + f'rank_hist.{fig_type}', bbox_inches='tight')
         
-    def draw_train_logger(self, data_type: str, steps: list, data: dict, output_dir: str, ylabel: str = None, norm: bool = False, pdf_fig: bool = True, data_wrapper: Callable = None) -> None:
+    def draw_train_logger(self, data_type: str, steps: list, data: dict, agent_for_rollout: str, output_dir: str, ylabel: str = None, norm: bool = False, pdf_fig: bool = True, data_wrapper: Callable = None) -> None:
         """
         # Introduction
         Plots and saves the training curve for a given data type, applying smoothing and displaying mean and standard deviation shading. Supports normalization and custom data processing.
@@ -1057,8 +1057,6 @@ class Basic_Logger:
 
         s = np.zeros(y.shape[0])
         a = s[0] = y[0]
-
-        agent_for_rollout = self.config.agent_for_rollout
 
         norm = 0.8 + 1
         for i in range(1, y.shape[0]):
@@ -1177,8 +1175,9 @@ class Basic_Logger:
             results = pickle.load(f)
         if not os.path.exists(log_dir + 'pics/'):
             os.makedirs(log_dir + 'pics/')
-        self.draw_train_logger('return', results['steps'], results['return'], log_dir + 'pics/', pdf_fig=pdf_fig)
-        self.draw_train_logger('cost', results['steps'], results['cost'], log_dir + 'pics/', pdf_fig=pdf_fig, data_wrapper = Basic_Logger.data_wrapper_cost_rollout)
+        agent_for_rollout = results['agent_for_rollout']
+        self.draw_train_logger('return', results['steps'], results['return'], agent_for_rollout, log_dir + 'pics/', pdf_fig=pdf_fig)
+        self.draw_train_logger('cost', results['steps'], results['cost'], agent_for_rollout, log_dir + 'pics/', pdf_fig=pdf_fig, data_wrapper = Basic_Logger.data_wrapper_cost_rollout)
 
     
 class MOO_Logger(Basic_Logger):
@@ -1675,9 +1674,9 @@ class MOO_Logger(Basic_Logger):
         
         with open(log_dir + 'test.pkl', 'rb') as f:
             results = pickle.load(f)
-            
-        metabbo = self.config.agent
-        bbo = self.config.t_optimizer
+
+        metabbo = results['config'].baselines['metabbo']
+        bbo = results['config'].baselines['bbo']
         
         # 可选地读取 random_search_baseline.pkl
         if include_random_baseline:

@@ -93,7 +93,6 @@ class RLDEAFL_Optimizer(Learnable_Optimizer):
         self.__n_crossover = 2
 
         self.__NP = 100
-        self.__dim = config.dim
         self.max_fes = config.maxFEs
         self.__reward_ratio = 1
 
@@ -128,6 +127,7 @@ class RLDEAFL_Optimizer(Learnable_Optimizer):
         return pop
 
     def init_population(self, problem):
+        self.__dim = problem.dim
         if self.__mu_selector is None:
             self.__mu_selector = select_mutation(self.rng)
             self.__cr_selector = select_crossover(self.rng)

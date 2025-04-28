@@ -60,7 +60,6 @@ class GLEET_Optimizer(Learnable_Optimizer):
         super().__init__(config)
         self.__config = config
 
-        self.dim = config.dim
         self.w_decay = True
         if self.w_decay:
             self.w = 0.9
@@ -102,6 +101,7 @@ class GLEET_Optimizer(Learnable_Optimizer):
         """
         
         # randomly generate the position and velocity
+        self.dim = problem.dim
         rand_pos = self.rng.uniform(low = problem.lb, high = problem.ub, size = (self.ps, self.dim))
         rand_vel = self.rng.uniform(low = -self.max_velocity, high = self.max_velocity, size = (self.ps, self.dim))
 

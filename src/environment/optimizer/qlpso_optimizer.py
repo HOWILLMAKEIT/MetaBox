@@ -72,7 +72,6 @@ class QLPSO_Optimizer(Learnable_Optimizer):
         self.__C = config.C
         self.__W = config.W
         self.__NP = config.NP
-        self.__dim = config.dim
         self.__maxFEs = config.maxFEs
         self.__solution_pointer = 0  # indicate which solution receive the action
         self.__population = None
@@ -140,7 +139,7 @@ class QLPSO_Optimizer(Learnable_Optimizer):
         - If the problem's optimum is provided, the cost is offset by this value.
         - If `full_meta_data` is enabled in the configuration, additional metadata is stored for analysis.
         """
-        
+        self.__dim = problem.dim
         self.__population = self.rng.rand(self.__NP, self.__dim) * (problem.ub - problem.lb) + problem.lb  # [lb, ub]
         self.__pbest = self.__population.copy()
         self.__velocity = np.zeros(shape=(self.__NP, self.__dim))

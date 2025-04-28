@@ -62,7 +62,6 @@ class DEDDQN_Optimizer(Learnable_Optimizer):
         self.__maxFEs = config.maxFEs
         self.__gen_max = config.gen_max
         self.__W = config.W
-        self.__dim = config.dim
         self.__dim_max = config.dim
         # records
         self.__gen = None  # record current generation
@@ -126,6 +125,7 @@ class DEDDQN_Optimizer(Learnable_Optimizer):
         """
         
         # population initialization
+        self.__dim = problem.dim
         self.__X = self.rng.rand(self.__NP, self.__dim) * (problem.ub - problem.lb) + problem.lb
         if problem.optimum is None:
             self.__cost = problem.eval(self.__X)

@@ -32,7 +32,7 @@ class RNNOPT(Basic_Agent):
         self.learning_step = 0
         self.cur_checkpoint = 0
 
-        self.config.agent_save_dir = self.config.agent_save_dir + self.__str__() + '/' + self.config.run_time + '/'
+        self.config.agent_save_dir = self.config.agent_save_dir + self.__str__() + '/' + self.config.train_name + '/'
         save_class(self.config.agent_save_dir, 'checkpoint-' + str(self.cur_checkpoint), self)
         self.cur_checkpoint = +1
 

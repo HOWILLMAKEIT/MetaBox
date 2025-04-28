@@ -76,6 +76,9 @@ class B2OPT_Optimizer(Learnable_Optimizer):
         else:
             cost = problem.eval(position) - problem.optimum
 
+        if isinstance(cost, np.ndarray):
+            cost = torch.Tensor(cost)
+
         return cost
 
     def __sort(self):

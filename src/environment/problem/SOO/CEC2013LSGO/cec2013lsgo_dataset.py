@@ -91,53 +91,53 @@ class CEC2013LSGO_Dataset(Dataset):
         """
         if difficulty == None and user_test_list == None and user_train_list == None:
             raise ValueError('Please set difficulty or user_train_list and user_test_list.')
-        if difficulty not in ['easy', 'difficult', 'all', None]:
+        if difficulty not in ['easy', 'difficult', 'all']:
             raise ValueError(f'{difficulty} difficulty is invalid.')
         func_id = [i for i in range(1, 16)]
         train_set = []
         test_set = []
+
         if difficulty == 'easy':
             train_id = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-            for id in func_id:
-                if version == 'numpy':
-                    instance = eval(f'F{id}')()
-                else:
-                    instance = eval(f'F{id}_Torch')()
-                if id in train_id:
-                    train_set.append(instance)
-                else:
-                    test_set.append(instance)
         elif difficulty == 'difficult':
             train_id = [7, 8, 9, 10, 11, 12, 13, 14, 15]
-            for id in func_id:
-                if version == 'numpy':
-                    instance = eval(f'F{id}')()
-                else:
-                    instance = eval(f'F{id}_Torch')()
+
+        instance_list = []
+        for id in func_id:
+            if version == 'numpy':
+                instance = eval(f"F{id}")()
+            else:
+                instance = eval(f"F{id}_Torch")()
+
+            if difficulty == "all":
+                instance_list.append(instance)
+                continue
+
+            if user_train_list is None and user_test_list is None:
                 if id in train_id:
                     train_set.append(instance)
                 else:
                     test_set.append(instance)
-        elif difficulty == 'all':
-            for id in func_id:
-                if version == 'numpy':
-                    instance = eval(f'F{id}')()
-                else:
-                    instance = eval(f'F{id}_Torch')()
-                train_set.append(instance)
-                test_set.append(instance)
-        elif difficulty is None:
-            train_id = user_train_list
-            test_id = user_test_list
-            for id in func_id:
-                if version == 'numpy':
-                    instance = eval(f'F{id}')()
-                else:
-                    instance = eval(f'F{id}_Torch')()
-                if id in train_id:
-                    train_set.append(instance)
-                elif id in test_id:
-                    test_set.append(instance)
+            else:
+                if user_train_list is not None and user_test_list is not None:
+                    if id in user_train_list:
+                        train_set.append(instance)
+                    if id in user_test_list:
+                        test_set.append(instance)
+                elif user_train_list is not None:
+                    if id in user_train_list:
+                        train_set.append(instance)
+                    else:
+                        test_set.append(instance)
+                elif user_test_list is not None:
+                    if id in user_test_list:
+                        test_set.append(instance)
+                    else:
+                        train_set.append(instance)
+
+        if difficulty == 'all':
+            train_set = instance_list.copy()
+            test_set = instance_list.copy()
 
         return CEC2013LSGO_Dataset(train_set, train_batch_size), CEC2013LSGO_Dataset(test_set, test_batch_size)
 

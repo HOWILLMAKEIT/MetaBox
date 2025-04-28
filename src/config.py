@@ -24,11 +24,11 @@ def Config(user_config, datasets_dir = None):
         os.makedirs(datasets_dir, exist_ok = True)
 
         # 检查该目录下是否已有对应数据文件
-        data_dir = datasets_dir + "HPO-B-main/hpob-data/"
-        surrogates_dir = datasets_dir + "HPO-B-main/saved-surrogates/"
+        data_dir = datasets_dir + "/HPO-B-main/hpob-data/"
+        surrogates_dir = datasets_dir + "/HPO-B-main/saved-surrogates/"
         # expected_files = ['hpob-data/meta-train-dataset.json', 'hpob-data/meta-test-dataset.json', 'hpob-data/meta-validation-dataset.json']  # 你可以换成真实文件名
         # missing_files = [f for f in expected_files if not os.path.exists(os.path.join(datasets_dir, f))]
-        missing_files = not os.path.exists(data_dir) or len(os.listdir(data_dir)) < 7 or not os.path.exists(surrogates_dir) or len(os.listdir(surrogates_dir)) < 1909
+        missing_files = not os.path.exists(data_dir) or len(os.listdir(data_dir)) != 7 or not os.path.exists(surrogates_dir) or len(os.listdir(surrogates_dir)) != 1909
 
         if missing_files:
             print(f"[Warning] HPO-B dataset files not found")  # Too many files to display
@@ -48,11 +48,11 @@ def Config(user_config, datasets_dir = None):
             snapshot_download(repo_id = 'GMC-DRL/MetaBox-HPO-B', repo_type = "dataset", local_dir = datasets_dir)
             print("Extract data...")
             os.system(f'tar -xf {datasets_dir}/HPO-B-main.tar.gz -C {datasets_dir}')
-            os.remove(f'rm {datasets_dir}/HPO-B-main.tar.gz')
-            os.remove(f'rm {datasets_dir}/.gitattributes')
+            os.remove(f'{datasets_dir}/HPO-B-main.tar.gz')
+            os.remove(f"{datasets_dir}/.gitattributes")
         else:
             print(f"HPO-B dataset is ready in: {datasets_dir}/HPO-B-main")
-        default_config.hpob_path = datasets_dir
+        default_config.hpob_path = datasets_dir + '/'
 
     # 判断是不是 uav 任务
     is_uav = 'uav' in default_config.train_problem or 'uav' in default_config.test_problem
@@ -112,12 +112,12 @@ def init_config(config):
     elif 'lsgo' in config.train_problem or 'lsgo' in config.test_problem:
         config.maxFEs = 3e6
 
-
-    config.run_time = f'{time.strftime("%Y%m%dT%H%M%S")}_{config.train_problem}_{config.train_difficulty}'
-    config.test_log_dir = config.log_dir + 'test/' + config.run_time + '/'
-    config.rollout_log_dir = config.log_dir + 'rollout/' + config.run_time + '/'
-    config.mgd_test_log_dir = config.log_dir + 'mgd_test/' + config.run_time + '/'
-    config.mte_test_log_dir = config.log_dir + 'mte_test/' + config.run_time + '/'
+    config.run_time = time.strftime("%Y%m%dT%H%M%S")
+    config.train_name = f'{config.run_time}_{config.train_problem}_{config.train_difficulty}'
+    config.test_log_dir = config.log_dir + 'test/' + f'{config.run_time}'
+    config.rollout_log_dir = config.log_dir + 'rollout/' + f'{config.run_time}'
+    config.mgd_test_log_dir = config.log_dir + 'mgd_test/' + f'{config.run_time}'
+    config.mte_test_log_dir = config.log_dir + 'mte_test/' + f'{config.run_time}'
 
     if config.end_mode == "step":
         config.save_interval = config.max_learning_step // config.n_checkpoint

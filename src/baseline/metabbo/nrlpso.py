@@ -21,7 +21,7 @@ class NRLPSO(QLearning_Agent):
         # self.__global_ls = 0  # a counter of accumulated learned steps
 
         # self.__cur_checkpoint = 0
-        self.config.agent_save_dir = self.config.agent_save_dir + self.__str__() + '/' + self.config.run_time + '/'
+        self.config.agent_save_dir = self.config.agent_save_dir + self.__str__() + '/' + self.config.train_name + '/'
         super().__init__(self.config)
 
     def __str__(self):
