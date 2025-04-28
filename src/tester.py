@@ -1057,7 +1057,7 @@ class Tester(object):
         with open(config.mgd_test_log_dir + 'mgd_test_results.pkl', 'wb') as f:
             pickle.dump(self.test_results, f, -1)
 
-    def mte_test(self, pre_train_file, scratch_file, agent):
+    def mte_test(self, agent: str, pre_train_problem: str, pre_train_difficulty: str, transferred_problem: str, transferred_difficulty: str, pre_train_data_path: str, scratch_data_path: str, pdf_fig: bool = True):
         """
         # Introduction
         Evaluates and visualizes the Model Transfer Efficiency (MTE) between a pre-trained agent and a scratch agent on a transfer learning task. The method loads experiment results, processes performance data, computes MTE, and generates a comparative plot of average returns over learning steps.
@@ -1070,9 +1070,13 @@ class Tester(object):
         - KeyError: If expected keys are missing in the loaded data.
         - Exception: For errors during data processing or plotting.
         """
+        with open(pre_train_data_path, 'rb') as f:
+            pre_train_data = pickle.load(f)
+        with open(scratch_data_path, 'rb') as f:
+            scratch_data = pickle.load(f)
         
-        config = self.config
-        print(f'start MTE_test: {config.run_time}')
+        fig_type = 'pdf' if pdf_fig else 'png'
+        print(f'start MTE_test: {self.config.run_time}, agent {agent} from {pre_train_difficulty}_{pre_train_problem} to {transferred_difficulty}_{transferred_problem}')
         # with open('model.json', 'r', encoding = 'utf-8') as f:
         #     json_data = json.load(f)
         # pre_train = json_data[config.pre_train_rollout]
@@ -1081,93 +1085,67 @@ class Tester(object):
         # pre_train_file = pre_train['dir']
         # scratch_file = scratch_rollout['dir']
 
-        min_max = False
-
         # preprocess data for agent
-        def preprocess(file, agent):
+        def preprocess(file):
             with open(file, 'rb') as f:
                 data = pickle.load(f)
             # aggregate all problem's data together
             returns = data['return']
-            results = None
-            i = 0
+            results = []
             for problem in returns.keys():
-                if i == 0:
-                    results = np.array(returns[problem][agent])
-                else:
-                    results = np.concatenate([results, np.array(returns[problem][agent])], axis=1)
-                i += 1
-            return np.array(results)
+                results.append([])
+                for agt in returns[problem].keys():
+                    results[-1].append(np.array(returns[problem][agt]))  
+            results = np.array(results).transpose(1, 0, 2)  # num_problems x n_ckeckpoints x rollout_run -> n_ckeckpoints x num_problems x rollout_run
+            return results.mean((1, 2)), results.std(-1).mean(-1)  # mean(n_ckeckpoints x rollout_run) ; std(rollout_run).mean(num_problems)
 
-        bbob_data = preprocess(pre_train_file, agent)
-        noisy_data = preprocess(scratch_file, agent)
-        # calculate min_max avg
-        temp = np.concatenate([bbob_data, noisy_data], axis=1)
-        if min_max:
-            temp_ = (temp - temp.min(-1)[:, None]) / (temp.max(-1)[:, None] - temp.min(-1)[:, None])
-        else:
-            temp_ = temp
-        bd, nd = temp_[:, :90], temp_[:, 90:]
-        checkpoints = np.hsplit(bd, 18)
-        g = []
-        for i in range(18):
-            g.append(checkpoints[i].tolist())
-        checkpoints = np.array(g)
-        avg = bd.mean(-1)
-        avg = savgol_filter(avg, 13, 5)
-        std = np.mean(np.std(checkpoints, -1), 0) / np.sqrt(5)
-        checkpoints = np.hsplit(nd, 18)
-        g = []
-        for i in range(18):
-            g.append(checkpoints[i].tolist())
-        checkpoints = np.array(g)
-        std_ = np.mean(np.std(checkpoints, -1), 0) / np.sqrt(5)
-        avg_ = nd.mean(-1)
-        avg_ = savgol_filter(avg_, 13, 5)
-        plt.figure(figsize=(40, 15))
-        plt.subplot(1, 3, (2, 3))
-        x = np.arange(21)
-        x = (1.5e6 / x[-1]) * x
-        idx = 21
+        pre_train_mean, pre_train_std = preprocess(pre_train_data)
+        scratch_mean, scratch_std = preprocess(scratch_data)
+        pre_train_mean = savgol_filter(pre_train_mean, 13, 5)
+        scratch_mean = savgol_filter(scratch_mean, 13, 5)
+        plt.figure(figsize=(40, 15))        
+        x = np.arange(min(len(pre_train_mean), len(scratch_mean)))
+        idx = len(x)
         smooth = 1
-        s = np.zeros(21)
-        a = s[0] = avg[0]
+        smooth_pre_train_mean = np.zeros(len(pre_train_data))
+        a = smooth_pre_train_mean[0] = pre_train_mean[0]
         norm = smooth + 1
-        for i in range(1, 21):
-            a = a * smooth + avg[i]
-            s[i] = a / norm if norm > 0 else a
+        for i in range(1, len(pre_train_mean)):
+            a = a * smooth + pre_train_mean[i]
+            smooth_pre_train_mean[i] = a / norm if norm > 0 else a
             norm *= smooth
             norm += 1
 
-        s_ = np.zeros(21)
-        a = s_[0] = avg_[0]
+        smooth_scratch_mean = np.zeros(len(scratch_mean))
+        a = smooth_scratch_mean[0] = scratch_mean[0]
         norm = smooth + 1
-        for i in range(1, 21):
-            a = a * smooth + avg_[i]
-            s_[i] = a / norm if norm > 0 else a
+        for i in range(1, len(scratch_mean)):
+            a = a * smooth + scratch_mean[i]
+            smooth_scratch_mean[i] = a / norm if norm > 0 else a
             norm *= smooth
             norm += 1
-        plt.plot(x[:idx], s[:idx], label='pre-train', marker='*', markersize=30, markevery=1, c='blue', linewidth=5)
-        plt.fill_between(x[:idx], s[:idx] - std[:idx], s[:idx] + std[:idx], alpha=0.2, facecolor='blue')
-        plt.plot(x[:idx], s_[:idx], label='scratch', marker='*', markersize=30, markevery=1, c='red', linewidth=5)
-        plt.fill_between(x[:idx], s_[:idx] - std_[:idx], s_[:idx] + std_[:idx], alpha=0.2, facecolor='red')
+            
+        plt.plot(x[:idx], smooth_pre_train_mean[:idx], label='pre-train', marker='*', markersize=30, markevery=1, c='blue', linewidth=5)
+        plt.fill_between(x[:idx], smooth_pre_train_mean[:idx] - pre_train_std[:idx], smooth_pre_train_mean[:idx] + pre_train_std[:idx], alpha=0.2, facecolor='blue')
+        plt.plot(x[:idx], smooth_scratch_mean[:idx], label='scratch', marker='*', markersize=30, markevery=1, c='red', linewidth=5)
+        plt.fill_between(x[:idx], smooth_scratch_mean[:idx] - scratch_std[:idx], smooth_scratch_mean[:idx] + scratch_std[:idx], alpha=0.2, facecolor='red')
         # Search MTE
-        scratch = s_[:idx]
-        pretrain = s[:idx]
+        scratch = smooth_scratch_mean[:idx]
+        pretrain = smooth_pre_train_mean[:idx]
         topx = np.argmax(scratch)
         topy = scratch[topx]
-        T = topx / 21
+        T = topx / idx
         t = 0
         if pretrain[0] < topy:
-            for i in range(1, 21):
+            for i in range(1, idx):
                 if pretrain[i - 1] < topy <= pretrain[i]:
-                    t = ((topy - pretrain[i - 1]) / (pretrain[i] - pretrain[i - 1]) + i - 1) / 21
+                    t = ((topy - pretrain[i - 1]) / (pretrain[i] - pretrain[i - 1]) + i - 1) / idx
                     break
         if np.max(pretrain[-1]) < topy:
             t = 1
         MTE = 1 - t / T
 
-        print(f'MTE({self.name_translate(config.problem_from)}_{config.difficulty_from}, {self.name_translate(config.problem_to)}_{config.difficulty_to}) of {agent}: '
+        print(f'MTE({self.name_translate(pre_train_problem)}_{pre_train_difficulty}, {self.name_translate(transferred_problem)}_{transferred_difficulty}) of {agent}: '
             f'{MTE}')
 
         ax = plt.gca()
@@ -1177,14 +1155,14 @@ class Tester(object):
         plt.legend(loc=0, fontsize=60)
         plt.xlabel('Learning Steps', fontsize=55)
         plt.ylabel('Avg Return', fontsize=55)
-        plt.title(f'Fine-tuning ({self.name_translate(config.problem_from)} $\\rightarrow$ {self.name_translate(config.problem_to)})',
+        plt.title(f'Fine-tuning ({self.name_translate(pre_train_problem)} $\\rightarrow$ {self.name_translate(transferred_problem)})',
                 fontsize=60)
         plt.tight_layout()
         plt.grid()
         plt.subplots_adjust(wspace=0.2)
-        if not os.path.exists(config.mte_test_log_dir):
-            os.makedirs(config.mte_test_log_dir)
-        plt.savefig(f'{config.mte_test_log_dir}/MTE_{agent}.png', bbox_inches='tight')
+        if not os.path.exists(self.config.mte_test_log_dir):
+            os.makedirs(self.config.mte_test_log_dir)
+        plt.savefig(f'{self.config.mte_test_log_dir}/MTE_{agent}_{pre_train_difficulty}_{pre_train_problem}_to_{transferred_difficulty}_{transferred_problem}.{fig_type}', bbox_inches='tight')
 
 
 def rollout_batch(config, rollout_dir, rollout_opt, rollout_datasets, log = True):
