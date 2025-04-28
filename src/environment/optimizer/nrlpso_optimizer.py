@@ -74,7 +74,6 @@ class NRLPSO_Optimizer(Learnable_Optimizer):
         self.n_state = 4
 
         self.__maxFEs = config.maxFEs
-        self.__dim = config.dim
 
         self.cost = None  # a list of costs that need to be maintained by EVERY backbone optimizers
         self.log_index = None
@@ -94,7 +93,7 @@ class NRLPSO_Optimizer(Learnable_Optimizer):
         - Handles optional meta-data logging if enabled in the configuration.
         - Sets up the initial state for each individual in the population.
         """
-
+        self.__dim = problem.dim
         self.pointer = 0
         # init population
         self.__population = self.rng.rand(self.NP, self.__dim) * (problem.ub - problem.lb) + problem.lb

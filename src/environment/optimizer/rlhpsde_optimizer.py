@@ -5,11 +5,11 @@ from typing import Union, Iterable
 
 
 class Population:
-    def __init__(self, config, rng):
+    def __init__(self, config, rng, dim):
         self.Nmax = config.NP_max                      # the upperbound of population size
         self.Nmin = config.NP_min                      # the lowerbound of population size
         self.NP = self.Nmax                            # the population size
-        self.dim = config.dim                          # the dimension of individuals
+        self.dim = dim                                 # the dimension of individuals
         self.group = None                              # the population
         self.cost = None                               # the cost of individuals
         self.gbest = None                              # the global best cost
@@ -133,7 +133,6 @@ class RLHPSDE_Optimizer(Learnable_Optimizer):
         super().__init__(config)
         config.F = 0.5
         config.Cr = 0.5
-        config.NP_max = 18 * config.dim
         config.NP_min = 4
         config.Hm = 0.5
         config.rw_steps = 200
@@ -141,7 +140,6 @@ class RLHPSDE_Optimizer(Learnable_Optimizer):
         self.__config = config
 
         self.__population = None
-        self.__dim = config.dim
         self.__rw_steps = config.rw_steps
         self.__step_size = config.step_size
         self.__maxFEs = config.maxFEs
@@ -164,8 +162,9 @@ class RLHPSDE_Optimizer(Learnable_Optimizer):
         # Side Effects:
         - Initializes and modifies internal attributes such as `self.__population`, `self.fes`, `self.log_index`, `self.meta_X`, `self.meta_Cost`, and `self.cost`.
         """
-        
-        self.__population = Population(self.__config, self.rng)
+        self.__dim = problem.dim
+        self.__config.NP_max = 18 * problem.dim
+        self.__population = Population(self.__config, self.rng, problem.dim)
         self.__population.initialize_group(lb=problem.lb, ub=problem.ub)
         self.__population.initialize_costs(problem)
         self.__population.sort(self.__population.NP)

@@ -324,8 +324,8 @@ class CEC2013LSGO_Torch_Problem(Basic_Problem_Torch):
         return s2
 
     def rosenbrock(self,x):
-        x0 = x[:,:x.size(1)-1]
-        x1 = x[:,1:x.size(1)]
+        x0 = x[:,:x.shape[1]-1]
+        x1 = x[:,1:x.shape[1]]
         t = x0**2 - x1
         s = torch.sum(100.0 * t**2 + (x0 - 1.0)**2,-1)
         return s
@@ -873,7 +873,7 @@ class F14_Torch(CEC2013LSGO_Torch_Problem):
         
     def compute(self, x):
 
-        result = torch.zeros(x.size(0))
+        result = torch.zeros(x.shape[0])
 
         c=0
 

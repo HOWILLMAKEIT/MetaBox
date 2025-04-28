@@ -28,6 +28,10 @@ class CMAES(Basic_Optimizer):
         self.meta_Cost = []
 
         def problem_eval(x):
+
+            x = np.clip(x, 0, 1)
+            x = x * (problem.ub - problem.lb) + problem.lb
+
             if problem.optimum is None:
                 fitness = problem.eval(x)
             else:
@@ -37,16 +41,16 @@ class CMAES(Basic_Optimizer):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             cma.evolution_strategy._CMASolutionDict = cma.evolution_strategy._CMASolutionDict_empty
-            es = cma.CMAEvolutionStrategy(np.ones(problem.dim), (problem.ub - problem.lb) * 0.3,
+            es = cma.CMAEvolutionStrategy(np.ones(problem.dim), 0.3,
                                           {'popsize': self.__config.NP,
-                                           'bounds': [problem.lb, problem.ub],
+                                           'bounds': [0, 1],
                                            'maxfevals': self.__config.maxFEs, 'tolfun': 1e-20, 'tolfunhist': 0})
         done = False
         X_batch = es.ask()  # initial population
         y = problem_eval(X_batch)
         self.__FEs += self.__config.NP
         if self.full_meta_data:
-            self.meta_X.append(np.array(X_batch.copy()))
+            self.meta_X.append(np.array(X_batch.copy()) * (problem.ub - problem.lb) + problem.lb)
             self.meta_Cost.append(np.array(y.copy()))
         index = 1
         cost.append(np.min(y).copy())
@@ -57,7 +61,7 @@ class CMAES(Basic_Optimizer):
             y = problem_eval(X_batch)
             self.__FEs += self.__config.NP
             if self.full_meta_data:
-                self.meta_X.append(np.array(X_batch.copy()))
+                self.meta_X.append(np.array(X_batch.copy()) * (problem.ub - problem.lb) + problem.lb)
                 self.meta_Cost.append(np.array(y.copy()))
             gbest = np.min(y)
 

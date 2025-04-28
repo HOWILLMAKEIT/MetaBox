@@ -56,7 +56,6 @@ class RLEPSO_Optimizer(Learnable_Optimizer):
         config.NP = 100
         self.__config = config
 
-        self.__dim = config.dim
         self.__w_decay = config.w_decay
         if self.__w_decay:
             self.__w = 0.9
@@ -97,7 +96,8 @@ class RLEPSO_Optimizer(Learnable_Optimizer):
         - Assumes that `self.rng` is a random number generator and `self.__get_costs` is a method for evaluating the cost of particle positions.
         - Resets counters for stagnation and improvement tracking.
         """
-        
+
+        self.__dim = problem.dim
         rand_pos = self.rng.uniform(low = problem.lb, high = problem.ub, size = (self.__NP, self.__dim))
         self.__max_velocity = 0.1 * (problem.ub - problem.lb)
         rand_vel = self.rng.uniform(low = -self.__max_velocity, high = self.__max_velocity, size = (self.__NP, self.__dim))

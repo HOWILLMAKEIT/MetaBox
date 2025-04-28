@@ -280,7 +280,7 @@ class L2T_Optimizer(Learnable_Optimizer):
         - Evaluates the fitness of the initial population for each task and stores the results.
         - Optionally stores meta-data if `self.__config.full_meta_data` is set to True.
         """
-        
+
         self.fes = 0
         self.task = tasks.tasks
         self.parent_population = np.array([[self.rng.rand(self.dim) for i in range(self.pop_cnt)] for _ in range(self.task_cnt)])

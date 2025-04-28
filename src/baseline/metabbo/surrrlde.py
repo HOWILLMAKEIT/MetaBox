@@ -46,7 +46,7 @@ class SurrRLDE(DDQN_Agent):
 		self.config.criterion = 'MSELoss'
 		model = MLP(self.config.net_config).to(self.config.device)
 
-		self.config.agent_save_dir = self.config.agent_save_dir + self.__str__() + '/' + self.config.run_time + '/'
+		self.config.agent_save_dir = self.config.agent_save_dir + self.__str__() + '/' + self.config.train_name + '/'
 		super().__init__(self.config, {'model': model}, self.config.lr_model)
 		self.replay_buffer = ReplayBuffer_torch(self.memory_size, 9, self.device)
 

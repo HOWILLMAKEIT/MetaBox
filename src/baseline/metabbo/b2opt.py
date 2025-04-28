@@ -162,10 +162,8 @@ class B2OPT(Basic_Agent):
         self.learning_time = 0
         self.cur_checkpoint = 0
 
-        self.config.agent_save_dir = self.config.agent_save_dir + self.__str__() + '/' + self.config.run_time + '/'
+        self.config.agent_save_dir = self.config.agent_save_dir + self.__str__() + '/' + self.config.train_name + '/'
         super().__init__(self.config)
-        save_class(self.config.agent_save_dir, 'checkpoint-' + str(self.cur_checkpoint), self)
-        self.cur_checkpoint += 1
 
     def __str__(self):
         return 'B2OPT'
@@ -202,6 +200,8 @@ class B2OPT(Basic_Agent):
                               ws = self.config.ws).to(self.config.device)
             self.optimizer = optim.Adam(self.Opt.parameters(), lr = self.config.lr)
             self.scheduler = optim.lr_scheduler.StepLR(self.optimizer, step_size = self.config.lr_step_size, gamma = self.config.lr_decay)
+            save_class(self.config.agent_save_dir, 'checkpoint-' + str(self.cur_checkpoint), self)
+            self.cur_checkpoint += 1
 
         state = env.reset()
         memory = []

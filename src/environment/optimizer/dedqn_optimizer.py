@@ -205,7 +205,6 @@ class DEDQN_Optimizer(Learnable_Optimizer):
         config.rwsteps = config.NP
         self.__config = config
 
-        self.__dim = config.dim
         self.__NP = config.NP
         self.__F = config.F
         self.__Cr = config.Cr
@@ -240,6 +239,7 @@ class DEDQN_Optimizer(Learnable_Optimizer):
         return np.array([fdc, rie, acf, nop])
 
     def init_population(self, problem):
+        self.__dim = problem.dim
         self.__population = self.rng.rand(self.__NP, self.__dim) * (problem.ub - problem.lb) + problem.lb  # [lb, ub]
         self.__survival = np.ones(self.__population.shape[0])
         if problem.optimum is None:

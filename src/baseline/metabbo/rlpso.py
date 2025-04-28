@@ -67,7 +67,7 @@ class RLPSO(REINFORCE_Agent):
         # origin RLPSO doesn't have clip
         self.config.max_grad_norm = math.inf
         
-        self.config.agent_save_dir = self.config.agent_save_dir + self.__str__() + '/' + self.config.run_time + '/'
+        self.config.agent_save_dir = self.config.agent_save_dir + self.__str__() + '/' + self.config.train_name + '/'
         super().__init__(self.config, {'model': model}, [self.config.lr_model])
 
     def __str__(self):

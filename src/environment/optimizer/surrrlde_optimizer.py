@@ -62,7 +62,6 @@ class SurrRLDE_Optimizer(Learnable_Optimizer):
 		self.Cr = config.Cr
 		self.pop_size = config.NP
 		self.maxFEs = config.maxFEs
-		self.dim = config.dim
 		self.ub = config.upperbound
 		self.lb = -config.upperbound
 
@@ -135,6 +134,7 @@ class SurrRLDE_Optimizer(Learnable_Optimizer):
 		return state
 
 	def init_population(self, problem):
+		self.dim = problem.dim
 		self.rng_torch = self.rng_cpu
 		if self.device != "cpu":
 			self.rng_torch = self.rng_gpu

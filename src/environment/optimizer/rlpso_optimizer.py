@@ -48,7 +48,6 @@ class RLPSO_Optimizer(Learnable_Optimizer):
         config.NP = 100
         self.__config = config
 
-        self.__dim = config.dim
         self.__w_decay = config.w_decay
         if self.__w_decay:
             self.__w = 0.9
@@ -84,7 +83,7 @@ class RLPSO_Optimizer(Learnable_Optimizer):
         - Assumes that `self.rng` is a random number generator and that `self.__get_costs` and `self.__get_state` are defined elsewhere in the class.
         - The method is intended to be called at the start of the optimization process.
         """
-        
+        self.__dim = problem.dim
         rand_pos = self.rng.uniform(low=problem.lb, high=problem.ub, size=(self.__NP, self.__dim))
         self.fes = 0
         self.__max_velocity=0.1*(problem.ub-problem.lb)

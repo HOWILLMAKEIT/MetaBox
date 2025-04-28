@@ -97,7 +97,6 @@ class SYMBOL_Optimizer(Learnable_Optimizer):
 
         self.tokenizer = MyTokenizer()
         self.__config = config
-        self.dim = config.dim
 
         self.NP = 100
 
@@ -143,6 +142,8 @@ class SYMBOL_Optimizer(Learnable_Optimizer):
         self.max_x = problem.ub
         self.min_x = problem.lb
         self.problem = problem
+        self.dim = problem.dim
+        self.__config.dim = problem.dim
         if self.teacher_optimizer is None:
              self.teacher_optimizer = eval(self.__config.teacher)(self.__config, self.rng)
         if self.is_train:
