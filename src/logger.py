@@ -1185,7 +1185,10 @@ class MOO_Logger(Basic_Logger):
         self.config = config
         self.color_arrangement = {}
         self.arrange_index = 0
-        self.indicators = config.indicators
+        if hasattr(config, 'indicators') and config.indicators is not None:
+            self.indicators = config.indicators
+        else:
+            self.indicators = ['hv_his', 'igd_his']
     
     def is_pareto_efficient(self,points):
         """
@@ -1431,7 +1434,7 @@ class MOO_Logger(Basic_Logger):
                         self.arrange_index += 1
                     if agent not in Y.keys():
                         Y[agent] = {'mean': [], 'std': []}
-                    values = np.array(data[problem][agent][indicator])
+                    values = np.array(data[problem][agent])
                     values = (values - global_min) / (global_max - global_min + 1e-8)  # 避免除零
                 
                     std = np.std(values, 0)
@@ -1672,7 +1675,7 @@ class MOO_Logger(Basic_Logger):
         - Exception: For errors encountered during file reading, directory creation, or result processing.
         """
         
-        with open(log_dir + 'test.pkl', 'rb') as f:
+        with open(log_dir + 'test_results.pkl', 'rb') as f:
             results = pickle.load(f)
 
         metabbo = results['config'].baselines['metabbo']
