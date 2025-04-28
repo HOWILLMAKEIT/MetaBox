@@ -431,7 +431,7 @@ class L2T_Optimizer(Learnable_Optimizer):
 
             reward_indicators = 1 if (self.this_gen_best[i] - self.optimal_value[i])<1e-8 else 0
             reward_converge = (self.this_gen_best[i] - self.optimal_value[i]) / (self.begin_best[i] - self.optimal_value[i])
-            self.reward[i] = 1*reward_kt + 10*reward_converge + 250*reward_indicators
+            self.reward[i] = 1*reward_converge + 10*reward_kt + 250*reward_indicators
 
         parent_finesses_np = np.array(parent_finesses_list, dtype=np.float32)
         if self.__config.full_meta_data:
