@@ -42,11 +42,10 @@ from metaevobox import Config, Trainer
 from metaevobox.baseline.metabbo import GLEET
 # import low-level BBO optimizer of MetaBBO you want to meta-train
 from metaevobox.environment.optimizer import GLEET_Optimizer
-# import the problem set you want to train your MetaBBO
 from metaevobox.environment.problem.utils import construct_problem_set
 
 # put user-specific configuration
-config = {'train_problem': 'bbob-10D', 
+config = {'train_problem': 'bbob-10D', # specify the problem set you want to train your MetaBBO 
           'train_batch_size': 16,
           'train_parallel_mode':'subproc', # choose parallel training mode
           }
@@ -68,18 +67,17 @@ tensorboard --logdir=./
 #### Test BBO/MetaBBO baselines
 ```python
 from metaevobox import Config, Tester, get_baseline
-# import meta-level agent of MetaBBO you want to meta-train
+# import meta-level agent of MetaBBO you want to test
 from metaevobox.baseline.metabbo import GLEET
-# import low-level BBO optimizer of MetaBBO you want to meta-train
+# import low-level BBO optimizer of MetaBBO you want to test
 from metaevobox.environment.optimizer import GLEET_Optimizer
-# import other baselines you want to compare with your MetaBBO\
+# import other baselines you want to compare with your MetaBBO
 from metaevobox.baseline.bbo import CMAES, SHADE
-# import the problem set you want to train your MetaBBO
 from metaevobox.environment.problem.utils import construct_problem_set
 
 # specify your configuration
 config = {
-    'test_problem':'bbob-10D', 
+    'test_problem':'bbob-10D', # specify the problem set you want to benchmark
     'test_batch_size':16,
     'test_difficulty':'difficult', # this is a train-test split mode
     'baselines':{
