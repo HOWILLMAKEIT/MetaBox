@@ -50,7 +50,11 @@ class DE(Basic_Optimizer):
         self.__toolbox.register("evaluate", problem_eval)
         self.__toolbox.register("select", tools.selTournament, tournsize=3)
         self.__toolbox.register("attr_float", np.random.uniform, problem.lb, problem.ub)
-        self.__toolbox.register("individual", tools.initIterate, creator.Individual, self.__toolbox.attr_float)
+
+        if np.isscalar(problem.lb):
+            self.__toolbox.register("individual", tools.initRepeat, creator.Individual, self.__toolbox.attr_float, n=problem.dim)
+        else:
+            self.__toolbox.register("individual", tools.initIterate, creator.Individual, self.__toolbox.attr_float)
         self.__toolbox.register("population", tools.initRepeat, list, self.__toolbox.individual)
 
         hof = tools.HallOfFame(1)
