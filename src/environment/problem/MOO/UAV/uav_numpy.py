@@ -43,6 +43,7 @@ class UAV_Numpy_Problem(Basic_Problem):
         self.dim = None
         self.lb = None
         self.ub = None
+        self.n_obj = 5
 
     def __str__(self):
         return f"Terrain {self.problem_id}"
