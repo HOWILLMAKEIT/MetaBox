@@ -42,12 +42,12 @@ class MOEAD(Basic_Optimizer):
         # problem
         self.problem = problem
         self.n_obj = problem.n_obj
-        self.n_var = problem.n_var
+        self.n_var = problem.dim
         # population
         self.weights = self.get_weights(self.n_obj)
         if self.population_size!=len(self.weights):
             self.population_size = len(self.weights)
-        self.population = self.rng.uniform(low=problem.lb, high=problem.ub, size=(self.population_size, problem.n_var))
+        self.population = self.rng.uniform(low=problem.lb, high=problem.ub, size=(self.population_size, problem.dim))
         self.population_obj = problem.eval(self.population)
         self.neighborhoods = self.get_neighborhoods()
         # budget
@@ -278,8 +278,8 @@ class MOEAD(Basic_Optimizer):
             if popobj.shape[0] <= 1:
                 hv_value = 0
                 self.hv_his.append(hv_value)
-                self.hv_last5.add(hv_value)
-                self.hv_running.update(np.array([hv_value]))
+                # self.hv_last5.add(hv_value)
+                # self.hv_running.update(np.array([hv_value]))
                 return hv_value
             assert np.max(popobj) < 1
             hv_maximum = np.ones([self.n_obj])
@@ -464,7 +464,7 @@ class MOEAD(Basic_Optimizer):
         child1 = copy.deepcopy(parents[0])
         child2 = copy.deepcopy(parents[1])
         if self.rng.uniform(0.0, 1.0) <= probability:
-            nvars = problem.n_var
+            nvars = problem.dim
 
             for i in range(nvars):
                 if self.rng.uniform(0.0, 1.0) <= 0.5:
@@ -498,9 +498,9 @@ class MOEAD(Basic_Optimizer):
 
             return x
         child = copy.deepcopy(parent)
-        probability /= float(problem.n_var)
+        probability /= float(problem.dim)
 
-        for i in range(problem.n_var):
+        for i in range(problem.dim):
             if self.rng.uniform(0.0, 1.0) <= probability:
                 child[i] = pm_mutation(float(child[i]),
                                         problem.lb[i],
