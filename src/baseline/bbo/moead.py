@@ -145,7 +145,8 @@ class MOEAD(Basic_Optimizer):
             if self.fes >= self.max_fes:
                 self.done = True
                 print("fes:{},last_igd:{},last_hv:{}".format(self.fes,self.last_igd,self.last_hv))
-                results = {'cost': self.cost, 'fes': self.fes, 'metadata': self.metadata}
+                results = {'cost': self.cost, 'fes': self.fes, 'metadata': self.metadata,'hv_his':self.hv_his,'igd_his':self.igd_his}
+                return results
             else:
                 self.done = False
             
@@ -755,4 +756,20 @@ def normalize(solutions_obj: np.ndarray, minimum: np.ndarray = None, maximum: np
     solutions_normalized_obj = (solutions_obj - minimum) / (maximum - minimum)
 
     return solutions_normalized_obj
+    
+def safe_extend(lst, items):
+    # 如果 items 是 None，跳过处理
+    if items is None:
+        return
+    # 判断是否是 list 或 ndarray
+    if isinstance(items, (list, np.ndarray)):
+        # 获取维度
+        shape = np.shape(items)
+        if len(shape) > 1:  # 多维的：用 extend
+            lst.extend(items)
+        else:               # 一维的：用 append
+            lst.append(items)
+    else:
+        # 不是列表/数组，默认 append
+        lst.append(items)
     
