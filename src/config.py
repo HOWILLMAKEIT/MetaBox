@@ -102,15 +102,14 @@ def init_config(config):
     if 'protein' in config.train_problem or 'protein' in config.test_problem:
         config.dim = 12
         config.maxFEs = 2000
-        config.n_logpoint = 5
     elif 'hpo-b' in config.train_problem or 'hpo-b' in config.test_problem:
         config.maxFEs = 2000
-        config.n_logpoint = 5
     elif 'uav' in config.train_problem or 'uav' in config.test_problem:
         config.maxFEs = 2500
-        config.n_logpoint = 5
     elif 'lsgo' in config.train_problem or 'lsgo' in config.test_problem:
         config.maxFEs = 3e6
+    else:
+        config.maxFEs = 20000
 
     config.run_time = time.strftime("%Y%m%dT%H%M%S")
     config.train_name = f'{config.run_time}_{config.train_problem}_{config.train_difficulty}'
@@ -178,7 +177,6 @@ def get_config(args=None):
     parser.add_argument('--full_meta_data', type=bool, default=False, help='store the metadata')
     parser.add_argument('--log_dir', type=str, default='output/',
                         help='logging output')
-    parser.add_argument('--maxFEs', type = int, default = 20000, help = 'maximum number of evaluation')
 
     config = parser.parse_args(args)
 

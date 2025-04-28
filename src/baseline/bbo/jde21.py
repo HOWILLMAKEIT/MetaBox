@@ -118,8 +118,8 @@ class JDE21(Basic_Optimizer):
             Cr[Cr > 1] = 0
             Crs = Cr.repeat(dim).reshape(xNP, dim)
             v = self.__population[r1] + Fs * (self.__population[r2] - self.__population[r3])
-            v[v > problem.ub] = (v[v > problem.ub] - problem.lb) % (problem.ub - problem.lb) + problem.lb
-            v[v < problem.lb] = (v[v < problem.lb] - problem.ub) % (problem.ub - problem.lb) + problem.lb
+            v = np.where(v > problem.ub, (v - problem.lb) % (problem.ub - problem.lb) + problem.lb, v)
+            v = np.where(v < problem.ub, (v - problem.ub) % (problem.ub - problem.lb) + problem.lb, v)
             # v = np.clip(v, problem.lb, problem.ub)
             jrand = self.rng.randint(dim, size=xNP)
             u = np.where(self.rng.rand(xNP, dim) < Crs, v, (self.__population[:bNP] if big else self.__population[bNP:]))

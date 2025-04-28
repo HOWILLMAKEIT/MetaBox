@@ -243,8 +243,8 @@ class NLSHADELBC(Basic_Optimizer):
         us[CrossExponential] = usE[CrossExponential]
         # reinitialize values exceed valid range
         # us = us * ((-100 <= us) * (us <= 100)) + ((us > 100) + (us < -100)) * (self.rng.rand(NP, dim) * 200 - 100)
-        us[us < problem.lb] = (us[us < problem.lb] + problem.lb) / 2
-        us[us > problem.ub] = (us[us > problem.ub] + problem.ub) / 2
+        us = np.where(us < problem.lb, (self.__population + problem.lb) / 2, us)
+        us = np.where(us > problem.ub, (self.__population + problem.ub) / 2, us)
 
         cost = self.__evaluate(problem, us)
         optim = np.where(cost < self.__cost)[0]  # the indices of indiv whose costs are better than parent

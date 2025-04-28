@@ -50,7 +50,7 @@ class DE(Basic_Optimizer):
         self.__toolbox.register("evaluate", problem_eval)
         self.__toolbox.register("select", tools.selTournament, tournsize=3)
         self.__toolbox.register("attr_float", np.random.uniform, problem.lb, problem.ub)
-        self.__toolbox.register("individual", tools.initRepeat, creator.Individual, self.__toolbox.attr_float, n=problem.dim)
+        self.__toolbox.register("individual", tools.initIterate, creator.Individual, self.__toolbox.attr_float)
         self.__toolbox.register("population", tools.initRepeat, list, self.__toolbox.individual)
 
         hof = tools.HallOfFame(1)
@@ -79,8 +79,9 @@ class DE(Basic_Optimizer):
                 for i, value in enumerate(agent):
                     if np.random.rand() < self.__config.Cr or i == index:
                         y[i] = a[i] + self.__config.F * (b[i] - c[i])
-                        # BC
-                        y[i] = max(problem.lb, min(y[i], problem.ub))
+                        lb = problem.lb if np.isscalar(problem.lb) else problem.lb[i]
+                        ub = problem.ub if np.isscalar(problem.ub) else problem.ub[i]
+                        y[i] = np.clip(y[i], lb, ub)
                 y.fitness.values = self.__toolbox.evaluate(y)
                 # selection
                 if y.fitness.values[0] < agent.fitness.values[0]:
