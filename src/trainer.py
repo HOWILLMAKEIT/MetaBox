@@ -8,7 +8,7 @@ from .logger import *
 import copy
 from .environment.problem.utils import *
 import numpy as np
-import os
+import os, warnings
 import matplotlib
 import matplotlib.pyplot as plt
 from .rl.utils import save_class
@@ -141,6 +141,10 @@ class Trainer(object):
             self.optimizer = eval(self.config.train_optimizer)(self.config)
         else:
             self.optimizer = user_optimizer
+            
+        if self.config.train_parallel_mode == 'subproc' and self.agent.__str__() in ['B2OPT', 'GLHF', 'Surr_RLDE', 'RNNOPT'] and self.config.device != 'cpu':
+            warnings.warn("Subproc training parallel mode for MetaBBO optimizers using CUDA will lead to CUDA kernel errors, changed to dummy.", category=UserWarning)
+            self.config.train_parallel_mode = 'dummy'
 
     def save_log(self, epochs, steps, cost, returns, normalizer):
         """
