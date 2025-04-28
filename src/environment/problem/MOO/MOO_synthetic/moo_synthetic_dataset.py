@@ -40,6 +40,8 @@ class MOO_Synthetic_Dataset(Dataset):
         if difficulty not in ['easy', 'difficult', 'all', None]:
             raise ValueError(f'{difficulty} difficulty is invalid.')
         instance_set = []
+        train_set = []
+        test_set = []
         if difficulty == None:
             for problem in user_train_list:
                 parts = problem.split("_")
@@ -153,8 +155,6 @@ class MOO_Synthetic_Dataset(Dataset):
             print(f"Total instances: {len(instance_set)}")
             # === 排序 ===
             instance_set.sort(key = lambda x: x.n_obj * x.n_var)
-            train_set = []
-            test_set = []
             if difficulty == 'easy':
                 train_set = instance_set[:int(0.8 * len(instance_set))]
                 test_set = instance_set[int(0.8 * len(instance_set)):]
@@ -164,10 +164,10 @@ class MOO_Synthetic_Dataset(Dataset):
             elif difficulty == 'all':
                 train_set = instance_set
                 test_set = instance_set
-            for i in range(len(train_set)):
-                train_set[i].dim = train_set[i].n_var
-            for i in range(len(test_set)):
-                test_set[i].dim = test_set[i].n_var
+        for i in range(len(train_set)):
+            train_set[i].dim = train_set[i].n_var
+        for i in range(len(test_set)):
+            test_set[i].dim = test_set[i].n_var
 
         return MOO_Synthetic_Dataset(train_set, train_batch_size), MOO_Synthetic_Dataset(test_set, test_batch_size)
 
