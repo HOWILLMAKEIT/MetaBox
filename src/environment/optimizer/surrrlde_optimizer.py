@@ -48,7 +48,6 @@ class SurrRLDE_Optimizer(Learnable_Optimizer):
 	# Raises:
 	- ValueError: If an invalid action or mutation strategy is specified.
 	"""
-    
 	def __init__(self, config):
 		super().__init__(config)
 
@@ -253,7 +252,7 @@ class SurrRLDE_Optimizer(Learnable_Optimizer):
 				self.population[i] = crossover_population[i]
 
 		reward = self.fit_history_best > torch.min(self.fit_history_best, torch.min(self.fitness).clone())
-
+		reward = reward / 200
 		best_index = torch.argmin(self.fitness)
 
 		self.pop_cur_best = self.population[best_index].clone()

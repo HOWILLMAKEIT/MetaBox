@@ -7,7 +7,7 @@ class SurrRLDE(DDQN_Agent):
 		self.config = config
 		self.config.state_size = 9
 		self.config.n_act = 15
-		self.config.lr_model = 1e-4
+		self.config.lr_model = 1e-5
 		self.config.lr_decay = 1
 		self.config.batch_size = 512
 		self.config.epsilon = 0.5  # 0.5 - 0.05
@@ -18,7 +18,7 @@ class SurrRLDE(DDQN_Agent):
 		self.config.net_config = [{'in': config.state_size, 'out': 32, 'drop_out': 0, 'activation': 'ReLU'},
 							 {'in': 32, 'out': 64, 'drop_out': 0, 'activation': 'ReLU'},
 							 {'in': 64, 'out': 32, 'drop_out': 0, 'activation': 'ReLU'},
-							 {'in': 32, 'out': config.n_act, 'drop_out': 0, 'activation': 'None'}]
+							 {'in': 32, 'out': config.n_act, 'drop_out': 0, 'activation': 'Sigmoid'}]
 		self.device = config.device
 		self.memory_size = self.config.memory_size = 2048
 
