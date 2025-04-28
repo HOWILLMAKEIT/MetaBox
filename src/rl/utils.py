@@ -168,11 +168,11 @@ class MultiAgent_ReplayBuffer:
                 done_lst.append(done)
 
         n_agents, obs_size = len(s_lst[0]), len(s_lst[0][0])
-        return torch.tensor(s_lst, dtype=torch.float).view(batch_size, chunk_size, n_agents, obs_size), \
-               torch.tensor(a_lst, dtype=torch.float).view(batch_size, chunk_size, n_agents), \
-               torch.tensor(r_lst, dtype=torch.float).view(batch_size, chunk_size, n_agents), \
-               torch.tensor(s_prime_lst, dtype=torch.float).view(batch_size, chunk_size, n_agents, obs_size), \
-               torch.tensor(done_lst, dtype=torch.float).view(batch_size, chunk_size, 1)
+        return torch.tensor(s_lst, dtype=torch.float64).view(batch_size, chunk_size, n_agents, obs_size), \
+               torch.tensor(a_lst, dtype=torch.float64).view(batch_size, chunk_size, n_agents), \
+               torch.tensor(r_lst, dtype=torch.float64).view(batch_size, chunk_size, n_agents), \
+               torch.tensor(s_prime_lst, dtype=torch.float64).view(batch_size, chunk_size, n_agents, obs_size), \
+               torch.tensor(done_lst, dtype=torch.float64).view(batch_size, chunk_size, 1)
 
     def __len__(self):
         return len(self.buffer)
