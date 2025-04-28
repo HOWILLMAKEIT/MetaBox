@@ -2317,7 +2317,7 @@ class MTO_Logger(Basic_Logger):
                 arr = np.array(data[problem_name][algorithm_name])          #(2,63,2) [test_run, log_points,tasks]
                 mean_result = np.mean(arr, axis=(0, 2))  # 形状 (63,)
                 plt.figure(figsize=(10, 5))
-                plt.plot(mean_result, marker='o', linestyle='-', color='b', label='Averaged Data')
+                plt.plot(mean_result, marker='o', linestyle='-', color='b', label=f'{algorithm_name}')
                 plt.xlabel('log_points')
                 plt.ylabel('Averaged Value')
                 plt.title(f'{problem_name}_{algorithm_name}_Cost_Test_Curves')
@@ -2351,7 +2351,8 @@ class MTO_Logger(Basic_Logger):
         res = np.mean(res, axis=-1)
         return res[:, -1]
 
-    def draw_train_logger(self, data_type: str, steps: list, data: dict, output_dir: str, ylabel: str = None, norm: bool = False, pdf_fig: bool = True, data_wrapper: Callable = None) -> None:
+    def draw_train_logger(self, data_type: str, steps: list, data: dict, agent_for_rollout: str, output_dir: str, ylabel: str = None, norm: bool = False, pdf_fig: bool = True, data_wrapper: Callable = None) -> None:
+       
         means, stds = self.get_average_data(data, norm=norm, data_wrapper=data_wrapper)
         plt.figure()
 
@@ -2362,8 +2363,6 @@ class MTO_Logger(Basic_Logger):
         s = np.zeros(y.shape[0])
         a = s[0] = y[0]
 
-        agent_for_rollout = self.config.agent_for_rollout
-
         norm = 0.8 + 1
         for i in range(1, y.shape[0]):
             a = a * 0.8 + y[i]
@@ -2373,7 +2372,7 @@ class MTO_Logger(Basic_Logger):
         if agent_for_rollout not in self.color_arrangement.keys():
             self.color_arrangement[agent_for_rollout] = colors[self.arrange_index]
             self.arrange_index += 1
-        
+
         plt.plot(x, s, label = to_label(agent_for_rollout), marker = '*', markersize = 12, markevery = 2, c = self.color_arrangement[agent_for_rollout])
         plt.fill_between(x, (s - y_std), (s + y_std), alpha = 0.2, facecolor = self.color_arrangement[agent_for_rollout])
 
@@ -2393,5 +2392,7 @@ class MTO_Logger(Basic_Logger):
             results = pickle.load(f)
         if not os.path.exists(log_dir + 'pics/'):
             os.makedirs(log_dir + 'pics/')
-        self.draw_train_logger('return', results['steps'], results['return'], log_dir + 'pics/', pdf_fig=pdf_fig)
-        self.draw_train_logger('cost', results['steps'], results['cost'], log_dir + 'pics/', pdf_fig=pdf_fig, data_wrapper = MTO_Logger.data_wrapper_mto_cost_rollout)
+        agent_for_rollout = results['agent_for_rollout']
+        self.draw_train_logger('return', results['steps'], results['return'], agent_for_rollout, log_dir + 'pics/', pdf_fig=pdf_fig)
+        self.draw_train_logger('cost', results['steps'], results['cost'], agent_for_rollout, log_dir + 'pics/', pdf_fig=pdf_fig, data_wrapper = MTO_Logger.data_wrapper_mto_cost_rollout)
+
