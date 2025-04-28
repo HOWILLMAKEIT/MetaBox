@@ -553,7 +553,11 @@ class MultKAN(nn.Module):
         with open(f'{path}_config.yml', 'r') as stream:
             config = yaml.safe_load(stream)
 
-        state = torch.load(f'{path}_state')
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        if torch.cuda.is_available():
+            state = torch.load(f'{path}_state')
+        else:
+            state = torch.load(f'{path}_state', map_location='cpu')
 
         model_load = MultKAN(width=config['width'], 
                      grid=config['grid'], 
@@ -571,10 +575,13 @@ class MultKAN(nn.Module):
                      first_init=False,
                      ckpt_path=config['ckpt_path'],
                      round = config['round']+1,
-                     device = config['device'])
+                     device = device)
 
         model_load.load_state_dict(state)
-        model_load.cache_data = torch.load(f'{path}_cache_data')
+        if torch.cuda.is_available():
+            model_load.cache_data = torch.load(f'{path}_cache_data')
+        else:
+            model_load.cache_data = torch.load(f'{path}_cache_data', map_location='cpu')
         
         depth = len(model_load.width) - 1
         for l in range(depth):

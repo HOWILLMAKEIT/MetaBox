@@ -91,7 +91,10 @@ class bbob_surrogate_model(Basic_Problem):
                 model_path = pkg_resources.files(base_dir).joinpath(model_file)
 
                 with model_path.open('rb') as f:
-                    self.model.load_state_dict(torch.load(f))
+                    if torch.cuda.is_available():
+                        self.model.load_state_dict(torch.load(f))
+                    else:
+                        self.model.load_state_dict(torch.load(f, map_location='cpu'))
 
         elif dim == 5:
 
@@ -106,7 +109,10 @@ class bbob_surrogate_model(Basic_Problem):
                 model_path = pkg_resources.files(base_dir).joinpath(model_file)
 
                 with model_path.open('rb') as f:
-                    self.model.load_state_dict(torch.load(f))
+                    if torch.cuda.is_available():
+                        self.model.load_state_dict(torch.load(f))
+                    else:
+                        self.model.load_state_dict(torch.load(f, map_location='cpu'))
 
 
         elif dim == 10:
@@ -123,7 +129,10 @@ class bbob_surrogate_model(Basic_Problem):
                 model_path = pkg_resources.files(base_dir).joinpath(model_file)
 
                 with model_path.open('rb') as f:
-                    self.model.load_state_dict(torch.load(f))
+                    if torch.cuda.is_available():
+                        self.model.load_state_dict(torch.load(f))
+                    else:
+                        self.model.load_state_dict(torch.load(f, map_location='cpu'))
 
         else:
             raise ValueError(f'training on dim{dim} is not supported yet.')
