@@ -1610,49 +1610,53 @@ class MOO_Logger(Basic_Logger):
         plt.savefig(output_dir + f'overall_{indicator}_boxplot.{fig_type}', bbox_inches='tight')
         plt.close()
 
-    def draw_train_logger(self, data_type: str, data: dict, output_dir: str, ylabel: str = None, norm: bool = False, pdf_fig: bool = True, data_wrapper: Callable = None) -> None:
+    def draw_train_logger(self, data_type: str, steps: list, data: dict, agent_for_rollout: str, output_dir: str, ylabel: str = None, norm: bool = False, pdf_fig: bool = True, data_wrapper: Callable = None) -> None:
         """
         # Introduction
-        Plots and saves the training progress curve for different agents, showing the average and standard deviation of a specified metric over learning steps. The plot can be smoothed, normalized, and saved as either a PDF or PNG.
+        Plots and saves the training curve for a given data type, applying smoothing and displaying mean and standard deviation shading. Supports normalization and custom data processing.
         # Args:
-        - data_type (str): The type of data to plot (e.g., 'reward', 'loss').
-        - data (dict):Part of the test result,the result[data_type].Also a nested dictionary,structured as `dict[problem][algorithm][run][generation][objective]`,stores the test result data.
-        - output_dir (str): Directory path where the plot image will be saved.
+        - data_type (str): The type of data being plotted. e.g. cost
+        - steps (list): List of step values (x-axis) corresponding to the data points.
+        - results (dict): Part of the result data,the result[data_type]. Also a nested dictionary containing experimental results structured as `dict[problem][algo][run]`.
+        - output_dir (str): Directory path where the output figure will be saved.
         - ylabel (str, optional): Label for the y-axis. If None, uses `data_type` as the label. Defaults to None.
         - norm (bool, optional): Whether to normalize the data before plotting. Defaults to False.
-        - pdf_fig (bool, optional): If True, saves the plot as a PDF; otherwise, saves as PNG. Defaults to True.
-        - data_wrapper (Callable, optional): Optional function to preprocess or wrap the data before plotting. Defaults to None.
+        - pdf_fig (bool, optional): Whether to save the figure as a PDF (if True) or PNG (if False). Defaults to True.
+        - data_wrapper (Callable, optional): Optional function to preprocess or wrap the data before averaging. Defaults to None.
         # Returns:
         - None
         # Notes:
-        - The function applies a smoothing algorithm to the plotted curves.
-        - The standard deviation is visualized as a shaded area around the mean curve for each agent.
-        - The function uses internal configuration for plotting parameters and color arrangements.
+        - The function applies a smoothing operation to the plotted curve based on the configuration.
+        - The mean and standard deviation are visualized, with the standard deviation shown as a shaded region.
+        - The color arrangement for each agent is managed to ensure consistent coloring across plots.
         """
         
-        means, stds = self.get_average_data(data_type, data, norm=norm, data_wrapper=data_wrapper)
+        means, stds = self.get_average_data(data, norm=norm, data_wrapper=data_wrapper)
         plt.figure()
-        for agent in means.keys():
-            x = np.arange(len(means[agent]), dtype=np.float64)
-            x = (self.config.max_learning_step / x[-1]) * x
-            y = means[agent]
-            s = np.zeros(y.shape[0])
-            a = s[0] = y[0]
-            norm = 0.8 + 1
-            for i in range(1, y.shape[0]):
-                a = a * 0.8 + y[i]
-                s[i] = a / norm if norm > 0 else a
-                norm *= 0.8
-                norm += 1
-            if agent not in self.color_arrangement.keys():
-                self.color_arrangement[agent] = colors[self.arrange_index]
-                self.arrange_index += 1
-            plt.plot(x, s, label=to_label(agent), marker='*', markersize=12, markevery=2, c=self.color_arrangement[agent])
-            plt.fill_between(x, (s - stds[agent]), (s + stds[agent]), alpha=0.2, facecolor=self.color_arrangement[agent])
-            # plt.plot(x, returns[agent], label=to_label(agent))
+
+        y = np.array([means[k] for k in means])
+        y_std = np.array([stds[k] for k in stds])
+        x = np.array(steps, dtype = np.float64)
+
+        s = np.zeros(y.shape[0])
+        a = s[0] = y[0]
+
+        norm = 0.8 + 1
+        for i in range(1, y.shape[0]):
+            a = a * 0.8 + y[i]
+            s[i] = a / norm if norm > 0 else a
+            norm *= 0.8
+            norm += 1
+        if agent_for_rollout not in self.color_arrangement.keys():
+            self.color_arrangement[agent_for_rollout] = colors[self.arrange_index]
+            self.arrange_index += 1
+
+        plt.plot(x, s, label = to_label(agent_for_rollout), marker = '*', markersize = 12, markevery = 2, c = self.color_arrangement[agent_for_rollout])
+        plt.fill_between(x, (s - y_std), (s + y_std), alpha = 0.2, facecolor = self.color_arrangement[agent_for_rollout])
+
         plt.legend()
         plt.grid()
-        plt.xlabel('Learning Steps')    
+        plt.xlabel('Learning Steps')
         if ylabel is None:
             ylabel = data_type
         plt.ylabel(ylabel)
@@ -1702,11 +1706,13 @@ class MOO_Logger(Basic_Logger):
     def post_processing_rollout_statics(self, log_dir: str, pdf_fig: bool = True) -> None:
         with open(log_dir+'rollout.pkl', 'rb') as f:
             results = pickle.load(f)
+        agent_for_rollout = results['agent_for_rollout']
+        
         if not os.path.exists(log_dir + 'pics/'):
             os.makedirs(log_dir + 'pics/')
-        self.draw_train_logger('return', results['return'], log_dir + 'pics/', pdf_fig=pdf_fig)
+        self.draw_train_logger('return', results['steps'], results['return'], agent_for_rollout, log_dir + 'pics/', pdf_fig=pdf_fig)
         for indicator in self.indicators:
-            self.draw_train_logger(indicator, results[indicator], log_dir + 'pics/', pdf_fig=pdf_fig)
+            self.draw_train_logger(indicator, results['steps'], results[indicator], agent_for_rollout, log_dir + 'pics/', pdf_fig=pdf_fig, data_wrapper = Basic_Logger.data_wrapper_cost_rollout)
 
 
 
