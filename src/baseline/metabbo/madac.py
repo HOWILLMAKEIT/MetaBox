@@ -65,7 +65,10 @@ class MADAC(VDN_Agent):
         config.criterion = 'MSELoss'
 
         config.target_update_interval = 2000
-        config.save_interval = 1000
+        config.required_info = {
+            'hv_his':'hv_his',
+            'igd_his': 'igd_his'
+        }
 
         agent_configs = [
             {'name': 'ns_agent', 'n_actions': 4, 'n_valid_actions': 4},
