@@ -531,7 +531,6 @@ class MADAC_Optimizer(Learnable_Optimizer):
                 sorted_weights[:self.moead_neighborhood_maxsize])
 
     def update_igd(self, value):
-        self.igd_his.append(value)
         if value < self.best_igd:
             self.stag_count = 0
             self.best_igd = value
