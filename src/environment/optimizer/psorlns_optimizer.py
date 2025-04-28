@@ -58,6 +58,8 @@ class PSORLNS_Optimizer(Learnable_Optimizer):
         self.sr = None
         self.log_index = None
         self.log_interval = None
+        self.archive = None
+        self.archive_val = None
 
     def __str__(self):
         return "PSORLNS_Optimizer"
@@ -65,11 +67,14 @@ class PSORLNS_Optimizer(Learnable_Optimizer):
     def cal_pr_sr(self, problem):
         raw_PR = np.zeros(5)
         raw_SR = np.zeros(5)
-        solu = self.particles['current_position'].copy()
+        solu = self.archive.copy()
+        solu_val = self.archive_val.copy()
+        # assert (self.get_costs(solu, problem) == solu_val).all()
         accuracy = [1e-1, 1e-2, 1e-3, 1e-4, 1e-5]
         total_pkn = problem.nopt
         for acc_level in range(5):
-            nfp, _ = problem.how_many_goptima(solu, accuracy[acc_level])
+            sub_sol = solu[solu_val < accuracy[acc_level]].copy()
+            nfp, _ = problem.how_many_goptima(sub_sol, accuracy[acc_level])
             raw_PR[acc_level] = nfp / total_pkn
             if nfp >= total_pkn:
                 raw_SR[acc_level] = 1
@@ -143,11 +148,15 @@ class PSORLNS_Optimizer(Learnable_Optimizer):
         self.max_velocity = 0.1 * (problem.ub - problem.lb)
         # set the hyperparameters back to init value if needed
         self.w = 1
+        self.archive = np.zeros((0, self.dim))
+        self.archive_val = np.array([])
 
         self.max_dist = np.sqrt(np.sum((problem.ub - problem.lb) ** 2))
         self.eps =  0.1 # todo: 邻域个数判断阈值
         # initialize the population
         self.initialize_particles(problem)
+        self.archive = np.vstack((self.archive, self.particles['current_position'][self.particles['c_cost'] < 1e-1].copy()))
+        self.archive_val = np.hstack((self.archive_val, self.particles['c_cost'][self.particles['c_cost']<1e-1].copy()))
 
         self.log_index = 1
         self.cost = [self.particles['gbest_val']]
@@ -174,10 +183,7 @@ class PSORLNS_Optimizer(Learnable_Optimizer):
     def get_costs(self, position, problem):
         ps = position.shape[0]
         self.fes += ps
-        if problem.optimum is None:
-            cost = problem.eval(position)
-        else:
-            cost = problem.eval(position) - problem.optimum
+        cost = problem.eval(position) - problem.optimum
         return cost
 
     # feature encoding
@@ -276,6 +282,11 @@ class PSORLNS_Optimizer(Learnable_Optimizer):
         accept_new_cost = self.particles['c_cost'].copy()
         accept_new_position[particles_filter] = new_position[particles_filter].copy()
         accept_new_cost[particles_filter] = new_cost[particles_filter].copy()
+
+        chosen_pop = new_position[particles_filter].copy()
+        chosen_val = new_cost[particles_filter].copy()
+        self.archive = np.vstack((self.archive, chosen_pop[chosen_val < 1e-1].copy()))
+        self.archive_val = np.hstack((self.archive_val, chosen_val[chosen_val<1e-1].copy()))
 
         # update particles
         filters = accept_new_cost < self.particles['pbest']

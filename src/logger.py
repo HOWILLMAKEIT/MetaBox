@@ -1743,10 +1743,10 @@ class MMO_Logger(Basic_Logger):
         - None
         # Notes:
         - For each agent, an Excel file is generated with a table of performance statistics for each problem.
-        - The statistics are computed from the last cost value of each run.
+        - The statistics are computed from the last pr/sr value of each run.
         """
         """
-        Store the `Worst`, `Best`, `Median`, `Mean` and `Std` of cost results of each agent as excel
+        Store the `Worst`, `Best`, `Median`, `Mean` and `Std` of pr/sr results of each agent as excel
         """
         
         total_data=results
@@ -1755,8 +1755,8 @@ class MMO_Logger(Basic_Logger):
         columns=['Worst','Best','Median','Mean','Std']
         for problem,value in total_data.items():
             indexs.append(problem)
-            problem_cost=value
-            for alg,alg_data in problem_cost.items():
+            problem_data=value
+            for alg,alg_data in problem_data.items():
                 n_data=np.array(alg_data)[:, -1, 3]
                 # if alg == 'MadDE' and problem == 'F5':
                 #     for run in alg_data:
@@ -2088,8 +2088,7 @@ class MMO_Logger(Basic_Logger):
         with open(log_dir + 'test_results.pkl', 'rb') as f:
             results = pickle.load(f)
             
-        metabbo = self.config.agent
-        # bbo = self.config.t_optimizer
+        metabbo = results['config'].baselines['metabbo']
         
 
         if not os.path.exists(log_dir + 'tables/'):
@@ -2097,17 +2096,17 @@ class MMO_Logger(Basic_Logger):
 
         self.gen_overall_tab(results, log_dir + 'tables/')
         self.gen_algorithm_complexity_table(results, log_dir + 'tables/')
-        self.gen_agent_performance_table(results, log_dir + 'tables/')
-        self.gen_agent_performance_prsr_table(results['pr'],'pr', log_dir+'tables/') 
-        self.gen_agent_performance_prsr_table(results['sr'], 'sr',log_dir + 'tables/')
+        # self.gen_agent_performance_table(results, log_dir + 'tables/')
+        # self.gen_agent_performance_prsr_table(results['pr'],'pr', log_dir+'tables/') 
+        # self.gen_agent_performance_prsr_table(results['sr'], 'sr',log_dir + 'tables/')
         
 
         if not os.path.exists(log_dir + 'pics/'):
             os.makedirs(log_dir + 'pics/')
 
-        self.draw_concrete_performance_hist(results['cost'], log_dir+'pics/',pdf_fig=pdf_fig)
-        self.draw_concrete_performance_prsr_hist(results['pr'], 'pr', log_dir+'pics/', pdf_fig = pdf_fig)
-        self.draw_concrete_performance_prsr_hist(results['sr'], 'sr', log_dir+'pics/', pdf_fig = pdf_fig)
+        # self.draw_concrete_performance_hist(results['cost'], log_dir+'pics/',pdf_fig=pdf_fig)
+        # self.draw_concrete_performance_prsr_hist(results['pr'], 'pr', log_dir+'pics/', pdf_fig = pdf_fig)
+        # self.draw_concrete_performance_prsr_hist(results['sr'], 'sr', log_dir+'pics/', pdf_fig = pdf_fig)
         self.draw_boxplot(results, log_dir+'pics/', pdf_fig=pdf_fig)
         self.draw_boxplot_prsr(results['pr'], 'pr', log_dir+'pics/', pdf_fig=pdf_fig)
         self.draw_boxplot_prsr(results['sr'], 'sr', log_dir+'pics/', pdf_fig=pdf_fig)
@@ -2115,8 +2114,8 @@ class MMO_Logger(Basic_Logger):
         self.draw_test_data(results['cost'], 'cost', log_dir + 'pics/', logged=True, categorized=False, pdf_fig=pdf_fig, data_wrapper=np.array)
         self.draw_test_data(results['pr'],'pr', log_dir + 'pics/', logged=False, categorized=False, pdf_fig=pdf_fig, data_wrapper=self.data_wrapper_prsr_hist)
         self.draw_test_data(results['sr'],'sr', log_dir + 'pics/', logged=False, categorized=False, pdf_fig=pdf_fig, data_wrapper=self.data_wrapper_prsr_hist)
-        self.draw_rank_hist_prsr(results['pr'], 'pr',log_dir + 'pics/', pdf_fig=pdf_fig) 
-        self.draw_rank_hist_prsr(results['sr'], 'sr', log_dir + 'pics/',pdf_fig=pdf_fig)
+        # self.draw_rank_hist_prsr(results['pr'], 'pr',log_dir + 'pics/', pdf_fig=pdf_fig) 
+        # self.draw_rank_hist_prsr(results['sr'], 'sr', log_dir + 'pics/',pdf_fig=pdf_fig)
 
 
     def post_processing_rollout_statics(self, log_dir: str, pdf_fig: bool = True) -> None:
@@ -2125,10 +2124,11 @@ class MMO_Logger(Basic_Logger):
             results = pickle.load(f)
         if not os.path.exists(log_dir + 'pics/'):
             os.makedirs(log_dir + 'pics/')
-        self.draw_train_logger('return', results['steps'], results['return'], log_dir + 'pics/', pdf_fig=pdf_fig)
-        self.draw_train_logger('cost', results['steps'],results['cost'], log_dir + 'pics/', pdf_fig=pdf_fig, data_wrapper=self.data_wrapper_cost_rollout)
-        self.draw_train_logger('pr', results['steps'],results['pr'], log_dir + 'pics/', pdf_fig=pdf_fig, data_wrapper=self.data_wrapper_prsr_rollout)
-        self.draw_train_logger('sr', results['steps'],results['sr'], log_dir + 'pics/', pdf_fig=pdf_fig, data_wrapper=self.data_wrapper_prsr_rollout)
+        agent_for_rollout = results['agent_for_rollout']
+        self.draw_train_logger('return', results['steps'], results['return'],agent_for_rollout, log_dir + 'pics/', pdf_fig=pdf_fig)
+        self.draw_train_logger('cost', results['steps'],results['cost'], agent_for_rollout,log_dir + 'pics/', pdf_fig=pdf_fig, data_wrapper=self.data_wrapper_cost_rollout)
+        self.draw_train_logger('pr', results['steps'],results['pr'], agent_for_rollout,log_dir + 'pics/', pdf_fig=pdf_fig, data_wrapper=self.data_wrapper_prsr_rollout)
+        self.draw_train_logger('sr', results['steps'],results['sr'], agent_for_rollout,log_dir + 'pics/', pdf_fig=pdf_fig, data_wrapper=self.data_wrapper_prsr_rollout)
 
 #logger
 # class basic_Logger:

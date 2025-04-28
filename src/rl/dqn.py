@@ -93,6 +93,9 @@ class DQN_Agent(Basic_Agent):
         save_class(self.config.agent_save_dir, 'checkpoint-' + str(self.cur_checkpoint), self)
         self.cur_checkpoint += 1
 
+    def get_step(self):
+        return self.learning_time
+
     def set_network(self, networks: dict, learning_rates: float):
         Network_name = []
         if networks:
