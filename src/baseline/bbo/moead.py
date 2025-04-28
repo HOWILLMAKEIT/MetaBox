@@ -44,7 +44,7 @@ class MOEAD(Basic_Optimizer):
         self.n_obj = problem.n_obj
         self.n_var = problem.n_var
         # population
-        self.weights = self.random_weights(self.n_obj,self.population_size)
+        self.weights = self.get_weights(self.n_obj)
         if self.population_size!=len(self.weights):
             self.population_size = len(self.weights)
         self.population = self.rng.uniform(low=problem.lb, high=problem.ub, size=(self.population_size, problem.n_var))
