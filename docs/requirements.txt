@@ -11,3 +11,4 @@ myst-parser
 sphinx_copybutton
 shibuya
 myst_nb
+linkify-it-py
