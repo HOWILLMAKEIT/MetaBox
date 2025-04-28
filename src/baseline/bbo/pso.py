@@ -13,8 +13,8 @@ class PSO(Basic_Optimizer):
         config.population_size = 50
 
         self.__config = config
-        self.__toolbox = base.Toolbox()
-        self.__creator = creator
+        self.__toolbox = None
+        self.__creator = None
         self.log_interval = config.log_interval
         self.full_meta_data = config.full_meta_data
         
@@ -25,6 +25,10 @@ class PSO(Basic_Optimizer):
         self.rng_cpu = None
         self.rng = None
         np.random.seed(self.rng_seed)
+
+        if self.__toolbox is None:
+            self.__toolbox = base.Toolbox()
+            self.__creator = creator
 
         self.__creator.create("Fitnessmin", base.Fitness, weights=(-1.0,))
         self.__creator.create("Particle", np.ndarray, fitness=creator.Fitnessmin, speed=list, smin=None, smax=None, best=None)
@@ -46,16 +50,22 @@ class PSO(Basic_Optimizer):
             v_u2 = u2 * (best - part)
             part.speed += v_u1 + v_u2
             for i, speed in enumerate(part.speed):
-                if speed < part.smin:
-                    part.speed[i] = part.smin
-                elif speed > part.smax:
-                    part.speed[i] = part.smax
+                smin = part.smin if np.isscalar(part.smin) else part.smin[i]
+                smax = part.smax if np.isscalar(part.smax) else part.smax[i]
+
+                if speed < smin:
+                    part.speed[i] = smin
+                elif speed > smax:
+                    part.speed[i] = smax
             part += part.speed
             for i, value in enumerate(part):
-                if value < pmin:
-                    part[i] = pmin
-                elif value > pmax:
-                    part[i] = pmax
+                pm = pmin if np.isscalar(pmin) else pmin[i]
+                pma = pmax if np.isscalar(pmax) else pmax[i]
+
+                if value < pm:
+                    part[i] = pm
+                elif value > pma:
+                    part[i] = pma
             return part
 
         def problem_eval(x):

@@ -828,7 +828,8 @@ class Tester(object):
         return test_results
 
 
-    def name_translate(self, problem):
+    @ staticmethod
+    def name_translate(problem):
         """
         # Introduction
         Translates a given problem identifier into a human-readable problem name.
@@ -839,218 +840,243 @@ class Tester(object):
         # Raises:
         - ValueError: If the provided problem identifier is not recognized.
         """
-        
-        if problem in ['bbob', 'bbob-torch']:
-            return 'Synthetic'
-        elif problem in ['bbob-noisy', 'bbob-noisy-torch']:
-            return 'Noisy-Synthetic'
-        elif problem in ['protein', 'protein-torch']:
-            return 'Protein-Docking'
-        else:
-            raise ValueError(problem + ' is not defined!')
 
-    def mgd_test(self, user_from, user_to, user_opt, user_datasets):
-        """
-        todo:重写注释
-        # Introduction
-        Executes the Meta Generalization Domain (MGD) test for evaluating agent performance across different problem domains and configurations. This method loads pre-trained agents, sets up test environments, and runs parallelized test episodes to collect and log performance metrics.
-        # Args:
-        None (uses instance attributes and configuration).
-        # Side Effects:
-        - Loads agent models and configuration from files.
-        - Runs parallelized test episodes using various batching strategies.
-        - Logs test results and meta-data to disk.
-        - Updates instance attributes `self.test_results` and `self.meta_data_results`.
-        # Raises:
-        - FileNotFoundError: If required model or configuration files are missing.
-        - KeyError: If specified agent or optimizer keys are not found in the configuration.
-        - Exception: Propagates exceptions from environment setup, agent loading, or parallel execution.
-        # Notes:
-        - Supports multiple parallelization strategies: 'Full', 'Baseline_Problem', 'Problem_Testrun', and 'Batch'.
-        - Stores results as pickled files in the specified log directory.
-        - Designed for use in meta-learning and black-box optimization benchmarking.
-        """
-        
-        config = self.config
-        print(f'start MGD_test: {config.run_time}_{config.test_problem}_{config.test_difficulty}')
-        # get test set
-        num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
-        mgd_test_log_dir = f"{self.mgd_test_log_dir}_{self.config.test_problem}_{self.config.test_difficulty}"
+        return problem[:-6] if problem.endswith('-torch') else problem
 
-        if not os.path.exists(mgd_test_log_dir):
-            os.makedirs(mgd_test_log_dir)
-        with open(mgd_test_log_dir + '/config.pkl', 'wb') as f:
-            pickle.dump(config, f, -1)
+    @ staticmethod
+    def mgd_test(config, agent: str, from_problem:str, from_difficulty:str, from_test_path: str, to_test_path: str):
+        with open(from_test_path, 'rb') as f:
+            from_data = pickle.load(f)
+        with open(to_test_path, 'rb') as f:
+            to_data = pickle.load(f)
 
-        _, test_set = user_datasets
-        self.test_set = test_set
+        mgd_test_log_dir = f"{config.mgd_test_log_dir}/{agent}"
+        #
+        data = {}
+        for metric in from_data.keys():
+            if metric not in data.keys():
+                data[metric] = {}
+            metric_value = from_data[metric]
+            for problem in metric_value.keys():
+                if problem not in data[metric].keys():
+                    data[metric][problem] = {}
+                from_agent_data = from_data[metric][problem]
+                to_agent_data = to_data[metric][problem]
+                if agent not in from_agent_data.keys() or agent not in to_agent_data.keys():
+                    assert "Agent '{agent}' not found in from_data or to_data for metric '{metric}', problem '{problem}'."
+                data[metric][problem][f"{agent}_from"] = from_agent_data[agent]
+                data[metric][problem][f"{agent}_to"] = to_agent_data[agent]
+                data[metric][problem]['Random_Search'] = from_agent_data['Random_Search']
+        logger = Basic_Logger(config) # Only SOO
+        aei, aei_std = logger.aei_metric(data, config.maxFEs)
+        print(f"AEI: {aei}")
+        print(f"AEI_std: {aei_std}")
+        print(f'MGD({Tester.name_translate(from_problem)}_{from_difficulty}, {Tester.name_translate(config.test_problem)}_{config.test_difficulty}) of {agent}: '
+              f'{100 * (1 - aei[agent + "_from"] / aei[agent + "_to"])}%')
 
-        agent_name = user_from.__str__()
-        agent_from = user_from
-        agent_to = user_to
-        l_optimizer = copy.deepcopy(user_opt)
+    # def mgd_test(self, user_from, user_to, user_opt, user_datasets):
+    #     """
+    #     todo:重写注释
+    #     # Introduction
+    #     Executes the Meta Generalization Domain (MGD) test for evaluating agent performance across different problem domains and configurations. This method loads pre-trained agents, sets up test environments, and runs parallelized test episodes to collect and log performance metrics.
+    #     # Args:
+    #     None (uses instance attributes and configuration).
+    #     # Side Effects:
+    #     - Loads agent models and configuration from files.
+    #     - Runs parallelized test episodes using various batching strategies.
+    #     - Logs test results and meta-data to disk.
+    #     - Updates instance attributes `self.test_results` and `self.meta_data_results`.
+    #     # Raises:
+    #     - FileNotFoundError: If required model or configuration files are missing.
+    #     - KeyError: If specified agent or optimizer keys are not found in the configuration.
+    #     - Exception: Propagates exceptions from environment setup, agent loading, or parallel execution.
+    #     # Notes:
+    #     - Supports multiple parallelization strategies: 'Full', 'Baseline_Problem', 'Problem_Testrun', and 'Batch'.
+    #     - Stores results as pickled files in the specified log directory.
+    #     - Designed for use in meta-learning and black-box optimization benchmarking.
+    #     """
+    #
+    #     config = self.config
+    #     print(f'start MGD_test: {config.run_time}_{config.test_problem}_{config.test_difficulty}')
+    #     # get test set
+    #     num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
+    #     mgd_test_log_dir = f"{self.mgd_test_log_dir}_{self.config.test_problem}_{self.config.test_difficulty}"
+    #
+    #     if not os.path.exists(mgd_test_log_dir):
+    #         os.makedirs(mgd_test_log_dir)
+    #     with open(mgd_test_log_dir + '/config.pkl', 'wb') as f:
+    #         pickle.dump(config, f, -1)
+    #
+    #     _, test_set = user_datasets
+    #     self.test_set = test_set
+    #
+    #     agent_name = user_from.__str__()
+    #     agent_from = user_from
+    #     agent_to = user_to
+    #     l_optimizer = copy.deepcopy(user_opt)
+    #
+    #     # initialize the dataframe for logging
+    #     self.test_results = {'cost': {},
+    #                          'fes': {},
+    #                          'T1': {},
+    #                          'T2': {},
+    #                          }
+    #     self.meta_data_results = {}
+    #     agent_name_list = [f'{agent_name}_from', f'{agent_name}_to']
+    #     l_optimizer_cp = []
+    #     for agent_name in agent_name_list:
+    #         opt = copy.deepcopy(l_optimizer)
+    #         setattr(opt, 'test_name', agent_name)
+    #         l_optimizer_cp.append(opt)
+    #
+    #     self.agent_name_list = agent_name_list
+    #
+    #
+    #     for key in self.test_results.keys():
+    #         self.initialize_record(key)
+    #
+    #     if config.full_meta_data:
+    #         for problem in self.test_set.data:
+    #             self.meta_data_results[problem.__str__()] = {}
+    #             for agent_name in self.agent_name_list:
+    #                 self.meta_data_results[problem.__str__()][agent_name] = []  # test_run x fes
+    #
+    #     # calculate T0
+    #     self.test_results['T0'] = np.mean([cal_t0(p.dim, config.maxFEs) for p in self.test_set.data])
+    #     # begin mgd_test
+    #
+    #     test_run = config.test_run
+    #     test_parallel_mode = config.test_parallel_mode
+    #     seed_list = list(range(1, test_run + 1))
+    #
+    #     if test_parallel_mode == 'Full':
+    #         testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent_from), PBO_Env(copy.deepcopy(p), copy.deepcopy(l_optimizer_cp[0])), seed) for p in test_set.data for seed in seed_list]
+    #         testunit_list += [MetaBBO_TestUnit(copy.deepcopy(agent_to), PBO_Env(copy.deepcopy(p), copy.deepcopy(l_optimizer_cp[1])), seed) for p in test_set.data for seed in seed_list]
+    #
+    #         MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray', num_gpus=num_gpus)
+    #         meta_test_data = MetaBBO_test.rollout()
+    #         self.record_test_data(meta_test_data)
+    #         self.meta_data_results = store_meta_data(mgd_test_log_dir, self.meta_data_results)
+    #
+    #     elif test_parallel_mode == 'Baseline_Problem':
+    #         pbar = tqdm(total = len(seed_list), desc = "Baseline_Problem Testing")
+    #         for seed in seed_list:
+    #             testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent_from), PBO_Env(copy.deepcopy(p), copy.deepcopy(l_optimizer_cp[0])), seed) for p in test_set.data]
+    #             testunit_list += [MetaBBO_TestUnit(copy.deepcopy(agent_to), PBO_Env(copy.deepcopy(p), copy.deepcopy(l_optimizer_cp[1])), seed) for p in test_set.data]
+    #             MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray', num_gpus=num_gpus)
+    #             meta_test_data = MetaBBO_test.rollout()
+    #             self.record_test_data(meta_test_data)
+    #             self.meta_data_results = store_meta_data(mgd_test_log_dir, self.meta_data_results)
+    #             pbar.update()
+    #         pbar.close()
+    #
+    #     elif test_parallel_mode == 'Problem_Testrun':
+    #         pbar_len = 2
+    #         pbar = tqdm(total = pbar_len, desc = "Problem_Testrun Testing")
+    #         pbar.set_description(f"Problem_Testrun Testing from {agent_from.__str__()} to {agent_to.__str__()}")
+    #         testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent_from), PBO_Env(copy.deepcopy(p), copy.deepcopy(l_optimizer_cp[0])), seed)
+    #                          for p in self.test_set.data
+    #                          for seed in seed_list]
+    #         MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray', num_gpus=num_gpus)
+    #         meta_test_data = MetaBBO_test.rollout()
+    #         self.record_test_data(meta_test_data)
+    #         self.meta_data_results = store_meta_data(mgd_test_log_dir, self.meta_data_results)
+    #         pbar.update()
+    #
+    #         testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent_to), PBO_Env(copy.deepcopy(p), copy.deepcopy(l_optimizer_cp[1])), seed)
+    #                          for p in self.test_set.data
+    #                          for seed in seed_list]
+    #         MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray', num_gpus=num_gpus)
+    #         meta_test_data = MetaBBO_test.rollout()
+    #         self.record_test_data(meta_test_data)
+    #         self.meta_data_results = store_meta_data(mgd_test_log_dir, self.meta_data_results)
+    #         pbar.update()
+    #         pbar.close()
+    #
+    #     elif test_parallel_mode == 'Batch':
+    #         pbar_len = 2 * np.ceil(test_set.N / config.test_batch_size) * test_run
+    #         pbar = tqdm(total = pbar_len, desc = "Batch Testing")
+    #         for ip, problem in enumerate(test_set):
+    #             for i, seed in enumerate(seed_list):
+    #                 pbar.set_description_str(f"Batch Testing From Agent {agent_from.__str__()} with Problem Batch {ip}, Run {i}")
+    #                 testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent_from), PBO_Env(copy.deepcopy(p), copy.deepcopy(l_optimizer_cp[0])), seed) for p in problem]
+    #                 MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray', num_gpus=num_gpus)
+    #                 meta_test_data = MetaBBO_test.rollout()
+    #                 self.record_test_data(meta_test_data)
+    #                 pbar.update()
+    #             self.meta_data_results = store_meta_data(mgd_test_log_dir, self.meta_data_results)
+    #         for ip, problem in enumerate(test_set):
+    #             for i, seed in enumerate(seed_list):
+    #                 pbar.set_description_str(f"Batch Testing To Agent {agent_to.__str__()} with Problem Batch {ip}, Run {i}")
+    #                 testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent_to), PBO_Env(copy.deepcopy(p), copy.deepcopy(l_optimizer_cp[1])), seed) for p in problem]
+    #                 MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray', num_gpus=num_gpus)
+    #                 meta_test_data = MetaBBO_test.rollout()
+    #                 self.record_test_data(meta_test_data)
+    #                 pbar.update()
+    #             self.meta_data_results = store_meta_data(mgd_test_log_dir, self.meta_data_results)
+    #         pbar.close()
+    #
+    #     elif test_parallel_mode == 'Serial':
+    #         pbar_len = 2 * test_set.N * self.config.test_run
+    #         pbar = tqdm(total = pbar_len, desc = "Serial Testing")
+    #         for ip, problem in enumerate(test_set.data):
+    #             for i, seed in enumerate(seed_list):
+    #                 pbar.set_description_str(f"Batch Testing From Agent {agent_from.__str__()} with Problem Batch {ip}, Run {i}")
+    #                 env = PBO_Env(copy.deepcopy(problem), copy.deepcopy(l_optimizer_cp[0]))
+    #
+    #                 torch.manual_seed(seed)
+    #                 torch.cuda.manual_seed(seed)
+    #                 np.random.seed(seed)
+    #                 torch.backends.cudnn.deterministic = True
+    #                 torch.backends.cudnn.benchmark = False
+    #
+    #                 torch.set_default_dtype(torch.float64)
+    #                 tmp_agent = copy.deepcopy(agent_from)
+    #
+    #                 start_time = time.perf_counter()
+    #                 res = tmp_agent.rollout_episode(env, seed, {})
+    #                 end_time = time.perf_counter()
+    #                 res['T1'] = env.problem.T1
+    #                 res['T2'] = (end_time - start_time) * 1000
+    #                 agent_name = l_optimizer_cp[0].test_name
+    #                 res['agent_name'] = agent_name
+    #                 res['problem_name'] = problem.__str__()
+    #                 meta_test_data = [res]
+    #                 self.record_test_data(meta_test_data)
+    #                 pbar.update()
+    #             self.meta_data_results = store_meta_data(mgd_test_log_dir, self.meta_data_results)
+    #         for ip, problem in enumerate(test_set.data):
+    #             for i, seed in enumerate(seed_list):
+    #                 pbar.set_description_str(f"Batch Testing TO Agent {agent_to.__str__()} with Problem Batch {ip}, Run {i}")
+    #                 env = PBO_Env(copy.deepcopy(problem), copy.deepcopy(l_optimizer_cp[1]))
+    #
+    #                 torch.manual_seed(seed)
+    #                 torch.cuda.manual_seed(seed)
+    #                 np.random.seed(seed)
+    #                 torch.backends.cudnn.deterministic = True
+    #                 torch.backends.cudnn.benchmark = False
+    #
+    #                 torch.set_default_dtype(torch.float64)
+    #                 tmp_agent = copy.deepcopy(agent_to)
+    #
+    #                 start_time = time.perf_counter()
+    #                 res = tmp_agent.rollout_episode(env, seed, {})
+    #                 end_time = time.perf_counter()
+    #                 res['T1'] = env.problem.T1
+    #                 res['T2'] = (end_time - start_time) * 1000
+    #                 agent_name = l_optimizer_cp[1].test_name
+    #                 res['agent_name'] = agent_name
+    #                 res['problem_name'] = problem.__str__()
+    #                 meta_test_data = [res]
+    #                 self.record_test_data(meta_test_data)
+    #                 pbar.update()
+    #             self.meta_data_results = store_meta_data(mgd_test_log_dir, self.meta_data_results)
+    #
+    #     with open(mgd_test_log_dir + '/mgd_test_results.pkl', 'wb') as f:
+    #         pickle.dump(self.test_results, f, -1)
 
-        # initialize the dataframe for logging
-        self.test_results = {'cost': {},
-                             'fes': {},
-                             'T1': {},
-                             'T2': {},
-                             }
-        self.meta_data_results = {}
-        agent_name_list = [f'{agent_name}_from', f'{agent_name}_to']
-        l_optimizer_cp = []
-        for agent_name in agent_name_list:
-            opt = copy.deepcopy(l_optimizer)
-            setattr(opt, 'test_name', agent_name)
-            l_optimizer_cp.append(opt)
-
-        self.agent_name_list = agent_name_list
-
-
-        for key in self.test_results.keys():
-            self.initialize_record(key)
-        
-        if config.full_meta_data:
-            for problem in self.test_set.data:
-                self.meta_data_results[problem.__str__()] = {}
-                for agent_name in self.agent_name_list:
-                    self.meta_data_results[problem.__str__()][agent_name] = []  # test_run x fes
-
-        # calculate T0
-        self.test_results['T0'] = np.mean([cal_t0(p.dim, config.maxFEs) for p in self.test_set.data])
-        # begin mgd_test
-
-        test_run = config.test_run
-        test_parallel_mode = config.test_parallel_mode
-        seed_list = list(range(1, test_run + 1))
-
-        if test_parallel_mode == 'Full':
-            testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent_from), PBO_Env(copy.deepcopy(p), copy.deepcopy(l_optimizer_cp[0])), seed) for p in test_set.data for seed in seed_list]
-            testunit_list += [MetaBBO_TestUnit(copy.deepcopy(agent_to), PBO_Env(copy.deepcopy(p), copy.deepcopy(l_optimizer_cp[1])), seed) for p in test_set.data for seed in seed_list]
-
-            MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray', num_gpus=num_gpus)
-            meta_test_data = MetaBBO_test.rollout()
-            self.record_test_data(meta_test_data)
-            self.meta_data_results = store_meta_data(mgd_test_log_dir, self.meta_data_results)
-
-        elif test_parallel_mode == 'Baseline_Problem':
-            pbar = tqdm(total = len(seed_list), desc = "Baseline_Problem Testing")
-            for seed in seed_list:
-                testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent_from), PBO_Env(copy.deepcopy(p), copy.deepcopy(l_optimizer_cp[0])), seed) for p in test_set.data]
-                testunit_list += [MetaBBO_TestUnit(copy.deepcopy(agent_to), PBO_Env(copy.deepcopy(p), copy.deepcopy(l_optimizer_cp[1])), seed) for p in test_set.data]
-                MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray', num_gpus=num_gpus)
-                meta_test_data = MetaBBO_test.rollout()
-                self.record_test_data(meta_test_data)
-                self.meta_data_results = store_meta_data(mgd_test_log_dir, self.meta_data_results)
-                pbar.update()
-            pbar.close()
-
-        elif test_parallel_mode == 'Problem_Testrun':
-            pbar_len = 2
-            pbar = tqdm(total = pbar_len, desc = "Problem_Testrun Testing")
-            pbar.set_description(f"Problem_Testrun Testing from {agent_from.__str__()} to {agent_to.__str__()}")
-            testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent_from), PBO_Env(copy.deepcopy(p), copy.deepcopy(l_optimizer_cp[0])), seed)
-                             for p in self.test_set.data
-                             for seed in seed_list]
-            MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray', num_gpus=num_gpus)
-            meta_test_data = MetaBBO_test.rollout()
-            self.record_test_data(meta_test_data)
-            self.meta_data_results = store_meta_data(mgd_test_log_dir, self.meta_data_results)
-            pbar.update()
-
-            testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent_to), PBO_Env(copy.deepcopy(p), copy.deepcopy(l_optimizer_cp[1])), seed)
-                             for p in self.test_set.data
-                             for seed in seed_list]
-            MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray', num_gpus=num_gpus)
-            meta_test_data = MetaBBO_test.rollout()
-            self.record_test_data(meta_test_data)
-            self.meta_data_results = store_meta_data(mgd_test_log_dir, self.meta_data_results)
-            pbar.update()
-            pbar.close()
-
-        elif test_parallel_mode == 'Batch':
-            pbar_len = 2 * np.ceil(test_set.N / config.test_batch_size) * test_run
-            pbar = tqdm(total = pbar_len, desc = "Batch Testing")
-            for ip, problem in enumerate(test_set):
-                for i, seed in enumerate(seed_list):
-                    pbar.set_description_str(f"Batch Testing From Agent {agent_from.__str__()} with Problem Batch {ip}, Run {i}")
-                    testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent_from), PBO_Env(copy.deepcopy(p), copy.deepcopy(l_optimizer_cp[0])), seed) for p in problem]
-                    MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray', num_gpus=num_gpus)
-                    meta_test_data = MetaBBO_test.rollout()
-                    self.record_test_data(meta_test_data)
-                    pbar.update()
-                self.meta_data_results = store_meta_data(mgd_test_log_dir, self.meta_data_results)
-            for ip, problem in enumerate(test_set):
-                for i, seed in enumerate(seed_list):
-                    pbar.set_description_str(f"Batch Testing To Agent {agent_to.__str__()} with Problem Batch {ip}, Run {i}")
-                    testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent_to), PBO_Env(copy.deepcopy(p), copy.deepcopy(l_optimizer_cp[1])), seed) for p in problem]
-                    MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray', num_gpus=num_gpus)
-                    meta_test_data = MetaBBO_test.rollout()
-                    self.record_test_data(meta_test_data)
-                    pbar.update()
-                self.meta_data_results = store_meta_data(mgd_test_log_dir, self.meta_data_results)
-            pbar.close()
-
-        elif test_parallel_mode == 'Serial':
-            pbar_len = 2 * test_set.N * self.config.test_run
-            pbar = tqdm(total = pbar_len, desc = "Serial Testing")
-            for ip, problem in enumerate(test_set.data):
-                for i, seed in enumerate(seed_list):
-                    pbar.set_description_str(f"Batch Testing From Agent {agent_from.__str__()} with Problem Batch {ip}, Run {i}")
-                    env = PBO_Env(copy.deepcopy(problem), copy.deepcopy(l_optimizer_cp[0]))
-
-                    torch.manual_seed(seed)
-                    torch.cuda.manual_seed(seed)
-                    np.random.seed(seed)
-                    torch.backends.cudnn.deterministic = True
-                    torch.backends.cudnn.benchmark = False
-
-                    torch.set_default_dtype(torch.float64)
-                    tmp_agent = copy.deepcopy(agent_from)
-
-                    start_time = time.perf_counter()
-                    res = tmp_agent.rollout_episode(env, seed, {})
-                    end_time = time.perf_counter()
-                    res['T1'] = env.problem.T1
-                    res['T2'] = (end_time - start_time) * 1000
-                    agent_name = l_optimizer_cp[0].test_name
-                    res['agent_name'] = agent_name
-                    res['problem_name'] = problem.__str__()
-                    meta_test_data = [res]
-                    self.record_test_data(meta_test_data)
-                    pbar.update()
-                self.meta_data_results = store_meta_data(mgd_test_log_dir, self.meta_data_results)
-            for ip, problem in enumerate(test_set.data):
-                for i, seed in enumerate(seed_list):
-                    pbar.set_description_str(f"Batch Testing TO Agent {agent_to.__str__()} with Problem Batch {ip}, Run {i}")
-                    env = PBO_Env(copy.deepcopy(problem), copy.deepcopy(l_optimizer_cp[1]))
-
-                    torch.manual_seed(seed)
-                    torch.cuda.manual_seed(seed)
-                    np.random.seed(seed)
-                    torch.backends.cudnn.deterministic = True
-                    torch.backends.cudnn.benchmark = False
-
-                    torch.set_default_dtype(torch.float64)
-                    tmp_agent = copy.deepcopy(agent_to)
-
-                    start_time = time.perf_counter()
-                    res = tmp_agent.rollout_episode(env, seed, {})
-                    end_time = time.perf_counter()
-                    res['T1'] = env.problem.T1
-                    res['T2'] = (end_time - start_time) * 1000
-                    agent_name = l_optimizer_cp[1].test_name
-                    res['agent_name'] = agent_name
-                    res['problem_name'] = problem.__str__()
-                    meta_test_data = [res]
-                    self.record_test_data(meta_test_data)
-                    pbar.update()
-                self.meta_data_results = store_meta_data(mgd_test_log_dir, self.meta_data_results)
-
-        with open(mgd_test_log_dir + '/mgd_test_results.pkl', 'wb') as f:
-            pickle.dump(self.test_results, f, -1)
-
-    def mte_test(self, agent: str, pre_train_problem: str, pre_train_difficulty: str, pre_train_data_path: str, scratch_data_path: str, pdf_fig: bool = True):
+    @ staticmethod
+    def mte_test(config, agent: str, pre_train_problem: str, pre_train_difficulty: str, pre_train_data_path: str, scratch_data_path: str, pdf_fig: bool = True):
         """
         # Introduction
         Evaluates and visualizes the Model Transfer Efficiency (MTE) between a pre-trained agent and a scratch agent on a transfer learning task. The method loads experiment results, processes performance data, computes MTE, and generates a comparative plot of average returns over learning steps.
@@ -1067,11 +1093,12 @@ class Tester(object):
             pre_train_data = pickle.load(f)
         with open(scratch_data_path, 'rb') as f:
             scratch_data = pickle.load(f)
-        
+
+        pre_train_steps = pre_train_data['steps']
+
         fig_type = 'pdf' if pdf_fig else 'png'
-        config = self.config
-        
-        mte_test_log_dir = f"{self.mte_test_log_dir}/{agent}"
+
+        mte_test_log_dir = f"{config.mte_test_log_dir}/{agent}"
         transferred_problem = config.test_problem
         transferred_difficulty = config.test_difficulty
         print(f'start MTE_test: {config.run_time}, agent {agent} from {pre_train_difficulty}_{pre_train_problem} to {transferred_difficulty}_{transferred_problem}')
@@ -1085,9 +1112,7 @@ class Tester(object):
         # scratch_file = scratch_rollout['dir']
 
         # preprocess data for agent
-        def preprocess(file):
-            with open(file, 'rb') as f:
-                data = pickle.load(f)
+        def preprocess(data):
             # aggregate all problem's data together
             returns = data['return']
             results = []
@@ -1106,7 +1131,7 @@ class Tester(object):
         x = np.arange(min(len(pre_train_mean), len(scratch_mean)))
         idx = len(x)
         smooth = 1
-        smooth_pre_train_mean = np.zeros(len(pre_train_data))
+        smooth_pre_train_mean = np.zeros(len(pre_train_mean))
         a = smooth_pre_train_mean[0] = pre_train_mean[0]
         norm = smooth + 1
         for i in range(1, len(pre_train_mean)):
@@ -1144,17 +1169,17 @@ class Tester(object):
             t = 1
         MTE = 1 - t / T
 
-        print(f'MTE({self.name_translate(pre_train_problem)}_{pre_train_difficulty}, {self.name_translate(transferred_problem)}_{transferred_difficulty}) of {agent}: '
+        print(f'MTE({Tester.name_translate(pre_train_problem)}_{pre_train_difficulty}, {Tester.name_translate(transferred_problem)}_{transferred_difficulty}) of {agent}: '
             f'{MTE}')
 
         ax = plt.gca()
         ax.xaxis.get_offset_text().set_fontsize(45)
-        plt.xticks(fontsize=45, )
+        plt.xticks(fontsize=45, ticks = np.arange(idx)[::2], labels = pre_train_steps[::2])
         plt.yticks(fontsize=45)
         plt.legend(loc=0, fontsize=60)
         plt.xlabel('Learning Steps', fontsize=55)
         plt.ylabel('Avg Return', fontsize=55)
-        plt.title(f'Fine-tuning ({self.name_translate(pre_train_problem)} $\\rightarrow$ {self.name_translate(transferred_problem)})',
+        plt.title(f'Fine-tuning ({Tester.name_translate(pre_train_problem)} $\\rightarrow$ {Tester.name_translate(transferred_problem)})',
                 fontsize=60)
         plt.tight_layout()
         plt.grid()
@@ -1164,148 +1189,148 @@ class Tester(object):
             os.makedirs(mte_test_log_dir)
         plt.savefig(f'{mte_test_log_dir}/MTE_{pre_train_difficulty}_{pre_train_problem}_to_{transferred_difficulty}_{transferred_problem}.{fig_type}', bbox_inches='tight')
 
+    @ staticmethod
+    def rollout_batch(config, rollout_dir, rollout_opt, rollout_datasets, checkpoints = None, log = True):
+        """
+        todo:重写注释
+        # Introduction
+        Executes a batch rollout of agents on a test set of problems using various parallelization strategies. The function loads agent checkpoints, sets up environments, and evaluates agent performance across multiple seeds and problems, storing the results for further analysis.
+        # Args:
+        - config (object): Configuration object containing all necessary parameters for experiment.For details you can visit config.py.
+        # Returns:
+        - None: The function saves the rollout results and metadata to disk but does not return any value.
+        # Raises:
+        - KeyError: If the specified agent key is missing in the `model.json` file.
+        - NotImplementedError: If the specified parallelization mode in `config.test_parallel_mode` is not supported.
+        """
+        print(f'start rollout: {config.run_time}_{config.test_problem}_{config.test_difficulty}')
 
-def rollout_batch(config, rollout_dir, rollout_opt, rollout_datasets, checkpoints = None, log = True):
-    """
-    todo:重写注释
-    # Introduction
-    Executes a batch rollout of agents on a test set of problems using various parallelization strategies. The function loads agent checkpoints, sets up environments, and evaluates agent performance across multiple seeds and problems, storing the results for further analysis.
-    # Args:
-    - config (object): Configuration object containing all necessary parameters for experiment.For details you can visit config.py.
-    # Returns:
-    - None: The function saves the rollout results and metadata to disk but does not return any value.
-    # Raises:
-    - KeyError: If the specified agent key is missing in the `model.json` file.
-    - NotImplementedError: If the specified parallelization mode in `config.test_parallel_mode` is not supported.
-    """
-    print(f'start rollout: {config.run_time}_{config.test_problem}_{config.test_difficulty}')
+        rollout_log_dir = f"{config.rollout_log_dir}_{config.test_problem}_{config.test_difficulty}"
 
-    rollout_log_dir = f"{config.rollout_log_dir}_{config.test_problem}_{config.test_difficulty}"
+        num_gpus = 0 if config.device == 'cpu' else 1
+        train_set, test_set = rollout_datasets
 
-    num_gpus = 0 if config.device == 'cpu' else 1
-    train_set, test_set = rollout_datasets
+        test_parallel_mode = config.test_parallel_mode
 
-    test_parallel_mode = config.test_parallel_mode
+        agents = []
+        optimizer_for_rollout = []
 
-    agents = []
-    optimizer_for_rollout = []
+        l_optimizer = copy.deepcopy(rollout_opt)
+        upper_dir = rollout_dir
+        if not os.path.isdir(upper_dir):  # path to .pkl files
+            upper_dir = os.path.join(*tuple(str.split(upper_dir, '/')[:-1]))
 
-    l_optimizer = copy.deepcopy(rollout_opt)
-    upper_dir = rollout_dir
-    if not os.path.isdir(upper_dir):  # path to .pkl files
-        upper_dir = os.path.join(*tuple(str.split(upper_dir, '/')[:-1]))
+        if checkpoints is None:
+            epoch_list = [f for f in os.listdir(upper_dir) if f.endswith('.pkl')]
+            checkpoints = np.arange(len(epoch_list))
+        n_checkpoint = len(checkpoints)
 
-    if checkpoints is None:
-        epoch_list = [f for f in os.listdir(upper_dir) if f.endswith('.pkl')]
-        checkpoints = np.arange(len(epoch_list))
-    n_checkpoint = len(checkpoints)
+        # get agent
+        # learning_step
+        steps = []
+        agent_name = None
+        for agent_id in checkpoints:
+            with open(os.path.join(upper_dir, f'checkpoint-{agent_id}.pkl'), 'rb') as f:
+                agent = pickle.load(f)
+                agent_name = agent.__str__()
+                steps.append(agent.get_step())
+                agents.append(agent)
+                opt = copy.deepcopy(l_optimizer)
+                setattr(opt, 'test_name', agent_name + f'-{agent_id}')
+                optimizer_for_rollout.append(opt)
 
-    # get agent
-    # learning_step
-    steps = []
-    agent_name = None
-    for agent_id in checkpoints:
-        with open(os.path.join(upper_dir, f'checkpoint-{agent_id}.pkl'), 'rb') as f:
-            agent = pickle.load(f)
-            agent_name = agent.__str__()
-            steps.append(agent.get_step())
-            agents.append(agent)
-            opt = copy.deepcopy(l_optimizer)
-            setattr(opt, 'test_name', agent_name + f'-{agent_id}')
-            optimizer_for_rollout.append(opt)
+        agent_for_rollout = agent_name
+        rollout_results = {'cost': {},
+                           'return': {},
+                           }
+        meta_data_results = {}
+        for key in rollout_results.keys():
+            if key not in rollout_results.keys():
+                rollout_results[key] = {}
+            for problem in test_set.data:
+                rollout_results[key][problem.__str__()] = {}
+                meta_data_results[problem.__str__()] = {}
+                for agent_id in checkpoints:
+                    rollout_results[key][problem.__str__()][agent_name + f'-{agent_id}'] = []  # 51 np.arrays
+                    meta_data_results[problem.__str__()][agent_name + f'-{agent_id}'] = []
 
-    agent_for_rollout = agent_name
-    rollout_results = {'cost': {},
-                       'return': {},
-                       }
-    meta_data_results = {}
-    for key in rollout_results.keys():
-        if key not in rollout_results.keys():
-            rollout_results[key] = {}
-        for problem in test_set.data:
-            rollout_results[key][problem.__str__()] = {}
-            meta_data_results[problem.__str__()] = {}
-            for agent_id in checkpoints:
-                rollout_results[key][problem.__str__()][agent_name + f'-{agent_id}'] = []  # 51 np.arrays
-                meta_data_results[problem.__str__()][agent_name + f'-{agent_id}'] = []
+        rollout_results['config'] = copy.deepcopy(config)
 
-    rollout_results['config'] = copy.deepcopy(config)
+        pbar_len = int(np.ceil(test_set.N * n_checkpoint / test_set.batch_size))
+        seed_list = list(range(1, config.rollout_run + 1))
 
-    pbar_len = int(np.ceil(test_set.N * n_checkpoint / test_set.batch_size))
-    seed_list = list(range(1, config.rollout_run + 1))
-
-    if test_parallel_mode == 'Full':
-        testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent), PBO_Env(copy.deepcopy(p), copy.deepcopy(optimizer)), seed) for (ckp, agent, optimizer) in zip(checkpoints, agents, optimizer_for_rollout)
-                                                                                                                            for p in test_set.data
-                                                                                                                            for seed in seed_list]
-        MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray', num_gpus=num_gpus)
-        meta_test_data = MetaBBO_test.rollout()
-        rollout_results, meta_data_results = record_data(meta_test_data, test_set, agent_for_rollout, checkpoints, rollout_results, meta_data_results, config)
-        meta_data_results = store_meta_data(rollout_log_dir, meta_data_results)
-    elif test_parallel_mode == 'Baseline_Problem':
-        pbar = tqdm(total=len(seed_list), desc="Baseline_Problem Rollouting")
-        for seed in seed_list:
+        if test_parallel_mode == 'Full':
             testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent), PBO_Env(copy.deepcopy(p), copy.deepcopy(optimizer)), seed) for (ckp, agent, optimizer) in zip(checkpoints, agents, optimizer_for_rollout)
-                                                                                                                            for p in test_set.data
-                                                                                                                            ]
+                                                                                                                                for p in test_set.data
+                                                                                                                                for seed in seed_list]
             MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray', num_gpus=num_gpus)
             meta_test_data = MetaBBO_test.rollout()
             rollout_results, meta_data_results = record_data(meta_test_data, test_set, agent_for_rollout, checkpoints, rollout_results, meta_data_results, config)
             meta_data_results = store_meta_data(rollout_log_dir, meta_data_results)
-            pbar.update()
-        pbar.close()
+        elif test_parallel_mode == 'Baseline_Problem':
+            pbar = tqdm(total=len(seed_list), desc="Baseline_Problem Rollouting")
+            for seed in seed_list:
+                testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent), PBO_Env(copy.deepcopy(p), copy.deepcopy(optimizer)), seed) for (ckp, agent, optimizer) in zip(checkpoints, agents, optimizer_for_rollout)
+                                                                                                                                for p in test_set.data
+                                                                                                                                ]
+                MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray', num_gpus=num_gpus)
+                meta_test_data = MetaBBO_test.rollout()
+                rollout_results, meta_data_results = record_data(meta_test_data, test_set, agent_for_rollout, checkpoints, rollout_results, meta_data_results, config)
+                meta_data_results = store_meta_data(rollout_log_dir, meta_data_results)
+                pbar.update()
+            pbar.close()
 
-    elif test_parallel_mode == 'Problem_Testrun':
-        pbar = tqdm(total=len(agents), desc="Problem_Testrun Rollouting")
-        for (ckp, agent, optimizer) in zip(checkpoints, agents, optimizer_for_rollout):
-            pbar.set_description(f"Problem_Testrun Rollouting Checkpoint {ckp}")
-            testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent), PBO_Env(copy.deepcopy(p), copy.deepcopy(optimizer)), seed)
-                                                                                                                            for p in test_set.data
-                                                                                                                            for seed in seed_list]
-            MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray', num_gpus=num_gpus)
-            meta_test_data = MetaBBO_test.rollout()
-            rollout_results, meta_data_results = record_data(meta_test_data, test_set, agent_for_rollout, checkpoints, rollout_results, meta_data_results, config)
-            meta_data_results = store_meta_data(rollout_log_dir, meta_data_results)
-            pbar.update()
-        pbar.close()
+        elif test_parallel_mode == 'Problem_Testrun':
+            pbar = tqdm(total=len(agents), desc="Problem_Testrun Rollouting")
+            for (ckp, agent, optimizer) in zip(checkpoints, agents, optimizer_for_rollout):
+                pbar.set_description(f"Problem_Testrun Rollouting Checkpoint {ckp}")
+                testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent), PBO_Env(copy.deepcopy(p), copy.deepcopy(optimizer)), seed)
+                                                                                                                                for p in test_set.data
+                                                                                                                                for seed in seed_list]
+                MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray', num_gpus=num_gpus)
+                meta_test_data = MetaBBO_test.rollout()
+                rollout_results, meta_data_results = record_data(meta_test_data, test_set, agent_for_rollout, checkpoints, rollout_results, meta_data_results, config)
+                meta_data_results = store_meta_data(rollout_log_dir, meta_data_results)
+                pbar.update()
+            pbar.close()
 
-    elif test_parallel_mode == 'Batch':
-        pbar_len = len(agents)  * np.ceil(test_set.N / config.test_batch_size) * config.rollout_run
-        pbar = tqdm(total=pbar_len, desc="Batch Rollouting")
-        for (ckp, agent, optimizer) in zip(checkpoints, agents, optimizer_for_rollout):
-            for ip, problem in enumerate(test_set):
-                for i, seed in enumerate(seed_list):
-                    pbar.set_description_str(f"Batch Rollouting Checkpoint {ckp} with Problem Batch {ip}, Run {i}")
-                    testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent), PBO_Env(copy.deepcopy(p), copy.deepcopy(optimizer)), seed) for p in problem]
-                    MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray', num_gpus=num_gpus)
-                    meta_test_data = MetaBBO_test.rollout()
-                    rollout_results, meta_data_results = record_data(meta_test_data, test_set, agent_for_rollout, checkpoints, rollout_results, meta_data_results, config)
-                    pbar.update()
-            meta_data_results = store_meta_data(rollout_log_dir, meta_data_results)
-        pbar.close()
-    else:
-        raise NotImplementedError
-
-    rollout_results['steps'] = steps
-    rollout_results['agent_for_rollout'] = agent_name
-
-    if not os.path.exists(rollout_log_dir):
-        os.makedirs(rollout_log_dir)
-    with open(rollout_log_dir + '/rollout.pkl', 'wb') as f:
-        pickle.dump(rollout_results, f, -1)
-    with open(rollout_log_dir + '/config.pkl', 'wb') as f:
-        pickle.dump(config, f, -1)
-
-    if log:
-        if 'mmo' in config.test_problem:
-            logger = MMO_Logger(config)
-        elif 'mto' in config.test_problem or 'wcci2020' in config.test_problem:
-            logger = MTO_Logger(config)
-        elif 'moo' in config.test_problem:
-            logger = MOO_Logger(config)
+        elif test_parallel_mode == 'Batch':
+            pbar_len = len(agents)  * np.ceil(test_set.N / config.test_batch_size) * config.rollout_run
+            pbar = tqdm(total=pbar_len, desc="Batch Rollouting")
+            for (ckp, agent, optimizer) in zip(checkpoints, agents, optimizer_for_rollout):
+                for ip, problem in enumerate(test_set):
+                    for i, seed in enumerate(seed_list):
+                        pbar.set_description_str(f"Batch Rollouting Checkpoint {ckp} with Problem Batch {ip}, Run {i}")
+                        testunit_list = [MetaBBO_TestUnit(copy.deepcopy(agent), PBO_Env(copy.deepcopy(p), copy.deepcopy(optimizer)), seed) for p in problem]
+                        MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray', num_gpus=num_gpus)
+                        meta_test_data = MetaBBO_test.rollout()
+                        rollout_results, meta_data_results = record_data(meta_test_data, test_set, agent_for_rollout, checkpoints, rollout_results, meta_data_results, config)
+                        pbar.update()
+                meta_data_results = store_meta_data(rollout_log_dir, meta_data_results)
+            pbar.close()
         else:
-            logger = Basic_Logger(config)
-        logger.post_processing_rollout_statics(rollout_log_dir + '/')
+            raise NotImplementedError
+
+        rollout_results['steps'] = steps
+        rollout_results['agent_for_rollout'] = agent_name
+
+        if not os.path.exists(rollout_log_dir):
+            os.makedirs(rollout_log_dir)
+        with open(rollout_log_dir + '/rollout.pkl', 'wb') as f:
+            pickle.dump(rollout_results, f, -1)
+        with open(rollout_log_dir + '/config.pkl', 'wb') as f:
+            pickle.dump(config, f, -1)
+
+        if log:
+            if 'mmo' in config.test_problem:
+                logger = MMO_Logger(config)
+            elif 'mto' in config.test_problem or 'wcci2020' in config.test_problem:
+                logger = MTO_Logger(config)
+            elif 'moo' in config.test_problem:
+                logger = MOO_Logger(config)
+            else:
+                logger = Basic_Logger(config)
+            logger.post_processing_rollout_statics(rollout_log_dir + '/')
 
 
 

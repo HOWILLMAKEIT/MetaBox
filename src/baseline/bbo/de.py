@@ -12,8 +12,10 @@ class DE(Basic_Optimizer):
         config.Cr = 0.5
 
         self.__config = config
-        self.__toolbox = base.Toolbox()
-        self.__creator = creator
+
+        self.__toolbox = None
+        self.__creator = None
+
         self.log_interval = config.log_interval
         self.full_meta_data = config.full_meta_data
         
@@ -26,6 +28,10 @@ class DE(Basic_Optimizer):
         self.rng_cpu = None
         self.rng = None
         np.random.seed(self.rng_seed)
+
+        if self.__toolbox is None:
+            self.__toolbox = base.Toolbox()
+            self.__creator = creator
 
         self.__creator.create("Fitnessmin", base.Fitness, weights=(-1.0,))
         self.__creator.create("Individual", list, fitness=creator.Fitnessmin)
