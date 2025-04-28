@@ -64,7 +64,6 @@ def DE_crossover(mutants, populations):
         print("ValueError occurred:", e)
         print('mutant_shape',mutants.shape)
 
-    #population_cnt, dim = mutants.shape
     for j in range(population_cnt):
         rand_pos = np.random.randint(low=0, high=dim)
         for k in range(dim):
@@ -179,7 +178,7 @@ class L2T_Optimizer(Learnable_Optimizer):
     def __init__(self, config):
         super().__init__(config)
         self.__config = config
-        # self.task_cnt = config.task_cnt
+
         if config.train_problem == 'wcci2020':
             self.task_cnt = 50
         if config.train_problem == 'cec2017mto':
@@ -188,6 +187,10 @@ class L2T_Optimizer(Learnable_Optimizer):
             self.task_cnt = 50
         if config.test_problem == 'cec2017mto':
             self.task_cnt = 2
+        if config.train_problem == 'augmented-wcci2020':
+            self.task_cnt = 10
+        if config.test_problem == 'augmented-wcci2020':
+            self.task_cnt = 10
         self.dim = config.dim = 50
         self.generation = 0
         self.pop_cnt = 50
@@ -407,8 +410,6 @@ class L2T_Optimizer(Learnable_Optimizer):
                     next_population[i][j] = self.parent_population[i][j]
 
             reward_kt = (float)(S_update-S_KT) / self.pop_cnt
-            reward_converge = (self.last_gen_best[i] - self.optimal_value[i]) / (self.begin_best[i] - self.optimal_value[i])
-            self.reward[i] = 1*reward_kt + 10*reward_converge
             self.Q_kt[i] = float(S_KT) / self.KT_count
 
             flag = 0
@@ -427,6 +428,10 @@ class L2T_Optimizer(Learnable_Optimizer):
 
             self.this_gen_best[i] = self.gbest[i]
             self.parent_population[i] = next_population[i]
+
+            reward_indicators = 1 if (self.this_gen_best[i] - self.optimal_value[i])<1e-8 else 0
+            reward_converge = (self.this_gen_best[i] - self.optimal_value[i]) / (self.begin_best[i] - self.optimal_value[i])
+            self.reward[i] = 1*reward_kt + 10*reward_converge + 250*reward_indicators
 
         parent_finesses_np = np.array(parent_finesses_list, dtype=np.float32)
         if self.__config.full_meta_data:

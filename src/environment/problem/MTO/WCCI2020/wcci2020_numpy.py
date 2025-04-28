@@ -160,6 +160,7 @@ class Schwefel(WCCI2020_Numpy_Problem):
         a = 4.209687462275036e+002
         b = 4.189828872724338e+002
         z += a
+        z = np.clip(z, a_min=self.lb, a_max=self.ub)
         g = z * np.sin(np.sqrt(np.abs(z)))
         return b * self.dim - np.sum(g,-1)
     

@@ -100,8 +100,11 @@ class L2T(PPO_Agent):
             self.task_cnt = 50
         if config.test_problem == 'cec2017mto':
             self.task_cnt = 2
-        # self.config.n_state = self.config.task_cnt * 7 + 1
-        # self.config.n_action = self.config.task_cnt * 3
+        if config.train_problem == 'augmented-wcci2020':
+            self.task_cnt = 10
+        if config.test_problem == 'augmented-wcci2020':
+            self.task_cnt = 10
+
         self.config.n_state = self.task_cnt * 7 + 1
         self.config.n_action = self.task_cnt * 3
         

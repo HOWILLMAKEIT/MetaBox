@@ -165,6 +165,7 @@ class Schwefel_Torch(WCCI2020_Torch_Problem):
         a = 4.209687462275036e+002
         b = 4.189828872724338e+002
         z += a
+        z = torch.clip(z, min=self.lb, max=self.ub)
         g = z * torch.sin(torch.sqrt(torch.abs(z)))
         return b * self.dim - torch.sum(g,-1)
     
