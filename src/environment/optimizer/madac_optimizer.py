@@ -57,13 +57,13 @@ class MADAC_Optimizer(Learnable_Optimizer):
         # problem related
         self.problem = problem
         self.n_obj = problem.n_obj
-        self.n_var = problem.n_var
+        self.n_var = problem.dim
         # polulation related
         self.weights = self.get_weights(self.n_obj)
         self.neighborhoods = self.get_neighborhoods()
         if self.population_size != len(self.weights):
             self.population_size = len(self.weights)
-        self.population = self.rng.uniform(low = problem.lb, high = problem.ub, size = (self.population_size, problem.n_var))
+        self.population = self.rng.uniform(low = problem.lb, high = problem.ub, size = (self.population_size, problem.dim))
         self.population_obj = problem.eval(self.population)
         # eval budget
         self.done = False
@@ -279,7 +279,7 @@ class MADAC_Optimizer(Learnable_Optimizer):
         
         obs_ = np.zeros(22)
         obs_[0] = 1 / self.problem.n_obj
-        obs_[1] = 1 / self.problem.n_var
+        obs_[1] = 1 / self.problem.dim
         obs_[2] = (self.moead_generation) / self.episode_limit
         obs_[3] = self.stag_count / self.stag_count_max
         obs_[4] = self.last_hv
@@ -1061,9 +1061,9 @@ class Operators:
     def DE1(self, problem, parents, step_size = 0.5, crossover_rate = 1.0):
         """arity = 3"""
         result = copy.deepcopy(parents[0])
-        jrand = self.rng.randint(problem.n_var)
+        jrand = self.rng.randint(problem.dim)
 
-        for j in range(problem.n_var):
+        for j in range(problem.dim):
             if self.rng.uniform() <= crossover_rate or j == jrand:
                 y = parents[0][j] + step_size * (parents[1][j] - parents[2][j])
                 y = np.clip(y, problem.lb[j], problem.ub[j])
@@ -1075,9 +1075,9 @@ class Operators:
     def DE2(self, problem, parents, step_size = 0.5, crossover_rate = 1.0):
         """arity = 5"""
         result = copy.deepcopy(parents[0])
-        jrand = self.rng.randint(problem.n_var)
+        jrand = self.rng.randint(problem.dim)
 
-        for j in range(problem.n_var):
+        for j in range(problem.dim):
             if self.rng.uniform() <= crossover_rate or j == jrand:
                 y = parents[0][j] + step_size * (parents[1][j] - parents[2][j]) + step_size * (parents[3][j] - parents[4][j])
                 y = np.clip(y, problem.lb[j], problem.ub[j])
@@ -1089,9 +1089,9 @@ class Operators:
     def DE3(self, problem, parents, step_size = 0.5, crossover_rate = 1.0):
         """arity = 6"""
         result = copy.deepcopy(parents[0])
-        jrand = self.rng.randint(problem.n_var)
+        jrand = self.rng.randint(problem.dim)
 
-        for j in range(problem.n_var):
+        for j in range(problem.dim):
             if self.rng.uniform() <= crossover_rate or j == jrand:
                 y = parents[0][j] + step_size * (parents[0][j] - parents[1][j]) \
                     + step_size * (parents[2][j] - parents[3][j]) \
@@ -1105,9 +1105,9 @@ class Operators:
     def DE4(self, problem, parents, step_size = 0.5, crossover_rate = 1.0):
         """arity = 4"""
         result = copy.deepcopy(parents[0])
-        jrand = self.rng.randint(problem.n_var)
+        jrand = self.rng.randint(problem.dim)
 
-        for j in range(problem.n_var):
+        for j in range(problem.dim):
             if self.rng.uniform() <= crossover_rate or j == jrand:
                 y = parents[0][j] + step_size * (parents[0][j] - parents[1][j]) + step_size * (parents[2][j] - parents[3][j])
                 y = np.clip(y, problem.lb[j], problem.ub[j])
