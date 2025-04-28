@@ -84,7 +84,7 @@ matplotlib.use('Agg')
 
 
 class Trainer(object):
-    def __init__(self, config, user_agent = None, user_optimizer = None, user_datasets = None):
+    def __init__(self, config, user_agent, user_optimizer, user_datasets):
         """
         Initializes the trainer with the given configuration.
         todo:重写注释
@@ -113,10 +113,7 @@ class Trainer(object):
         """
         self.config = config
         self.config.run_time = f"{self.config.run_time}_{self.config.train_problem}_{self.config.train_difficulty}"
-        if user_datasets is None:
-            self.train_set, self.test_set = construct_problem_set(config)
-        else:
-            self.train_set, self.test_set = user_datasets
+        self.train_set, self.test_set = user_datasets
 
         self.config.dim = max(self.train_set.maxdim, self.test_set.maxdim)
 
@@ -126,21 +123,9 @@ class Trainer(object):
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
 
-        if user_agent is None:
-            if self.config.resume_dir is None:
-                self.agent = eval(self.config.train_agent)(self.config)
-            else:
-                file_path = self.config.resume_dir + self.config.train_agent + '.pkl'
-                with open(file_path, 'rb') as f:
-                    self.agent = pickle.load(f)
-                self.agent.update_setting(self.config)
-        else:
-            self.agent = user_agent
+        self.agent = user_agent
 
-        if user_optimizer is None:
-            self.optimizer = eval(self.config.train_optimizer)(self.config)
-        else:
-            self.optimizer = user_optimizer
+        self.optimizer = user_optimizer
             
         if self.config.train_parallel_mode == 'subproc' and self.agent.__str__() in ['B2OPT', 'GLHF', 'Surr_RLDE', 'RNNOPT'] and self.config.device != 'cpu':
             warnings.warn("Subproc training parallel mode for MetaBBO optimizers using CUDA will lead to CUDA kernel errors, changed to dummy.", category=UserWarning)
@@ -248,7 +233,6 @@ class Trainer(object):
                     # set seed
                     seed_list = (epoch * epoch_seed + id_seed * (np.arange(bs) + bs * problem_id) + seed).tolist()
 
-                    # 这里前面已经判断好 train_mode，这里只需要根据 train_mode 构造env就行
                     if self.config.train_mode == "single":
                         env_list = [PBO_Env(copy.deepcopy(problem[0]), copy.deepcopy(self.optimizer)) for _ in range(bs)] # bs
                     elif self.config.train_mode == "multi":
