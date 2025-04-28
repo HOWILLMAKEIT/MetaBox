@@ -283,7 +283,8 @@ class VDN_Agent(Basic_Agent):
                         env,
                         seed = None,
                         required_info = {}):
-
+        if hasattr(self.config,required_info):
+            required_info = self.config.required_info
         with torch.no_grad():
             if seed is not None:
                 env.seed(seed)
@@ -306,7 +307,7 @@ class VDN_Agent(Basic_Agent):
                 env_metadata = env.get_env_attr('metadata')
                 results['metadata'] = env_metadata
             for key in required_info.keys():
-                results[key] = env.get_env_attr(env, required_info[key])
+                results[key] = env.get_env_attr(required_info[key])
             return results
 
     def rollout_batch_episode(self,
