@@ -35,7 +35,7 @@ class HPOB_Problem(Basic_Problem):
     - func(position): Returns the (possibly normalized) cost at the given position.
     """
     
-    def __init__(self,bst_surrogate,dim,y_min,y_max,lb,ub,normalized=False) -> None:
+    def __init__(self,bst_surrogate,dim,y_min,y_max,lb,ub,normalized=False,name=None) -> None:
         self.bst_surrogate=bst_surrogate
         self.y_min=y_min
         self.y_max=y_max
@@ -46,6 +46,7 @@ class HPOB_Problem(Basic_Problem):
         self.lb = lb
         self.ub = ub
         self.optimum = None
+        self.name = name
     def func(self,position):
         x_q = xgb.DMatrix(position.reshape(-1,self.dim))
         new_y = self.bst_surrogate.predict(x_q)
@@ -61,3 +62,6 @@ class HPOB_Problem(Basic_Problem):
             else:
                 return np.clip((y-self.y_min)/(self.y_max-self.y_min),0,1)
         return y
+
+    def __str__(self):
+        return self.name

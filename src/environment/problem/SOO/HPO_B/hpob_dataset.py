@@ -96,7 +96,7 @@ class HPOB_Dataset(Dataset):
                                                           surrogates_stats = surrogates_stats)
                         X = np.array(data[search_space_id][dataset_id]["X"])
                         dim = X.shape[1]
-                        p = HPOB_Problem(bst_surrogate = bst_model, dim = dim, y_min = y_min, y_max = y_max, lb = -upperbound, ub = upperbound, normalized = cost_normalize)
+                        p = HPOB_Problem(bst_surrogate = bst_model, dim = dim, y_min = y_min, y_max = y_max, lb = -upperbound, ub = upperbound, normalized = cost_normalize, name=str(search_space_id)+'-'+ str(dataset_id))
                         problems.append(p)
                         pbar.update()
                 pbar.close()
