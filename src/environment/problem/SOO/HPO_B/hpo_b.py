@@ -51,7 +51,6 @@ class HPOB_Problem(Basic_Problem):
         x_q = xgb.DMatrix(position.reshape(-1,self.dim))
         new_y = self.bst_surrogate.predict(x_q)
         cost=-self.normalize(new_y)
-        self.gbest=np.minimum(self.gbest,cost)
         self.collect_gbest.append(self.gbest)
         return cost
 
