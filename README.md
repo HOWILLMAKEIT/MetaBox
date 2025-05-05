@@ -34,6 +34,11 @@ pip install torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0 --index-url https
 pip install metaevobox
 ```
 ### Common Usage
+
+> [!Important]
+> The following is the code specific to Linux.
+> If you are using Windows, please add: ```if __name__ == "__main__":```
+
 #### Train a MetaBBO baseline
 create your_dir, then create a your_train.py file in your_dir, write following codes into your_train.py.
 ```python
