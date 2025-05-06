@@ -11,6 +11,47 @@ from cmaes import CMA
 from dill import loads, dumps
 
 class LGA(Basic_Agent):
+    """
+    # Introduction
+    **L**earned **G**enetic **A**lgorithm parametrizes selection and mutation rate adaptation as cross- and self-attention modules and use MetaBBO to evolve their parameters on a set of diverse optimization tasks.
+    # Original paper
+    "[**Discovering attention-based genetic algorithms via meta-black-box optimization**](https://dl.acm.org/doi/abs/10.1145/3583131.3590496)." Proceedings of the Genetic and Evolutionary Computation Conference. (2023).
+    # Official Implementation
+    [LGA](https://github.com/RobertTLange/evosax/blob/main/evosax/strategies/lga.py)
+    # Args:
+    - config (object): Configuration object containing agent and training parameters, such as device, save directories, and training intervals.
+    # Attributes:
+    - M (int): Population size for the optimizer.
+    - T (int): Number of steps to skip in each action.
+    - J (int): Number of evaluations per candidate.
+    - optimizer (CMA): CMA-ES optimizer instance.
+    - x_population (np.ndarray): Current population of candidate solutions.
+    - meta_performances (List[List[float]]): Performance history for each candidate.
+    - best_x (np.ndarray): Best candidate solution found so far.
+    - costs (Any): Placeholder for cost tracking.
+    - best_lga (int): Index of the best candidate in the population.
+    - gbest (float): Best fitness score achieved.
+    - learning_step (int): Number of learning steps completed.
+    - cur_checkpoint (int): Current checkpoint index for saving.
+    - task_step (int): Number of tasks (episodes) completed.
+    # Methods:
+    - __str__(): Returns the string identifier for the agent.
+    - get_step(): Returns the current learning step.
+    - optimizer_step(): Samples a new population from the optimizer.
+    - train_episode(...): Runs a training episode, evaluates the population, and updates the optimizer.
+    - rollout_episode(...): Evaluates the best candidate in a single environment.
+    - rollout_batch_episode(...): Evaluates the best candidate across multiple environments in parallel.
+    - update(): Updates the optimizer with new fitness scores and refreshes the population.
+    - log_to_tb_train(...): Logs training metrics and extra information to TensorBoard.
+    # Returns:
+    Methods return various outputs, such as training progress, evaluation results, and logging status. See individual method docstrings for details.
+    # Raises:
+    - Any exceptions raised by underlying environment, optimizer, or file I/O operations may propagate.
+    # Notes:
+    - This class assumes the existence of supporting classes and functions such as `Basic_Agent`, `CMA`, `ParallelEnv`, `save_class`, and appropriate environment interfaces.
+    - The agent is designed for meta-optimization tasks and may require adaptation for specific problem domains.
+    """
+    
     def __init__(self, config):
         super().__init__(config)
         self.config = config

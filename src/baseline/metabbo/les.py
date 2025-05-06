@@ -11,6 +11,43 @@ from typing import Optional, Union, Literal, List
 import math
 
 class LES(Basic_Agent):
+    """
+    # Introduction
+    **L**earned **E**volution **S**trategy (LES) is a novel self-attention-based evolution strategies parametrization, and discover effective update rules for ES via meta-learning.
+    # Original paper
+    "[**Discovering evolution strategies via meta-black-box optimization**](https://iclr.cc/virtual/2023/poster/11005)." The Eleventh International Conference on Learning Representations. (2023).
+    # Official Implementation
+    [LES](https://github.com/RobertTLange/evosax/blob/main/evosax/strategies/les.py)
+    # Args:
+    - config (object): Configuration object containing agent and training parameters.
+    # Attributes:
+    - meta_pop_size (int): Size of the meta-population for CMA-ES.
+    - skip_step (int): Number of steps to skip during evaluation.
+    - optimizer (CMA): CMA-ES optimizer instance.
+    - x_population (np.ndarray): Current population of latent vectors.
+    - meta_performances (list): Performance records for each member of the population.
+    - best_x (np.ndarray): Best latent vector found so far.
+    - costs (np.ndarray): Normalized costs for the population.
+    - best_les (int): Index of the best latent vector.
+    - gbest (float): Best cost found so far.
+    - learning_step (int): Current learning step.
+    - cur_checkpoint (int): Current checkpoint index.
+    # Methods:
+    - __str__(): Returns the string representation of the agent.
+    - get_step(): Returns the current learning step.
+    - update_setting(config): Updates agent settings and resets learning step.
+    - optimizer_step(): Samples a new population from the optimizer.
+    - train_episode(...): Evaluates the current population on the environment(s) and updates performance records.
+    - train_epoch(): Aggregates meta-performances, updates optimizer, and tracks the best solution.
+    - rollout_episode(env, seed, required_info): Evaluates the best solution on a single environment.
+    - rollout_batch_episode(envs, seeds, para_mode, compute_resource, required_info): Evaluates the best solution on a batch of environments.
+    - log_to_tb_train(tb_logger, mini_step, gbest, extra_info): Logs training metrics and extra information to TensorBoard.
+    # Returns:
+    Varies by method. Core methods return training status, performance metrics, or evaluation results.
+    # Raises:
+    - Depends on the underlying environment, optimizer, and configuration. May raise exceptions related to invalid configurations, environment errors, or optimizer failures.
+    """
+    
     def __init__(self, config):
         super().__init__(config)
         self.config = config

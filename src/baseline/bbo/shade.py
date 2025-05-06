@@ -19,6 +19,32 @@ import time
 # please refer:https://pypop.readthedocs.io/en/latest/applications.html
 # this .py display pypop7-SHADE
 class SHADE(Basic_Optimizer):
+    """
+    # Introduction
+    A parameter adaptation technique for DE which uses a historical memory of successful control parameter settings to guide the selection of future control parameter values.
+    # Original paper
+    "[**Success-history based parameter adaptation for differential evolution**](https://ieeexplore.ieee.org/abstract/document/6557555/)." 2013 IEEE Congress on Evolutionary Computation. IEEE, 2013.
+    # Official Implementation
+    None
+    # Args:
+    - config (object): Configuration object containing optimizer parameters such as population size (`NP`), logging intervals, maximum function evaluations (`maxFEs`), and metadata options.
+    # Methods:
+    - __str__(): Returns the name of the optimizer ("SHADE").
+    - run_episode(problem): Executes one optimization run (episode) on the given problem instance.
+        ## Args:
+        - problem (object): An optimization problem instance with attributes such as `dim` (dimension), `lb` (lower bounds), `ub` (upper bounds), `eval` (evaluation function), and optionally `optimum`.
+        ## Returns:
+        - dict: A dictionary containing:
+            - 'cost' (list): Best-so-far cost values logged at specified intervals.
+            - 'fes' (int): Total number of function evaluations performed.
+            - 'metadata' (dict, optional): If `full_meta_data` is enabled, includes the population (`X`) and cost (`Cost`) history.
+    # Raises:
+    - Any exceptions raised by the underlying problem's `eval` method or the `PYPOP7SHADE` optimizer.
+    # Notes:
+    - The optimizer logs the best cost at intervals defined by `log_interval` and ensures the result list has length `n_logpoint + 1`.
+    - If `full_meta_data` is enabled, detailed population and cost history are stored for further analysis.
+    """
+    
     def __init__(self, config):
         super().__init__(config)
         config.NP = 50

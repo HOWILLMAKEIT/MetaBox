@@ -169,6 +169,58 @@ class Critic(nn.Module):
         return baseline_value.squeeze()
 
 class GLEET(PPO_Agent):
+    """
+    # Introduction
+    GLEET is a **G**eneralizable **L**earning-based **E**xploration-**E**xploitation **T**radeoff framework, which could explicitly control the exploration-exploitation tradeoff hyper-parameters of a given EC algorithm to solve a class of problems via reinforcement learning. 
+    # Original paper
+    "[**Auto-configuring Exploration-Exploitation Tradeoff in Evolutionary Computation via Deep Reinforcement Learning**](https://dl.acm.org/doi/abs/10.1145/3638529.3653996)." Proceedings of the Genetic and Evolutionary Computation Conference (2024).
+    # Official Implementation
+    [GLEET](https://github.com/GMC-DRL/GLEET)
+    # Args:
+    - config (object): Configuration object containing hyperparameters and settings for the agent, neural networks, and training process.
+    # Methods:
+    - __str__():
+        Returns the string representation of the agent.
+    - train_episode(envs, seeds, para_mode='dummy', compute_resource={}, tb_logger=None, required_info={}):
+        Trains the agent for one episode using parallel environments and PPO updates.
+        ## Args:
+        - envs: List of environments to train on.
+        - seeds (Optional[int, List[int], np.ndarray]): Random seeds for environment reproducibility.
+        - para_mode (str): Parallelization mode ('dummy', 'subproc', 'ray', 'ray-subproc').
+        - compute_resource (dict): Resource allocation for CPUs/GPUs.
+        - tb_logger: TensorBoard logger for tracking training metrics.
+        - required_info (dict): Additional environment attributes to collect.
+        ## Returns:
+        - Tuple[bool, dict]: Training end status and information dictionary with returns, loss, and other metrics.
+    - rollout_batch_episode(envs, seeds=None, para_mode='dummy', compute_resource={}, required_info={}):
+        Executes a batch rollout in parallel environments without updating the agent.
+        ## Args:
+        - envs: List of environments for rollout.
+        - seeds: Random seeds for reproducibility.
+        - para_mode (str): Parallelization mode.
+        - compute_resource (dict): Resource allocation.
+        - required_info (dict): Additional environment attributes to collect.
+        ## Returns:
+        - dict: Results including cost, function evaluations, returns, and any required info.
+    - rollout_episode(env, seed=None, required_info={}):
+        Executes a single rollout in one environment without updating the agent.
+        ## Args:
+        - env: The environment to interact with.
+        - seed: Random seed for reproducibility.
+        - required_info (dict): Additional environment attributes to collect.
+        ## Returns:
+        - dict: Results including cost, function evaluations, returns, and optional metadata.
+    # Attributes:
+    - config: Configuration object with all agent and network hyperparameters.
+    - actor: The actor neural network for policy approximation.
+    - critic: The critic neural network for value estimation.
+    - optimizer: Optimizer for training the networks.
+    - learning_time: Counter for training steps.
+    - device: Device used for computation ('cpu' or 'cuda').
+    # Raises:
+    - Any exceptions raised by underlying neural network operations, environment interactions, or resource allocation.
+    """
+    
     def __init__(self, config):
         self.config = config
 

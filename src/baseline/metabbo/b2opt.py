@@ -141,6 +141,60 @@ class Policy(BaseModel):
 
 
 class B2OPT(Basic_Agent):
+    """
+    # Introduction
+    B2Opt: Learning to Optimize Black-box Optimization with Little Budget.
+    # Original paper
+    "[**B2Opt: Learning to Optimize Black-box Optimization with Little Budget**](https://arxiv.org/abs/2304.11787)". arXiv preprint arXiv:2304.11787, (2023).
+    # Official Implementation
+    [B2Opt](https://github.com/ninja-wm/B2Opt)
+    # Args:
+    - config (object): Configuration object containing hyperparameters and settings for the agent, such as optimizer type, learning rate, device, save directory, and environment dimensions.
+    # Methods:
+    - __str__():
+        Returns the string representation of the agent.
+    - train_episode(envs, seeds, para_mode='dummy', compute_resource={}, tb_logger=None, required_info={}):
+        Trains the agent for one episode across parallel environments.
+        - envs: List of environments.
+        - seeds (Optional[int, List[int], np.ndarray]): Random seeds for reproducibility.
+        - para_mode (str): Parallelization mode ('dummy', 'subproc', 'ray', 'ray-subproc').
+        - compute_resource (dict): Resource allocation for CPUs/GPUs.
+        - tb_logger: TensorBoard logger for training metrics.
+        - required_info (dict): Additional environment attributes to log.
+        - Returns: (is_train_ended (bool), return_info (dict))
+    - rollout_episode(env, seed=None, required_info={}):
+        Evaluates the agent in a single environment without training.
+        - env: Environment instance.
+        - seed (Optional[int]): Random seed.
+        - required_info (dict): Additional environment attributes to log.
+        - Returns: results (dict) with evaluation metrics.
+    - rollout_batch_episode(envs, seeds=None, para_mode='dummy', compute_resource={}, required_info={}):
+        Evaluates the agent across a batch of environments.
+        - envs: List of environments.
+        - seeds (Optional[int, List[int], np.ndarray]): Random seeds.
+        - para_mode (str): Parallelization mode.
+        - compute_resource (dict): Resource allocation.
+        - required_info (dict): Additional environment attributes to log.
+        - Returns: results (dict) with evaluation metrics.
+    - log_to_tb_train(tb_logger, mini_step, grad_norms, loss, Return, extra_info={}):
+        Logs training metrics to TensorBoard.
+        - tb_logger: TensorBoard logger.
+        - mini_step (int): Current training step.
+        - grad_norms (tuple): Gradient norms before and after clipping.
+        - loss (torch.Tensor): Training loss.
+        - Return (torch.Tensor): Episode returns.
+        - extra_info (dict): Additional metrics to log.
+    # Attributes:
+    - Opt: The policy network.
+    - optimizer: The optimizer instance (Adam).
+    - scheduler: Learning rate scheduler.
+    - learning_time (int): Number of training steps completed.
+    - cur_checkpoint (int): Current checkpoint index.
+    - config: Configuration object with agent and training settings.
+    # Raises:
+    - None explicitly, but underlying methods may raise exceptions related to environment interaction, tensor operations, or file I/O.
+    """
+    
     def __init__(self, config):
         self.config = config
 

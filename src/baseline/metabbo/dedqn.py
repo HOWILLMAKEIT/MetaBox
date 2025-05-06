@@ -3,6 +3,34 @@ from ...rl.dqn import *
 
 
 class DEDQN(DQN_Agent):
+    """
+    # Introduction
+    DEDQN is a mixed mutation strategy Differential Evolution (DE) algorithm based on deep Q-network (DQN), in which a deep reinforcement learning approach realizes the adaptive selection of mutation strategy in the evolution process.
+    # Original paper
+    "[**Differential evolution with mixed mutation strategy based on deep reinforcement learning**](https://www.sciencedirect.com/science/article/abs/pii/S1568494621005998)." Applied Soft Computing (2021).
+    # Official Implementation
+    None
+    # Args:
+    - config (object): Configuration object containing agent and environment parameters. 
+      The constructor modifies and extends this configuration with DEDQN-specific settings, 
+      such as state size, action space, learning rate, optimizer, and neural network architecture.
+    # Attributes:
+    - config (object): The configuration object with updated DEDQN parameters.
+    - model (MLP): The neural network model used for Q-value approximation.
+    # Example:
+    ```python
+    agent = DEDQN(config)
+    ```
+    # Notes:
+    - The agent uses an MLP with two hidden layers of 10 units each and ReLU activations.
+    - The optimizer is set to AdamW, and the loss criterion is MSELoss.
+    - Learning rate decay and gradient clipping are not used by default, following the original DEDQN design.
+    - The agent's save directory is automatically constructed based on its string representation and training name.
+    # See Also:
+    - DQN_Agent: The base class for DEDQN.
+    - MLP: The neural network class used for function approximation.
+    """
+    
     def __init__(self, config):
         
         self.config = config

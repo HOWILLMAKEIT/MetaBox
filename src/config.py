@@ -12,7 +12,7 @@ def Config(user_config, datasets_dir = None):
     default_config = init_config(default_config)
 
     torch.set_default_dtype(torch.float64)
-    # 判断是不是 HPO-B 任务
+    # find out if it is an HPO-B task
     is_hpo_b = 'hpo-b' in default_config.train_problem or 'hpo-b' in default_config.test_problem
 
     if is_hpo_b:

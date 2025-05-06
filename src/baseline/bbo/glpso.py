@@ -3,6 +3,51 @@ from ...environment.optimizer.basic_optimizer import Basic_Optimizer
 
 
 class GLPSO(Basic_Optimizer):
+    """
+    # Introduction
+    The PSO algorithm is hybridized with genetic evolution mechanisms. In this approach, genetic operators—specifically crossover, mutation, and selection—are incorporated into the PSO framework to construct promising exemplars and enhance the search performance.
+    # Original paper
+    "[**Genetic learning particle swarm optimization**](https://ieeexplore.ieee.org/abstract/document/7271066/)." IEEE Transactions on Cybernetics 46.10 (2015): 2277-2290.
+    # Official Implementation
+    [GLPSO](http://www.ai.sysu.edu.cn/GYJ/glpso/c_co)
+
+    # Args:
+    - config (object): Configuration object containing algorithm parameters such as logging intervals, maximum function evaluations, and metadata options.
+    # Attributes:
+    - __pm (float): Probability of mutation for exemplars.
+    - __NP (int): Number of particles in the swarm.
+    - __nsel (int): Number of selections in tournament selection.
+    - __w (float): Inertia weight for velocity update.
+    - __c1 (float): Cognitive coefficient for velocity update.
+    - __sg (int): Stagnation threshold for exemplar update.
+    - __rho (float): Scaling factor for maximum velocity.
+    - log_interval (int): Interval for logging optimization progress.
+    - full_meta_data (bool): Flag to store full metadata during optimization.
+    - __fes (int): Current number of function evaluations.
+    - __exemplar_stag (np.ndarray): Stagnation counters for each particle's exemplar.
+    - meta_Cost (list): Stores cost history if full_meta_data is enabled.
+    - meta_X (list): Stores position history if full_meta_data is enabled.
+    - cost (list): Stores global best cost at each logging interval.
+    # Methods:
+    - __str__(): Returns the string representation of the optimizer.
+    - run_episode(problem): Runs a single optimization episode on the given problem.
+    - __init_population(problem): Initializes the particle population and related attributes.
+    - __get_costs(problem, position): Evaluates the cost of given positions.
+    - __update(problem): Performs a single iteration of the optimization process.
+    - __exemplar_crossover(problem): Applies crossover to generate new exemplars.
+    - __exemplar_mutation(problem): Applies mutation to exemplars.
+    - __exemplar_selection(problem, init=False): Selects exemplars based on cost.
+    - __exemplar_tour_selection(): Performs tournament selection among exemplars.
+    - __exemplar_update(problem, init): Updates exemplars using crossover, mutation, and selection.
+    # Returns:
+    - run_episode(problem): Returns a dictionary containing the optimization results, including cost history, number of function evaluations, and optional metadata.
+    # Raises:
+    - None explicitly, but may raise exceptions from underlying numpy operations or problem evaluation methods.
+    # Notes:
+    - The optimizer is designed to work with problems that provide `lb`, `ub`, `dim`, `eval()`, and optionally `optimum` attributes.
+    - The algorithm supports logging and metadata collection for analysis and benchmarking.
+    """
+    
     def __init__(self, config):
         super().__init__(config)
         self.__pm=0.01

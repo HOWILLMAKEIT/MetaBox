@@ -22,6 +22,60 @@ class PlatypusError(Exception):
 
 
 class MOEAD(Basic_Optimizer):
+    """
+    # Introduction
+    MOEAD is a multiobjective evolutionary algorithm based on decomposition.It decomposes a multiobjective optimization problem into a number of scalar optimization subproblems and optimizes them simultaneously. Each subproblem is optimized by only using information from its several neighboring subproblems.
+    # Original paper
+    "[**MOEA/D: A multiobjective evolutionary algorithm based on decomposition**](https://ieeexplore.ieee.org/abstract/document/4358754/)." IEEE Transactions on Evolutionary Computation 11.6 (2007): 712-731.
+    # Official Implementation
+    None
+    # Args:
+    - config (object): Configuration object containing algorithm parameters such as the maximum number of function evaluations (`maxFEs`), random number generator (`rng`), and other relevant settings.
+    # Attributes:
+    - n_ref_points (int): Number of reference points for performance indicators.
+    - population_size (int): Number of individuals in the population.
+    - moead_neighborhood_size (int): Number of neighbors considered for mating.
+    - moead_neighborhood_maxsize (int): Maximum size of the neighborhood.
+    - moead_delta (float): Probability of selecting neighbors for mating.
+    - moead_eta (int): Maximum number of solutions to be replaced by offspring.
+    - max_fes (int): Maximum number of function evaluations.
+    - population (np.ndarray): Current population of solutions.
+    - population_obj (np.ndarray): Objective values of the current population.
+    - weights (list): List of weight vectors for decomposition.
+    - neighborhoods (list): Neighborhood indices for each subproblem.
+    - ideal_point (np.ndarray): Current ideal point in the objective space.
+    - archive_maximum (np.ndarray): Maximum objective values found.
+    - archive_minimum (np.ndarray): Minimum objective values found.
+    - problem_ref_points (np.ndarray): Reference points for IGD/HV calculation.
+    - igd_his (list): History of IGD values.
+    - hv_his (list): History of HV values.
+    - metadata (dict): Stores population and objective values for each generation.
+    # Methods:
+    - __str__(): Returns the name of the optimizer.
+    - init_population(problem): Initializes the population and related structures.
+    - get_neighborhoods(): Computes neighborhoods for each subproblem.
+    - get_weights(n_obj): Generates weight vectors for decomposition.
+    - moead_update_ideal(solution_obj): Updates the ideal point with a new solution.
+    - run_episode(problem): Runs the main optimization loop until the evaluation budget is exhausted.
+    - update_information(): Updates non-dominated solutions and metadata.
+    - find_non_dominated_indices(population_list): Identifies non-dominated solutions in the population.
+    - moead_calculate_fitness(solution_obj, weights): Calculates the scalarized fitness of a solution.
+    - moead_update_solution(solution, solution_obj, mating_indices): Updates solutions in the neighborhood if the offspring is better.
+    - moead_sort_weights(base, weights): Sorts weights by distance to a base weight.
+    - moead_get_subproblems(): Returns the indices of subproblems to be optimized in the current generation.
+    - moead_get_mating_indices(index): Determines the mating pool for a given subproblem.
+    - get_hv(n_samples=1e5): Calculates or estimates the hypervolume indicator.
+    - get_igd(): Calculates the Inverted Generational Distance (IGD) indicator.
+    - close(): Resets the optimizer.
+    - normal_boundary_weights(nobjs, divisions_outer, divisions_inner=0): Generates uniformly distributed weights on the simplex.
+    - random_weights(nobjs, population_size): Generates a set of random but uniformly distributed weights.
+    - sbx(problem, parents, probability=1.0, distribution_index=20.0): Simulated binary crossover operator.
+    - pm(problem, parent, probability=1.0, distribution_index=20.0): Polynomial mutation operator.
+    # Returns:
+    - None directly. The main results are returned from `run_episode()` as a dictionary containing cost, function evaluations, metadata, and performance indicator histories.
+    # Raises:
+    - No explicit exceptions are raised by the class itself, but underlying methods may raise exceptions (e.g., due to invalid input shapes or failed evaluations).
+    """
     
     def __init__(self, config):
         super().__init__(config)

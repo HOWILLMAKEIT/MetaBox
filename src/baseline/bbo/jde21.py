@@ -4,6 +4,58 @@ from ...environment.optimizer.basic_optimizer import Basic_Optimizer
 
 
 class JDE21(Basic_Optimizer):
+    """
+    # Introduction
+    A DE for solving single-objective real-parameter bound-constrained optimization problems. It uses several mechanisms to tackle optimization problems efficiently: two populations with different sizes, restart mechanism in both populations, self-adaptive control parameters F and CR, the extended range of values for CR in thebigger population, migration of the best individual from the big population into the small population, modified mutation strategy in the bigger population, crowding mechanism and population size reduction in the bigger population.
+    # Original paper
+    "[**Self-adaptive differential evolution algorithm with population size reduction for single objective bound-constrained optimization: Algorithm j21**](https://ieeexplore.ieee.org/abstract/document/9504782/)." 2021 IEEE Congress on Evolutionary Computation (CEC). IEEE, 2021.
+    # Official Implementation
+    None
+    # Args:
+    - config (object): Configuration object containing algorithm parameters such as `maxFEs` (maximum function evaluations), `n_logpoint` (number of log points), `log_interval` (interval for logging), and `full_meta_data` (flag to record full meta data).
+    # Attributes:
+    - gbest (float): The current global best cost found.
+    - cost (list): History of best costs at each logging interval.
+    - meta_Cost (list): (Optional) History of all costs if `full_meta_data` is enabled.
+    - meta_X (list): (Optional) History of all population states if `full_meta_data` is enabled.
+    - __population (np.ndarray): Current population of candidate solutions.
+    - __cost (np.ndarray): Current costs of the population.
+    - __F (np.ndarray): Mutation factors for each individual.
+    - __Cr (np.ndarray): Crossover rates for each individual.
+    - __FEs (int): Current number of function evaluations.
+    - __MaxFEs (int): Maximum number of function evaluations allowed.
+    - __sNP (int): Size of the small population.
+    - __bNP (int): Size of the big population.
+    - __NP (int): Total population size.
+    - __nReset (int): Number of times the big population was reinitialized.
+    - __sReset (int): Number of times the small population was reinitialized.
+    - __cCopy (int): Number of times the best individual was copied to the small population.
+    # Methods:
+    - __str__(): Returns the name of the optimizer ("JDE21").
+    - run_episode(problem): Runs a full optimization episode on the given problem, returning a dictionary with cost history, total function evaluations, and optionally meta data.
+    - (Private) __update(problem): Performs one iteration of the optimization process, including mutation, crossover, selection, and population management.
+    - (Private) __init_population(problem): Initializes the population and associated parameters.
+    - (Private) __evaluate(problem, Xs): Evaluates the cost of a set of candidate solutions.
+    - (Private) __crowding(group, vs): Performs the crowding operation for replacement selection.
+    - (Private) __prevecEnakih(cost, best): Checks for stagnation in the population.
+    - (Private) __sort(): Sorts the population by cost.
+    - (Private) __reinitialize(size, problem): Reinitializes a subset of the population.
+    # Returns:
+    - run_episode(problem) returns:
+        - dict: {
+            'cost': list of best costs at each log interval,
+            'fes': total number of function evaluations,
+            'metadata' (optional): {
+                'X': list of population states,
+                'Cost': list of cost arrays
+            }
+        }
+    # Raises:
+    - None explicitly, but may raise exceptions from numpy or the problem's evaluation function if inputs are invalid.
+    # References:
+    - JDE21: An Improved Differential Evolution Algorithm with Adaptive Parameter Control and Dual-population Strategies.
+    """
+    
     def __init__(self, config):
         super(JDE21, self).__init__(config)
         self.__sNP = 10       # size of small population

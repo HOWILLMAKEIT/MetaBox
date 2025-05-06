@@ -3,6 +3,37 @@ from ...environment.optimizer.basic_optimizer import Basic_Optimizer
 
 
 class Random_search(Basic_Optimizer):
+    """
+    # Introduction
+    Random_search is an implementation of a basic random search optimization algorithm, inheriting from Basic_Optimizer. It generates random candidate solutions within the problem bounds and tracks the best solution found so far. The optimizer supports logging of progress and optional collection of full meta-data for analysis.
+    
+    # Orighinal paper:
+     
+    # Official Implementation:
+    
+    # Args:
+    - config (object): Configuration object containing the following attributes:
+        - maxFEs (int): Maximum number of function evaluations allowed.
+        - n_logpoint (int): Number of log points for recording progress.
+        - log_interval (int): Interval of function evaluations between logs.
+        - full_meta_data (bool): Whether to collect and store full meta-data during optimization.
+    # Methods:
+    - __init__(self, config): Initializes the optimizer with the given configuration.
+    - __str__(self): Returns the string representation of the optimizer.
+    - __reset(self, problem): Resets the optimizer state for a new optimization run.
+    - __random_population(self, problem, init): Generates a random population and evaluates their costs.
+    - run_episode(self, problem): Runs a single optimization episode on the given problem.
+    # Returns (from run_episode):
+    - dict: A dictionary containing:
+        - 'cost' (list): The best cost found at each log point.
+        - 'fes' (int): The total number of function evaluations performed.
+        - 'metadata' (dict, optional): If `full_meta_data` is True, includes:
+            - 'X' (list): List of candidate solutions evaluated.
+            - 'Cost' (list): List of corresponding costs for each candidate solution.
+    # Raises:
+    - None explicitly, but may propagate exceptions from problem evaluation or configuration errors.
+    """
+    
     def __init__(self, config):
         super().__init__(config)
         self.__fes=0

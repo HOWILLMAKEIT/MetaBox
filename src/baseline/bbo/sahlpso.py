@@ -4,6 +4,37 @@ import numpy as np
 
 
 class SAHLPSO(Basic_Optimizer):
+    """
+    # Introduction
+    Self-Adaptive two roles hybrid learn-ing strategies-based particle swarm optimization.It uses exploration-role and exploitation-role learning strategies with self-adaptively updating parameters manner.
+    # Original paper
+    "[**Self-Adaptive two roles hybrid learning strategies-based particle swarm optimization**](https://www.sciencedirect.com/science/article/pii/S0020025521006988)." Information Sciences 578 (2021): 457-481.
+    # Official Implementation
+    None
+    # Args:
+    - config (object): Configuration object containing algorithm parameters such as `maxFEs`, 
+      `log_interval`, `full_meta_data`, and `n_logpoint`.
+    # Methods:
+    - __str__(): Returns the string representation of the optimizer.
+    - run_episode(problem): Executes one optimization run (episode) on the given problem.
+    # run_episode Args:
+    - problem (object): An optimization problem instance with attributes such as `dim`, `eval()`, 
+      and optionally `optimum`.
+    # run_episode Returns:
+    - dict: A dictionary containing:
+        - 'cost' (list): The best cost (objective value) found at each logging interval.
+        - 'fes' (int): The total number of function evaluations performed.
+        - 'metadata' (dict, optional): If `full_meta_data` is True, includes:
+            - 'X' (list): Population positions at each logging interval.
+            - 'Cost' (list): Population costs at each logging interval.
+    # Raises:
+    - None explicitly, but may raise exceptions from numpy or the problem's evaluation function.
+    # Notes:
+    - The optimizer supports population size reduction, self-adaptive crossover and learning step 
+      selection, and maintains historical best solutions for each particle.
+    - Logging and meta-data collection are controlled via the configuration object.
+    """
+    
     def __init__(self, config):
         super().__init__(config)
         self.config = config

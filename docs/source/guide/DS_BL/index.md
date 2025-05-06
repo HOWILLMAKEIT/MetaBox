@@ -125,10 +125,10 @@ Baseline
 
 ## Baseline
 
-|                     | SOO                                                                                                                                                                                                                                                                                      | MOO   | MMO             | MTO  |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | --------------- | ---- |
-| [MetaBBO](#metabbo) | [B2Opt](#b2opt)、[DEDDQN](#deddqn)、[DEDQN](#dedqn)、[GLEET](#gleet)、[GLHF](#glhf)、[LDE](#lde)、[LES](#les)、[LGA](#lga)、[NRLPSO](#nrlpso)、[QLPSO](#qlpso)、[RLDAS](#rldas)、[RLDEAFL](#rldeafl)、[RLEPSO](#rlepso)、[RLPSO](#rlpso)、[SurrRLDE](#surrrlde)、[SYMBOL](#symbol)、OPRO | MADAC | RLEMMO、PSORLNS | L2T  |
-| [BBO](#bbo)         | CMA-ES、DE、GLPSO、JDE21、MADDE、NL-SHADE-LBC、PSO、SHADE、SAHLPSO、SDMSPSO                                                                                                                                                                                                              |       |                 | MFEA |
+|                     | SOO                                                                                                                                                                                                                                                                                      | MOO             | MMO             | MTO  |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- | --------------- | ---- |
+| [MetaBBO](#metabbo) | [B2Opt](#b2opt)、[DEDDQN](#deddqn)、[DEDQN](#dedqn)、[GLEET](#gleet)、[GLHF](#glhf)、[LDE](#lde)、[LES](#les)、[LGA](#lga)、[NRLPSO](#nrlpso)、[QLPSO](#qlpso)、[RLDAS](#rldas)、[RLDEAFL](#rldeafl)、[RLEPSO](#rlepso)、[RLPSO](#rlpso)、[SurrRLDE](#surrrlde)、[SYMBOL](#symbol)、OPRO | MADAC           | RLEMMO、PSORLNS | L2T  |
+| [BBO](#bbo)         | [CMA-ES](#cma-es)、DE、[GLPSO](#glpso)、[JDE21](#jde21)、[MADDE](#madde)、[NL-SHADE-LBC](#nl-shade-lbc)、PSO、[SHADE](#shade)、[SAHLPSO](#sahlpso)、SDMSPSO                                                                                                                              | [MOEAD](#moead) |                 | MFEA |
 
 ### MetaBBO
 
@@ -261,6 +261,22 @@ Baseline
   "[**Symbol: Generating Flexible Black-Box Optimizers through Symbolic Equation Learning**](https://openreview.net/forum?id=vLJcd43U7a)." The Twelfth International Conference on Learning Representations. (2024).
 - **Official Implementation**：[SYMBOL](https://github.com/GMC-DRL/Symbol)
 
+#### Multi-Modal Optimization
+
+##### MADAC
+
+- **Introduction**：\
+  Multi-agent dynamic algorithm configuration in which one agent works for one type of configuration hyperparameter.It rmulates the dynamic configuration of a complex algorithm with multiple types of hyperparameters as a contextual multi-agent Markov decision process and solves it by a cooperative multi-agent RL (MARL) algorithm.
+- **Original paper**：
+  "[**Multi-agent dynamic algorithm configuration**](https://proceedings.neurips.cc/paper_files/paper/2022/hash/7f02b39c0424cc4a422994289ca03e46-Abstract-Conference.html)." Advances in Neural Information Processing Systems 35 (2022): 20147-20161.
+- **Official Implementation**：[MADAC](https://github.com/lamda-bbo/madac)
+
+#### Multi-Task Optimization
+
+### BBO
+
+#### Single-Object Optimization
+
 ##### CMA-ES
 
 - **Introduction**：\
@@ -317,15 +333,23 @@ Baseline
   "[**Self-Adaptive two roles hybrid learning strategies-based particle swarm optimization**](https://www.sciencedirect.com/science/article/pii/S0020025521006988)." Information Sciences 578 (2021): 457-481.
 - **Official Implementation**：None
 
-#### Multi-Objective Optimization
-
-##### MADAC
+##### SDMSPSO
 
 - **Introduction**：\
-  Multi-agent dynamic algorithm configuration in which one agent works for one type of configuration hyperparameter.It rmulates the dynamic configuration of a complex algorithm with multiple types of hyperparameters as a contextual multi-agent Markov decision process and solves it by a cooperative multi-agent RL (MARL) algorithm.
+  The sDMS-PSO is a self-adaptive dynamic multi-swarm particle swarm optimizer that incorporates parameter adaptation, cooperative coevolution among multiple swarms, and a quasi-Newton local search to enhance convergence speed and optimization performance.
 - **Original paper**：
-  "[**Multi-agent dynamic algorithm configuration**](https://proceedings.neurips.cc/paper_files/paper/2022/hash/7f02b39c0424cc4a422994289ca03e46-Abstract-Conference.html)." Advances in Neural Information Processing Systems 35 (2022): 20147-20161.
-- **Official Implementation**：[MADAC](https://github.com/lamda-bbo/madac)
+  "[**A self-adaptive dynamic particle swarm optimizer**](https://ieeexplore.ieee.org/abstract/document/7257290/)." 2015 IEEE Congress on Evolutionary Computation (CEC). IEEE, 2015.
+- **Official Implementation**：None
+
+#### Multi-Objective Optimization
+
+##### MOEAD
+
+- **Introduction**：\
+   MOEAD is a multiobjective evolutionary algorithm based on decomposition.It decomposes a multiobjective optimization problem into a number of scalar optimization subproblems and optimizes them simultaneously. Each subproblem is optimized by only using information from its several neighboring subproblems.
+- **Original paper**：
+  "[**MOEA/D: A multiobjective evolutionary algorithm based on decomposition**](https://ieeexplore.ieee.org/abstract/document/4358754/)." IEEE Transactions on Evolutionary Computation 11.6 (2007): 712-731.
+- **Official Implementation**：None
 
 #### Multi-Modal Optimization
 

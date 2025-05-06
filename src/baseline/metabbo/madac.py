@@ -43,6 +43,39 @@ class MultiAgentQNet(nn.Module):
 
 
 class MADAC(VDN_Agent):
+    """
+    # Introduction
+    Multi-agent dynamic algorithm configuration in which one agent works for one type of configuration hyperparameter.It rmulates the dynamic configuration of a complex algorithm with multiple types of hyperparameters as a contextual multi-agent Markov decision process and solves it by a cooperative multi-agent RL (MARL) algorithm.
+    # Original paper
+    "[**Multi-agent dynamic algorithm configuration**](https://proceedings.neurips.cc/paper_files/paper/2022/hash/7f02b39c0424cc4a422994289ca03e46-Abstract-Conference.html)." Advances in Neural Information Processing Systems 35 (2022): 20147-20161.
+    # Official Implementation
+    [MADAC](https://github.com/lamda-bbo/madac)
+    # Args:
+    - config (Namespace): A configuration object containing all necessary hyperparameters and settings for the agent and environment.
+    # Attributes:
+    - gamma (float): Discount factor for future rewards.
+    - n_act (int): Number of actions per agent.
+    - epsilon_start (float): Initial value of epsilon for epsilon-greedy exploration.
+    - epsilon_end (float): Final value of epsilon after decay.
+    - epsilon_decay_steps (int): Number of steps over which epsilon decays.
+    - max_grad_norm (float): Maximum norm for gradient clipping.
+    - memory_size (int): Size of the replay buffer.
+    - batch_size (int): Number of samples per training batch.
+    - warm_up_size (int): Number of steps before training starts.
+    - chunk_size (int): Size of sequence chunks for training.
+    - update_iter (int): Number of update iterations per training step.
+    - device (str): Device to use for computation ('cuda' or 'cpu').
+    - n_agent (int): Number of agents in the environment.
+    - available_action (list): List specifying the number of available actions for each agent.
+    - optimizer (str): Optimizer to use for training.
+    - criterion (str): Loss function to use for training.
+    - target_update_interval (int): Frequency (in steps) to update the target network.
+    - required_info (dict): Dictionary specifying required information for logging or evaluation.
+    - agent_save_dir (str): Directory path for saving agent checkpoints.
+    # Methods:
+    - __init__(self, config): Initializes the MADAC agent with the specified configuration.
+    - __str__(self): Returns the string representation of the agent ("MADAC").
+    """
     def __init__(self, config):
         config.gamma = 0.99
         config.n_act = 4

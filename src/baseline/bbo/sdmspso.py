@@ -5,6 +5,30 @@ from ...environment.optimizer.basic_optimizer import Basic_Optimizer
 
 
 class SDMSPSO(Basic_Optimizer):
+    """
+    # Introduction
+    The sDMS-PSO is a self-adaptive dynamic multi-swarm particle swarm optimizer that incorporates parameter adaptation, cooperative coevolution among multiple swarms, and a quasi-Newton local search to enhance convergence speed and optimization performance.
+    # Original paper
+    "[**A self-adaptive dynamic particle swarm optimizer**](https://ieeexplore.ieee.org/abstract/document/7257290/)." 2015 IEEE Congress on Evolutionary Computation (CEC). IEEE, 2015.
+    # Official Implementation
+    None
+    # Args:
+    - config (object): Configuration object containing algorithm parameters such as maximum function evaluations (`maxFEs`), logging interval (`log_interval`), number of log points (`n_logpoint`), and meta-data logging flag (`full_meta_data`).
+    # Methods:
+    - __str__(): Returns the string representation of the optimizer.
+    - run_episode(problem): Executes a single optimization run on the given problem instance.
+    - (Private methods): Includes initialization, swarm regrouping, local/global best updates, parameter adaptation, and quasi-Newton refinement.
+    # Returns (from run_episode):
+    - dict: A dictionary containing:
+        - 'cost' (list): The best cost (fitness) values recorded at each logging interval.
+        - 'fes' (int): The total number of function evaluations performed.
+        - 'metadata' (dict, optional): If `full_meta_data` is enabled, includes:
+            - 'X' (list): The positions of particles at each evaluation.
+            - 'Cost' (list): The corresponding cost values.
+    # Raises:
+    - AssertionError: If the population size is not divisible by the number of sub-swarms (`m`).
+    - Any exceptions raised by the underlying optimization problem or numerical routines (e.g., during quasi-Newton refinement).
+    """
     def __init__(self,config):
         super().__init__(config)
         self.__w,self.__c1,self.__c2=0.729,1.49445,1.49445

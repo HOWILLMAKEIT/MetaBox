@@ -69,7 +69,6 @@ class Basic_Agent:
 
     def train_epoch(self):
         """
-        todo:写清楚,问一下，是不是只有les用了这个
         # Introduction
         Executes a single epoch of training for the reinforcement learning agent.
         # Args:

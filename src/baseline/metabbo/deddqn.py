@@ -2,6 +2,43 @@ from ...rl.ddqn import *
 from .networks import MLP
 
 class DEDDQN(DDQN_Agent):
+    """
+    # Introduction
+    DE-DDQN is an adaptive operator selection method based on Double Deep Q-Learning (DDQN), a Deep Reinforcement Learning method, to control the mutation strategies of Differential Evolution (DE).
+    # Original paper
+    "[**Deep reinforcement learning based parameter control in differential evolution**](https://dl.acm.org/doi/abs/10.1145/3321707.3321813)." Proceedings of the Genetic and Evolutionary Computation Conference (2019).
+    # Official Implementation
+    [DE-DDQN](https://github.com/mudita11/DE-DDQN)
+    # Args:
+    - config (Namespace): Configuration object containing environment and agent parameters. 
+      The constructor modifies several attributes of `config` to set up the DEDDQN agent.
+    # Attributes Set in Config:
+    - state_size (int): Size of the input state vector (default: 99).
+    - n_act (int): Number of possible actions (default: 4).
+    - lr_model (float): Learning rate for the optimizer (default: 1e-4).
+    - lr_decay (float): Learning rate decay factor (default: 1).
+    - batch_size (int): Batch size for training (default: 64).
+    - epsilon (float): Exploration rate for epsilon-greedy policy (default: 0.1).
+    - gamma (float): Discount factor for future rewards (default: 0.99).
+    - target_update_interval (int): Frequency of target network updates (default: 1000).
+    - memory_size (int): Size of the replay buffer (default: 100000).
+    - warm_up_size (int): Number of experiences to collect before training (default: 10000).
+    - net_config (list): List of dictionaries specifying the neural network architecture.
+    - device (str or torch.device): Device to run the model on.
+    - max_grad_norm (float): Maximum norm for gradient clipping (default: infinity).
+    - optimizer (str): Optimizer type (default: 'Adam').
+    - lr_scheduler (str): Learning rate scheduler type (default: 'ExponentialLR').
+    - criterion (str): Loss function (default: 'MSELoss').
+    - agent_save_dir (str): Directory to save agent checkpoints.
+    # Methods
+    - __str__(): Returns the string "DEDDQN" representing the agent type.
+    # Usage
+    Instantiate with a configuration object and use as a reinforcement learning agent for environments
+    with discrete action spaces.
+    # Raises
+    - Inherits exceptions from DDQN_Agent and underlying PyTorch modules.
+    """
+    
     def __init__(self, config):
         self.config = config
         self.config.state_size = 99

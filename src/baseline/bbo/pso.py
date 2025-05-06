@@ -6,6 +6,36 @@ from ...environment.optimizer.basic_optimizer import Basic_Optimizer
 
 
 class PSO(Basic_Optimizer):
+    """
+    # Introduction
+    Particle Swarm Optimization (PSO) optimizer implementation for black-box optimization problems.  
+    This class inherits from `Basic_Optimizer` and utilizes the DEAP library to perform PSO, maintaining a population of particles that iteratively update their positions and velocities to search for the global optimum.
+    
+    # Orighinal paper:
+     
+    # Official Implementation:
+    
+    # Args:
+    - config (object): Configuration object containing PSO and experiment parameters such as `phi1`, `phi2`, `population_size`, `log_interval`, `full_meta_data`, `maxFEs`, and `n_logpoint`.
+    # Methods:
+    - __str__(): Returns the string representation of the optimizer ("PSO").
+    - run_episode(problem): Executes a single optimization episode on the given problem instance.
+        - problem (object): Problem instance with attributes `ub` (upper bounds), `lb` (lower bounds), `dim` (dimension), `eval` (evaluation function), and optionally `optimum`.
+    # Returns (from run_episode):
+    - dict: A dictionary containing:
+        - 'cost' (list): Best fitness value found at each logging interval.
+        - 'fes' (int): Total number of function evaluations performed.
+        - 'metadata' (dict, optional): If `full_meta_data` is True, includes:
+            - 'X' (list): Population positions at each logging interval.
+            - 'Cost' (list): Fitness values of the population at each logging interval.
+    # Raises:
+    - AttributeError: If the problem instance does not provide required attributes (`ub`, `lb`, `dim`, `eval`).
+    - Any exceptions raised by the problem's `eval` function.
+    # Notes:
+    - The optimizer supports logging and metadata collection for analysis and benchmarking.
+    - The PSO parameters (`phi1`, `phi2`, `population_size`) are set to default values but can be overridden via the config object.
+    """
+    
     def __init__(self, config):
         super().__init__(config)
         config.phi1 = 2.

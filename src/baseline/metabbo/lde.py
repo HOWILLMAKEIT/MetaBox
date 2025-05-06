@@ -32,6 +32,67 @@ class PolicyNet(nn.Module):
 
 
 class LDE(REINFORCE_Agent):
+    """
+    # Introduction
+    LDE:Learning Adaptive Differential Evolution Algorithm From Optimization Experiences by Policy Gradient
+    # Original paper
+    "[**Learning Adaptive Differential Evolution Algorithm from Optimization Experiences by Policy Gradient**](https://ieeexplore.ieee.org/abstract/document/9359652)." IEEE Transactions on Evolutionary Computation (2021).
+    # Official Implementation
+    [LDE](https://github.com/yierh/LDE)
+    # Args:
+    - config (object): Configuration object containing hyperparameters and settings for the agent, environment, and training process.
+    # Methods:
+    - __str__():
+        Returns the string representation of the agent ("LDE").
+    - __discounted_norm_rewards(r):
+        Computes discounted and normalized rewards for a batch of trajectories.
+        ## Args:
+        - r (np.ndarray): Array of rewards.
+        ## Returns:
+        - np.ndarray: Discounted and normalized rewards.
+    - train_episode(envs, seeds, para_mode='dummy', compute_resource={}, tb_logger=None, required_info={}):
+        Trains the agent for one episode across parallel environments.
+        ## Args:
+        - envs: List of environments.
+        - seeds (Optional[int, List[int], np.ndarray]): Seeds for environment reproducibility.
+        - para_mode (str): Parallelization mode ('dummy', 'subproc', 'ray', 'ray-subproc').
+        - compute_resource (dict): Resources for parallel execution (CPUs, GPUs).
+        - tb_logger: TensorBoard logger.
+        - required_info (dict): Additional information to collect from environments.
+        ## Returns:
+        - is_train_ended (bool): Whether training has reached the maximum step.
+        - return_info (dict): Training statistics and environment information.
+    - rollout_episode(env, seed=None, required_info={}):
+        Executes a rollout in a single environment without updating the policy.
+        ## Args:
+        - env: Environment instance.
+        - seed (Optional[int]): Seed for reproducibility.
+        - required_info (dict): Additional information to collect from the environment.
+        ## Returns:
+        - results (dict): Rollout statistics and environment information.
+    - rollout_batch_episode(envs, seeds=None, para_mode='dummy', compute_resource={}, required_info={}):
+        Executes rollouts in a batch of parallel environments.
+        ## Args:
+        - envs: List of environments.
+        - seeds (Optional[int, List[int], np.ndarray]): Seeds for environment reproducibility.
+        - para_mode (str): Parallelization mode.
+        - compute_resource (dict): Resources for parallel execution.
+        - required_info (dict): Additional information to collect from environments.
+        ## Returns:
+        - results (dict): Batch rollout statistics and environment information.
+    # Attributes:
+    - config: Configuration object with agent and environment settings.
+    - __BATCH_SIZE (int): Batch size for training.
+    - __feature_shape (tuple): Shape of input features for the policy network.
+    - device (str): Device used for computation ('cpu' or 'cuda').
+    - optimizer: Optimizer for policy network parameters.
+    - learning_time (int): Counter for training steps.
+    - cur_checkpoint (int): Current checkpoint index for saving the agent.
+    # Raises:
+    - ValueError: If environment or configuration parameters are invalid.
+    - RuntimeError: For errors during training or rollout execution.
+    """
+    
     def __init__(self, config):
 
         self.config = config

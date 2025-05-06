@@ -4,6 +4,30 @@ from ...environment.optimizer.basic_optimizer import Basic_Optimizer
 
 
 class MADDE(Basic_Optimizer):
+    """
+    # Introduction
+    A DE for solving single-objective real-parameter bound-constrained optimization problems. It uses several mechanisms to tackle optimization problems efficiently: two populations with different sizes, restart mechanism in both populations, self-adaptive control parameters F and CR, the extended range of values for CR in thebigger population, migration of the best individual from the big population into the small population, modified mutation strategy in the bigger population, crowding mechanism and population size reduction in the bigger population.
+    # Original paper
+    "[**Self-adaptive differential evolution algorithm with population size reduction for single objective bound-constrained optimization: Algorithm j21**](https://ieeexplore.ieee.org/abstract/document/9504782/)." 2021 IEEE Congress on Evolutionary Computation (CEC). IEEE, 2021.
+    # Official Implementation
+    None
+    # Args:
+    - config (object): Configuration object containing algorithm parameters such as `maxFEs`, `n_logpoint`, `log_interval`, and `full_meta_data`.
+    # Methods:
+    - __str__(): Returns the string representation of the optimizer.
+    - run_episode(problem): Runs a single optimization episode on the given problem instance.
+    - (Private methods): Includes various internal methods for mutation, crossover, parameter adaptation, population initialization, and archive management.
+    # Returns (from run_episode):
+    - dict: A dictionary containing:
+        - 'cost' (list): The best-so-far cost values logged during the optimization.
+        - 'fes' (int): The total number of function evaluations performed.
+        - 'metadata' (optional, dict): If `full_meta_data` is enabled, includes the population and cost history.
+    # Raises:
+    - None explicitly, but may raise exceptions from underlying numpy or scipy operations if input data is invalid.
+    # Usage:
+    Instantiate with a configuration object and call `run_episode(problem)` where `problem` defines the optimization task.
+    """
+    
     def __init__(self, config):
         super(MADDE, self).__init__(config)
         self.__p = 0.18

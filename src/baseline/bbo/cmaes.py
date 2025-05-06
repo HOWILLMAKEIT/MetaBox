@@ -9,6 +9,37 @@ import math
 # please refer:https://pypop.readthedocs.io/en/latest/applications.html
 # this .py display pypop7-SHADE
 class CMAES(Basic_Optimizer):
+    """
+    # Introduction
+    A novel evolutionary optimization strategy based on the derandomized evolution strategy with covariance matrix adaptation. This is accomplished by efficientlyincorporating the available information from a large population, thus significantly re-ducing the number of generations needed to adapt the covariance matrix.
+    # Original paper
+    "[**Reducing the time complexity of the derandomized evolution strategy with covariance matrix adaptation (CMA-ES)**](https://ieeexplore.ieee.org/abstract/document/6790790/)." Evolutionary Computation 11.1 (2003): 1-18.
+    # Official Implementation
+    None
+    # Args:
+    - config (object): Configuration object containing optimizer parameters such as population size (`NP`), 
+      logging interval (`log_interval`), number of log points (`n_logpoint`), maximum function evaluations (`maxFEs`), 
+      and whether to collect full meta data (`full_meta_data`).
+    # Methods:
+    - __str__(): Returns the string representation of the optimizer.
+    - run_episode(problem): Runs a single optimization episode on the given problem instance.
+    # run_episode Args:
+    - problem (object): An optimization problem instance with attributes `dim` (dimension), `ub` (upper bound), 
+      `lb` (lower bound), `optimum` (optional, known optimum value), and an `eval(x)` method for fitness evaluation.
+    # run_episode Returns:
+    - dict: A dictionary containing:
+        - 'cost' (list): The best cost found at each logging interval.
+        - 'fes' (int): The total number of function evaluations performed.
+        - 'metadata' (dict, optional): If `full_meta_data` is True, contains:
+            - 'X' (list): List of candidate solutions at each logging interval.
+            - 'Cost' (list): List of corresponding costs at each logging interval.
+    # Raises:
+    - Any exceptions raised by the underlying `cma` library or the problem's `eval` method.
+    # Notes:
+    - The optimizer automatically rescales candidate solutions to the problem's bounds.
+    - Logging and metadata collection are controlled by the configuration object.
+    """
+    
     def __init__(self, config):
         super().__init__(config)
         config.NP = 50

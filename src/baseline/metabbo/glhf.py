@@ -280,6 +280,71 @@ class Policy(nn.Module):
 
 
 class GLHF(Basic_Agent):
+    """
+    # Introduction
+    GLHF: General Learned Evolutionary Algorithm Via Hyper Functions
+    # Original paper
+    "[**GLHF: General Learned Evolutionary Algorithm Via Hyper Functions**](https://arxiv.org/abs/2405.03728)." arXiv preprint arXiv:2405.03728 (2024).
+    # Official Implementation
+    [GLHF](https://github.com/ninja-wm/POM/)
+    # Args:
+    - config (object): Configuration object containing hyperparameters and settings for the agent, such as optimizer type, learning rate, device, and save directories.
+    # Attributes:
+    - Pom (Policy): The policy model used by the agent.
+    - optimizer (torch.optim.Optimizer): The optimizer for training the policy.
+    - learning_time (int): Counter for the number of training steps taken.
+    - cur_checkpoint (int): Counter for the current checkpoint index.
+    - config (object): The configuration object with agent settings.
+    # Methods:
+    - __str__(): Returns the string representation of the agent.
+    - train_episode(...): Trains the agent for one episode in parallel environments.
+    - rollout_episode(...): Evaluates the agent in a single environment without training.
+    - rollout_batch_episode(...): Evaluates the agent in a batch of environments.
+    - log_to_tb_train(...): Logs training metrics to TensorBoard.
+    # train_episode
+    Trains the agent for one episode using parallel environments. Handles environment setup, policy optimization, checkpointing, and logging.
+    ## Args:
+    - envs: List of environments to train on.
+    - seeds (Optional[Union[int, List[int], np.ndarray]]): Seeds for environment reproducibility.
+    - para_mode (str): Parallelization mode ('dummy', 'subproc', 'ray', 'ray-subproc').
+    - compute_resource (dict): Resources for parallelization (e.g., number of CPUs/GPUs).
+    - tb_logger: TensorBoard logger for recording metrics.
+    - required_info (dict): Additional environment attributes to record.
+    ## Returns:
+    - is_train_ended (bool): Whether the training has reached the maximum step.
+    - return_info (dict): Dictionary containing returns, losses, learning steps, and additional info.
+    # rollout_episode
+    Evaluates the agent in a single environment without updating the policy.
+    ## Args:
+    - env: The environment to evaluate in.
+    - seed: Seed for reproducibility.
+    - required_info (dict): Additional environment attributes to record.
+    ## Returns:
+    - results (dict): Dictionary containing cost, function evaluations, return, and optional metadata.
+    # rollout_batch_episode
+    Evaluates the agent in a batch of environments in parallel.
+    ## Args:
+    - envs: List of environments to evaluate on.
+    - seeds: Seeds for environment reproducibility.
+    - para_mode (str): Parallelization mode.
+    - compute_resource (dict): Resources for parallelization.
+    - required_info (dict): Additional environment attributes to record.
+    ## Returns:
+    - results (dict): Dictionary containing cost, function evaluations, and returns for each environment.
+    # log_to_tb_train
+    Logs training statistics and metrics to TensorBoard.
+    ## Args:
+    - tb_logger: TensorBoard logger.
+    - mini_step (int): Current training step.
+    - grad_norms: Gradient norms before and after clipping.
+    - loss_1, loss_2, loss: Loss components.
+    - Return: Episode returns.
+    - reward: Rewards for the current step.
+    - extra_info (dict): Additional metrics to log.
+    # Raises:
+    - ValueError: If invalid configuration or environment state is encountered during training.
+    """
+    
     def __init__(self, config):
         self.config = config
 

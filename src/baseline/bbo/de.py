@@ -5,6 +5,39 @@ from deap import tools
 from ...environment.optimizer.basic_optimizer import Basic_Optimizer
 
 class DE(Basic_Optimizer):
+    """
+    # Introduction
+    Differential Evolution (DE) optimizer implementation based on the DEAP framework.  
+    This class inherits from `Basic_Optimizer` and provides an evolutionary algorithm for global optimization, supporting logging and optional metadata collection.
+    
+    # Orighinal paper:
+    
+    # Official Implementation:
+    
+    # Args:
+    - config (object): Configuration object containing algorithm parameters such as population size (`NP`), mutation factor (`F`), crossover rate (`Cr`), logging interval, and metadata options.
+    # Methods:
+    - __init__(self, config): Initializes the DE optimizer with the provided configuration.
+    - __str__(self): Returns the string representation of the optimizer ("DE").
+    - run_episode(self, problem): Executes a single optimization run (episode) on the given problem instance.
+    # run_episode Args:
+    - problem (object): An optimization problem instance with attributes such as `lb` (lower bounds), `ub` (upper bounds), `dim` (dimension), `eval` (evaluation function), and optionally `optimum`.
+    # Returns:
+    - dict: A dictionary containing:
+        - 'cost' (list): Best-so-far fitness values at each logging point.
+        - 'fes' (int): Total number of function evaluations performed.
+        - 'metadata' (dict, optional): If `full_meta_data` is enabled, includes:
+            - 'X' (list): Population snapshots at each logging point.
+            - 'Cost' (list): Fitness values of the population at each logging point.
+    # Raises:
+    - AttributeError: If required attributes are missing from the `problem` or `config` objects.
+    - Exception: Propagates exceptions from the DEAP framework or numpy operations.
+    # Notes:
+    - The optimizer supports both scalar and vector bounds.
+    - Logging and metadata collection are controlled via the configuration object.
+    - The optimizer is designed for minimization problems.
+    """
+    
     def __init__(self, config):
         super().__init__(config)
         config.NP = 50

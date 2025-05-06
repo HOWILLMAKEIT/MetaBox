@@ -9,6 +9,28 @@ def test(x):
 
 
 class NLSHADELBC(Basic_Optimizer):
+    """
+    # Introduction
+    Non-Linear population size reduction Success-History Adaptive Differential Evolution with Linear Bias Change.It combines selective pressure, biased parameter adaptation with linear bias change, current-to-pbest strategy, resampling of solutions as bound constraint handling techniques, as well as the non-linear population size reduction.
+    # Original paper
+    "[**NL-SHADE-LBC algorithm with linear parameter adaptation bias change for CEC 2022 Numerical Optimization**](https://ieeexplore.ieee.org/abstract/document/9870295/)." 2022 IEEE Congress on Evolutionary Computation (CEC). IEEE, 2022.
+    # Official Implementation
+    None
+    # Args:
+    - config (object): Configuration object containing algorithm parameters such as maximum function evaluations (`maxFEs`), logging intervals (`log_interval`), number of log points (`n_logpoint`), and whether to collect full meta data (`full_meta_data`).
+    # Methods:
+    - `__str__()`: Returns the string representation of the optimizer.
+    - `run_episode(problem)`: Runs the optimization process on the given problem instance until the maximum number of function evaluations is reached. Returns a dictionary with optimization results and optional metadata.
+    - Internal methods for initialization, mutation, crossover, parameter adaptation, archive management, and population size reduction.
+    # Returns:
+    - The main method `run_episode` returns a dictionary with:
+        - `cost` (list): The best cost found at each logging interval.
+        - `fes` (int): The total number of function evaluations performed.
+        - `metadata` (dict, optional): Contains the history of solutions (`X`) and their corresponding costs (`Cost`) if `full_meta_data` is enabled.
+    # Raises:
+    - No explicit exceptions are raised by the class itself, but underlying operations (e.g., NumPy operations) may raise exceptions if invalid inputs are provided.
+    # Usage Example:
+    """
     def __init__(self, config):
         super(NLSHADELBC, self).__init__(config)
         self.__pb = 0.4  # rate of best individuals in mutation
