@@ -224,6 +224,11 @@ Baseline
 
 ##### RLDEAFL
 
+- **Introduction**：\
+   RLDEAFL is an algorithm that supports automated feature learning during the meta-learning process, which integrates a learnable feature extraction module into a reinforcement learning-based DE method to learn both the feature encoding and meta-level policy.
+- **Original paper**："[**Reinforcement Learning-based Self-adaptive Differential Evolution through Automated Landscape Feature Learning**](http://arxiv.org/abs/2503.18061)."
+- **Official Implementation**：[RLDE-AFL](https://github.com/MetaEvo/RLDE-AFL?tab=readme-ov-file)
+
 ##### RLEPSO
 
 - **Introduction**：\
@@ -262,8 +267,7 @@ Baseline
   A novel evolutionary optimization strategy based on the derandomized evolution strategy with covariance matrix adaptation. This is accomplished by efficientlyincorporating the available information from a large population, thus significantly re-ducing the number of generations needed to adapt the covariance matrix.
 - **Original paper**：
   "[**Reducing the time complexity of the derandomized evolution strategy with covariance matrix adaptation (CMA-ES)**](https://ieeexplore.ieee.org/abstract/document/6790790/)." Evolutionary Computation 11.1 (2003): 1-18.
-- **Official Implementation**：
-  None
+- **Official Implementation**：None
 
 ##### GLPSO
 
@@ -271,7 +275,7 @@ Baseline
   The PSO algorithm is hybridized with genetic evolution mechanisms. In this approach, genetic operators—specifically crossover, mutation, and selection—are incorporated into the PSO framework to construct promising exemplars and enhance the search performance.
 - **Original paper**：
   "[**Genetic learning particle swarm optimization**](https://ieeexplore.ieee.org/abstract/document/7271066/)." IEEE Transactions on Cybernetics 46.10 (2015): 2277-2290.
-- **Official Implementation**：
+- **Official Implementation**：[GLPSO](http://www.ai.sysu.edu.cn/GYJ/glpso/c_co)
 
 ##### JDE21
 
@@ -279,7 +283,7 @@ Baseline
   A DE for solving single-objective real-parameter bound-constrained optimization problems. It uses several mechanisms to tackle optimization problems efficiently: two populations with different sizes, restart mechanism in both populations, self-adaptive control parameters F and CR, the extended range of values for CR in thebigger population, migration of the best individual from the big population into the small population, modified mutation strategy in the bigger population, crowding mechanism and population size reduction in the bigger population.
 - **Original paper**：
   "[**Self-adaptive differential evolution algorithm with population size reduction for single objective bound-constrained optimization: Algorithm j21**](https://ieeexplore.ieee.org/abstract/document/9504782/)." 2021 IEEE Congress on Evolutionary Computation (CEC). IEEE, 2021.
-- **Official Implementation**：
+- **Official Implementation**：None
 
 ##### MADDE
 
@@ -311,9 +315,17 @@ Baseline
   Self-Adaptive two roles hybrid learn-ing strategies-based particle swarm optimization.It uses exploration-role and exploitation-role learning strategies with self-adaptively updating parameters manner.
 - **Original paper**：
   "[**Self-Adaptive two roles hybrid learning strategies-based particle swarm optimization**](https://www.sciencedirect.com/science/article/pii/S0020025521006988)." Information Sciences 578 (2021): 457-481.
-- **Official Implementation**：
+- **Official Implementation**：None
 
 #### Multi-Objective Optimization
+
+##### MADAC
+
+- **Introduction**：\
+  Multi-agent dynamic algorithm configuration in which one agent works for one type of configuration hyperparameter.It rmulates the dynamic configuration of a complex algorithm with multiple types of hyperparameters as a contextual multi-agent Markov decision process and solves it by a cooperative multi-agent RL (MARL) algorithm.
+- **Original paper**：
+  "[**Multi-agent dynamic algorithm configuration**](https://proceedings.neurips.cc/paper_files/paper/2022/hash/7f02b39c0424cc4a422994289ca03e46-Abstract-Conference.html)." Advances in Neural Information Processing Systems 35 (2022): 20147-20161.
+- **Official Implementation**：[MADAC](https://github.com/lamda-bbo/madac)
 
 #### Multi-Modal Optimization
 
