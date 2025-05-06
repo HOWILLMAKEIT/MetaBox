@@ -58,35 +58,6 @@ pip install myst-parser
 
 跟一般的前端 web 界面类似，我们的主界面是在 Metabox/docs/source/index.md, 如果要修改主界面请在这里。
 
-## API Reference 规范
-
-先写成 docstring 那种,还要再研究一下是什么规范
-
-ok 按照[autodoc2 官方文档](https://sphinx-autodoc2.readthedocs.io/en/stable/docstrings.html)中所写：
-
-> 在自动记录源代码时， 默认情况下，文档字符串将使用当前解析器呈现。（机翻）
-
-也就是说对于每种函数的 docstring，他都会将它解析成 markdown 格式，实测过后确实如此。
-对于使用 gpt 4o 的 copilot 来进行生成时，直接/doc 是无法生成 markdown 格式的，
-
-那最简单的方法就是 prompt engineering，也就是调整我们的提示词。
-我的方法是/doc 然后后面写上本文件夹下的 template.py 中的内容，实测下来确实按照要求写了，写的也很美观，供参考
-
-0419：
-
-和师兄约定好了：
-
-- 外层的基类所有接口都要写
-- 内层的算法（包括 baseline 什么的）先要讲清楚出处然后写好
-- 可以生成成后问对应的人 但是写作工作是我们写
-- template 基本上是 params（注意，params 也要写道具体的内容，不只是 type），return，里面的实现细节不用写
-
-一些笔记：
-使用到的一些说法：
-
-- config (object): Configuration object containing all necessary parameters for experiment.For details you can visit config.py.
-- data (dict): The test result.Also a nested dictionary where the first-level keys are problem names, and the second-level keys are agent names. Each agent maps to a list or array of results.或者是：structured as `dict[problem][algo][run][generation][objective]`.(主要是可以参考这种写法，使用 first-level keys……这样的语句来表达数据结构,或者直接写第二种，好像第二种挺直观的)
-
 ## markdown 与 readthedocs 的一些使用问题
 
 感觉上 readthedocs 和 reST 语法更合得来（毕竟是人家的默认语言）

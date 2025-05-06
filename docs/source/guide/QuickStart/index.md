@@ -9,8 +9,6 @@ Core_Concept
 
 ```
 
-# Quickstart
-
 🚀 Hi！Here is **the fastest way to begin your journey of MetaBox**. 🚀
 
 ## Installation
@@ -150,6 +148,7 @@ tester.test()
 🎯 Example: Test GLEET and CMAES on COCO's BBOB (10D, easy)
 
 Assume the GLEET agent is saved in "agent_model/train/GLEET/20250426T113530_bbob-10D_easy/checkpoint-0.pk1"
+
 ```python
 from metaevobox import Tester, Config
 from metaevobox.environment.problem.utils import construct_problem_set
