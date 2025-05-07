@@ -17,6 +17,10 @@ class VDN_Agent(Basic_Agent):
     """
     # Introduction
     The `VDN_Agent` class implements a Value Decomposition Network (VDN) agent for multi-agent reinforcement learning. This agent is designed to handle cooperative multi-agent environments by decomposing the joint action-value function into individual agent value functions. It supports experience replay, target networks, epsilon-greedy exploration, and parallelized environments. The class provides methods for training, action selection, and evaluation.
+    # Original paper
+    "[**Value-Decomposition Networks For Cooperative Multi-Agent Learning**](https://arxiv.org/abs/1706.05296)."
+    # Official Implementation
+    None
     # Args
     - `config`: Configuration object containing all necessary parameters for experiment.For details you can visit config.py.
     - `network` (dict): A dictionary of neural networks used by the agent, where keys are network names and values are the corresponding network objects.

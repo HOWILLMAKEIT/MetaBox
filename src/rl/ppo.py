@@ -16,7 +16,6 @@ class Memory:
     A class to store and manage the memory required for reinforcement learning algorithms.
     It keeps track of actions, states, log probabilities, and rewards during an episode
     and provides functionality to clear the stored memory.
-
     # Methods:
     - __init__(): Initializes the memory by creating empty lists for actions, states, log probabilities, and rewards.
     - clear_memory(): Clears the stored memory by deleting the lists of actions, states, log probabilities, and rewards.
@@ -41,6 +40,10 @@ class PPO_Agent(Basic_Agent):
     """
     # Introduction
     The `PPO_Agent` class implements a Proximal Policy Optimization (PPO) agent for reinforcement learning. This agent uses actor-critic architecture, generalized advantage estimation, and clipping techniques to optimize policies in a stable and efficient manner. It supports parallelized environments, logging to TensorBoard, and saving/loading checkpoints for training continuation.
+    # Original paper
+    "[**Proximal Policy Optimization Algorithms**](https://arxiv.org/abs/1707.06347)."
+    # Official Implementation
+    None
     # Args
     - `config`: Configuration object containing all necessary parameters for experiment.For details you can visit config.py.
     - `networks` (dict): A dictionary of neural networks used by the agent, with keys as network names (e.g., 'actor', 'critic') and values as the corresponding network instances.

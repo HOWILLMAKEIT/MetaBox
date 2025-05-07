@@ -44,6 +44,10 @@ class A2C_Agent(Basic_Agent):
     """
     # Introduction
     The `A2C_Agent` class implements an Advantage Actor-Critic (A2C) agent for reinforcement learning. This agent uses actor and critic networks to optimize policies and guide the low_level optimizer to optimize.
+    # Original paper
+    "[**Actor-Critic Algorithms**](https://proceedings.neurips.cc/paper/1999/file/6449f44a102fde848669bdd9eb6b76fa-Paper.pdf)." Advances in Neural Information Processing Systems (NIPS), 1999
+    # Official Implementation
+    None
     # Args
     - `config`: Configuration object containing all necessary parameters for experiment.For details you can visit config.py.
     - `networks` (dict): A dictionary of neural networks used by the agent, with keys as network names (e.g., 'actor', 'critic') and values as the corresponding network instances.

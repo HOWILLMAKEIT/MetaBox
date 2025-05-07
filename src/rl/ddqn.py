@@ -14,6 +14,10 @@ class DDQN_Agent(Basic_Agent):
     """
     # Introduction
     The `DDQN_Agent` class implements a Double Deep Q-Network (DDQN) agent for reinforcement learning. This agent leverages experience replay, target networks, and epsilon-greedy exploration to learn optimal policies in a given environment.
+    # Original paper
+    "[**Deep Reinforcement Learning with Double Q-learning**](https://arxiv.org/abs/1509.06461)."Proceedings of the AAAI Conference on Artificial Intelligence, 2016
+    # Official Implementation
+    None
     # Args
     - `config`: Configuration object containing all necessary parameters for experiment.For details you can visit config.py.
     - `networks` (dict): A dictionary of neural networks used by the agent, with keys as network names (e.g., 'actor', 'critic') and values as the corresponding network instances.

@@ -12,6 +12,12 @@ class QLearning_Agent(Basic_Agent):
     """
     # Introduction
     The `QLearning_Agent` class implements a Q-Learning agent for reinforcement learning. This agent uses a tabular Q-learning approach to learn optimal policies in discrete state and action spaces. It supports parallelized environments, epsilon-greedy exploration, and provides methods for training, action selection, and evaluation.
+    # Original paper
+    "Learning from Delayed Rewards" (Chapter 5 introduces Q-Learning)
+    The First Journal Publication：
+    "[**Q-Learning**](https://link.springer.com/article/10.1007/BF00992698)." 1992 (in Machine Learning journal)
+    # Official Implementation
+    None
     # Args
     - `config`: Configuration object containing all necessary parameters for experiment.For details you can visit config.py.
     # Attributes

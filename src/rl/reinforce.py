@@ -37,6 +37,10 @@ class REINFORCE_Agent(Basic_Agent):
     """
     # Introduction
     The `REINFORCE_Agent` class implements a REINFORCE algorithm-based agent for reinforcement learning. This agent uses policy gradient methods to optimize the policy directly by maximizing the expected cumulative reward. It supports parallelized environments, logging to TensorBoard, and saving/loading checkpoints for training continuation.
+    # Original paper
+    "[**Simple Statistical Gradient-Following Algorithms for Connectionist Reinforcement Learning**](https://link.springer.com/article/10.1007/BF00992696)." 1992 (in Machine Learning journal)
+    # Official Implementation
+    None
     # Args
     - `config`: Configuration object containing all necessary parameters for experiment.For details you can visit config.py.
     - `networks` (dict): A dictionary of neural networks used by the agent, with keys as network names (e.g., 'actor', 'critic') and values as the corresponding network instances.

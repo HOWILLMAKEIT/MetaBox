@@ -13,6 +13,10 @@ class DQN_Agent(Basic_Agent):
     """
     # Introduction
     The `DQN_Agent` class implements a Deep Q-Network (DQN) agent for reinforcement learning. This agent uses experience replay, epsilon-greedy exploration, and gradient clipping to learn optimal policies in a given environment. It supports parallelized environments and provides methods for training, action selection, and evaluation.
+    # Original paper
+    "[**Playing Atari with Deep Reinforcement Learning**](https://arxiv.org/abs/1312.5602)."
+    # Official Implementation
+    None
     # Args
     - `config`: Configuration object containing all necessary parameters for experiment.For details you can visit config.py.
     - `networks` (dict): A dictionary of neural networks used by the agent, with keys as network names (e.g., 'actor', 'critic') and values as the corresponding network instances.
