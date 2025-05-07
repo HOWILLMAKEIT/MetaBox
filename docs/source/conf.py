@@ -15,6 +15,9 @@
 import os
 import sys
 
+# 添加项目根目录到路径
+sys.path.insert(0, os.path.abspath("../.."))
+# 添加src目录到路径
 sys.path.insert(0, os.path.abspath("../../src"))
 
 
