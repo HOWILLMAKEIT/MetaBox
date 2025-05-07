@@ -73,6 +73,19 @@ class Individual():
 
 
 class MFEA(Basic_Optimizer):
+    """
+    # Introduction
+    MFEA:Multifactorial Evolution: Toward Evolutionary Multitasking
+    Multifactorial Evolution is an emerging evolutionary computing paradigm that aims to achieve evolutionary multitasking. Traditional evolutionary algorithms usually target a single optimization problem, while multifactorial evolution allows a single population to optimize multiple target tasks simultaneously. This method can exploit the correlation between different tasks and improve the overall performance of the algorithm through cross-task knowledge transfer.
+    Multifactorial evolution algorithms achieve evolutionary multitasking by simulating the multifactorial characteristics of biological evolution, such as gene expression and inheritance. This adaptive multitasking optimization method can be applied to various complex practical problems, such as production optimization, reinforcement learning, etc.
+    # Original Paper
+    "[**Multifactorial Evolution: Toward Evolutionary Multitasking**](https://ieeexplore.ieee.org/abstract/document/7161358)." 
+    # Official Implementation
+    None
+    # Application Scenario
+    multi-task optimization problems(MTOP)
+
+    """
     def __init__(self, config):
         super().__init__(config)
         self.__config = config

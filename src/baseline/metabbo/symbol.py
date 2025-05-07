@@ -40,6 +40,17 @@ class Memory:
         del self.b_rewards[:]
 
 class SYMBOL(PPO_Agent):
+    """
+    # Introduction
+    The paper "SYMBOL: Generating Flexible Black-Box Optimizers through Symbolic Equation Learning" introduces a novel framework, SYMBOL, designed to automate the discovery of advanced black-box optimizers using symbolic equation learning. Unlike traditional Meta-Black-Box Optimization (MetaBBO) methods that rely on predefined, hand-crafted optimizers, SYMBOL employs a Symbolic Equation Generator (SEG) to dynamically produce closed-form optimization rules tailored to specific tasks and optimization steps. The framework incorporates reinforcement learning-based strategies to efficiently meta-learn these symbolic rules. 
+    # Original Paper
+    "[**Symbol: Generating Flexible Black-Box Optimizers through Symbolic Equation Learning**](https://openreview.net/forum?id=vLJcd43U7a)." The Twelfth International Conference on Learning Representations. (2024)
+    # Official Implementation
+    [SYMBOL](https://github.com/MetaEvo/Symbol)
+    # Application Scenario
+    single-object optimization problems(SOOP)
+
+    """
     def __init__(self, config):
         self.config = config
 

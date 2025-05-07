@@ -5,6 +5,18 @@ from ...rl.utils import save_class
 
 
 class NRLPSO(QLearning_Agent):
+    """
+    # Introduction
+    This paper proposes a new reinforcement learning driven particle swarm optimization algorithm, which enhances the algorithm's exploration ability and convergence by introducing a neighborhood differential mutation strategy into the PSO algorithm.
+    Specifically, the algorithm uses reinforcement learning to adaptively adjust the mutation probability and mutation amplitude of particles to better balance exploration and utilization. At the same time, it adopts a neighborhood differential mutation strategy, using information within the particle neighborhood to guide the search direction of the particles, further improving the algorithm's convergence speed and solution quality.
+    # Original Paper
+    "[**Reinforcement learning-based particle swarm optimization with neighborhood differential mutation strategy**](https://www.sciencedirect.com/science/article/pii/S2210650223000482)." Swarm and Evolutionary Computation (2023)
+    # Official Implementation
+    None
+    # Application Scenario
+    single-object optimization problems(SOOP)
+
+    """
     def __init__(self, config):
 
         self.config = config

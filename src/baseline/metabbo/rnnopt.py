@@ -14,6 +14,18 @@ def scale(x, lb, ub):
 
 
 class RNNOPT(Basic_Agent):
+    """
+    # Introduction
+    The paper "Meta-Learning for Black-Box Optimization" explores the use of meta-learning techniques to address black-box optimization problems, where the objective function is unknown and derivative-free methods are required. The authors propose RNN-Opt, a recurrent neural network-based optimizer trained under the meta-learning framework to optimize real-parameter single-objective continuous functions within constrained budgets. Unlike traditional approaches, this method employs a regret-based loss function during training, which better aligns with real-world testing scenarios. Additionally, the paper introduces enhancements to handle challenges such as unknown function ranges and domain-specific constraints. 
+    # Original Paper
+    "[**Meta-learning for black-box optimization**](https://link.springer.com/chapter/10.1007/978-3-030-46147-8_22)." Joint European Conference on Machine Learning and Knowledge Discovery in Databases. (2019)
+    # Official Implementation
+    None
+    # Application Scenario
+    single-object optimization problems(SOOP)
+
+    """
+
     def __init__(self, config):
         super().__init__(config)
         config.lr = 1e-5

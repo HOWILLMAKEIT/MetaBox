@@ -5,6 +5,18 @@ from ...rl.utils import save_class
 
 
 class QLPSO(QLearning_Agent):
+    """
+    # Introduction
+    This paper proposes a particle swarm optimization communication topology algorithm based on reinforcement learning, aiming to improve the performance of PSO.
+    Existing studies have shown that the communication topology of PSO has an important impact on its performance. The authors use reinforcement learning agents to dynamically adjust and select the communication topology of PSO to adapt to different optimization problems and improve optimization efficiency.
+    # Original Paper
+    "[**A reinforcement learning-based communication topology in particle swarm optimization**](https://link.springer.com/article/10.1007/s00521-019-04527-9)." Neural Computing and Applications (2020)
+    # Official Implementation
+    None
+    # Application Scenario
+    single-object optimization problems(SOOP)
+
+    """
     def __init__(self, config):
         self.config = config
         # define hyperparameters that agent needs

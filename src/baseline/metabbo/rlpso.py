@@ -47,6 +47,17 @@ class PolicyNetwork(nn.Module):
 
 
 class RLPSO(REINFORCE_Agent):
+    """
+    # Introduction
+    The paper "Employing reinforcement learning to enhance particle swarm optimization methods" presents a novel approach to improving the efficiency and adaptability of Particle Swarm Optimization (PSO), a popular optimization algorithm inspired by swarm intelligence. By incorporating reinforcement learning (RL), the authors develop a framework that adaptively adjusts key PSO parameters and strategies during the optimization process. This integration enables the algorithm to intelligently balance exploration and exploitation, addressing challenges such as premature convergence and stagnation. 
+    # Original Paper
+    "[**Employing reinforcement learning to enhance particle swarm optimization methods**](https://www.tandfonline.com/doi/abs/10.1080/0305215X.2020.1867120)." Engineering Optimization (2022)
+    # Official Implementation
+    None
+    # Application Scenario
+    single-object optimization problems(SOOP)
+
+    """
     def __init__(self, config):
 
         # add specified config

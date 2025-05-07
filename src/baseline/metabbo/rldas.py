@@ -91,6 +91,17 @@ class Critic(nn.Module):
         return bl_val.detach(), bl_val
 
 class RLDAS(PPO_Agent):
+    """
+    # Introduction
+    This paper proposes a dynamic algorithm selection method based on deep reinforcement learning, aiming to improve the performance of solving real-parameter optimization problems. The paper points out that evolutionary algorithms (such as differential evolution) perform well in solving real-parameter optimization problems. However, the optimal algorithm parameters corresponding to different problem instances may be different, which poses a challenge to algorithm selection. To this end, the authors designed a deep reinforcement learning framework that can adaptively select the optimal algorithm parameter configuration based on the characteristics of the problem instance. Through experimental verification on a series of benchmark functions, the method shows better performance than traditional differential evolution algorithms.
+    # Original Paper
+    "[**Deep Reinforcement Learning for Dynamic Algorithm Selection: A Proof-of-Principle Study on Differential Evolution**](https://ieeexplore.ieee.org/abstract/document/10496708/)."  IEEE Transactions on Systems, Man, and Cybernetics: Systems (2024)
+    # Official Implementation
+    [RL-DAS](https://github.com/GMC-DRL/RL-DAS)
+    # Application Scenario
+    single-object optimization problems(SOOP)
+
+    """
     def __init__(self, config):
         self.config = config
 

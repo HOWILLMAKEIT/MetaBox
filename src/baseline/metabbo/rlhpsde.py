@@ -5,6 +5,17 @@ from ...rl.utils import save_class
 
 
 class RLHPSDE(QLearning_Agent):
+    """
+    # Introduction
+    The paper "Differential evolution with hybrid parameters and mutation strategies based on reinforcement learning" explores an innovative approach to enhancing the performance of Differential Evolution (DE), a widely-used optimization algorithm. The authors propose a hybrid framework that integrates reinforcement learning (RL) to dynamically adjust DE's key parameters and mutation strategies. This adaptive mechanism enables the algorithm to balance exploration and exploitation more effectively, improving its ability to solve complex optimization problems. The study demonstrates the efficacy of the proposed method through extensive experiments on benchmark functions and real-world applications, highlighting its potential to achieve superior performance compared to traditional DE variants.
+    # Original Paper
+    "[**Differential evolution with hybrid parameters and mutation strategies based on reinforcement learning**](https://www.sciencedirect.com/science/article/pii/S2210650222001602)." Swarm and Evolutionary Computation (2022): 101194
+    # Official Implementation
+    None
+    # Application Scenario
+    single-object optimization problems(SOOP)
+
+    """
     def __init__(self, config):
 
         self.config = config

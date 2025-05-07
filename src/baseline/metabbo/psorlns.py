@@ -3,6 +3,18 @@ from ...rl.dqn import *
 
 
 class PSORLNS(DQN_Agent):
+    """
+    # Introduction
+    PSORLNS:A reinforcement learning-based neighborhood search operator for multi-modal optimization and its applications
+    PSORLNS is a neighborhood search operator based on reinforcement learning for solving multimodal optimization problems. PSORLNS adaptively adjusts the search range through reinforcement learning to balance exploration and exploitation, thereby improving the search performance for multimodal optimization problems.
+    # Original Paper
+    "[**A reinforcement learning-based neighborhood search operator for multi-modal optimization and its applications**](https://www.sciencedirect.com/science/article/abs/pii/S0957417424000150)." 
+    # Official Implementation
+    None
+    # Application Scenario
+    multi-modal optimization problems(MMOP)
+
+    """
     def __init__(self, config):
         
         self.config = config

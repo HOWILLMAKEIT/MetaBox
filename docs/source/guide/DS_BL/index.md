@@ -125,10 +125,10 @@ Baseline
 
 ## Baseline
 
-|                     | SOO                                                                                                                                                                                                                                                                                      | MOO             | MMO             | MTO  |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- | --------------- | ---- |
-| [MetaBBO](#metabbo) | [B2Opt](#b2opt)、[DEDDQN](#deddqn)、[DEDQN](#dedqn)、[GLEET](#gleet)、[GLHF](#glhf)、[LDE](#lde)、[LES](#les)、[LGA](#lga)、[NRLPSO](#nrlpso)、[QLPSO](#qlpso)、[RLDAS](#rldas)、[RLDEAFL](#rldeafl)、[RLEPSO](#rlepso)、[RLPSO](#rlpso)、[SurrRLDE](#surrrlde)、[SYMBOL](#symbol)、OPRO | MADAC           | RLEMMO、PSORLNS | L2T  |
-| [BBO](#bbo)         | [CMA-ES](#cma-es)、DE、[GLPSO](#glpso)、[JDE21](#jde21)、[MADDE](#madde)、[NL-SHADE-LBC](#nl-shade-lbc)、PSO、[SHADE](#shade)、[SAHLPSO](#sahlpso)、SDMSPSO                                                                                                                              | [MOEAD](#moead) |                 | MFEA |
+|                     | SOO                                                                                                                                                                                                                                                                                 | MOO             | MMO             | MTO  |
+| ------------------- |-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------| --------------- | --------------- | ---- |
+| [MetaBBO](#metabbo) | [B2Opt](#b2opt)、[DEDDQN](#deddqn)、[DEDQN](#dedqn)、[GLEET](#gleet)、[GLHF](#glhf)、[LDE](#lde)、[LES](#les)、[LGA](#lga)、[NRLPSO](#nrlpso)、[QLPSO](#qlpso)、[RLDAS](#rldas)、[RLDEAFL](#rldeafl)、[RLEPSO](#rlepso)、[RLPSO](#rlpso)、[SurrRLDE](#surrrlde)、[SYMBOL](#symbol)、OPRO、RNN-OPT、RL-HPSDE | MADAC           | RLEMMO、PSORLNS | L2T  |
+| [BBO](#bbo)         | [CMA-ES](#cma-es)、DE、[GLPSO](#glpso)、[JDE21](#jde21)、[MADDE](#madde)、[NL-SHADE-LBC](#nl-shade-lbc)、PSO、[SHADE](#shade)、[SAHLPSO](#sahlpso)、SDMSPSO                                                                                                                                  | [MOEAD](#moead) |                 | MFEA |
 
 ### MetaBBO
 

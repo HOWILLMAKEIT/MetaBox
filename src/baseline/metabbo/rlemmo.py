@@ -158,6 +158,20 @@ class Critic(nn.Module):
 
 
 class RLEMMO(PPO_Agent):
+    """
+    # Introduction
+    RLEMMO: Evolutionary Multimodal Optimization Assisted By Deep Reinforcement Learning.
+    RLEMMO adopts a meta-black-box optimization framework, maintains a population of solutions, and combines a reinforcement learning agent to flexibly adjust individual-level search strategies to match the current optimization state, thereby improving the search performance for MMOPs. Specifically, RLEMMO encodes terrain characteristics and evolution path information into each individual, and then uses an attention network to promote group information sharing. Through a new reward mechanism that encourages quality and diversity, RLEMMO can be effectively trained using a policy gradient algorithm.
+    In the CEC2013 MMOP benchmark, RLEMMO's optimization performance outperforms several strong baseline algorithms, demonstrating its competitiveness in solving multimodal optimization problems.
+    # Original Paper
+    "[**RLEMMO: Evolutionary Multimodal Optimization Assisted By Deep Reinforcement Learning.**](https://dl.acm.org/doi/abs/10.1145/3638529.3653995)." 
+    # Official Implementation
+    None
+    # Application Scenario
+    multi-modal optimization problems(MMOP)
+
+    """
+
     def __init__(self, config):
         self.config = config
         

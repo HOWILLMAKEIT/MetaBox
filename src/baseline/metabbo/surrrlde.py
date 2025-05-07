@@ -3,6 +3,17 @@ from ...rl.ddqn import *
 
 
 class SurrRLDE(DDQN_Agent):
+	"""
+	# Introduction
+	The paper "Surrogate Learning in Meta-Black-Box Optimization: A Preliminary Study" introduces a novel framework, Surr-RLDE, that combines surrogate modeling and reinforcement learning to enhance Meta-Black-Box Optimization (MetaBBO),the authors propose a two-stage learning process: (1) Surrogate learning, where a Kolmogorov-Arnold Network (KAN) is trained using a relative-order-aware loss to accurately approximate objective functions, and (2) Policy learning, where reinforcement learning dynamically configures mutation operators in a Differential Evolution (DE) algorithm. By integrating the surrogate model into policy training, Surr-RLDE significantly reduces evaluation costs while maintaining competitive performance.
+	# Original Paper
+	"[**Surrogate Learning in Meta-Black-Box Optimization: A Preliminary Study**](https://arxiv.org/abs/2503.18060)." The Genetic and Evolutionary Computation Conference (GECCO 2025)
+	# Official Implementation
+	[Surr-RLDE](https://github.com/MetaEvo/Surr-RLDE)
+	# Application Scenario
+	single-object optimization problems(SOOP)
+
+	"""
 	def __init__(self, config):
 		self.config = config
 		self.config.state_size = 9

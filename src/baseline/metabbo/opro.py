@@ -97,6 +97,17 @@ class LLMAgent:
         return res
 
 class OPRO(Basic_Agent):
+    """
+    # Introduction
+    The paper proposes a method called "Optimization by PROmpting (OPRO)", which achieves optimization using LLM by describing the optimization task in natural language and guiding LLM to iteratively generate new solutions based on the problem description and previously found solutions.
+    # Original Paper
+    "[**Large language models as optimizers**](https://arxiv.org/abs/2309.03409)." arXiv preprint arXiv:2309.03409 (2023).
+    # Official Implementation
+    [OPRO](https://github.com/google-deepmind/opro)
+    # Application Scenario
+    single-object optimization problems(SOOP)
+
+    """
     def __init__(self, config):
         super().__init__(config)
         self.config = config

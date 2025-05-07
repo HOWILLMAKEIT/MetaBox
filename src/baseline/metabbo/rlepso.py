@@ -62,6 +62,17 @@ class Critic(nn.Module):
 
 
 class RLEPSO(PPO_Agent):
+    """
+    # Introduction
+    This paper proposes a new reinforcement learning driven ensemble particle swarm optimization algorithm (RLEPSO). The algorithm uses reinforcement learning technology to adaptively select different PSO variants, thereby improving the algorithm's exploration ability and convergence. Specifically, the RLEPSO algorithm uses reinforcement learning to dynamically adjust the use probability of different PSO variants to better balance exploration and utilization. At the same time, it uses an ensemble learning method to combine multiple PSO variants together to fully utilize the advantages of different variants.
+    # Original Paper
+    "[**RLEPSO: Reinforcement learning based Ensemble particle swarm optimizer**](https://dl.acm.org/doi/abs/10.1145/3508546.3508599)." Proceedings of the 2021 4th International Conference on Algorithms, Computing and Artificial Intelligence. (2021)
+    # Official Implementation
+    None
+    # Application Scenario
+    single-object optimization problems(SOOP)
+
+    """
     def __init__(self, config):
 
         self.config = config

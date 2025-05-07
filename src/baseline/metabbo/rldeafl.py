@@ -356,6 +356,18 @@ class Critic(nn.Module):
         return {'Total': total_num, 'Trainable': trainable_num}
 
 class RLDEAFL(PPO_Agent):
+    """
+    # Introduction
+    This paper proposes a new reinforcement learning-based adaptive differential evolution algorithm, called RLDE-AFL. The algorithm achieves automatic feature learning for optimization problems by integrating a learnable feature extraction module into the differential evolution algorithm. At the same time, it also adopts a reinforcement learning-driven adaptive algorithm configuration strategy to better adapt to the characteristics of different optimization problems.
+    Specifically, RLDE-AFL uses an attention mechanism neural network and a mantissa-based embedding method to transform the solution population and its target value into expressive optimization problem features. In addition, it introduces a comprehensive algorithm configuration space containing multiple differential evolution operators, and uses reinforcement learning to adaptively adjust these operators and their parameters, thereby improving the algorithm's behavioral diversity and optimization performance.
+    # Original Paper
+    "[**Reinforcement Learning-based Self-adaptive Differential Evolution through Automated Landscape Feature Learning**](https://arxiv.org/abs/2503.18061)." 
+    # Official Implementation
+    [RLDE-AFL](https://github.com/GMC-DRL/RLDE-AFL)
+    # Application Scenario
+    single-object optimization problems(SOOP)
+
+    """
     def __init__(self, config):
         self.config = config
 

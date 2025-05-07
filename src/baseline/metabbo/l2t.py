@@ -77,6 +77,20 @@ class Memory:
         del self.rewards[:]
 
 class L2T(PPO_Agent):
+    """
+    # Introduction
+    L2T: Learning to Transfer for Evolutionary Multitasking
+    Existing implicit EMT(Evolutionary Multitasking) methods are challenging in terms of adaptability because they use limited evolutionary operators and cannot fully utilize the evolutionary state for effective knowledge transfer. To overcome these limitations, this paper proposes a "Learning to Transfer" (L2T) framework to enhance the adaptability of EMT by automatically discovering efficient knowledge transfer strategies.
+    The framework models the knowledge transfer process as a learning agent making a series of policy decisions during the EMT process. It includes action design, state representation, reward function, and an interactive environment with multi-task optimization problems. Through the agent-critic network structure and the proximal policy optimization algorithm, the agent can learn efficient knowledge transfer strategies and can be integrated with various evolutionary algorithms to improve their ability to solve new multi-task optimization problems.
+    Comprehensive experimental results show that the L2T framework can significantly improve the adaptability and performance of implicit EMT and achieve excellent results on a variety of different multi-task optimization problems.
+    # Original Paper
+    "[**Learning to Transfer for Evolutionary Multitasking**](https://arxiv.org/abs/2406.14359)." 
+    # Official Implementation
+    None
+    # Application Scenario
+    multi-task optimization problems(MTOP)
+
+    """
     def __init__(self, config):
         self.config = config
 
