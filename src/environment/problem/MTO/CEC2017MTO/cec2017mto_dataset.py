@@ -40,6 +40,50 @@ class CEC2017MTO_Tasks():
         self.T1 = eval_time
 
 class CEC2017MTO_Dataset(Dataset):
+    """
+    # Introduction
+      CEC2017MTO proposes 9 multi-task benchmark problems to represent a wider range of multi-task optimization problems.
+    # Original Paper
+      "[Evolutionary Multitasking for Single-objective Continuous Optimization: Benchmark Problems, Performance Metric, and Bseline Results](https://arxiv.org/pdf/1706.03470)."
+    # Official Implementation
+      [CEC2017MTO](http://www.bdsc.site/websites/MTO/index.html)
+    # License
+    None
+    # Problem Suite Composition
+      The CEC2017MTO problem suite contains a total of 9 benchmark problems, each consisting of two basic functions.
+      These nine benchmark problems are classified according to the degree of intersection and the inter-task similarity between the two constitutive functions:
+        P1. Complete intersection and high similarity(CI+HS)
+        P2. Complete intersection and medium similarity(CI+MS)  
+        P3. Complete intersection and low similarity(CI+LS)
+        P4. Partial intersection and high similarity(PI+HS)
+        P5. Partial intersection and medium similarity(PI+MS)  
+        P6. Partial intersection and low similarity(PI+LS)
+        P7. No intersection and high similarity(NI+HS)
+        P8. No intersection and medium similarity(NI+MS) 
+        P9. No intersection and low similarity(NI+LS)
+    # Args:
+    - `data` (list): A list of task datasets, where each dataset contains multiple tasks.
+    - `batch_size` (int, optional): The size of each batch for data retrieval. Defaults to 1.
+    # Attributes:
+    - `data` (list): The dataset containing tasks for the CEC2017MTO problem suite.
+    - `batch_size` (int): The size of each batch for data retrieval.
+    - `maxdim` (int): The maximum dimensionality across all tasks in the dataset.
+    - `N` (int): The total number of datasets in the collection.
+    - `ptr` (list): A list of indices for batching the dataset.
+    - `index` (numpy.ndarray): An array of shuffled indices for dataset access.
+    # Methods:
+    - `__getitem__(item)`: Retrieves a batch of data based on the specified index.
+    - `__len__()`: Returns the total number of datasets in the collection.
+    - `__add__(other)`: Combines the current dataset with another `CEC2017MTO_Dataset` instance.
+    - `shuffle()`: Randomly shuffles the dataset indices.
+    - `get_datasets(version, train_batch_size, test_batch_size, difficulty, user_train_list, user_test_list)`: 
+        Static method to generate training and testing datasets based on the specified difficulty level or user-defined task lists.
+    # Raises:
+    - `ValueError`: Raised in the following cases:
+        - If `difficulty`, `user_train_list`, and `user_test_list` are all `None`.
+        - If an invalid `difficulty` value is provided.
+    """
+
     def __init__(self,
                  data,
                  batch_size=1):

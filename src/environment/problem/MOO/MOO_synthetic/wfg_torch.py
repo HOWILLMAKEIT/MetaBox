@@ -82,6 +82,47 @@ def find_non_dominated_indices(Point):
 
 
 class WFG_Torch(Basic_Problem_Torch):
+    """
+    # Introduction
+    The `WFG_Torch` class is an Pytorch-based implementation of the WFG (Walking Fish Group) test problems for multi-objective optimization using PyTorch. These problems are widely used in the field of evolutionary computation to evaluate the performance of optimization algorithms. The class provides functionality to define and validate the problem parameters, generate optimal solutions, and calculate the objective values.
+    # Original paper
+    "[A review of multiobjective test problems and a scalable test problem toolkit](https://ieeexplore.ieee.org/abstract/document/1705400)." IEEE Transactions on Evolutionary Computation 10.5 (2006): 477-506.
+    # Official Implementation
+    [pymoo](https://github.com/anyoptimization/pymoo)
+    # License
+    Apache-2.0
+    # Problem Suite Composition
+    The WFG problem suite consists of a set of scalable multi-objective optimization problems. These problems are designed to test the performance of optimization algorithms under various conditions, such as different numbers of objectives, decision variables, and problem complexities. The problems are parameterized by the number of objectives (`n_obj`), the number of decision variables (`n_var`), and two additional parameters: `k` (position-related parameters) and `l` (distance-related parameters).
+    # Args:
+    - `n_var` (int): Number of decision variables.
+    - `n_obj` (int): Number of objectives.
+    - `k` (int, optional): Position-related parameter. Defaults to `2 * (n_obj - 1)` if not provided.
+    - `l` (int, optional): Distance-related parameter. Defaults to `n_var - k` if not provided.
+    - `**kwargs`: Additional keyword arguments.
+    # Attributes:
+    - `n_obj` (int): Number of objectives.
+    - `n_var` (int): Number of decision variables.
+    - `lb` (torch.Tensor): Lower bounds of the decision variables.
+    - `ub` (torch.Tensor): Upper bounds of the decision variables.
+    - `vtype` (torch.dtype): Data type of the decision variables.
+    - `S` (torch.Tensor): Scaling constants for the objective functions.
+    - `A` (torch.Tensor): Constants used in the transformation of objectives.
+    - `k` (int): Position-related parameter.
+    - `l` (int): Distance-related parameter.
+    # Methods:
+    - `validate(l, k, n_obj)`: Validates the problem parameters.
+    - `_post(t, a)`: Transforms the decision variables using a post-processing function.
+    - `_calculate(x, s, h)`: Calculates the objective values based on the decision variables and scaling constants.
+    - `_rand_optimal_position(n)`: Generates random optimal positions for the decision variables.
+    - `_positional_to_optimal(K)`: Converts positional variables to optimal decision variables.
+    - `__str__()`: Returns a string representation of the problem instance.
+    # Raises:
+    - `ValueError`: Raised in the `validate` method if:
+        - The number of objectives (`n_obj`) is less than 2.
+        - The position parameter (`k`) is not divisible by the number of objectives minus one.
+        - The position parameter (`k`) is less than 4.
+        - The sum of the position and distance parameters (`k + l`) is less than the number of objectives (`n_obj`).
+    """
 
     def __init__(self, n_var, n_obj, k = None, l = None, **kwargs):
         self.n_obj = n_obj

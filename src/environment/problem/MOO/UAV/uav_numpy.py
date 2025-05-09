@@ -35,6 +35,38 @@ from scipy.interpolate import RegularGridInterpolator
 import pickle
 
 class UAV_Numpy_Problem(Basic_Problem):
+    """
+    # Introduction
+    The `UAV_Numpy_Problem` class is designed to model a numpy-based multi-objective optimization problem for UAV (Unmanned Aerial Vehicle) path planning. 
+    # Original Paper
+    "[Benchmarking global optimization techniques for unmanned aerial vehicle path planning](https://arxiv.org/abs/2501.14503)." 
+    # Official Implementation
+    None
+    # License
+    None
+    # Problem Suite Composition
+    This problem involves optimizing UAV trajectories in a 3D terrain model. The problem is defined by a set of constraints, including terrain boundaries, velocity limits, and angular constraints. The optimization process aims to find feasible and optimal paths for UAVs while considering multiple objectives.
+    # Args:
+    None
+    # Attributes:
+    - `terrain_model` (dict): A dictionary containing the terrain model parameters, including start and end points, boundaries, and other relevant data.
+    - `FES` (int): Function evaluation count, initialized to 0.
+    - `optimum` (NoneType): Placeholder for the optimum solution, if applicable.
+    - `problem_id` (NoneType): Identifier for the problem instance.
+    - `dim` (NoneType): Dimensionality of the problem.
+    - `lb` (numpy.ndarray): Lower bounds for the problem variables.
+    - `ub` (numpy.ndarray): Upper bounds for the problem variables.
+    - `n_obj` (int): Number of objectives in the optimization problem, default is 5.
+    # Methods:
+    - `__str__() -> str`: Returns a string representation of the problem, including the terrain identifier.
+    - `__boundaries__() -> None`: Computes and sets the lower and upper bounds for the problem variables based on the terrain model.
+    - `spherical_to_cart_vec(solve: numpy.ndarray) -> Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray]`: Converts spherical coordinates (r, phi, psi) to Cartesian coordinates (x, y, z) for UAV trajectory points.
+    - `DistP2S(xs: numpy.ndarray, a: numpy.ndarray, b: numpy.ndarray) -> numpy.ndarray`: Computes the distance from a point to a line segment in 2D space.
+    # Raises:
+    - `ValueError`: Raised if the terrain model is not properly defined or if required parameters are missing.
+    - `TypeError`: Raised if input arguments to methods are not of the expected type.
+    """
+
     def __init__(self):
         self.terrain_model = None
         self.FES = 0

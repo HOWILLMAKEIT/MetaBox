@@ -23,7 +23,67 @@ class RNNOPT(Basic_Agent):
     None
     # Application Scenario
     single-object optimization problems(SOOP)
-
+    # Args:
+        `config`: Configuration object containing all necessary parameters for experiment.For details you can visit config.py.
+    # Attributes:
+        config (object): Configuration object containing hyperparameters and settings.
+        device (str): Device to be used for computation ('cpu' or 'cuda').
+        hidden_size (int): Size of the hidden layer in the LSTM network.
+        proj_size (int): Size of the projection layer in the LSTM network.
+        optimizer (torch.optim.Optimizer): Optimizer used for training the network.
+        network (list): List of network names used in the agent.
+        learning_step (int): Counter for the number of learning steps performed.
+        cur_checkpoint (int): Counter for the current checkpoint saved.
+    # Methods:
+        __str__():
+            Returns the string representation of the class.
+        set_network(networks: dict, learning_rates: float):
+            Sets up the neural networks and their corresponding optimizers.
+            Args:
+                networks (dict): Dictionary of network names and their instances.
+                learning_rates (float): Learning rate(s) for the networks.
+            Raises:
+                ValueError: If the length of learning rates does not match the number of networks.
+        get_step():
+            Returns the current learning step.
+            Returns:
+                int: The current learning step.
+        update_setting(config):
+            Updates the agent's settings and resets the learning step.
+            Args:
+                config (object): Configuration object with updated settings.
+        train_episode(envs, seeds, para_mode='dummy', compute_resource={}, tb_logger=None, required_info={}):
+            Trains the agent for one episode.
+            Args:
+                envs (list): List of environments for training.
+                seeds (Optional[Union[int, List[int], np.ndarray]]): Seeds for environment initialization.
+                para_mode (str): Parallelization mode for environments.
+                compute_resource (dict): Resources for computation (e.g., CPUs, GPUs).
+                tb_logger (object): TensorBoard logger for logging training metrics.
+                required_info (dict): Additional information required from the environment.
+            Returns:
+                tuple: A boolean indicating if the maximum learning step was exceeded and a dictionary with training information.
+        rollout_episode(env, seed=None, required_info={}):
+            Performs a rollout episode in the environment.
+            Args:
+                env (object): Environment for the rollout.
+                seed (Optional[int]): Seed for environment initialization.
+                required_info (dict): Additional information required from the environment.
+            Returns:
+                dict: Results of the rollout, including cost, function evaluations, and metadata.
+        log_to_tb_train(tb_logger, mini_step, grad_norms, loss, extra_info={}):
+            Logs training metrics to TensorBoard.
+            Args:
+                tb_logger (object): TensorBoard logger.
+                mini_step (int): Current mini-step in training.
+                grad_norms (tuple): Gradient norms before and after clipping.
+                loss (torch.Tensor): Loss value.
+                extra_info (dict): Additional information to log.
+    # Returns:
+        None
+    # Raises:
+        ValueError: If the length of the learning rates list does not match the number of networks.
+        AssertionError: If the optimizer specified in the configuration is not available in PyTorch.
     """
 
     def __init__(self, config):

@@ -56,7 +56,47 @@ class RLPSO(REINFORCE_Agent):
     None
     # Application Scenario
     single-object optimization problems(SOOP)
-
+    # Args:
+        `config`: Configuration object containing all necessary parameters for experiment.For details you can visit config.py.
+    # Attributes:
+        config (object): Configuration object with updated attributes specific to RLPSO.
+        model (PolicyNetwork): The policy network used by the RLPSO agent.
+        optimizer (torch.optim.Optimizer): Optimizer for training the policy network.
+        learning_time (int): Counter for the number of learning steps taken.
+        cur_checkpoint (int): Counter for the current checkpoint during training.
+    # Methods:
+        __str__():
+            Returns the string representation of the RLPSO class.
+        train_episode(envs, seeds, para_mode='dummy', asynchronous=None, num_cpus=1, num_gpus=0, tb_logger=None, required_info={}):
+            Trains the RLPSO agent for one episode.
+            Args:
+                envs (list): List of environments for training.
+                seeds (Optional[Union[int, List[int], np.ndarray]]): Seed(s) for environment randomization.
+                para_mode (Literal['dummy', 'subproc', 'ray', 'ray-subproc']): Parallelization mode for environments.
+                asynchronous (Literal[None, 'idle', 'restart', 'continue']): Asynchronous mode for environment execution.
+                num_cpus (Optional[Union[int, None]]): Number of CPUs to use.
+                num_gpus (int): Number of GPUs to use.
+                tb_logger (object): TensorBoard logger for logging training metrics.
+                required_info (dict): Additional information to retrieve from the environment.
+            Returns:
+                is_train_ended (bool): Whether the training has reached the maximum learning steps.
+                return_info (dict): Dictionary containing training metrics and environment attributes.
+        rollout_batch_episode(envs, seeds=None, para_mode='dummy', asynchronous=None, num_cpus=1, num_gpus=0, required_info={}):
+            Executes a batch rollout of episodes without training.
+            Args:
+                envs (list): List of environments for rollout.
+                seeds (Optional[Union[int, List[int], np.ndarray]]): Seed(s) for environment randomization.
+                para_mode (Literal['dummy', 'subproc', 'ray', 'ray-subproc']): Parallelization mode for environments.
+                asynchronous (Literal[None, 'idle', 'restart', 'continue']): Asynchronous mode for environment execution.
+                num_cpus (Optional[Union[int, None]]): Number of CPUs to use.
+                num_gpus (int): Number of GPUs to use.
+                required_info (dict): Additional information to retrieve from the environment.
+            Returns:
+                results (dict): Dictionary containing rollout metrics and environment attributes.
+    # Returns:
+        None
+    # Raises:
+        None
     """
     def __init__(self, config):
 

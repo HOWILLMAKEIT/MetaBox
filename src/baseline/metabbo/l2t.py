@@ -89,7 +89,64 @@ class L2T(PPO_Agent):
     None
     # Application Scenario
     multi-task optimization problems(MTOP)
-
+    # Args:
+        `config`: Configuration object containing all necessary parameters for experiment.For details you can visit config.py.
+    # Attributes:
+        config (object): Configuration object containing hyperparameters and settings.
+        task_cnt (int): Number of tasks based on the training or testing problem.
+        gamma (float): Discount factor for rewards.
+        n_step (int): Number of steps for n-step returns.
+        K_epochs (int): Number of epochs for PPO updates.
+        eps_clip (float): Clipping parameter for PPO.
+        max_grad_norm (float): Maximum gradient norm for clipping.
+        device (str): Device to run the computations ('cpu' or 'cuda').
+        actor (Actor): Actor network for policy generation.
+        critic (Critic): Critic network for value estimation.
+        optimizer (torch.optim.Optimizer): Optimizer for training the networks.
+        learning_time (int): Counter for the number of learning steps.
+        cur_checkpoint (int): Current checkpoint index for saving the model.
+    # Methods:
+        __str__():
+            Returns the string representation of the class.
+        train_episode(envs, seeds, para_mode='dummy', compute_resource={}, tb_logger=None, required_info={}):
+            Trains the agent for one episode using PPO.
+            # Args:
+                envs (list): List of environments for training.
+                seeds (Optional[Union[int, List[int], np.ndarray]]): Seeds for environment initialization.
+                para_mode (str): Parallelization mode for environments.
+                compute_resource (dict): Resources for computation (e.g., CPUs, GPUs).
+                tb_logger (object): TensorBoard logger for logging training metrics.
+                required_info (dict): Additional information required from the environment.
+            # Returns:
+                tuple: A boolean indicating if training ended and a dictionary with training information.
+            # Raises:
+                None.
+        rollout_episode(env, seed=None, required_info={}):
+            Executes a single rollout episode in the environment.
+            # Args:
+                env (object): Environment for the rollout.
+                seed (Optional[int]): Seed for environment initialization.
+                required_info (dict): Additional information required from the environment.
+            # Returns:
+                dict: Results of the rollout including return, cost, and other metadata.
+            # Raises:
+                None.
+        rollout_batch_episode(envs, seeds=None, para_mode='dummy', compute_resource={}, required_info={}):
+            Executes a batch of rollout episodes in parallel environments.
+            # Args:
+                envs (list): List of environments for rollouts.
+                seeds (Optional[Union[int, List[int], np.ndarray]]): Seeds for environment initialization.
+                para_mode (str): Parallelization mode for environments.
+                compute_resource (dict): Resources for computation (e.g., CPUs, GPUs).
+                required_info (dict): Additional information required from the environment.
+            # Returns:
+                dict: Results of the rollouts including returns, costs, and other metadata.
+            # Raises:
+                None.
+    # Returns:
+        None.
+    # Raises:
+        None.
     """
     def __init__(self, config):
         self.config = config

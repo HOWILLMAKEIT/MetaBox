@@ -27,6 +27,32 @@ def find_non_dominated_indices(Point):
 
 
 class ZDT(Basic_Problem):
+    """
+    # Introduction
+    The `ZDT` class represents a numpy-based synthetic multi-objective optimization problem from the ZDT problem suite. 
+    These problems are widely used as benchmarks in the field of evolutionary multi-objective optimization.
+    # Original paper
+    "[Comparison of multiobjective evolutionary algorithms: Empirical results](https://ieeexplore.ieee.org/abstract/document/6787994)." Evolutionary computation 8.2 (2000): 173-195.
+    # Official Implementation
+    [pymoo](https://github.com/anyoptimization/pymoo)
+    # License
+    Apache-2.0
+    # Problem Suite Composition
+    The ZDT problem suite consists of six benchmark problems (ZDT1 to ZDT6) designed to test the performance of multi-objective optimization algorithms. Each problem has two or three objectives and varying levels of complexity in terms of Pareto front shapes and decision space characteristics.
+    # Args:
+    - `n_var` (int, optional): Number of decision variables. Defaults to 30.
+    - `**kwargs`: Additional keyword arguments for customization.
+    # Attributes:
+    - `n_var` (int): Number of decision variables.
+    - `n_obj` (int): Number of objectives. Defaults to 2.
+    - `vtype` (type): Variable type, set to `float`.
+    - `lb` (numpy.ndarray): Lower bounds of the decision variables, initialized to zeros.
+    - `ub` (numpy.ndarray): Upper bounds of the decision variables, initialized to ones.
+    # Methods:
+    - `__str__() -> str`: Returns a string representation of the problem, including the class name, number of objectives, and number of decision variables.
+    # Raises:
+    - No specific exceptions are raised by this class, but errors may occur if the input arguments are invalid or if the methods are used improperly.
+    """
 
     def __init__(self, n_var = 30, **kwargs):
         self.n_var = n_var

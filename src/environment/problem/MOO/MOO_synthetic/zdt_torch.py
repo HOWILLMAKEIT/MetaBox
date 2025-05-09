@@ -25,6 +25,31 @@ def find_non_dominated_indices(Point):
     return non_dominated_indices
 
 class ZDT_Torch(Basic_Problem_Torch):
+    """
+    # Introduction
+    The `ZDT_Torch` class represents a Pytorch-based synthetic multi-objective optimization problem from the ZDT problem suite, implemented using PyTorch. This class is designed to define the problem's structure, including the number of variables, objectives, and bounds for the decision variables.
+    # Original paper
+    "[Comparison of multiobjective evolutionary algorithms: Empirical results](https://ieeexplore.ieee.org/abstract/document/6787994)." Evolutionary computation 8.2 (2000): 173-195.
+    # Official Implementation
+    [pymoo](https://github.com/anyoptimization/pymoo)
+    # License
+    Apache-2.0
+    # Problem Suite Composition
+    The ZDT problem suite consists of a set of benchmark problems commonly used in multi-objective optimization research. These problems are designed to evaluate the performance of optimization algorithms in terms of convergence and diversity. The suite includes problems with varying levels of complexity and characteristics, such as convex, non-convex, and discontinuous Pareto fronts.
+    # Args:
+    - `n_var` (int, optional): The number of decision variables in the problem. Defaults to 30.
+    - `**kwargs`: Additional keyword arguments for customization.
+    # Attributes:
+    - `n_var` (int): The number of decision variables.
+    - `n_obj` (int): The number of objectives in the problem. Defaults to 2.
+    - `vtype` (type): The type of decision variables. Defaults to `float`.
+    - `lb` (torch.Tensor): A tensor representing the lower bounds of the decision variables.
+    - `ub` (torch.Tensor): A tensor representing the upper bounds of the decision variables.
+    # Methods:
+    - `__str__() -> str`: Returns a string representation of the problem, including the class name, number of objectives, and number of decision variables.
+    # Raises:
+    - No specific exceptions are raised by this class. However, errors may occur if invalid arguments are provided during initialization.
+    """
 
     def __init__(self, n_var=30, **kwargs):
         self.n_var = n_var

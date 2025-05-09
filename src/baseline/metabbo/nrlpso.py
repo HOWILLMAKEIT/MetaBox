@@ -15,7 +15,43 @@ class NRLPSO(QLearning_Agent):
     None
     # Application Scenario
     single-object optimization problems(SOOP)
-
+    # Args:
+        `config`: Configuration object containing all necessary parameters for experiment.For details you can visit config.py.
+    # Attributes:
+        config (object): Stores the configuration object passed during initialization.
+        device (str): Specifies the device to be used for computation ('cpu' or 'gpu').
+        __alpha_max (float): Maximum learning rate for the agent.
+        __max_learning_step (int): Maximum number of learning steps allowed.
+        q_table (torch.Tensor): Q-table used for storing state-action values.
+        learning_time (int): Counter for the number of learning steps completed.
+        cur_checkpoint (int): Counter for the current checkpoint during training.
+    # Methods:
+        __str__():
+            Returns the string representation of the class ("NRLPSO").
+        __get_action(state):
+            Determines the action to take based on the given state using the Q-table and softmax probabilities.
+            Args:
+                state (int): The current state of the environment.
+            Returns:
+                numpy.ndarray: The selected action(s) as a numpy array.
+        train_episode(envs, seeds, para_mode='dummy', asynchronous=None, num_cpus=1, num_gpus=0, tb_logger=None, required_info={}):
+            Trains the agent for one episode using the provided environment(s).
+            Args:
+                envs (list): List of environments for training.
+                seeds (int, list, or np.ndarray): Seed(s) for environment randomization.
+                para_mode (str): Parallelization mode for environments ('dummy', 'subproc', 'ray', 'ray-subproc').
+                asynchronous (str or None): Asynchronous mode for environment execution ('idle', 'restart', 'continue').
+                num_cpus (int): Number of CPUs to use for parallelization.
+                num_gpus (int): Number of GPUs to use for computation.
+                tb_logger (object): TensorBoard logger for logging training metrics.
+                required_info (dict): Additional information to retrieve from the environment.
+            Returns:
+                tuple: A tuple containing:
+                    - is_train_ended (bool): Whether the training has reached the maximum learning steps.
+                    - return_info (dict): Dictionary containing training metrics such as 'return', 'loss',
+                      'learn_steps', 'normalizer', 'gbest', and any additional required information.
+            Raises:
+                ValueError: If the environment configuration or parameters are invalid.
     """
     def __init__(self, config):
 

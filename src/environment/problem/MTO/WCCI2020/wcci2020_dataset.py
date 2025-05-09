@@ -33,6 +33,51 @@ class WCCI2020MTO_Tasks():
         self.T1 = eval_time
 
 class WCCI2020_Dataset(Dataset):
+    """
+    # Introduction
+      WCCI2020 proposes 10 multi-task benchmark problems to represent a wider range of multi-task optimization problems.
+    # Original Paper
+    None
+    # Official Implementation
+      [WCCI2020](http://www.bdsc.site/websites/MTO_competition_2020/MTO_Competition_WCCI_2020.html)
+    # License
+    None
+    # Problem Suite Composition
+      The WCCI2020 problem suite contains a total of 10 benchmark problems, each consisting of 50 different basic functions with unique transformations(shifts and rotations).
+      For each benchmark problem, fifty basic functions are added sequentially and cyclically to constitute the problem.
+      These ten benchmark problems are classified according to the specific combination of different types of basic functions:
+        P1: Shpere
+        P2: Rosenbrock
+        P3: Rastrigin
+        P4: Shpere, Rosenbrock, Ackley
+        P5: Rastrigin, Griewank, Weierstrass
+        P6: Rosenbrock, Griewank, Schwefel
+        P7: Rastrigin, Ackley, Weierstrass
+        P8: Rosenbrock, Rastrigin, Ackley, Griewank, Weierstrass
+        P9: Rosenbrock, Rastrigin, Ackley, Griewank, Weierstrass, Schwefel
+        P10:Rastrigin, Ackley, Griewank, Weierstrass, Schwefel
+    # Args:
+    - `data` (list): A list of task datasets, where each dataset contains multiple tasks.
+    - `batch_size` (int, optional): The size of each batch when retrieving data. Defaults to 1.
+    # Attributes:
+    - `data` (list): The dataset containing tasks.
+    - `batch_size` (int): The size of each batch.
+    - `maxdim` (int): The maximum dimensionality across all tasks in the dataset.
+    - `N` (int): The total number of task datasets.
+    - `ptr` (list): A list of indices for batching.
+    - `index` (numpy.ndarray): An array of indices for shuffling and accessing data.
+    # Methods:
+    - `__getitem__(item)`: Retrieves a batch of tasks based on the given index.
+    - `__len__()`: Returns the total number of task datasets.
+    - `__add__(other)`: Combines the current dataset with another `WCCI2020_Dataset` instance.
+    - `shuffle()`: Shuffles the dataset indices to randomize the order of tasks.
+    - `get_datasets(version, train_batch_size, test_batch_size, difficulty, user_train_list, user_test_list)`: A static method to generate training and testing datasets based on the specified difficulty or user-defined task lists.
+    # Raises:
+    - `ValueError`: Raised in the `get_datasets` method if:
+        - Neither `difficulty` nor `user_train_list` and `user_test_list` are provided.
+        - An invalid `difficulty` value is specified.
+    """
+
     def __init__(self,
                  data,
                  batch_size=1):

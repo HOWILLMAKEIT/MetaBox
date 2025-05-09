@@ -106,7 +106,39 @@ class OPRO(Basic_Agent):
     [OPRO](https://github.com/google-deepmind/opro)
     # Application Scenario
     single-object optimization problems(SOOP)
-
+    # Args:
+        `config`: Configuration object containing all necessary parameters for experiment.For details you can visit config.py.
+    # Attributes:
+        config (dict): Stores the configuration dictionary passed during initialization.
+        llm_agent (LLMAgent): An instance of the LLMAgent class used to interact with the large language model.
+        max_episodes (int): Maximum number of episodes for the optimization process.
+        max_num_pairs (int): Maximum number of (theta, value) pairs to include in the meta-prompt.
+    # Methods:
+        __str__():
+            Returns the string representation of the class.
+        train_episode(envs, seeds):
+            Raises a NotImplementedError as this method is not supported by OPRO.
+        train_epoch():
+            Raises a NotImplementedError as this method is not supported by OPRO.
+        gen_meta_prompt_multi(old_value_pairs_set, num_input_decimals=5, num_output_decimals=5, max_num_pairs=100):
+            Generates a meta-prompt for general d-dimensional optimization.
+                old_value_pairs_set (set): Set of (theta, value) pairs, where theta is a list.
+                num_input_decimals (int): Number of decimal places for theta values.
+                num_output_decimals (int): Number of decimal places for function values.
+                max_num_pairs (int): Maximum number of examples to include in the meta-prompt.
+                str: The generated meta-prompt string.
+        rollout_episode(env, seed=None, required_info={}):
+            Executes the optimization process by interacting with the environment and the LLM agent.
+                env (object): The environment to interact with.
+                seed (int, optional): Random seed for reproducibility.
+                required_info (dict, optional): Additional information required from the environment.
+                dict: Results of the optimization process, including cost, function evaluations, and metadata if enabled.
+    # Returns:
+        str: For __str__(), returns the string "OPRO".
+        str: For gen_meta_prompt_multi(), returns the generated meta-prompt string.
+        dict: For rollout_episode(), returns a dictionary containing optimization results.
+    # Raises:
+        NotImplementedError: Raised by train_episode() and train_epoch() methods as they are not supported.
     """
     def __init__(self, config):
         super().__init__(config)

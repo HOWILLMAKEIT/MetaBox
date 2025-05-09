@@ -71,7 +71,57 @@ class RLEPSO(PPO_Agent):
     None
     # Application Scenario
     single-object optimization problems(SOOP)
-
+    # Args:
+        `config`: Configuration object containing all necessary parameters for experiment.For details you can visit config.py.
+    # Attributes:
+        config (object): Configuration object containing hyperparameters and settings.
+        actor (Actor): The actor network responsible for policy generation.
+        critic (Critic): The critic network responsible for value estimation.
+        optimizer (torch.optim.Optimizer): Optimizer used for training the networks.
+        learning_time (int): Counter for the number of learning steps performed.
+        device (str): Device used for computation ('cpu' or 'cuda').
+    # Methods:
+        __str__():
+            Returns the string representation of the class.
+        train_episode(envs, seeds, para_mode='dummy', compute_resource={}, tb_logger=None, required_info={}):
+            Trains the agent for one episode using the PPO algorithm.
+            Args:
+                envs (list): List of environments for training.
+                seeds (Optional[Union[int, List[int], np.ndarray]]): Seeds for environment initialization.
+                para_mode (Literal['dummy', 'subproc', 'ray', 'ray-subproc']): Parallelization mode for environments.
+                compute_resource (dict): Resources for computation (e.g., CPUs, GPUs).
+                tb_logger (object): TensorBoard logger for logging training metrics.
+                required_info (dict): Additional information required from the environment.
+            Returns:
+                tuple: A tuple containing a boolean indicating if training has ended and a dictionary with training information.
+            Raises:
+                None.
+        rollout_batch_episode(envs, seeds=None, para_mode='dummy', compute_resource={}, required_info={}):
+            Executes a batch rollout of episodes in parallel environments.
+            Args:
+                envs (list): List of environments for rollout.
+                seeds (Optional[Union[int, List[int], np.ndarray]]): Seeds for environment initialization.
+                para_mode (Literal['dummy', 'subproc', 'ray', 'ray-subproc']): Parallelization mode for environments.
+                compute_resource (dict): Resources for computation (e.g., CPUs, GPUs).
+                required_info (dict): Additional information required from the environment.
+            Returns:
+                dict: A dictionary containing rollout results, including costs, function evaluations, and returns.
+            Raises:
+                None.
+        rollout_episode(env, seed=None, required_info={}):
+            Executes a single rollout episode in a given environment.
+            Args:
+                env (object): The environment for the rollout.
+                seed (Optional[int]): Seed for environment initialization.
+                required_info (dict): Additional information required from the environment.
+            Returns:
+                dict: A dictionary containing rollout results, including costs, function evaluations, and returns.
+            Raises:
+                None.
+    # Returns:
+        None.
+    # Raises:
+        None.
     """
     def __init__(self, config):
 

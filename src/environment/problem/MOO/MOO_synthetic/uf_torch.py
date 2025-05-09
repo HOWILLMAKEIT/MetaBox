@@ -60,6 +60,33 @@ def crtup(n_obj, n_ref_points = 1000):
 
 
 class UF1_Torch(Basic_Problem_Torch):
+    """
+    # Introduction
+    The `UF1_Torch` class represents the Pytorch-based UF1 problem from the ZDT (Zitzler-Deb Thiele) multi-objective optimization problem suite.  The UF dataset include 10 problems (UF1-UF10),others are similar to UF1.
+    # Original paper
+    "[Multiobjective optimization test instances for the CEC 2009 special session and competition](https://www.al-roomi.org/multimedia/CEC_Database/CEC2009/MultiObjectiveEA/CEC2009_MultiObjectiveEA_TechnicalReport.pdf)." (2008): 1-30.
+    # Official Implementation
+    [pymoo](https://github.com/anyoptimization/pymoo)
+    # License
+    Apache-2.0
+    # Problem Suite Composition
+    The UF1 problem is part of the ZDT problem suite, which consists of six benchmark problems (ZDT1 to ZDT6). These problems are widely used in the field of evolutionary multi-objective optimization to evaluate the performance of optimization algorithms. The UF1 problem specifically has a convex Pareto front.
+    # Args:
+    None.
+    # Attributes:
+    - `n_obj` (int): Number of objectives for the problem (default is 2).
+    - `n_var` (int): Number of decision variables (default is 30).
+    - `lb` (torch.Tensor): Lower bounds for the decision variables.
+    - `ub` (torch.Tensor): Upper bounds for the decision variables.
+    - `vtype` (type): Data type of the decision variables (default is `float`).
+    # Methods:
+    - `func(x: torch.Tensor) -> torch.Tensor`: Computes the objective values for a given decision variable matrix `x`.
+    - `get_ref_set(n_ref_points: int = 1000) -> torch.Tensor`: Generates a reference set of points on the theoretical Pareto front for benchmarking.
+    - `__str__() -> str`: Returns a string representation of the problem instance.
+    # Raises:
+    - `ValueError`: Raised if the input tensor `x` in the `func` method has an invalid dimension.
+    """
+
     def __init__(self):
         self.n_obj = 2
         self.n_var = 30

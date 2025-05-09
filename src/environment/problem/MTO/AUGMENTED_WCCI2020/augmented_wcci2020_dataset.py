@@ -63,6 +63,45 @@ class AugmentedWCCI2020_MTO_Tasks():
         self.T1 = eval_time
 
 class Augmented_WCCI2020_Dataset(Dataset):
+    """
+    # Introduction
+      Augmented WCCI2020 proposes 127 multi-task benchmark problems to represent a wider range of multi-task optimization problems.
+    # Original Paper
+    None
+    # Official Implementation
+    None
+    # License
+    None
+    # Problem Suite Composition
+      The Augmented WCCI2020 problem suite contains a total of 127 benchmark problems, with each problem consisting of multiple different basic functions with unique transformations(shifts and rotations).
+      The number of basic functions can be specified according to the user's requirements. Defaults to 10.
+      These 127 benchmark problems are composed based on all combinations of the seven basic functions as Shpere, Rosenbrock, Rastrigin, Ackley, Griewank, Weierstrass and Schwefel.
+      For each benchmark problem, the basic functions in the correspondent combination are selected randomly and added with unique transformations(shifts and rotations) until the number of basic functions is reached.
+    # Args:
+    - `data` (list): A list of tasks, where each task is a list of optimization problems.
+    - `batch_size` (int, optional): The number of tasks to include in each batch. Defaults to 1.
+    # Attributes:
+    - `data` (list): The dataset containing tasks for optimization.
+    - `batch_size` (int): The size of each batch.
+    - `maxdim` (int): The maximum dimensionality of the tasks in the dataset.
+    - `N` (int): The total number of tasks in the dataset.
+    - `ptr` (list): A list of indices for batching.
+    - `index` (numpy.ndarray): An array of indices used for shuffling the dataset.
+    # Methods:
+    - `get_datasets(version='numpy', train_batch_size=1, test_batch_size=1, difficulty=None, user_train_list=None, user_test_list=None)`: 
+        Static method to generate training and testing datasets based on the specified difficulty or user-provided task lists.
+    - `__getitem__(item)`: 
+        Retrieves a batch of tasks based on the given index.
+    - `__len__()`: 
+        Returns the total number of tasks in the dataset.
+    - `__add__(other)`: 
+        Combines two datasets into a single dataset.
+    - `shuffle()`: 
+        Randomly shuffles the order of tasks in the dataset.
+    # Raises:
+    - `ValueError`: Raised in the `get_datasets` method if neither `difficulty` nor `user_train_list` and `user_test_list` are provided, or if an invalid difficulty level is specified.
+    """
+
     def __init__(self,
                  data,
                  batch_size=1):

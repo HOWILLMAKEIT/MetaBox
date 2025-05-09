@@ -49,7 +49,52 @@ class SYMBOL(PPO_Agent):
     [SYMBOL](https://github.com/MetaEvo/Symbol)
     # Application Scenario
     single-object optimization problems(SOOP)
-
+    # Args:
+        `config`: Configuration object containing all necessary parameters for experiment.For details you can visit config.py.
+    # Attributes:
+        config (object): Configuration object with various hyperparameters and settings.
+        tokenizer (MyTokenizer): Tokenizer instance used for processing sequences.
+        actor (LSTM): Actor network for generating actions.
+        critic (Critic): Critic network for evaluating states.
+        optimizer (torch.optim.Optimizer): Optimizer for training the actor and critic networks.
+        learning_time (int): Counter for the number of learning steps performed.
+        cur_checkpoint (int): Counter for the current checkpoint during training.
+    # Methods:
+        __str__():
+            Returns the string representation of the class.
+        train_episode(envs, seeds, para_mode='dummy', compute_resource={}, tb_logger=None, required_info={}):
+            Trains the agent for one episode using the provided environments.
+            Args:
+                envs (list): List of environments for training.
+                seeds (Optional[Union[int, List[int], np.ndarray]]): Seeds for environment initialization.
+                para_mode (Literal['dummy', 'subproc', 'ray', 'ray-subproc']): Parallelization mode.
+                compute_resource (dict): Resources for computation (e.g., CPUs, GPUs).
+                tb_logger (object): TensorBoard logger for logging training metrics.
+                required_info (dict): Additional information required from the environment.
+            Returns:
+                Tuple[bool, dict]: A tuple containing a boolean indicating if training has ended and a dictionary with training information.
+        rollout_batch_episode(envs, seeds=None, para_mode='dummy', compute_resource={}, required_info={}):
+            Executes a batch rollout of episodes in parallel environments.
+            Args:
+                envs (list): List of environments for rollout.
+                seeds (Optional[Union[int, List[int], np.ndarray]]): Seeds for environment initialization.
+                para_mode (Literal['dummy', 'subproc', 'ray', 'ray-subproc']): Parallelization mode.
+                compute_resource (dict): Resources for computation (e.g., CPUs, GPUs).
+                required_info (dict): Additional information required from the environment.
+            Returns:
+                dict: A dictionary containing rollout results.
+        rollout_episode(env, seed=None, required_info={}):
+            Executes a single rollout episode in the given environment.
+            Args:
+                env (object): Environment for the rollout.
+                seed (Optional[int]): Seed for environment initialization.
+                required_info (dict): Additional information required from the environment.
+            Returns:
+                dict: A dictionary containing rollout results.
+    # Returns:
+        None
+    # Raises:
+        AssertionError: If a NaN value is found in the loss during training.
     """
     def __init__(self, config):
         self.config = config

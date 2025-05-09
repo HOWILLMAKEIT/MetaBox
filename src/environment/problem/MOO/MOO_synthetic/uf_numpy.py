@@ -58,6 +58,43 @@ def crtup(n_obj, n_ref_points = 1000):
 
 # Basic_Problem
 class UF1(Basic_Problem):
+    """
+    # Introduction
+    The `UF1` class represents a numpy-based synthetic multi-objective optimization problem from the UF (Unconstrained Functions) problem suite. The UF dataset include 10 problems (UF1-UF10),others are similar to UF1.
+    It is designed to evaluate optimization algorithms on a two-objective problem with a specific mathematical formulation.
+    # Original paper
+    "[Multiobjective optimization test instances for the CEC 2009 special session and competition](https://www.al-roomi.org/multimedia/CEC_Database/CEC2009/MultiObjectiveEA/CEC2009_MultiObjectiveEA_TechnicalReport.pdf)." (2008): 1-30.
+    # Official Implementation
+    [pymoo](https://github.com/anyoptimization/pymoo)
+    # License
+    Apache-2.0
+    # Problem Suite Composition
+    The UF problem suite contains a set of unconstrained multi-objective optimization problems designed for benchmarking optimization algorithms. 
+    Each problem in the suite has a specific number of objectives and variables, with known theoretical Pareto fronts.
+    # Args:
+    None
+    # Attributes:
+    - `n_obj` (int): Number of objectives for the problem (default is 2).
+    - `n_var` (int): Number of decision variables for the problem (default is 30).
+    - `lb` (numpy.ndarray): Lower bounds for the decision variables.
+    - `ub` (numpy.ndarray): Upper bounds for the decision variables.
+    - `vtype` (type): Data type of the decision variables (default is `float`).
+    # Methods:
+    - `func(x)`: Computes the objective values for a given decision variable matrix `x`.
+        - **Args**:
+            - `x` (numpy.ndarray): Decision variable matrix.
+        - **Returns**:
+            - `ObjV` (numpy.ndarray): Objective values for the input decision variables.
+    - `get_ref_set(n_ref_points=1000)`: Generates a reference set of points on the theoretical Pareto front.
+        - **Args**:
+            - `n_ref_points` (int): Number of reference points to generate (default is 1000).
+        - **Returns**:
+            - `referenceObjV` (numpy.ndarray): Reference points on the Pareto front.
+    - `__str__()`: Returns a string representation of the problem instance.
+    # Raises:
+    - `ValueError`: Raised if the input `x` to the `func` method has an invalid dimension.
+    """
+
     def __init__(self):
         self.n_obj = 2
         self.n_var = 30

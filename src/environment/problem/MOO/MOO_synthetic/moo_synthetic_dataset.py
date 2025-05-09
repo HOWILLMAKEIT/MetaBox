@@ -13,6 +13,43 @@ from ....problem.MOO.MOO_synthetic.wfg_torch import *
 
 
 class MOO_Synthetic_Dataset(Dataset):
+    """
+    # Introduction
+    The `MOO_Synthetic_Dataset` class is designed to handle synthetic multi-objective optimization (MOO) datasets. MOO-Synthetic provides a more comprehensive problem set for multi-objective optimization by combining multiple mainstream problem sets (ZDT、UF、DTLZ、WFG).
+    # Problem Suite Composition
+    MOO-Synthetic contains 187 questions, consisting of the ZDT, UF, DTLZ, and WFG question sets.
+    - **UF (Unconstrained Functions)**: UF1 to UF10.
+    - **ZDT (Zitzler-Deb Thiele)**: ZDT1 to ZDT6.
+    - **DTLZ (Deb Thiele Laumanns Zitzler)**: DTLZ1 to DTLZ7.
+    - **WFG (Walking Fish Group)**: WFG1 to WFG9.
+    Each problem is parameterized by the number of objectives (`n_obj`) and the number of decision variables (`n_var`). The problems can be instantiated in either NumPy or PyTorch versions.
+    # Args:
+    - `data` (list): A list of problem instances to be included in the dataset.
+    - `batch_size` (int, optional): The size of each batch. Defaults to 1.
+    # Attributes:
+    - `data` (list): The list of problem instances in the dataset.
+    - `batch_size` (int): The size of each batch.
+    - `N` (int): The total number of problem instances in the dataset.
+    - `ptr` (list): A list of indices for batching.
+    - `index` (numpy.ndarray): An array of shuffled indices for accessing the dataset.
+    - `maxdim` (int): The maximum number of decision variables (`n_var`) across all problem instances.
+    # Methods:
+    - `get_datasets(version='numpy', train_batch_size=1, test_batch_size=1, difficulty=None, user_train_list=None, user_test_list=None)`: 
+        Static method to generate training and testing datasets based on the specified difficulty or user-provided problem lists.
+    - `__getitem__(item)`: 
+        Retrieves a batch of problem instances based on the given index.
+    - `__len__()`: 
+        Returns the total number of problem instances in the dataset.
+    - `__add__(other)`: 
+        Combines the current dataset with another `MOO_Synthetic_Dataset` instance.
+    - `shuffle()`: 
+        Shuffles the dataset indices for random access.
+    # Raises:
+    - `ValueError`: Raised in the `get_datasets` method if:
+        - Neither `difficulty` nor `user_train_list` and `user_test_list` are provided.
+        - An invalid `difficulty` value is specified.
+    """
+
     def __init__(self,
                  data,
                  batch_size = 1):

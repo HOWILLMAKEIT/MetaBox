@@ -84,7 +84,32 @@ class MFEA(Basic_Optimizer):
     None
     # Application Scenario
     multi-task optimization problems(MTOP)
-
+    # Args:
+        `config`: Configuration object containing all necessary parameters for experiment.For details you can visit config.py.
+    # Attributes:
+        __config (object): Stores the configuration object passed during initialization.
+        log_interval (int): Interval at which logs are recorded.
+        full_meta_data (bool): Flag to determine whether to store full metadata during execution.
+        cost (list): Tracks the best fitness values for each task over generations.
+        _fes (int): Tracks the number of function evaluations performed.
+        log_index (int): Tracks the current log index.
+        meta_Cost (list): Stores the factorial costs of the population (if `full_meta_data` is True).
+        meta_X (list): Stores the genes of the population (if `full_meta_data` is True).
+    # Methods:
+        __str__():
+            Returns the string representation of the class.
+        run_episode(mto_tasks):
+            Executes the optimization process for the given multi-task optimization tasks.
+            # Args:
+                mto_tasks (object): An object containing the tasks to be optimized.
+            # Returns:
+                dict: A dictionary containing the optimization results, including:
+                    - 'cost': List of best fitness values for each task.
+                    - 'fes': Total number of function evaluations performed.
+                    - 'metadata' (optional): Contains 'X' (genes of the population) and
+                      'Cost' (factorial costs of the population) if `full_meta_data` is True.
+    # Raises:
+        None
     """
     def __init__(self, config):
         super().__init__(config)

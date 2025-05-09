@@ -5,6 +5,42 @@ import numpy as np
 import pickle
 
 class UAV_Dataset(Dataset):
+    """
+    # Introduction
+    The `UAV_Dataset` class is designed to handle datasets for Unmanned Aerial Vehicle (UAV) optimization problems. 
+    # Original Paper
+    "[Benchmarking global optimization techniques for unmanned aerial vehicle path planning](https://arxiv.org/abs/2501.14503)." 
+    # Official Implementation
+    None
+    # License
+    None
+    # Problem Suite Composition
+    The UAV dataset is composed of instances that simulate UAV optimization problems. The dataset can be configured to include different levels of difficulty (`easy`, `difficult`, or `all`) and supports both user-defined and random splits for training and testing. The dataset can be generated using surrogate models or custom terrain generation.
+    # Args:
+    - `data` (list): A list of data instances representing the UAV optimization problems.
+    - `batch_size` (int, optional): The size of each batch for data retrieval. Defaults to 1.
+    # Attributes:
+    - `data` (list): The dataset containing UAV problem instances.
+    - `batch_size` (int): The size of each batch for data retrieval.
+    - `N` (int): The total number of instances in the dataset.
+    - `ptr` (list): A list of pointers for batching.
+    - `index` (numpy.ndarray): An array of indices for shuffling and batching.
+    - `maxdim` (int): The maximum dimensionality of the problem instances in the dataset.
+    # Methods:
+    - `get_datasets(version, train_batch_size, test_batch_size, difficulty, user_train_list, user_test_list, dv, j_pen, seed, num, mode, path)`: 
+        Static method to generate training and testing datasets based on the specified parameters.
+    - `__getitem__(item)`: 
+        Retrieves a batch of data instances based on the given index.
+    - `__len__()`: 
+        Returns the total number of instances in the dataset.
+    - `__add__(other)`: 
+        Combines the current dataset with another `UAV_Dataset` instance.
+    - `shuffle()`: 
+        Shuffles the dataset indices to randomize the order of data retrieval.
+    # Raises:
+    - `ValueError`: Raised in `get_datasets` if `difficulty`, `user_train_list`, or `user_test_list` are not properly set or if an invalid difficulty level is provided.
+    """
+
     def __init__(self, data, batch_size = 1):
         super().__init__()
         self.data = data

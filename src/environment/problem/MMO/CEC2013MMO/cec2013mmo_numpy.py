@@ -5,6 +5,44 @@ from os import path
 MINMAX = -1 
 import importlib.resources as pkg_resources
 class CEC2013MMO_Numpy_Problem(Basic_Problem):
+    """
+    # CEC2013_MMO_Numpy_Problem
+    A base class for CEC2013 Multi-Modal Optimization (MMO) problems implemented in NumPy.
+    # Introduction
+    CEC2013 MMO benchmark puts together 20 multimodal problems (including several identical functions with different dimension sizes), with different characteristics, for evaluating niching algorithms.
+    # Original Paper
+    "[Benchmark Functions for CEC’2013 Special Session and Competition on Niching Methods for Multimodal Function Optimization](https://al-roomi.org/multimedia/CEC_Database/CEC2015/NichingMultimodalOptimization/CEC2015_NichingMethods_TechnicalReport.pdf)"
+    # Official Implementation
+    [CEC2013MMO](https://github.com/mikeagn/CEC2013)
+    # License
+    Simplified BSD License
+    # Problem Suite Composition
+    The CEC2013 MMO problem suite contains 20 optimization problems, each with specific characteristics such as dimensionality, bounds, and multimodal properties. These problems are categorized into different difficulty levels (`easy`, `difficult`, and `all`) and can be used for benchmarking optimization algorithms.
+    # Args:
+    - `dim` (int): Dimensionality of the problem.
+    - `lb` (float): Lower bound of the search space.
+    - `ub` (float): Upper bound of the search space.
+    - `fopt` (float): The optimal fitness value for the problem.
+    - `rho` (float): Radius used to determine proximity for seed identification.
+    - `nopt` (int): Number of global optima in the problem.
+    - `maxfes` (int): Maximum number of function evaluations allowed.
+    # Attributes:
+    - `dim` (int): Dimensionality of the problem.
+    - `lb` (float): Lower bound of the search space.
+    - `ub` (float): Upper bound of the search space.
+    - `FES` (int): Current number of function evaluations performed.
+    - `optimum` (float): The optimal fitness value for the problem.
+    - `rho` (float): Radius used to determine proximity for seed identification.
+    - `nopt` (int): Number of global optima in the problem.
+    - `maxfes` (int): Maximum number of function evaluations allowed.
+    # Methods:
+    - `func(x)`: Abstract method to evaluate the fitness of a solution `x`. Must be implemented in a subclass.
+    - `how_many_goptima(pop, accuracy)`: Determines the number of global optima found in a given population within a specified accuracy.
+    - `__find_seeds_indices(sorted_pop, radius)`: Identifies seed points in a sorted population based on a given radius.
+    # Raises:
+    - `NotImplementedError`: Raised when the `func` method is called without being implemented in a subclass.
+    """
+
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
         self.dim = dim
         self.lb = lb

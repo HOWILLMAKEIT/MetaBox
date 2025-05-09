@@ -76,6 +76,38 @@ def crtgp(dim, N):
     return grid_points, total_points
 
 class DTLZ(Basic_Problem):
+    """
+    # Introduction
+    The `DTLZ` class represents a numpy-based family of multi-objective optimization problems commonly used in benchmarking optimization algorithms. These problems are designed to evaluate the performance of algorithms in handling trade-offs between multiple conflicting objectives. The class provides a flexible implementation of the DTLZ problem suite, allowing users to specify the number of variables, objectives, and other parameters.
+    # Original paper
+    "[Scalable multi-objective optimization test problems](https://ieeexplore.ieee.org/abstract/document/1007032)." Proceedings of the 2002 congress on evolutionary computation. CEC'02 (Cat. No. 02TH8600). Vol. 1. IEEE, 2002.
+    # Official Implementation
+    [pymoo](https://github.com/anyoptimization/pymoo)
+    # License
+    Apache-2.0
+    # Problem Suite Composition
+    The DTLZ problem suite consists of a set of scalable multi-objective optimization problems. Each problem is parameterized by the number of decision variables (`n_var`) and the number of objectives (`n_obj`). The problems are designed to test the scalability and performance of optimization algorithms in high-dimensional objective spaces.
+    # Args:
+    - `n_var` (int): The number of decision variables. If not provided, it is computed using `k` and `n_obj`.
+    - `n_obj` (int): The number of objectives.
+    - `k` (int, optional): The number of distance-related variables. If not provided, it is computed using `n_var` and `n_obj`.
+    - `**kwargs`: Additional keyword arguments for customization.
+    # Attributes:
+    - `n_var` (int): The number of decision variables.
+    - `n_obj` (int): The number of objectives.
+    - `k` (int): The number of distance-related variables.
+    - `vtype` (type): The type of variables (default is `float`).
+    - `lb` (numpy.ndarray): The lower bounds of the decision variables.
+    - `ub` (numpy.ndarray): The upper bounds of the decision variables.
+    # Methods:
+    - `g1(X_M)`: Computes the `g1` function, which is a component of the DTLZ problem.
+    - `g2(X_M)`: Computes the `g2` function, which is another component of the DTLZ problem.
+    - `obj_func(X_, g, alpha=1)`: Computes the objective function values for the given decision variables and `g` function.
+    - `__str__()`: Returns a string representation of the problem, including the number of objectives and decision variables.
+    # Raises:
+    - `Exception`: Raised if neither `n_var` nor `k` is provided during initialization.
+    """
+
     def __init__(self, n_var, n_obj, k=None, **kwargs):
 
         if n_var:

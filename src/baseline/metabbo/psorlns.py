@@ -13,7 +13,61 @@ class PSORLNS(DQN_Agent):
     None
     # Application Scenario
     multi-modal optimization problems(MMOP)
-
+    # Args:
+        `config`: Configuration object containing all necessary parameters for experiment.For details you can visit config.py.
+    # Attributes:
+        config (object): Stores the configuration object.
+        ps (int): Number of parallel environments.
+        replay_buffer (object): Replay buffer for storing experience tuples.
+        learning_time (int): Counter for the number of learning steps.
+        cur_checkpoint (int): Counter for the current checkpoint.
+        device (str): Device to be used for computation ('cpu' or 'cuda').
+        model (object): Neural network model used for Q-value estimation.
+        optimizer (object): Optimizer for training the model.
+        criterion (object): Loss function used for training.
+        gamma (float): Discount factor for future rewards.
+        batch_size (int): Batch size for training.
+        warm_up_size (int): Minimum number of samples in the replay buffer before training starts.
+        max_grad_norm (float): Maximum gradient norm for gradient clipping.
+        n_act (int): Number of possible actions.
+    # Methods:
+        __str__():
+            Returns the string representation of the class.
+        train_episode(envs, seeds, para_mode='dummy', compute_resource={}, tb_logger=None, required_info={}):
+            Trains the agent for one episode.
+            Args:
+                envs (list): List of environments.
+                seeds (int, list, or np.ndarray): Seeds for environment initialization.
+                para_mode (str): Parallelization mode ('dummy', 'subproc', 'ray', 'ray-subproc').
+                compute_resource (dict): Resources for computation (e.g., num_cpus, num_gpus).
+                tb_logger (object): TensorBoard logger.
+                required_info (dict): Additional information required from the environment.
+            Returns:
+                is_train_ended (bool): Whether the training has ended.
+                return_info (dict): Information about the training episode.
+        rollout_episode(env, seed=None, required_info={}):
+            Executes a single rollout episode.
+            Args:
+                env (object): Environment object.
+                seed (int, optional): Seed for environment initialization.
+                required_info (dict): Additional information required from the environment.
+            Returns:
+                results (dict): Results of the rollout, including rewards and metadata.
+        rollout_batch_episode(envs, seeds=None, para_mode='dummy', compute_resource={}, required_info={}):
+            Executes a batch of rollout episodes.
+            Args:
+                envs (list): List of environments.
+                seeds (int, list, or np.ndarray, optional): Seeds for environment initialization.
+                para_mode (str): Parallelization mode ('dummy', 'subproc', 'ray', 'ray-subproc').
+                compute_resource (dict): Resources for computation (e.g., num_cpus, num_gpus).
+                required_info (dict): Additional information required from the environment.
+            Returns:
+                results (dict): Results of the rollout batch, including rewards and metadata.
+    # Returns:
+        None for the class itself. Individual methods return specific outputs as described above.
+    # Raises:
+        AssertionError: If the state shape does not match the expected dimensions during training.
+        Exception: If there are issues with tensor reshaping or environment interactions.
     """
     def __init__(self, config):
         

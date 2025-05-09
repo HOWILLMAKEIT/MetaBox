@@ -77,6 +77,40 @@ def crtgp(dim, N):
     return grid_points, total_points
 
 class DTLZ_Torch(Basic_Problem_Torch):
+    """
+    # Introduction
+    The `DTLZ_Torch` class is an Pytorch-based implementation of the DTLZ (Deb-Thiele-Laumanns-Zitzler) test suite for multi-objective optimization problems using PyTorch. 
+    It is designed to evaluate the performance of optimization algorithms on synthetic benchmark problems with varying numbers of objectives and decision variables.
+    # Original paper
+    "[Scalable multi-objective optimization test problems](https://ieeexplore.ieee.org/abstract/document/1007032)." Proceedings of the 2002 congress on evolutionary computation. CEC'02 (Cat. No. 02TH8600). Vol. 1. IEEE, 2002.
+    # Official Implementation
+    [pymoo](https://github.com/anyoptimization/pymoo)
+    # License
+    Apache-2.0
+    # Problem Suite Composition
+    The DTLZ problem suite consists of a set of scalable multi-objective optimization problems. These problems are parameterized by the number of objectives (`n_obj`) and the number of decision variables (`n_var`). 
+    The problems are designed to test the scalability and performance of optimization algorithms in handling complex Pareto fronts.
+    # Args:
+    - `n_var` (int): Number of decision variables. If not provided, it is computed as `k + n_obj - 1`.
+    - `n_obj` (int): Number of objectives.
+    - `k` (int, optional): A parameter used to compute the number of decision variables when `n_var` is not provided.
+    - `**kwargs`: Additional keyword arguments.
+    # Attributes:
+    - `n_var` (int): Number of decision variables.
+    - `n_obj` (int): Number of objectives.
+    - `k` (int): A parameter derived from `n_var` and `n_obj`.
+    - `vtype` (type): Data type of the decision variables (default is `float`).
+    - `lb` (torch.Tensor): Lower bounds of the decision variables (default is a tensor of zeros).
+    - `ub` (torch.Tensor): Upper bounds of the decision variables (default is a tensor of ones).
+    # Methods:
+    - `g1(X_M)`: Computes the `g1` function, which is a component of the DTLZ problem formulation.
+    - `g2(X_M)`: Computes the `g2` function, which is another component of the DTLZ problem formulation.
+    - `obj_func(X_, g, alpha=1)`: Computes the objective function values for the given decision variables and auxiliary function `g`.
+    - `__str__()`: Returns a string representation of the problem, including the class name, number of objectives, and number of decision variables.
+    # Raises:
+    - `Exception`: Raised if neither `n_var` nor `k` is provided during initialization.
+    """
+
     def __init__(self, n_var, n_obj, k=None, **kwargs):
 
         if n_var:

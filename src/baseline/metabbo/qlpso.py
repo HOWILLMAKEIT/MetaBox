@@ -15,7 +15,43 @@ class QLPSO(QLearning_Agent):
     None
     # Application Scenario
     single-object optimization problems(SOOP)
-
+    # Args:
+        `config`: Configuration object containing all necessary parameters for experiment.For details you can visit config.py.
+    # Attributes:
+        config (object): Configuration object containing hyperparameters and settings for the QLPSO agent.
+        device (str): The device on which computations will be performed ('cpu' or 'cuda').
+        __alpha_max (float): Maximum learning rate for the agent.
+        __alpha_decay (bool): Whether to apply learning rate decay.
+        __max_learning_step (int): Maximum number of learning steps allowed during training.
+    # Methods:
+        __str__():
+            Returns the string representation of the QLPSO class.
+        __get_action(state):
+            Determines the action to take based on the current state using the Q-table and softmax probabilities.
+            Args:
+                state (int): The current state of the environment.
+            Returns:
+                numpy.ndarray: The selected action.
+        train_episode(envs, seeds, para_mode='dummy', asynchronous=None, num_cpus=1, num_gpus=0, tb_logger=None, required_info={}):
+            Trains the QLPSO agent for one episode.
+            Args:
+                envs (list): List of environments for training.
+                seeds (Optional[Union[int, List[int], np.ndarray]]): Seed(s) for environment randomization.
+                para_mode (Literal['dummy', 'subproc', 'ray', 'ray-subproc'], optional): Parallelization mode. Defaults to 'dummy'.
+                asynchronous (Literal[None, 'idle', 'restart', 'continue'], optional): Asynchronous mode. Defaults to None.
+                num_cpus (Optional[Union[int, None]], optional): Number of CPUs to use. Defaults to 1.
+                num_gpus (int, optional): Number of GPUs to use. Defaults to 0.
+                tb_logger (optional): TensorBoard logger for logging training metrics. Defaults to None.
+                required_info (dict, optional): Additional information to retrieve from the environment. Defaults to {}.
+            Returns:
+                tuple: A tuple containing a boolean indicating whether training has ended and a dictionary with training information.
+    # Returns:
+        train_episode():
+            tuple: A tuple containing:
+                - is_train_ended (bool): Whether the training has reached the maximum learning steps.
+                - return_info (dict): Dictionary containing training metrics such as return, loss, learn_steps, normalizer, and gbest.
+    # Raises:
+        None
     """
     def __init__(self, config):
         self.config = config

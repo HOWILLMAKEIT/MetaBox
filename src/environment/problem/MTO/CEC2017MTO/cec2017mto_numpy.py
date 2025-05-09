@@ -3,6 +3,54 @@ import numpy as np
 import time 
 
 class CEC2017MTO_Numpy_Problem(Basic_Problem):
+    """
+    # CEC2017MTO_Numpy_Problem
+      A Numpy-based implementation of base class for defining basic functions in CEC2017 Multitask Optimization(MTO) benchmark problems.
+    # Introduction
+      CEC2017MTO proposes 9 multi-task benchmark problems to represent a wider range of multi-task optimization problems.
+    # Original Paper
+      "[Evolutionary Multitasking for Single-objective Continuous Optimization: Benchmark Problems, Performance Metric, and Bseline Results](https://arxiv.org/pdf/1706.03470)."
+    # Official Implementation
+      [CEC2017MTO](http://www.bdsc.site/websites/MTO/index.html)
+    # License
+    None
+    # Problem Suite Composition
+      The CEC2017MTO problem suite contains a total of 9 benchmark problems, each consisting of two basic functions.
+      These nine benchmark problems are classified according to the degree of intersection and the inter-task similarity between the two constitutive functions:
+        P1. Complete intersection and high similarity(CI+HS)
+        P2. Complete intersection and medium similarity(CI+MS)  
+        P3. Complete intersection and low similarity(CI+LS)
+        P4. Partial intersection and high similarity(PI+HS)
+        P5. Partial intersection and medium similarity(PI+MS)  
+        P6. Partial intersection and low similarity(PI+LS)
+        P7. No intersection and high similarity(NI+HS)
+        P8. No intersection and medium similarity(NI+MS) 
+        P9. No intersection and low similarity(NI+LS)
+    # Args:
+    - `dim` (int): Dimensionality of the problem.
+    - `shift` (np.ndarray or None): Shift vector for the problem. If `None`, a zero vector is used.
+    - `rotate` (np.ndarray or None): Rotation matrix for the problem. If `None`, no rotation is applied.
+    - `bias` (float): Bias value added to the objective function.
+    # Attributes:
+    - `T1` (float): Accumulated time (in milliseconds) for evaluating solutions.
+    - `dim` (int): Dimensionality of the problem.
+    - `shift` (np.ndarray): Shift vector for the problem.
+    - `rotate` (np.ndarray): Rotation matrix for the problem.
+    - `bias` (float): Bias value added to the objective function.
+    - `lb` (float): Lower bound of the search space.
+    - `ub` (float): Upper bound of the search space.
+    - `FES` (int): Function evaluation count.
+    - `opt` (np.ndarray): Optimal solution for the problem.
+    - `optimum` (float): Objective function value at the optimal solution.
+    # Methods:
+    - `get_optimal() -> np.ndarray`: Returns the optimal solution for the problem.
+    - `func(x: np.ndarray) -> float`: Abstract method to compute the objective function value for a given solution. Must be implemented in subclasses.
+    - `decode(x: np.ndarray) -> np.ndarray`: Decodes a solution from the normalized space [0, 1] to the problem's search space.
+    - `sr_func(x: np.ndarray, shift: np.ndarray, rotate: np.ndarray) -> np.ndarray`: Applies shift and rotation transformations to a solution.
+    - `eval(x: np.ndarray) -> float or np.ndarray`: Evaluates the objective function for a single solution or a population of solutions. Supports both individual and population-based evaluations.
+    # Raises:
+    - `NotImplementedError`: Raised if the `func` method is not implemented in a subclass.
+    """
     def __init__(self, dim, shift, rotate, bias):
         self.T1 = 0
         self.dim = dim

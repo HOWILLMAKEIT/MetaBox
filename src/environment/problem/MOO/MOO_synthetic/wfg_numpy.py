@@ -80,6 +80,47 @@ def find_non_dominated_indices(Point):
 
 
 class WFG(Basic_Problem):
+    """
+    # Introduction
+    The `WFG` class represents a numpy-based family of multi-objective optimization problems known as the WFG (Walking Fish Group) test problems. These problems are widely used in the field of evolutionary multi-objective optimization to evaluate the performance of optimization algorithms. The WFG problems are characterized by their scalability, modularity, and ability to control problem difficulty through various parameters.
+    # Original paper
+    "[A review of multiobjective test problems and a scalable test problem toolkit](https://ieeexplore.ieee.org/abstract/document/1705400)." IEEE Transactions on Evolutionary Computation 10.5 (2006): 477-506.
+    # Official Implementation
+    [pymoo](https://github.com/anyoptimization/pymoo)
+    # License
+    Apache-2.0
+    # Problem Suite Composition
+    The WFG problem suite consists of a set of scalable multi-objective optimization problems. Each problem is defined by the number of decision variables (`n_var`), the number of objectives (`n_obj`), and two key parameters: `k` (position-related parameters) and `l` (distance-related parameters). These problems are designed to test the ability of optimization algorithms to handle complex Pareto fronts, including disconnected, degenerate, and mixed geometries.
+    # Args:
+    - `n_var` (int): Number of decision variables.
+    - `n_obj` (int): Number of objectives.
+    - `k` (int, optional): Position-related parameter. Defaults to `2 * (n_obj - 1)` if not provided.
+    - `l` (int, optional): Distance-related parameter. Defaults to `n_var - k` if not provided.
+    - `**kwargs`: Additional keyword arguments.
+    # Attributes:
+    - `n_var` (int): Number of decision variables.
+    - `n_obj` (int): Number of objectives.
+    - `lb` (numpy.ndarray): Lower bounds for decision variables.
+    - `ub` (numpy.ndarray): Upper bounds for decision variables.
+    - `vtype` (type): Data type of decision variables (default is `float`).
+    - `S` (numpy.ndarray): Scaling factors for objectives.
+    - `A` (numpy.ndarray): Shift parameters for the Pareto front.
+    - `k` (int): Position-related parameter.
+    - `l` (int): Distance-related parameter.
+    # Methods:
+    - `validate(l, k, n_obj)`: Validates the problem parameters to ensure they meet the constraints of the WFG problem suite.
+    - `_post(t, a)`: Transforms the decision variables using a post-processing function.
+    - `_calculate(x, s, h)`: Calculates the objective values based on the decision variables and scaling factors.
+    - `_rand_optimal_position(n)`: Generates random optimal positions for the decision variables.
+    - `_positional_to_optimal(K)`: Converts positional variables to optimal decision variables.
+    - `__str__()`: Returns a string representation of the WFG problem instance.
+    # Raises:
+    - `ValueError`: Raised in the `validate` method if:
+        - The number of objectives (`n_obj`) is less than 2.
+        - The position parameter (`k`) is not divisible by the number of objectives minus one.
+        - The position parameter (`k`) is less than 4.
+        - The sum of the position and distance parameters (`k + l`) is less than the number of objectives (`n_obj`).
+    """
 
     def __init__(self, n_var, n_obj, k = None, l = None, **kwargs):
 

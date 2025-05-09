@@ -6,6 +6,38 @@ from .cec2013mmo_torch import *
 import math
 
 class CEC2013MMO_Dataset(Dataset):
+    """
+    # Introduction
+    CEC2013 MMO benchmark puts together 20 multimodal problems (including several identical functions with different dimension sizes), with different characteristics, for evaluating niching algorithms.
+    # Original Paper
+    "[Benchmark Functions for CEC’2013 Special Session and Competition on Niching Methods for Multimodal Function Optimization](https://al-roomi.org/multimedia/CEC_Database/CEC2015/NichingMultimodalOptimization/CEC2015_NichingMethods_TechnicalReport.pdf)"
+    # Official Implementation
+    [CEC2013MMO](https://github.com/mikeagn/CEC2013)
+    # License
+    Simplified BSD License
+    # Problem Suite Composition
+    The CEC2013 MMO problem suite contains 20 optimization problems, each with specific characteristics such as dimensionality, bounds, and multimodal properties. These problems are categorized into different difficulty levels (`easy`, `difficult`, and `all`) and can be used for benchmarking optimization algorithms.
+    # Args:
+    - `data` (list): A list of problem instances to be included in the dataset.
+    - `batch_size` (int, optional): The size of each batch for data retrieval. Defaults to 1.
+    # Attributes:
+    - `data` (list): The list of problem instances in the dataset.
+    - `maxdim` (int): The maximum dimensionality among all problem instances in the dataset.
+    - `batch_size` (int): The size of each batch for data retrieval.
+    - `N` (int): The total number of problem instances in the dataset.
+    - `ptr` (list): A list of indices representing the start of each batch.
+    - `index` (numpy.ndarray): An array of indices used for shuffling and accessing data.
+    # Methods:
+    - `get_datasets(version='numpy', train_batch_size=1, test_batch_size=1, difficulty=None, user_train_list=None, user_test_list=None, instance_seed=3849)`: 
+        A static method to generate training and testing datasets based on the specified difficulty or user-defined problem lists.
+    - `__getitem__(item)`: Retrieves a batch of problem instances based on the given batch index.
+    - `__len__()`: Returns the total number of problem instances in the dataset.
+    - `__add__(other)`: Combines two datasets into a single dataset.
+    - `shuffle()`: Shuffles the dataset to randomize the order of problem instances.
+    # Raises:
+    - `ValueError`: Raised in `get_datasets` if neither `difficulty` nor `user_train_list` and `user_test_list` are provided, or if an invalid `difficulty` value is specified.
+    """
+
     def __init__(self, data, batch_size = 1):
         super().__init__()
         self.data = data

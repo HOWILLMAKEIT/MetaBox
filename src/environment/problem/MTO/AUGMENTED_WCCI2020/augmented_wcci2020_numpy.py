@@ -3,6 +3,48 @@ import numpy as np
 import time 
 
 class AUGMENTED_WCCI2020_Numpy_Problem(Basic_Problem):
+    """
+    # AUGMENTED_WCCI2020_Numpy_Problem
+      A Numpy-based implementation of base class for defining basic functions in AUGMENTED WCCI2020 Multitask Optimization(MTO) benchmark problems.
+    # Introduction
+      Augmented WCCI2020 proposes 127 multi-task benchmark problems to represent a wider range of multi-task optimization problems.
+    # Original Paper
+    None
+    # Official Implementation
+    None
+    # License
+    None
+    # Problem Suite Composition
+      The Augmented WCCI2020 problem suite contains a total of 127 benchmark problems, with each problem consisting of multiple different basic functions with unique transformations(shifts and rotations).
+      The number of basic functions can be specified according to the user's requirements. Defaults to 10.
+      These 127 benchmark problems are composed based on all combinations of the seven basic functions as Shpere, Rosenbrock, Rastrigin, Ackley, Griewank, Weierstrass and Schwefel.
+      For each benchmark problem, the basic functions in the correspondent combination are selected randomly and added with unique transformations(shifts and rotations) until the number of basic functions is reached.
+    # Args:
+    - `dim` (int): The dimensionality of the problem.
+    - `shift` (numpy.ndarray): The shift vector applied to the problem.
+    - `rotate` (numpy.ndarray): The rotation matrix applied to the problem.
+    - `bias` (float): The bias value added to the problem.
+    # Attributes:
+    - `T1` (float): Tracks the cumulative evaluation time in milliseconds.
+    - `dim` (int): The dimensionality of the problem.
+    - `shift` (numpy.ndarray): The shift vector applied to the problem.
+    - `rotate` (numpy.ndarray): The rotation matrix applied to the problem.
+    - `bias` (float): The bias value added to the problem.
+    - `lb` (float): The lower bound of the problem's search space.
+    - `ub` (float): The upper bound of the problem's search space.
+    - `FES` (int): The number of function evaluations performed.
+    - `opt` (numpy.ndarray): The optimal solution for the problem.
+    - `optimum` (float): The optimal function value for the problem.
+    # Methods:
+    - `__init__(dim, shift, rotate, bias)`: Initializes the problem with the given parameters.
+    - `get_optimal()`: Returns the optimal solution for the problem.
+    - `func(x)`: Abstract method to define the problem's objective function. Must be implemented in subclasses.
+    - `decode(x)`: Decodes a solution from the normalized space [0, 1] to the problem's actual search space.
+    - `sr_func(x, shift, rotate)`: Applies shift and rotation transformations to the input solution.
+    - `eval(x)`: Evaluates the solution(s) using the problem's objective function. Supports both individual and population evaluations.
+    # Raises:
+    - `NotImplementedError`: Raised if the `func` method is not implemented in a subclass.
+    """
     def __init__(self, dim, shift, rotate, bias):
         self.T1 = 0
         self.dim = dim
