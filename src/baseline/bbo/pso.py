@@ -10,33 +10,30 @@ class PSO(Basic_Optimizer):
     # Introduction
     Particle Swarm Optimization (PSO) optimizer implementation for black-box optimization problems.  
     This class inherits from `Basic_Optimizer` and utilizes the DEAP library to perform PSO, maintaining a population of particles that iteratively update their positions and velocities to search for the global optimum.
-    
-    # Orighinal paper:
-     
-    # Official Implementation:
-    
-    # Args:
-    - config (object): Configuration object containing PSO and experiment parameters such as `phi1`, `phi2`, `population_size`, `log_interval`, `full_meta_data`, `maxFEs`, and `n_logpoint`.
-    # Methods:
-    - __str__(): Returns the string representation of the optimizer ("PSO").
-    - run_episode(problem): Executes a single optimization episode on the given problem instance.
-        - problem (object): Problem instance with attributes `ub` (upper bounds), `lb` (lower bounds), `dim` (dimension), `eval` (evaluation function), and optionally `optimum`.
-    # Returns (from run_episode):
-    - dict: A dictionary containing:
-        - 'cost' (list): Best fitness value found at each logging interval.
-        - 'fes' (int): Total number of function evaluations performed.
-        - 'metadata' (dict, optional): If `full_meta_data` is True, includes:
-            - 'X' (list): Population positions at each logging interval.
-            - 'Cost' (list): Fitness values of the population at each logging interval.
-    # Raises:
-    - AttributeError: If the problem instance does not provide required attributes (`ub`, `lb`, `dim`, `eval`).
-    - Any exceptions raised by the problem's `eval` function.
-    # Notes:
-    - The optimizer supports logging and metadata collection for analysis and benchmarking.
-    - The PSO parameters (`phi1`, `phi2`, `population_size`) are set to default values but can be overridden via the config object.
     """
     
     def __init__(self, config):
+        """
+        # Introduction
+        Initializes the PSO (Particle Swarm Optimization) optimizer with the config object constructed in config.py, setting default hyperparameters and preparing internal state.
+        # Args:
+        - config (object): Configuration object containing PSO parameters and metadata.
+            - The Attributes needed for the PSO are the following:
+                - log_interval (int): Interval at which logs are recorded.
+                - n_logpoint (int): Number of log points to record. Default is 50.
+                - full_meta_data (bool): Flag indicating whether to use full meta data. Default is False.
+                - maxFEs (int): Maximum number of function evaluations allowed. Default value depends on the type of the problem.
+                - phi1 (float): Cognitive coefficient for particle velocity update. Default is 2.0.
+                - phi2 (float): Social coefficient for particle velocity update. Default is 2.0.
+                - population_size (int): Size of the particle population. Default is 50.
+        # Attributes:
+        - __config (object): Stores the configuration object.
+        - __toolbox (object or None): Placeholder for the optimization toolbox, initialized as None.
+        - __creator (object or None): Placeholder for the creator utility, initialized as None.
+        # Notes:
+        - Sets default values for `phi1`, `phi2`, and `population_size` in the configuration.
+        """
+        
         super().__init__(config)
         config.phi1 = 2.
         config.phi2 = 2.
@@ -49,8 +46,31 @@ class PSO(Basic_Optimizer):
         self.full_meta_data = config.full_meta_data
         
     def __str__(self):
+        """
+        Returns a string representation of the PSO (Particle Swarm Optimization) class.
+        # Returns:
+            str: The string "PSO", representing the class name.
+        """
+        
         return "PSO"
     def run_episode(self, problem):
+        """
+        # Introduction
+        Executes a single episode of Particle Swarm Optimization (PSO) on the given optimization problem, tracking the best solution found and optionally collecting meta-data about the optimization process.
+        # Args:
+        - problem (object): An object representing the optimization problem to solve. Must have attributes `lb` (lower bounds), `ub` (upper bounds), `dim` (dimension), `eval` (evaluation function), and optionally `optimum` (known optimum value).
+        # Returns:
+        - dict: A dictionary containing:
+            - 'cost' (list of float): The best fitness value found at each logging interval.
+            - 'fes' (int): The total number of function evaluations performed.
+            - 'metadata' (dict, optional): If `self.full_meta_data` is True, includes:
+                - 'X' (list of np.ndarray): The population positions at each logging interval.
+                - 'Cost' (list of float): The fitness values of the population at each logging interval.
+        # Raises:
+        - AttributeError: If required attributes are missing from the `problem` object.
+        - Exception: For errors during the optimization process, such as invalid configuration or evaluation failures.
+        """
+        
         self.rng_gpu = None
         self.rng_cpu = None
         self.rng = None

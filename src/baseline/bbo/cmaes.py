@@ -14,33 +14,25 @@ class CMAES(Basic_Optimizer):
     A novel evolutionary optimization strategy based on the derandomized evolution strategy with covariance matrix adaptation. This is accomplished by efficientlyincorporating the available information from a large population, thus significantly re-ducing the number of generations needed to adapt the covariance matrix.
     # Original paper
     "[**Reducing the time complexity of the derandomized evolution strategy with covariance matrix adaptation (CMA-ES)**](https://ieeexplore.ieee.org/abstract/document/6790790/)." Evolutionary Computation 11.1 (2003): 1-18.
-    # Official Implementation
-    None
-    # Args:
-    - config (object): Configuration object containing optimizer parameters such as population size (`NP`), 
-      logging interval (`log_interval`), number of log points (`n_logpoint`), maximum function evaluations (`maxFEs`), 
-      and whether to collect full meta data (`full_meta_data`).
-    # Methods:
-    - __str__(): Returns the string representation of the optimizer.
-    - run_episode(problem): Runs a single optimization episode on the given problem instance.
-    # run_episode Args:
-    - problem (object): An optimization problem instance with attributes `dim` (dimension), `ub` (upper bound), 
-      `lb` (lower bound), `optimum` (optional, known optimum value), and an `eval(x)` method for fitness evaluation.
-    # run_episode Returns:
-    - dict: A dictionary containing:
-        - 'cost' (list): The best cost found at each logging interval.
-        - 'fes' (int): The total number of function evaluations performed.
-        - 'metadata' (dict, optional): If `full_meta_data` is True, contains:
-            - 'X' (list): List of candidate solutions at each logging interval.
-            - 'Cost' (list): List of corresponding costs at each logging interval.
-    # Raises:
-    - Any exceptions raised by the underlying `cma` library or the problem's `eval` method.
-    # Notes:
-    - The optimizer automatically rescales candidate solutions to the problem's bounds.
-    - Logging and metadata collection are controlled by the configuration object.
     """
     
     def __init__(self, config):
+        """
+        # Introduction
+        Initializes the CMA-ES optimizer with the provided configuration settings.
+        # Args:
+        - config (object): config object from src/config.py.
+            - The Attributes needed for the CMAES are the following:
+                - log_interval (int): Interval at which logs are recorded.Default is config.maxFEs/config.n_logpoint.
+                - n_logpoint (int): Number of log points to record.Default is 50.
+                - full_meta_data (bool): Flag indicating whether to use full meta data.Default is False.
+                - __FEs (int): Counter for the number of function evaluations.Default is 0.
+                - __config (object): Stores the config object from src/config.py.
+                - NP(int): Set the population size in config to 50.
+        # Attributes:
+        - __config (object): Configuration object containing algorithm parameters.     
+        """
+        
         super().__init__(config)
         config.NP = 50
         self.__config = config
@@ -51,9 +43,34 @@ class CMAES(Basic_Optimizer):
         self.__FEs = 0
 
     def __str__(self):
+        """
+        Returns a string representation of the CMAES class.
+        # Returns:
+        - str: The string "CMAES".
+        """
         return "CMAES"
 
     def run_episode(self, problem):
+        """
+        # Introduction
+        Executes a single optimization episode using the CMA-ES (Covariance Matrix Adaptation Evolution Strategy) algorithm on a given problem instance. Tracks the optimization process, logs costs at specified intervals, and optionally collects meta-data about the search trajectory.
+        Use the cma package to implement the CMA-ES algorithm.
+        # Args:
+        - problem (object): An optimization problem instance that must provide the following attributes and methods:
+            - `dim` (int): Dimensionality of the problem.
+            - `lb` (np.ndarray): Lower bounds for the variables.
+            - `ub` (np.ndarray): Upper bounds for the variables.
+            - `eval(x)` (callable): Function to evaluate the objective at point `x`.
+            - `optimum` (float or None): Known optimum value of the problem (if available).
+        # Returns:
+        - dict: A dictionary containing:
+            - `'cost'` (list of float): The best cost found at each logging interval.
+            - `'fes'` (int): The total number of function evaluations performed.
+            - `'metadata'` (dict, optional): If `self.full_meta_data` is True, includes:
+                - `'X'` (list of np.ndarray): The population positions at each iteration (in original problem scale).
+                - `'Cost'` (list of np.ndarray): The corresponding costs for each population.
+        """
+        
         cost = []
         self.meta_X = []
         self.meta_Cost = []
