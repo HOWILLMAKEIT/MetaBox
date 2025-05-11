@@ -5,11 +5,11 @@ some examples, tutorial and some other advanced usage of Metabox
 
 :maxdepth: 1
 :hidden
-Develop_your_MetaBBO
-Develop_your_Problem_Set
-Flexible_Usage_of_Metadata
-Flexibly_Integrate_other_EC_Libraries.
-Flexibly_Leverage_Parallelism
+Develop your MetaBBO
+Develop your Problem Set
+Flexible Usage of Metadata
+Flexibly Integrate other EC Libraries.
+Flexibly Leverage Parallelism
 
 ```
 
