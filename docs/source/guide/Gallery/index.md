@@ -8,7 +8,7 @@ some examples, tutorial and some other advanced usage of Metabox
 Develop your MetaBBO
 Develop your Problem Set
 Flexible Usage of Metadata
-Flexibly Integrate other EC Libraries.
+Flexibly Integrate other EC Libraries
 Flexibly Leverage Parallelism
 
 ```
