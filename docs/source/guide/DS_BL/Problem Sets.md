@@ -6,11 +6,11 @@
 | **Multi-Modal Optimization**      | [CEC2013MMO](#cec2013mmo)                                                                                                  |
 | **Multi-Task Optimization**       | [CEC2017MTO](#cec2017mto)、[WCCI2020](#wcci2020)                                                                           |
 
-### Single-Object Optimization
+## Single-Object Optimization
 
-#### COCO-BBOB
+### COCO-BBOB
 
-#### BBOB-Surrogate
+### BBOB-Surrogate
 
 - **Introduction**：\
   BBOB-Surrogate investigates the integration of surrogate modeling techniques into MetaBBO , enabling data-driven approximation of expensive objective functions while maintaining optimization fidelity.
@@ -21,15 +21,15 @@
 - **Problem Suite Composition**：\
   BBOB-Surrogate contains a total of 72 optimization problems, corresponding to three dimensions (2, 5, 10), each dimension contains 24 problems. Each problem consists of a trained KAN or MLP network, which is used to fit 24 black box functions in the COCO-BBOB benchmark. The network here is a surrogate model of the original function.
 
-#### HPO-B
+### HPO-B
 
-#### NeuroEvolution
+### NeuroEvolution
 
-#### Protein-Docking
+### Protein-Docking
 
-#### UAV
+### UAV
 
-#### CEC2013LSGO
+### CEC2013LSGO
 
 - **Introduction**：\
   CEC2013LSGO proposes 15 large-scale benchmark problems to represent a wider range of realworld large-scale optimization problems.
@@ -48,9 +48,9 @@
      2. Overlapping functions with conflicting subcomponents (F14)
   4. Fully-nonseparable functions (F15)
 
-### Multi-Objective Optimization
+## Multi-Objective Optimization
 
-#### MOO-Synthetic
+### MOO-Synthetic
 
 - **Introduction**：\
   MOO-Synthetic provides a more comprehensive problem set for multi-objective optimization by combining multiple mainstream problem sets (ZDT、UF、DTLZ、WFG).
@@ -64,9 +64,9 @@
 - **Problem Suite Composition**：\
   MOO-Synthetic contains 187 questions, consisting of the ZDT, UF, DTLZ, and WFG question sets.
 
-### Multi-Modal Optimization
+## Multi-Modal Optimization
 
-#### CEC2013MMO
+### CEC2013MMO
 
 - **Introduction**：\
   CEC2013MMO is a problem set for evaluating multi-modal optimization algorithms.
@@ -77,9 +77,9 @@
 - **Problem Suite Composition**：\
   CEC2013MMO includes 20 functions covering different dimensions and the number of global optima. Among them, F1 to F5 are simple functions, F6 to F10 are scalable functions with many global optima, and F11 to F20 are composition functions with challenging landscapes.
 
-### Multi-Modal Optimization
+## Multi-Modal Optimization
 
-#### CEC2017MTO
+### CEC2017MTO
 
 - **Introduction**：\
   CEC2017MTO is a problem set for evaluating multi-task optimization algorithms.
@@ -94,7 +94,7 @@
   <img src="https://github.com/GMC-DRL/MetaBox/blob/v2.0.0/docs/pic/CEC2017MTO.png" width="700"/>
   </p>
 
-#### WCCI2020
+### WCCI2020
 
 - **Introduction**：\
   WCCI2020 is a problem set for evaluating multi-task optimization algorithms.
