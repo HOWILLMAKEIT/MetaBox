@@ -5,7 +5,7 @@
 :maxdepth: 1
 
 Core_Concept_of_MetaBBO
-MetaBox-V2's_running_logic
+MetaBox-V2's_Running_Logic
 Installastion
 Common_Usage
 Config
