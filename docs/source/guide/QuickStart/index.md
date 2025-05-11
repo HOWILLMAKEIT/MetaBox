@@ -4,9 +4,11 @@
 
 :maxdepth: 1
 
+Core_Concept_of_MetaBBO
+MetaBox-V2's_running_logic
+Installastion
 Common_Usage
-Core_Concept
-
+Config
 ```
 
 🚀 Hi！Here is **the fastest way to begin your journey of MetaBox**. 🚀
