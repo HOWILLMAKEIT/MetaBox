@@ -6,7 +6,7 @@
 
 Core_Concept_of_MetaBBO
 MetaBox-V2's_Running_Logic
-Installastion
+Installation
 Common_Usage
 Config
 ```
