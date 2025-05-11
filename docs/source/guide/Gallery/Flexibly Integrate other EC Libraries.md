@@ -1,4 +1,4 @@
-# 3. Config
+# Flexibly Integrate other EC Libraries
 
 ## BashBuilder
 
