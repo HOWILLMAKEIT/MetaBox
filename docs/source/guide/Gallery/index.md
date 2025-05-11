@@ -1,14 +1,15 @@
-# Flexible usage gallery
-
+# Developer Guide
 some examples, tutorial and some other advanced usage of Metabox
 
 ```{toctree}
 
 :maxdepth: 1
 :hidden
-Own_algorithm
-Own_dataset
-Config
+Develop_your_MetaBBO
+Develop_your_Problem_Set
+Flexible_Usage_of_Metadata
+Flexibly_Integrate_other_EC_Libraries.
+Flexibly_Leverage_Parallelism
 
 ```
 
