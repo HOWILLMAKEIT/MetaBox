@@ -3,15 +3,12 @@
 
 :maxdepth: 1
 :hidden
-Develop your MetaBBO
-Develop your Problem Set
-Flexible Usage of Metadata
-Flexibly Integrate other EC Libraries
-Flexibly Leverage Parallelism
+Train one MetaBox's algorithm on MetaBox's one Dataset
+Test one MetaBox's algorithm on MetaBox's one Dataset
 
 ```
 
-## 1. Train one MetaBox's algorithm on MetaBox's one dataset
+## 1. Train one MetaBox's algorithm on MetaBox's one Dataset
 
 ```{note}
 **The following code demonstrates the core training logic.**
