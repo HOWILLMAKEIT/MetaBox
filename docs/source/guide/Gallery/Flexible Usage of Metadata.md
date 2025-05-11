@@ -1,4 +1,4 @@
-## 1. Implement your own algorithm in Metabox
+# Flexible Usage of Metadata
 
 [GLEET](source/guide/Gallery/GLEET.md)
 [GLHF](source/guide/Gallery/GLHF.md)
