@@ -431,3 +431,30 @@ def run_episode(self, problem):
          results['metadata'] = metadata
       return results
 ```
+
+```{tip}
+MetaBOX not only supports RL-based MetaBBO methods, but also supports MetaBBO methods based on SL, NE, and ICL.
+```
+
+Exp:
+- **MetaBBO-RL**：GLEET
+- **MetaBBO-SL**：GLHF
+- **MetaBBO-NE**：LES
+- **MetaBBO-ICL**：OPRO
+
+Compared to RL, other methods differ in that they do not require an `rl` class and are instead built directly by inheriting from `basic_agent`.
+
+1️⃣ Create the Agent
+
+```{python}
+from metaevobox.rl import basic_agent
+class MyAgent(basic_agent)
+    # Specific Operation
+```
+
+The procedure can be referred to in [Create your own agent](#12-create-your-own-agent).
+
+2️⃣ Create the Optimizer
+
+The procedure can be referred to in [Create your own optimizer](#2-create-your-own-optimizer).
+
