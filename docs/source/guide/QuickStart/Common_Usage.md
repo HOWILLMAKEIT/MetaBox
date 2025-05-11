@@ -1,4 +1,8 @@
 # Common Usage
+:maxdepth: 1
+:hidden
+Train one MetaBox's algorithm on MetaBox's one dataset
+Test one MetaBox's algorithm on MetaBox's one Dataset
 
 ## 1. Train one MetaBox's algorithm on MetaBox's one dataset
 
