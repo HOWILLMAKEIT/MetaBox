@@ -206,15 +206,17 @@ class RLHPSDE_Optimizer(Learnable_Optimizer):
         samples[0] = (ub + lb) / 2 + startingZone * r
         rD = self.rng.choice(self.__dim, 1)
         if startingZone[rD] == -1:
-            samples[0][rD] = lb
+            lbj = lb if np.isscalar(lb) else lb[rD]
+            samples[0][rD] = lbj
         else:
-            samples[0][rD] = ub
+            ubj = ub if np.isscalar(ub) else ub[rD]
+            samples[0][rD] = ubj
         for step in range(1, self.__rw_steps + 1):
             samples[step] = samples[step - 1] + self.rng.rand(self.__dim) * (-self.__step_size) * startingZone
             cro_ub = samples[step] > ub
             cro_lb = samples[step] < lb
-            samples[step][cro_ub] = 2 * ub - samples[step][cro_ub]
-            samples[step][cro_lb] = 2 * lb - samples[step][cro_lb]
+            samples[step][cro_ub] = (2 * ub - samples[step])[cro_ub]
+            samples[step][cro_lb] = (2 * lb - samples[step])[cro_lb]
             startingZone[np.any([cro_ub, cro_lb], axis=0)] *= -1
         return samples
 
@@ -224,7 +226,7 @@ class RLHPSDE_Optimizer(Learnable_Optimizer):
         cost = cost[1:]
         gbest_solution = self.__population.gbest_solution
         dist = np.linalg.norm(sample - gbest_solution, ord=2, axis=-1)
-        r = np.mean((cost - cost.mean()) * (dist - dist.mean())) / (cost.std() * dist.std())
+        r = np.mean((cost - cost.mean()) * (dist - dist.mean())) / (cost.std() * dist.std() + 1e-32)
         if 0.15 < r <= 1:
             return True  # easy
         elif -1 <= r < 0.15:

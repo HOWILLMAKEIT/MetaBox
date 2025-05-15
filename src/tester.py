@@ -627,7 +627,7 @@ class Tester(object):
                 pbar.update()
             for optimizer in self.t_optimizer_for_cp:
                 pbar.set_description(f"Problem_Testrun Testing {optimizer.__str__()}")
-                testunit_list += [BBO_TestUnit(copy.deepcopy(optimizer), copy.deepcopy(p), seed) for p in self.test_set.data
+                testunit_list = [BBO_TestUnit(copy.deepcopy(optimizer), copy.deepcopy(p), seed) for p in self.test_set.data
                                                                                                  for seed in seed_list]
                 MetaBBO_test = ParallelEnv(testunit_list, para_mode = 'ray', num_gpus=num_gpus)
                 meta_test_data = MetaBBO_test.rollout()

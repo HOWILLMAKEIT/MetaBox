@@ -55,6 +55,8 @@ class SAHLPSO(Basic_Optimizer):
 
     def run_episode(self,problem):
         self.dim = problem.dim
+        self.lb = problem.lb
+        self.ub = problem.ub
         if self.full_meta_data:
             self.meta_Cost = []
             self.meta_X = []
@@ -165,13 +167,14 @@ class SAHLPSO(Basic_Optimizer):
                 mask = nf_cr != 0
                 S_cr[mask] = ns_cr[mask] / nf_cr[mask]
                 # update P_cr
-                if np.sum(S_cr) == 0 and H_cr < len(self.M_cr):
-                    H_cr += 1
+                if np.sum(S_cr) == 0:
+                    if H_cr < len(self.M_cr):
+                        H_cr += 1
+                        nf_cr = np.append(nf_cr, 0)
+                        ns_cr = np.append(ns_cr, 0)
                     P_cr = np.ones(H_cr) / H_cr
-
-
                 else:
-                    P_cr = S_cr / np.sum(S_cr)
+                    P_cr = S_cr / (np.sum(S_cr) + 1e-20)
 
                 # update P_ls
                 S_ls = np.zeros(H_ls)

@@ -67,7 +67,7 @@ class NoisyProblem:
     def boundaryHandling(self, x):
         return 100. * pen_func(x, self.ub)
 
-class GaussNoisyProblem(BBOB_Numpy_Problem):
+class GaussNoisyProblem(NoisyProblem):
     """
     Attribute 'gause_beta' need to be defined in subclass.
     """

@@ -331,7 +331,7 @@ class DEDDQN_Optimizer(Learnable_Optimizer):
 
         if self.__config.full_meta_data:
             self.meta_tmp_x.append(self.__X[self.__pointer].copy())
-            self.meta_tmp_cost.append(self.__cost[self.__pointer][j].copy())
+            self.meta_tmp_cost.append(self.__cost[self.__pointer].copy())
 
             # 在某一轮迭代结束后（例如在 for j in range(NP) 之后）
             if len(self.meta_tmp_cost) == self.__NP:  # 或 len(self.meta_tmp_x) == NP
