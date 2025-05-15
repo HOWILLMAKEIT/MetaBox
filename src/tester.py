@@ -168,7 +168,9 @@ def record_data(data, test_set, agent_for_rollout, checkpoints, results, meta_re
     for item in data:
         for key in item.keys():
             if key == 'metadata' and config.full_meta_data:
-                meta_results[item['problem_name']][item['agent_name']].append(item[key])
+                metadata = item[key]
+                metadata['T'] = item['T2'] # ms
+                meta_results[item['problem_name']][item['agent_name']].append(metadata)
                 continue
             if key not in ['agent_name', 'problem_name']:
                 if key not in results.keys():
@@ -197,23 +199,40 @@ def store_meta_data(log_dir, meta_data_results):
     
     if not os.path.exists(log_dir+'/metadata/'):
         os.makedirs(log_dir+'/metadata/')
+
     for pname in meta_data_results.keys():
-        if not os.path.exists(log_dir+f'/metadata/{pname}.pkl'):
-            with open(log_dir + f'/metadata/{pname}.pkl', 'wb') as f:
-                pickle.dump(meta_data_results[pname], f, -1)
-            for agent in meta_data_results[pname].keys():  # clear memory storage
-                meta_data_results[pname][agent] = []
-        else:
-            with open(log_dir + f'/metadata/{pname}.pkl', 'rb') as f:
-                data_results = pickle.load(f)
-            for key in meta_data_results[pname].keys():
-                if key in data_results.keys():
-                    data_results[key] += meta_data_results[pname][key]  # list + list
+        problem_data = meta_data_results[pname]
+        for baseline in problem_data.keys():
+            if not problem_data[baseline]:
+                # not empty
+                if not os.path.exists(log_dir + f"/metadata/{baseline}/{pname}.pkl"):
+                    with open(log_dir + f"/metadata/{baseline}/{pname}.pkl", 'wb') as f:
+                        pickle.dump(problem_data[baseline], f, -1)
                 else:
-                    data_results[key] = meta_data_results[pname][key]
-                meta_data_results[pname][key] = []  # clear memory storage
-            with open(log_dir + f'/metadata/{pname}.pkl', 'wb') as f:
-                pickle.dump(data_results, f, -1)
+                    with open(log_dir + f"/metadata/{baseline}/{pname}.pkl", 'rb') as f:
+                        data_results = pickle.load(f)
+                    data_results += problem_data[baseline] # list + list
+                    with open(log_dir + f"/metadata/{baseline}/{pname}.pkl", 'wb') as f:
+                        pickle.dump(data_results, f, -1)
+                meta_data_results[pname][baseline] = []
+
+    # for pname in meta_data_results.keys():
+    #     if not os.path.exists(log_dir+f'/metadata/{pname}.pkl'):
+    #         with open(log_dir + f'/metadata/{pname}.pkl', 'wb') as f:
+    #             pickle.dump(meta_data_results[pname], f, -1)
+    #         for agent in meta_data_results[pname].keys():  # clear memory storage
+    #             meta_data_results[pname][agent] = []
+    #     else:
+    #         with open(log_dir + f'/metadata/{pname}.pkl', 'rb') as f:
+    #             data_results = pickle.load(f)
+    #         for key in meta_data_results[pname].keys():
+    #             if key in data_results.keys():
+    #                 data_results[key] += meta_data_results[pname][key]  # list + list
+    #             else:
+    #                 data_results[key] = meta_data_results[pname][key]
+    #             meta_data_results[pname][key] = []  # clear memory storage
+    #         with open(log_dir + f'/metadata/{pname}.pkl', 'wb') as f:
+    #             pickle.dump(data_results, f, -1)
     return meta_data_results
                     
                     

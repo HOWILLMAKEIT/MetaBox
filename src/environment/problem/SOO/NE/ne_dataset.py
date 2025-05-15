@@ -56,7 +56,7 @@ class NE_Dataset(Dataset):
                      user_train_list = None,
                      user_test_list = None,
                      instance_seed=3849):
-        assert difficulty in ['all','easy','difficult','user-define']
+        assert difficulty in ['all','easy','difficult']
         train_set = []
         test_set = []
         if difficulty == 'all':
@@ -64,8 +64,24 @@ class NE_Dataset(Dataset):
                 for depth in model_depth:
                     train_set.append(NE_Problem(env, depth, instance_seed))
                     test_set.append(NE_Problem(env, depth, instance_seed))
-            return NE_Dataset(train_set, train_batch_size), NE_Dataset(test_set, test_batch_size)
-            
+        elif user_train_list is not None or user_test_list is not None:
+            for env in envs.keys():
+                for depth in model_depth:
+                    if user_train_list is not None and user_test_list is not None:
+                        if f'{env}_{depth}' in user_train_list:
+                            train_set.append(NE_Problem(env, depth, instance_seed))
+                        if f'{env}_{depth}' in user_test_list:
+                            test_set.append(NE_Problem(env, depth, instance_seed))
+                    elif user_train_list is not None:
+                        if f'{env}_{depth}' in user_train_list:
+                            train_set.append(NE_Problem(env, depth, instance_seed))
+                        else:
+                            test_set.append(NE_Problem(env, depth, instance_seed))
+                    elif user_test_list is not None:
+                        if f'{env}_{depth}' in user_test_list:
+                            test_set.append(NE_Problem(env, depth, instance_seed))
+                        else:
+                            train_set.append(NE_Problem(env, depth, instance_seed))
         elif difficulty == 'easy':
             for env in envs.keys():
                 for depth in model_depth:
@@ -73,8 +89,6 @@ class NE_Dataset(Dataset):
                         test_set.append(NE_Problem(env, depth, instance_seed))
                     else:
                         train_set.append(NE_Problem(env, depth, instance_seed))
-            return NE_Dataset(train_set, train_batch_size), NE_Dataset(test_set, test_batch_size)
-        
         elif difficulty == 'difficult':
             for env in envs.keys():
                 for depth in model_depth:
@@ -82,30 +96,7 @@ class NE_Dataset(Dataset):
                         train_set.append(NE_Problem(env, depth, instance_seed))
                     else:
                         test_set.append(NE_Problem(env, depth, instance_seed))
-            return NE_Dataset(train_set, train_batch_size), NE_Dataset(test_set, test_batch_size)
-        
-        elif difficulty == 'user-define':
-            for env in envs.keys():
-                for depth in model_depth:
-                    if user_train_list is not None and user_test_list is not None:
-                        if f'{env}-{depth}' in user_train_list:
-                            train_set.append(NE_Problem(env, depth, instance_seed))
-                        if f'{env}-{depth}' in user_test_list:
-                            test_set.append(NE_Problem(env, depth, instance_seed))
-                    elif user_train_list is not None:
-                        if f'{env}-{depth}' in user_train_list:
-                            train_set.append(NE_Problem(env, depth, instance_seed))
-                        else:
-                            test_set.append(NE_Problem(env, depth, instance_seed))
-                    elif user_test_list is not None:
-                        if f'{env}-{depth}' in user_test_list:
-                            test_set.append(NE_Problem(env, depth, instance_seed))
-                        else:
-                            train_set.append(NE_Problem(env, depth, instance_seed))
-                    else:
-                        raise NotImplementedError
-                
-            return NE_Dataset(train_set, train_batch_size), NE_Dataset(test_set, test_batch_size)
+        return NE_Dataset(train_set, train_batch_size), NE_Dataset(test_set, test_batch_size)
 
     def __getitem__(self, item):
         

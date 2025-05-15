@@ -108,6 +108,10 @@ def init_config(config):
         config.maxFEs = 2500
     elif 'lsgo' in config.train_problem or 'lsgo' in config.test_problem:
         config.maxFEs = 3e6
+    elif "30D" in config.train_problem or '30D' in config.test_problem:
+        config.maxFEs = 50000
+    elif "ne" in config.train_problem or "ne" in config.test_problem:
+        config.maxFEs = 2500
     else:
         config.maxFEs = 20000
 

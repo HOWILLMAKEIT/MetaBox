@@ -322,8 +322,8 @@ class LDE_Optimizer(Learnable_Optimizer):
         self.__past_histo = (self.__config.NP/self.__config.BINS) * np.ones((self.__BATCH_SIZE, 1, self.__config.BINS))
 
         if self.__config.full_meta_data:
-            self.meta_X = [self.__pop.copy()]
-            self.meta_Cost = [self.__fit.copy()]
+            self.meta_X = [self.__pop.copy()[0]]
+            self.meta_Cost = [self.__fit.copy()[0]]
         return self.__get_feature()
 
     def get_best(self):
@@ -404,8 +404,8 @@ class LDE_Optimizer(Learnable_Optimizer):
             self.cost.append(self.gbest_cost)
 
         if self.__config.full_meta_data:
-            self.meta_X.append(self.__pop.copy())
-            self.meta_Cost.append(self.__fit.copy())
+            self.meta_X.append(self.__pop.copy()[0])
+            self.meta_Cost.append(self.__fit.copy()[0])
         if is_done:
             if len(self.cost) >= self.__config.n_logpoint + 1:
                 self.cost[-1] = self.gbest_cost

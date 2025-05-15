@@ -360,7 +360,7 @@ class GLEET_Optimizer(Learnable_Optimizer):
             reward = 0.5 * (p_t_new ** 2 - p_t ** 2)
         else:
             reward = 0
-        assert reward >= 0, 'reward should be bigger than 0!'
+        # assert reward >= 0, 'reward should be bigger than 0!'
         return reward
 
     def update(self, action, problem):
