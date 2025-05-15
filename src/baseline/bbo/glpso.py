@@ -10,45 +10,32 @@ class GLPSO(Basic_Optimizer):
     "[**Genetic learning particle swarm optimization**](https://ieeexplore.ieee.org/abstract/document/7271066/)." IEEE Transactions on Cybernetics 46.10 (2015): 2277-2290.
     # Official Implementation
     [GLPSO](http://www.ai.sysu.edu.cn/GYJ/glpso/c_co)
-
-    # Args:
-    - config (object): Configuration object containing algorithm parameters such as logging intervals, maximum function evaluations, and metadata options.
-    # Attributes:
-    - __pm (float): Probability of mutation for exemplars.
-    - __NP (int): Number of particles in the swarm.
-    - __nsel (int): Number of selections in tournament selection.
-    - __w (float): Inertia weight for velocity update.
-    - __c1 (float): Cognitive coefficient for velocity update.
-    - __sg (int): Stagnation threshold for exemplar update.
-    - __rho (float): Scaling factor for maximum velocity.
-    - log_interval (int): Interval for logging optimization progress.
-    - full_meta_data (bool): Flag to store full metadata during optimization.
-    - __fes (int): Current number of function evaluations.
-    - __exemplar_stag (np.ndarray): Stagnation counters for each particle's exemplar.
-    - meta_Cost (list): Stores cost history if full_meta_data is enabled.
-    - meta_X (list): Stores position history if full_meta_data is enabled.
-    - cost (list): Stores global best cost at each logging interval.
-    # Methods:
-    - __str__(): Returns the string representation of the optimizer.
-    - run_episode(problem): Runs a single optimization episode on the given problem.
-    - __init_population(problem): Initializes the particle population and related attributes.
-    - __get_costs(problem, position): Evaluates the cost of given positions.
-    - __update(problem): Performs a single iteration of the optimization process.
-    - __exemplar_crossover(problem): Applies crossover to generate new exemplars.
-    - __exemplar_mutation(problem): Applies mutation to exemplars.
-    - __exemplar_selection(problem, init=False): Selects exemplars based on cost.
-    - __exemplar_tour_selection(): Performs tournament selection among exemplars.
-    - __exemplar_update(problem, init): Updates exemplars using crossover, mutation, and selection.
-    # Returns:
-    - run_episode(problem): Returns a dictionary containing the optimization results, including cost history, number of function evaluations, and optional metadata.
-    # Raises:
-    - None explicitly, but may raise exceptions from underlying numpy operations or problem evaluation methods.
-    # Notes:
-    - The optimizer is designed to work with problems that provide `lb`, `ub`, `dim`, `eval()`, and optionally `optimum` attributes.
-    - The algorithm supports logging and metadata collection for analysis and benchmarking.
     """
     
     def __init__(self, config):
+        """
+        # Introduction
+        Initializes the GLPSO (Global Learning Particle Swarm Optimization) algorithm with the specified configuration parameters.
+        # Args:
+        - config (object): 
+            - The Attributes needed for the MOEAD optimizer in config are the following:
+            - maxFEs (int): Maximum number of function evaluations allowed. Default value depends on the type of the problem.
+            - n_logpoint (int): Number of log points for tracking progress. Default is 50.
+            - log_interval (int): Interval at which logs are recorded. Default is maxFEs // n_logpoint.
+            - full_meta_data (bool): Flag indicating whether to store complete solution history. Default is False.
+        # Attributes:
+        - __pm (float): Mutation probability, default is 0.01.
+        - __NP (int): Population size, default is 100.
+        - __nsel (int): Number of selected individuals, default is 10.
+        - __w (float): Inertia weight, default is 0.7298.
+        - __c1 (float): Cognitive coefficient, default is 1.49618.
+        - __sg (int): Number of subgroups, default is 7.
+        - __rho (float): Learning rate, default is 0.2.
+        - config (object): Stores the configuration object.
+        - __fes (int): Function evaluation counter, initialized to 0.
+        - __exemplar_stag (np.ndarray): Array to track stagnation of exemplars, initialized to zeros of length `__NP`.
+        """
+        
         super().__init__(config)
         self.__pm=0.01
         self.__NP=100
@@ -65,9 +52,28 @@ class GLPSO(Basic_Optimizer):
         self.full_meta_data = config.full_meta_data
         
     def __str__(self):
+        """
+        Returns the string representation of the GLPSO class.
+        # Returns:
+        - str: The string "GLPSO", representing the class name.
+        """
+        
         return "GLPSO"
     
     def __exemplar_crossover(self, problem):
+        """
+        # Introduction
+        Performs the exemplar crossover operation for the GLPSO (Global Learning Particle Swarm Optimization) algorithm, generating new exemplars for each particle based on their personal bests, global best, and randomly selected peers.
+        # Args:
+        - problem (object): The problem object representing the optimization problem.
+        # Modifies:
+        - self.__new_exemplar (np.ndarray): Updates the array with new exemplars for each particle, determined by either a random peer's personal best or a uniform crossover between the particle's personal best and the global best.
+        # Details:
+        - For each particle and each dimension, selects a random peer and compares their personal best value.
+        - If the random peer's personal best is better, adopts their position as the exemplar.
+        - Otherwise, performs a uniform crossover between the particle's personal best and the global best position.
+        """
+        
         rand_index=self.rng.randint(low=0,high=self.__NP,size=(self.__NP,problem.dim))
         xs=self.__particles['pbest_position']
         rand_par=xs[rand_index,np.arange(problem.dim)[None,:]]
@@ -78,10 +84,38 @@ class GLPSO(Basic_Optimizer):
         self.__new_exemplar=np.where(filter,rand_par,uniform_crossover)
 
     def __exemplar_mutation(self, problem):
+        """
+        # Introduction
+        Performs exemplar mutation on the population by probabilistically replacing elements with random values within the search bounds.
+        # Args:
+        - problem: The problem object representing the optimization problem.
+        # Modifies:
+        - self.__new_exemplar (np.ndarray): Updates the exemplar population by mutating elements with probability `self.__pm` using random values within `[self.__lb, self.__ub]`.
+        # Notes:
+        - Uses the instance's random number generator (`self.rng`) for reproducibility.
+        - Mutation is applied independently to each element of the population matrix.
+        """
+        
         rand_pos=self.rng.uniform(low=self.__lb,high=self.__ub,size=(self.__NP,problem.dim))
         self.__new_exemplar=np.where(self.rng.rand(self.__NP,problem.dim)<self.__pm,rand_pos,self.__new_exemplar)
     
     def __exemplar_selection(self,problem,init=False):
+        """
+        # Introduction
+        Selects and updates exemplars based on their costs for a given optimization problem, supporting both initialization and iterative improvement phases.
+        # Args:
+        - problem: The problem object representing the optimization problem.
+        - init (bool): If True, initializes the exemplars with new candidates; otherwise, performs selection and updates based on cost comparison.
+        # Updates:
+        - self.__exemplar: The current set of exemplars, updated if new candidates have lower cost.
+        - self.__exemplar_cost: The costs associated with the current exemplars.
+        - self.__exemplar_stag: Stagnation counters for each exemplar, reset if improved.
+        - self.__found_best: Tracks the best cost found so far across all exemplars.
+        # Notes:
+        - Uses numpy operations for efficient batch updates.
+        - Assumes that self.__get_costs, self.__new_exemplar, self.__exemplar, self.__exemplar_cost, self.__exemplar_stag, and self.__found_best are defined as class attributes.
+        """
+        
         new_exemplar_cost=self.__get_costs(problem,self.__new_exemplar)
         if init:
             self.__exemplar=self.__new_exemplar
@@ -97,6 +131,13 @@ class GLPSO(Basic_Optimizer):
         self.__found_best=np.where(min_exemplar_cost<self.__found_best,min_exemplar_cost,self.__found_best)
 
     def __exemplar_tour_selection(self):
+        """
+        # Introduction
+        Selects exemplar tours for each particle by randomly sampling a subset of exemplars and choosing the one with the minimum cost.
+        # Returns:
+        - np.ndarray: An array of selected exemplar tours, one for each particle in the population.
+        """
+        
         rand_index=self.rng.randint(low=0,high=self.__NP,size=(self.__NP,self.__nsel))
         rand_exemplar=self.__exemplar[rand_index]
         rand_exemplar_cost=self.__exemplar_cost[rand_index]
@@ -105,6 +146,16 @@ class GLPSO(Basic_Optimizer):
         return selected_exemplar
     
     def __exemplar_update(self,problem,init):
+        """
+        # Introduction
+        Updates the exemplar solutions in the population by performing crossover, mutation, and selection operations. Additionally, applies a tour selection mechanism to exemplars that have stagnated beyond a specified threshold.
+        # Args:
+        - problem: The optimization problem instance containing evaluation and constraint information.
+        - init: Initialization data or state required for the selection process.
+        # Returns:
+        - None
+        """
+        
         self.__exemplar_crossover(problem)
         self.__exemplar_mutation(problem)
         self.__exemplar_selection(problem,init)
@@ -114,6 +165,24 @@ class GLPSO(Basic_Optimizer):
             self.__exemplar=np.where(filter[:,None],self.__exemplar_tour_selection(),self.__exemplar)
     
     def run_episode(self,problem):
+        """
+        # Introduction
+        Executes a single optimization episode for the given problem using the GLPSO algorithm. Initializes the population, iteratively updates particle positions, and collects metadata if enabled.
+        # Args:
+        - problem: The problem object representing the optimization problem. 
+        # Returns:
+        - dict: A dictionary containing the results of the optimization episode.Containing:
+            - 'cost' (list): The best fitness value found at each logging interval.
+            - 'fes' (int): The total number of function evaluations performed.
+            - 'metadata' (dict, optional): If `self.full_meta_data` is True, includes:
+                - 'X' (list of np.ndarray): The population positions at each logging interval.
+                - 'Cost' (list of float): The fitness values of the population at each logging interval.
+        
+        # Notes:
+        - The method resets and initializes the population at the start of each episode.
+        - Metadata collection is optional and controlled by the `self.full_meta_data` attribute.
+        """
+        
         if self.full_meta_data:
             self.meta_Cost = []
             self.meta_X = []
@@ -131,6 +200,19 @@ class GLPSO(Basic_Optimizer):
     
 
     def __init_population(self,problem):
+        """
+        # Introduction
+        Initializes the particle population for the GLPSO (Global Learning Particle Swarm Optimization) algorithm, setting up positions, velocities, and tracking variables for optimization.
+        # Args:
+        - problem (object): The problem object representing the optimization problem. 
+        # Side Effects:
+        - Initializes and sets internal attributes such as upper/lower bounds, function evaluation counter, exemplar cost, particle positions, velocities, costs, and best solutions.
+        - Updates the internal log and cost tracking variables.
+        # Notes:
+        - This method is intended for internal use and assumes that the random number generator (`self.rng`) and population size (`self.__NP`) are already defined.
+        - Calls internal methods for cost evaluation and exemplar update.
+        """
+        
         
         self.__ub=problem.ub
         self.__lb=problem.lb
@@ -165,6 +247,19 @@ class GLPSO(Basic_Optimizer):
         self.cost = [self.__particles['gbest_val']]
 
     def __get_costs(self,problem,position):
+        """
+        # Introduction
+        Computes the cost(s) of a given position or set of positions for a specified optimization problem, optionally adjusting by the known optimum. Also records meta-data if enabled.
+        # Args:
+        - problem: The problem object representing the optimization problem.
+        - position (np.ndarray): The position(s) in the search space for which the cost is to be evaluated.
+        # Returns:
+        - cost (float or np.ndarray): The computed cost(s) for the given position(s), optionally shifted by the problem's optimum if available.
+        # Side Effects:
+        - Increments the function evaluation counter (`self.__fes`) by the number of positions evaluated.
+        - If `self.full_meta_data` is True, appends the computed cost(s) and position(s) to `self.meta_Cost` and `self.meta_X`, respectively.
+        """
+        
         ps=position.shape[0]
         self.__fes+=ps
         if problem.optimum is None:
@@ -177,6 +272,21 @@ class GLPSO(Basic_Optimizer):
         return cost
 
     def __update(self,problem):
+        """
+        # Introduction
+        Updates the state of the particle swarm in the GLPSO (Global Learning Particle Swarm Optimization) algorithm for a single iteration, including velocity and position updates, personal and global best tracking, and logging of optimization progress.
+        # Args:
+        - problem (object): The problem object representing the optimization problem.
+        # Returns:
+        - is_end (bool): Indicates whether the optimization process should terminate based on the number of function evaluations or other stopping criteria.
+        - dict: A dictionary containing:
+            - 'cost' (list): The history of global best costs at logged intervals.
+            - 'fes' (int): The current number of function evaluations.
+        # Notes:
+        - This method updates particle positions and velocities according to PSO rules, applies boundary constraints, updates personal and global bests, and manages logging of optimization progress.
+        - The method assumes that the class maintains internal state for particles, random number generator, logging, and function evaluation counters.
+        """
+        
         is_end=False
         
         rand=self.rng.rand(self.__NP,problem.dim)

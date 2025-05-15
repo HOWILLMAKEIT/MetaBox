@@ -14,24 +14,32 @@ class NLSHADELBC(Basic_Optimizer):
     Non-Linear population size reduction Success-History Adaptive Differential Evolution with Linear Bias Change.It combines selective pressure, biased parameter adaptation with linear bias change, current-to-pbest strategy, resampling of solutions as bound constraint handling techniques, as well as the non-linear population size reduction.
     # Original paper
     "[**NL-SHADE-LBC algorithm with linear parameter adaptation bias change for CEC 2022 Numerical Optimization**](https://ieeexplore.ieee.org/abstract/document/9870295/)." 2022 IEEE Congress on Evolutionary Computation (CEC). IEEE, 2022.
-    # Official Implementation
-    None
-    # Args:
-    - config (object): Configuration object containing algorithm parameters such as maximum function evaluations (`maxFEs`), logging intervals (`log_interval`), number of log points (`n_logpoint`), and whether to collect full meta data (`full_meta_data`).
-    # Methods:
-    - `__str__()`: Returns the string representation of the optimizer.
-    - `run_episode(problem)`: Runs the optimization process on the given problem instance until the maximum number of function evaluations is reached. Returns a dictionary with optimization results and optional metadata.
-    - Internal methods for initialization, mutation, crossover, parameter adaptation, archive management, and population size reduction.
-    # Returns:
-    - The main method `run_episode` returns a dictionary with:
-        - `cost` (list): The best cost found at each logging interval.
-        - `fes` (int): The total number of function evaluations performed.
-        - `metadata` (dict, optional): Contains the history of solutions (`X`) and their corresponding costs (`Cost`) if `full_meta_data` is enabled.
-    # Raises:
-    - No explicit exceptions are raised by the class itself, but underlying operations (e.g., NumPy operations) may raise exceptions if invalid inputs are provided.
-    # Usage Example:
     """
     def __init__(self, config):
+        """
+        Initializes the NLSHADELBC optimizer with the given configuration.
+        # Args:
+        - config (object): 
+            - The Attributes needed for the NLSHADELBC in config are the following:
+                - maxFEs (int): Maximum number of function evaluations allowed. Default directly depends on the type of the problem.
+                - n_logpoint (int): Number of log points for tracking progress. Default is 50.
+                - log_interval (int): Interval at which logs are recorded. Default is maxFEs // n_logpoint.
+                - full_meta_data (bool): Flag indicating whether to store complete solution history. Default is False.
+        # Attributes:
+        - __pb (float): Rate of best individuals in mutation.
+        - __pa (float): Rate of selecting individual from archive.
+        - __m (float): Parameter for mutation.
+        - __p_iniF (float): Initial value for mutation factor.
+        - __p_iniCr (float): Initial value for crossover rate.
+        - __p_fin (float): Final value for parameter p.
+        - __Nmin (int): Lower bound of population size.
+        - __archive (np.ndarray): Archive of replaced individuals.
+        - __k (int): Index for updating elements in MF and MCr.
+        - __MaxFEs (int): Maximum number of function evaluations.
+        - __FEs (int): Current number of function evaluations.
+        - gbest (float): Best global fitness value found.
+        """
+        
         super(NLSHADELBC, self).__init__(config)
         self.__pb = 0.4  # rate of best individuals in mutation
         self.__pa = 0.5  # rate of selecting individual from archive
@@ -51,9 +59,26 @@ class NLSHADELBC(Basic_Optimizer):
         self.full_meta_data = config.full_meta_data
 
     def __str__(self):
+        """
+        Returns the string representation of the NLSHADELBC class.
+        # Returns:
+        - str: The string 'NLSHADELBC', representing the class name.
+        """
+        
         return 'NLSHADELBC'
 
     def __evaluate(self, problem, u):
+        """
+        # Introduction
+        Evaluates the cost of a solution vector `u` for a given optimization problem, optionally adjusting by the problem's optimum and storing metadata if enabled.
+        # Args:
+        - problem: An object representing the optimization problem.
+        - u (array-like): The solution vector to be evaluated.
+        # Returns:
+        - cost (float): The (possibly shifted) evaluation of the solution vector.
+        # Side Effects:
+        - If `self.full_meta_data` is True, appends the cost and solution vector to `self.meta_Cost` and `self.meta_X`, respectively.
+        """
         if problem.optimum is None:
             cost = problem.eval(u)
         else:
@@ -65,6 +90,17 @@ class NLSHADELBC(Basic_Optimizer):
 
     # Binomial crossover
     def __Binomial(self, x, v, cr):
+        """
+        # Introduction
+        Performs binomial crossover operation used in evolutionary algorithms, particularly in Differential Evolution (DE). This method generates trial vectors by mixing parent vectors (`x`) and donor vectors (`v`) based on a crossover rate (`cr`).
+        # Args:
+        - x (np.ndarray): Parent population array of shape (NP, dim), where NP is the population size and dim is the dimensionality.
+        - v (np.ndarray): Donor population array of the same shape as `x`.
+        - cr (np.ndarray): Crossover rate array of shape (NP,), specifying the probability of crossover for each individual.
+        # Returns:
+        - np.ndarray: Trial population array of shape (NP, dim) after binomial crossover.
+        """
+        
         NP, dim = x.shape
         jrand = self.rng.randint(dim, size=NP)
         u = np.where(self.rng.rand(NP, dim) < cr.repeat(dim).reshape(NP, dim), v, x)
@@ -73,6 +109,19 @@ class NLSHADELBC(Basic_Optimizer):
 
     # Exponential crossover
     def __Exponential(self, x, v, cr):
+        """
+        # Introduction
+        Performs the exponential crossover operation used in differential evolution algorithms. This method generates trial vectors by combining parent vectors (`x`) and donor vectors (`v`) based on a crossover rate (`cr`), following an exponential (contiguous) crossover scheme.
+        # Args:
+        - x (np.ndarray): The current population matrix of shape (NP, dim), where NP is the population size and dim is the dimensionality.
+        - v (np.ndarray): The donor (mutant) population matrix of shape (NP, dim).
+        - cr (np.ndarray): The crossover rate for each individual, of shape (NP, 1) or (NP,).
+        # Returns:
+        - np.ndarray: The trial population matrix after exponential crossover, of shape (NP, dim).
+        # Notes:
+        - This method ensures that for each individual, a contiguous subset of variables is inherited from the donor vector, starting from a randomly chosen position.
+        """
+        
         NP, dim = x.shape
         Crs = cr.repeat(dim).reshape(NP, dim)
         u = copy.deepcopy(x)
@@ -96,6 +145,21 @@ class NLSHADELBC(Basic_Optimizer):
 
     # update pa according to cost changes
     def __update_Pa(self, fa, fp, na, NP):
+        """
+        # Introduction
+        Updates the internal probability parameter `__pa` based on the provided counts of accepted and rejected solutions.
+        # Args:
+        - fa (float): The number of successful (accepted) solutions.
+        - fp (float): The number of unsuccessful (rejected) solutions.
+        - na (int): The number of accepted solutions in the current population.
+        - NP (int): The total population size.
+        # Returns:
+        - None: This method updates the internal state (`__pa`) of the object.
+        # Notes:
+        - If there are no accepted solutions (`na == 0`) or no successful solutions (`fa == 0`), `__pa` is set to 0.5.
+        - The updated `__pa` is constrained to the range [0.1, 0.9].
+        """
+        
         if na == 0 or fa == 0:
             self.__pa = 0.5
             return
@@ -103,6 +167,19 @@ class NLSHADELBC(Basic_Optimizer):
         self.__pa = np.minimum(0.9, np.maximum(self.__pa, 0.1))
 
     def __mean_wL_Cr(self, df, s):
+        """
+        # Introduction
+        Computes a weighted mean of the input array `s` using weights derived from `df` and a dynamically calculated exponent `pg`.
+        The calculation is based on the current and maximum function evaluations, as well as initial and final parameter values.
+        # Args:
+        - df (np.ndarray): Array of weights or differences used for normalization.
+        - s (np.ndarray): Array of values to be exponentiated and averaged.
+        # Returns:
+        - float: The weighted mean value computed using the specified formula. Returns 0.9 if the sum of `df` is zero.
+        # Notes:
+        - The method uses internal attributes: `__MaxFEs`, `__FEs`, `__p_iniCr`, `__p_fin`, and `__m`.
+        """
+        
         if np.sum(df) > 0.:
             w = df / np.sum(df)
             pg = (self.__MaxFEs - self.__FEs) * (self.__p_iniCr - self.__p_fin) / self.__MaxFEs + self.__p_fin
@@ -112,6 +189,19 @@ class NLSHADELBC(Basic_Optimizer):
             return 0.9
 
     def __mean_wL_F(self, df, s):
+        """
+        # Introduction
+        Computes a weighted mean of the input array `s` using weights derived from the array `df` and a dynamically calculated exponent `pg`. This function is typically used in optimization algorithms to aggregate solutions based on their fitness or other criteria.
+        # Args:
+        - df (np.ndarray): Array of weights or fitness differences for the population.
+        - s (np.ndarray): Array of solution values or candidate solutions.
+        # Returns:
+        - float: The weighted mean of `s` raised to the power `pg`, normalized by the weighted mean of `s` raised to the power `pg - self.__m`. Returns 0.5 if the sum of `df` is zero.
+        # Notes:
+        - The exponent `pg` is dynamically computed based on the current number of function evaluations (`self.__FEs`), the maximum allowed evaluations (`self.__MaxFEs`), and parameters `self.__p_iniF` and `self.__p_fin`.
+        - If the sum of `df` is zero, a default value of 0.5 is returned.
+        """
+        
         if np.sum(df) > 0.:
             w = df / np.sum(df)
             pg = (self.__MaxFEs - self.__FEs) * (self.__p_iniF - self.__p_fin) / self.__MaxFEs + self.__p_fin
@@ -120,6 +210,20 @@ class NLSHADELBC(Basic_Optimizer):
             return 0.5
 
     def __update_M_F_Cr(self, SF, SCr, df):
+        """
+        # Introduction
+        Updates the memory arrays for mutation factor (F) and crossover rate (Cr) based on successful parameter values and their corresponding fitness differences.
+        # Args:
+        - SF (np.ndarray): Array of successful mutation factors from the current generation.
+        - SCr (np.ndarray): Array of successful crossover rates from the current generation.
+        - df (np.ndarray): Array of fitness differences associated with the successful parameters.
+        # Side Effects:
+        - Updates the internal memory arrays `self.__MF` and `self.__MCr` at the current index `self.__k`.
+        - Advances the memory index `self.__k` in a circular manner.
+        # Notes:
+        - If there are no successful parameters (`SF.shape[0] == 0`), default values are assigned to the memory arrays.
+        """
+        
         if SF.shape[0] > 0:
             mean_wL = self.__mean_wL_F(df, SF)
             self.__MF[self.__k] = mean_wL
@@ -131,6 +235,20 @@ class NLSHADELBC(Basic_Optimizer):
             self.__MCr[self.__k] = 0.9
 
     def __choose_F_Cr(self):
+        """
+        # Introduction
+        Generates crossover rate (Cr) and scaling factor (F) values for a population in an evolutionary algorithm, using normal and Cauchy distributions with adaptive memory.
+        # Args:
+        None
+        # Returns:
+        - tuple:
+            - C_r (np.ndarray): Array of crossover rates for the population, clipped to [0, 1].
+            - F (np.ndarray): Array of scaling factors for the population, adjusted to be at least 0 and at most 1.
+        # Notes:
+        - Crossover rates are sampled from a normal distribution centered at memory values (`self.__MCr`).
+        - Scaling factors are sampled from a Cauchy distribution centered at memory values (`self.__MF`), with negative values reflected.
+        """
+        
         # generate Cr can be done simutaneously
         gs = self.__NP
         ind_r = self.rng.randint(0, self.__H, size=gs)  # index
@@ -143,18 +261,56 @@ class NLSHADELBC(Basic_Optimizer):
         return C_r, np.minimum(1, F)
 
     def __sort(self):
+        """
+        # Introduction
+        Sorts the population and corresponding cost arrays in ascending order of cost.
+        # Args:
+        None
+        # Returns:
+        None
+        # Side Effects:
+        - Updates `self.__cost` and `self.__population` so that both are sorted according to the ascending order of `self.__cost`.
+        """
+        
         # new index after sorting
         ind = np.argsort(self.__cost)
         self.__cost = self.__cost[ind]
         self.__population = self.__population[ind]
 
     def __update_archive(self, old_id):
+        """
+        # Introduction
+        Updates the archive of solutions by either appending a new individual from the population or replacing an existing one at random.
+        # Args:
+        - old_id (int): The index of the individual in the current population to be added to or used to update the archive.
+        # Modifies:
+        - self.__archive (np.ndarray): The archive of solutions, which is either expanded or updated in place.
+        # Notes:
+        - If the archive has not reached its maximum size (`self.__NA`), the individual is appended.
+        - If the archive is full, a random entry is replaced with the new individual.
+        """
+        
         if self.__archive.shape[0] < self.__NA:
             self.__archive = np.append(self.__archive, self.__population[old_id]).reshape(-1, self.__dim)
         else:
             self.__archive[self.rng.randint(self.__archive.shape[0])] = self.__population[old_id]
 
     def __NLPSR(self):
+        """
+        # Introduction
+        Adjusts the population and archive sizes dynamically based on the current number of function evaluations in the optimization process. This method is typically used in evolutionary algorithms to balance exploration and exploitation by resizing the population and archive as the search progresses.
+        # Args:
+        None
+        # Modifies:
+        - self.__NP (int): Updates the current population size.
+        - self.__population (np.ndarray): Truncates the population array to the new size.
+        - self.__cost (np.ndarray): Truncates the cost array to the new size.
+        - self.__NA (int): Updates the current archive size.
+        - self.__archive (np.ndarray): Truncates the archive array to the new size.
+        # Raises:
+        None
+        """
+        
         self.__sort()
         N = np.round(self.__Nmax + (self.__Nmin - self.__Nmax) * np.power(self.__FEs / self.__MaxFEs,
                                                                           1 - self.__FEs / self.__MaxFEs))
@@ -169,6 +325,19 @@ class NLSHADELBC(Basic_Optimizer):
             self.__archive = self.__archive[:A]
 
     def __init_population(self, problem):
+        """
+        # Introduction
+        Initializes the population and related parameters for the NL-SHADE-LBC evolutionary algorithm based on the given optimization problem.
+        # Args:
+        - problem (object): The problem object.
+        # Side Effects:
+        - Sets up the initial population, cost values, memory arrays for DE parameters, archive, and other internal state variables required for the algorithm's execution.
+        # Notes:
+        - The population size, memory size, and other parameters are determined as multiples of the problem's dimensionality.
+        - The initial population is randomly generated within the provided bounds.
+        - The best cost found so far is stored and logged.
+        """
+        
         self.__dim = problem.dim
         self.__Nmax = 23 * problem.dim
         self.__H = 20 * problem.dim
@@ -192,6 +361,19 @@ class NLSHADELBC(Basic_Optimizer):
     def __update(self,
                  problem,  # the problem instance
                  ):
+        """
+        # Introduction
+        Performs one iteration of the NL-SHADE-LBC algorithm, updating the population, archive, and adaptive parameters based on current solutions and their fitness. Handles mutation, crossover, selection, and parameter adaptation for the evolutionary process.
+        # Args:
+        - problem (object): The problem object.
+        # Returns:
+        - None
+        # Side Effects:
+        - Updates internal state variables such as population, archive, fitness values, adaptive parameters, and logging information.
+        # Notes:
+        - This method is intended for internal use within the NL-SHADE-LBC optimizer class.
+        - The method assumes that the population and archive are properly initialized.
+        """
         if self.__NA < self.__archive.shape[0]:
             self.__archive = self.__archive[:self.__NA]
         self.__pa = 0.5
@@ -303,6 +485,23 @@ class NLSHADELBC(Basic_Optimizer):
         #     return self.gbest <= 1e-8
 
     def run_episode(self, problem):
+        """
+        # Introduction
+        Executes a single optimization episode for the given problem, updating the population and tracking the best solution found.
+        # Args:
+        - problem (object): The problem object.
+        # Returns:
+        - dict: A dictionary containing:
+            - 'cost' (list): The history of best costs found during the episode.
+            - 'fes' (int): The total number of function evaluations performed.
+            - 'metadata' (dict, optional): If `full_meta_data` is enabled, includes:
+                - 'X' (list): The history of population states.
+                - 'Cost' (list): The history of population costs.
+        # Notes:
+        - The method initializes the population, iteratively updates it until the maximum number of function evaluations is reached, and logs the best solution.
+        - If `full_meta_data` is True, additional metadata about the optimization process is included in the results.
+        """
+        
         if self.full_meta_data:
             self.meta_Cost = []
             self.meta_X = []

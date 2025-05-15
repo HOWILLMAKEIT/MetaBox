@@ -9,54 +9,40 @@ class JDE21(Basic_Optimizer):
     A DE for solving single-objective real-parameter bound-constrained optimization problems. It uses several mechanisms to tackle optimization problems efficiently: two populations with different sizes, restart mechanism in both populations, self-adaptive control parameters F and CR, the extended range of values for CR in thebigger population, migration of the best individual from the big population into the small population, modified mutation strategy in the bigger population, crowding mechanism and population size reduction in the bigger population.
     # Original paper
     "[**Self-adaptive differential evolution algorithm with population size reduction for single objective bound-constrained optimization: Algorithm j21**](https://ieeexplore.ieee.org/abstract/document/9504782/)." 2021 IEEE Congress on Evolutionary Computation (CEC). IEEE, 2021.
-    # Official Implementation
-    None
-    # Args:
-    - config (object): Configuration object containing algorithm parameters such as `maxFEs` (maximum function evaluations), `n_logpoint` (number of log points), `log_interval` (interval for logging), and `full_meta_data` (flag to record full meta data).
-    # Attributes:
-    - gbest (float): The current global best cost found.
-    - cost (list): History of best costs at each logging interval.
-    - meta_Cost (list): (Optional) History of all costs if `full_meta_data` is enabled.
-    - meta_X (list): (Optional) History of all population states if `full_meta_data` is enabled.
-    - __population (np.ndarray): Current population of candidate solutions.
-    - __cost (np.ndarray): Current costs of the population.
-    - __F (np.ndarray): Mutation factors for each individual.
-    - __Cr (np.ndarray): Crossover rates for each individual.
-    - __FEs (int): Current number of function evaluations.
-    - __MaxFEs (int): Maximum number of function evaluations allowed.
-    - __sNP (int): Size of the small population.
-    - __bNP (int): Size of the big population.
-    - __NP (int): Total population size.
-    - __nReset (int): Number of times the big population was reinitialized.
-    - __sReset (int): Number of times the small population was reinitialized.
-    - __cCopy (int): Number of times the best individual was copied to the small population.
-    # Methods:
-    - __str__(): Returns the name of the optimizer ("JDE21").
-    - run_episode(problem): Runs a full optimization episode on the given problem, returning a dictionary with cost history, total function evaluations, and optionally meta data.
-    - (Private) __update(problem): Performs one iteration of the optimization process, including mutation, crossover, selection, and population management.
-    - (Private) __init_population(problem): Initializes the population and associated parameters.
-    - (Private) __evaluate(problem, Xs): Evaluates the cost of a set of candidate solutions.
-    - (Private) __crowding(group, vs): Performs the crowding operation for replacement selection.
-    - (Private) __prevecEnakih(cost, best): Checks for stagnation in the population.
-    - (Private) __sort(): Sorts the population by cost.
-    - (Private) __reinitialize(size, problem): Reinitializes a subset of the population.
-    # Returns:
-    - run_episode(problem) returns:
-        - dict: {
-            'cost': list of best costs at each log interval,
-            'fes': total number of function evaluations,
-            'metadata' (optional): {
-                'X': list of population states,
-                'Cost': list of cost arrays
-            }
-        }
-    # Raises:
-    - None explicitly, but may raise exceptions from numpy or the problem's evaluation function if inputs are invalid.
-    # References:
-    - JDE21: An Improved Differential Evolution Algorithm with Adaptive Parameter Control and Dual-population Strategies.
     """
     
     def __init__(self, config):
+        """
+        # Introduction
+        Initializes the JDE21 optimizer with configuration parameters and sets up internal variables according to the JDE21 algorithm.
+        # Args:
+        - config (object): Configuration object containing algorithm parameters.
+            - The Attributes needed for the JDE21 optimizer in config are the following:
+                - maxFEs (int): Maximum number of function evaluations allowed. Default value depends on the type of the problem.
+                - n_logpoint (int): Number of log points for tracking progress. Default is 50.
+                - log_interval (int): Interval at which logs are recorded. Default is maxFEs // n_logpoint.
+                - full_meta_data (bool): Flag indicating whether to store complete solution history. Default is False.
+                - seed (int): Random seed for reproducibility. Used for initializing populations and control parameters.
+
+        # Attributes:
+        - __sNP (int): Size of the small population. Default is 10.
+        - __bNP (int): Size of the big population. Default is 160.
+        - __NP (int): Total population size. Default is 170.
+        - __tao1 (float): Parameter for mutation strategy. Default is 0.1.
+        - __tao2 (float): Parameter for crossover strategy. Default is 0.1.
+        - __Finit (float): Initial scaling factor. Default is 0.5.
+        - __CRinit (float): Initial crossover rate. Default is 0.9.
+        - __Fl_b (float): Lower bound for scaling factor in big population. Default is 0.1.
+        - __Fl_s (float): Lower bound for scaling factor in small population. Default is 0.17.
+        - __Fu (float): Upper bound for scaling factor. Default is 1.1.
+        - __CRl_b (float): Lower bound for crossover rate in big population. Default is 0.0.
+        - __CRl_s (float): Lower bound for crossover rate in small population. Default is 0.1.
+        - __CRu_b (float): Upper bound for crossover rate in big population. Default is 1.1.
+        - __CRu_s (float): Upper bound for crossover rate in small population. Default is 0.8.
+        # Notes:
+        The meaning and usage of the parameters are based on the JDE21 paper. This constructor prepares all necessary internal state for running the JDE21 optimization algorithm.
+        """
+        
         super(JDE21, self).__init__(config)
         self.__sNP = 10       # size of small population
         self.__bNP = 160      # size of big population
@@ -90,19 +76,59 @@ class JDE21(Basic_Optimizer):
         self.full_meta_data = config.full_meta_data
         
     def __str__(self):
+        """
+        Returns the string representation of the JDE21 class.
+        # Returns:
+        - str: The string 'JDE21'.
+        """
+        
         return 'JDE21'
     # check whether the optimization stuck(global best doesn't improve for a while)
     def __prevecEnakih(self, cost, best):
+        """
+        # Introduction
+        Determines if there are a significant number of elements in `cost` that are approximately equal to `best`, based on specified tolerances.
+        # Args:
+        - cost (np.ndarray): Array of cost values.
+        - best (float): The reference value to compare against.
+        # Returns:
+        - bool: True if the number of elements in `cost` close to `best` exceeds both 2 and a fraction (`__MyEps`) of the total number of elements; otherwise, False.
+        """
+        
         eqs = len(cost[np.fabs(cost - best) < self.__eps])
         return eqs > 2 and eqs > len(cost) * self.__MyEps
 
     # crowding operation describe in JDE21
     def __crowding(self, group, vs):
+        """
+        # Introduction
+        Computes the index of the closest vector in `vs` to each vector in `group` based on squared Euclidean distance.
+        # Args:
+        - group (np.ndarray): An array representing a group of vectors, shape (NP, dim).
+        - vs (np.ndarray): An array of vectors to compare against, shape (NP, dim).
+        # Returns:
+        - np.ndarray: An array of indices indicating, for each vector in `group`, the index of the closest vector in `vs`.
+        # Notes:
+        - The function assumes that `group` and `vs` have the same shape.
+        """
+        
         NP, dim = vs.shape
         dist = np.sum(((group * np.ones((NP, NP, dim))).transpose(1, 0, 2) - vs) ** 2, -1).transpose()
         return np.argmin(dist, -1)
 
     def __evaluate(self, problem, Xs):
+        """
+        # Introduction
+        Evaluates the cost of a solution or set of solutions `Xs` for a given optimization `problem`, optionally normalizing by the problem's known optimum. Also stores meta-data if enabled.
+        # Args:
+        - problem:The problem object representing the optimization problem.
+        - Xs: The candidate solution(s) to be evaluated, typically as a NumPy array or compatible structure.
+        # Returns:
+        - cost: The evaluated cost(s) of the solution(s).
+        # Notes:
+        - If `self.full_meta_data` is `True`, the method appends the cost and solution to internal meta-data lists.
+        """
+        
         if problem.optimum is None:
             cost = problem.eval(Xs)
         else:
@@ -115,15 +141,67 @@ class JDE21(Basic_Optimizer):
         return cost
 
     def __sort(self):
+        """
+        # Introduction
+        Sorts the population and corresponding cost arrays in ascending order based on the cost values.
+        # Args:
+        None
+        # Returns:
+        None
+        # Side Effects:
+        - Updates `self.__cost` and `self.__population` so that both are sorted according to the ascending order of `self.__cost`.
+        """
+        
         # new index after sorting
         ind = np.argsort(self.__cost)
         self.__cost = self.__cost[ind]
         self.__population = self.__population[ind]
 
     def __reinitialize(self, size, problem):
+        """
+        # Introduction
+        Reinitializes a population of candidate solutions within the problem's bounds using uniform random sampling.
+        # Args:
+        - size (int): The number of candidate solutions to generate.
+        - problem (object): The problem object representing the optimization problem. Must have the following attributes:
+            - dim (int): Dimensionality of the problem.
+            - ub (float or np.ndarray): Upper bound(s) for each dimension.
+            - lb (float or np.ndarray): Lower bound(s) for each dimension.
+        # Returns:
+        - np.ndarray: An array of shape (size, problem.dim) containing the reinitialized candidate solutions.
+        # Notes:
+        The method uses the instance's random number generator (`self.rng`) to ensure reproducibility.
+        """
+        
         return self.rng.random((size, problem.dim)) * (problem.ub - problem.lb) + problem.ub
 
     def __init_population(self, problem):
+        """
+        # Introduction
+        Initializes the population and related attributes for the evolutionary optimization algorithm.
+        # Args:
+        - problem (object): The problem object representing the optimization problem.
+        # Side Effects:
+        - Initializes the population matrix with random values within the problem bounds.
+        - Evaluates the initial population and stores their costs.
+        - Sets up internal counters and parameters for the algorithm, such as population size, best cost, scaling factors, and crossover rates.
+        - Initializes logging variables for tracking optimization progress.
+        # Attributes Set:
+        - __sNP (int): Size of the small population.Default is 10.
+        - __bNP (int): Size of the big population. Default is 160.
+        - __NP (int): Total population size. Default is 170.
+        - __population (np.ndarray): The initial population matrix, shape (NP, problem.dim).
+        - __cost (np.ndarray): The cost of each individual in the population, shape (NP,).
+        - __FEs (int): Total number of function evaluations performed. Initialized to NP.
+        - __cbest (float): The best cost found so far.
+        - __cbest_id (int): The index of the best individual in the population.
+        - __F (np.ndarray): Scaling factors for each individual in the population, shape (NP,).
+        - __Cr (np.ndarray): Crossover rates for each individual in the population, shape (NP,).
+        - log_index (int): Index for logging progress, initialized to 1.
+        - cost (list): List to store the best cost found at each logging interval.
+        
+        """
+        
         self.__sNP = 10
         self.__bNP = 160
         self.__NP = self.__sNP + self.__bNP
@@ -141,6 +219,18 @@ class JDE21(Basic_Optimizer):
     def __update(self,
                  problem,       # the problem instance
                  ):
+        """
+        # Introduction
+        Performs one iteration of the population update for a differential evolution algorithm variant (likely NL-SHADE-RSP), including mutation, crossover, selection, population reinitialization, and population reduction. Handles both "big" and "small" subpopulations, manages best solution tracking, and logs progress.
+        # Args:
+        - problem: The problem object, which must provide at least the following attributes:
+            - dim (int): Dimensionality of the problem.
+            - lb (array-like): Lower bounds for each dimension.
+            - ub (array-like): Upper bounds for each dimension.
+            - optimum (optional): The known optimum value for early stopping (can be None).
+        # Returns:
+        - None
+        """
         # initialize population
         NP = self.__NP
         dim = problem.dim
@@ -324,6 +414,22 @@ class JDE21(Basic_Optimizer):
         #     return self.gbest <= 1e-8 
 
     def run_episode(self, problem):
+        """
+        # Introduction
+        Executes a single optimization episode for the given problem, managing population initialization, iterative updates, and result logging. Optionally collects and returns full meta-data for analysis.
+        # Args:
+        - problem (object): The optimization problem instance to be solved. Must provide necessary interfaces for population initialization and evaluation.
+        # Returns:
+        - dict: A dictionary containing:
+            - 'cost' (list): The cost history or best cost found during the episode.
+            - 'fes' (int): The number of function evaluations performed.
+            - 'metadata' (dict, optional): Contains 'X' (list of solutions) and 'Cost' (list of costs) if `full_meta_data` is enabled.
+        # Notes:
+        - The method resets and initializes the population at the start of each episode.
+        - Iteratively updates the population until the maximum number of function evaluations is reached.
+        - Logs the best solution and optionally collects detailed meta-data for further analysis.
+        """
+        
         if self.full_meta_data:
             self.meta_Cost = []
             self.meta_X = []
@@ -342,5 +448,4 @@ class JDE21(Basic_Optimizer):
         if self.full_meta_data:
             metadata = {'X':self.meta_X, 'Cost':self.meta_Cost}
             results['metadata'] = metadata
-        # 与agent一致，去除return，加上metadata
         return results

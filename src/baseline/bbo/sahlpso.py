@@ -9,33 +9,37 @@ class SAHLPSO(Basic_Optimizer):
     Self-Adaptive two roles hybrid learn-ing strategies-based particle swarm optimization.It uses exploration-role and exploitation-role learning strategies with self-adaptively updating parameters manner.
     # Original paper
     "[**Self-Adaptive two roles hybrid learning strategies-based particle swarm optimization**](https://www.sciencedirect.com/science/article/pii/S0020025521006988)." Information Sciences 578 (2021): 457-481.
-    # Official Implementation
-    None
-    # Args:
-    - config (object): Configuration object containing algorithm parameters such as `maxFEs`, 
-      `log_interval`, `full_meta_data`, and `n_logpoint`.
-    # Methods:
-    - __str__(): Returns the string representation of the optimizer.
-    - run_episode(problem): Executes one optimization run (episode) on the given problem.
-    # run_episode Args:
-    - problem (object): An optimization problem instance with attributes such as `dim`, `eval()`, 
-      and optionally `optimum`.
-    # run_episode Returns:
-    - dict: A dictionary containing:
-        - 'cost' (list): The best cost (objective value) found at each logging interval.
-        - 'fes' (int): The total number of function evaluations performed.
-        - 'metadata' (dict, optional): If `full_meta_data` is True, includes:
-            - 'X' (list): Population positions at each logging interval.
-            - 'Cost' (list): Population costs at each logging interval.
-    # Raises:
-    - None explicitly, but may raise exceptions from numpy or the problem's evaluation function.
-    # Notes:
-    - The optimizer supports population size reduction, self-adaptive crossover and learning step 
-      selection, and maintains historical best solutions for each particle.
-    - Logging and meta-data collection are controlled via the configuration object.
     """
     
     def __init__(self, config):
+        """
+        # Introduction
+        Initializes the SAHLPSO (Self-Adaptive Hybrid Learning Particle Swarm Optimization) algorithm with the provided configuration parameters.
+        # Args:
+            - config (object): Configuration object containing algorithm parameters.
+                - The Attributes needed for the SAHLPSO optimizer in config are the following:
+                    - maxFEs (int): Maximum number of function evaluations allowed.Default value depends on the type of the problem.
+                    - n_logpoint (int): Number of log points for tracking progress. Default is 50.
+                    - log_interval (int): Interval at which logs are recorded. Default is maxFEs // n_logpoint.
+                    - full_meta_data (bool): Flag indicating whether to store complete solution history. Default is False.
+                    - seed (int): Random seed for reproducibility. Used for initializing positions and velocities.
+        # Attributes:
+        - NP (int): Number of particles in the swarm (default: 40).
+        - lb (float): Lower bound for particle positions (default: -5).
+        - ub (float): Upper bound for particle positions (default: 5).
+        - v_max (float): Maximum velocity for particles (default: 1).
+        - H_cr (int): Number of crossover rates (default: 5).
+        - M_cr (list of float): List of crossover rates.
+        - H_ls (int): Number of local search strategies (default: 15).
+        - M_ls (range): Range of local search strategies.
+        - LP (int): Learning period (default: 5).
+        - Lg (float): Learning gain (default: 0.2).
+        - p (float): Probability parameter (default: 0.2).
+        - c1 (float): Cognitive acceleration coefficient (default: 1.49445).
+        - log_interval (int): Logging interval, taken from `config`.
+        - full_meta_data (bool): Flag indicating whether to store full meta data, taken from `config`.
+        """
+        
         super().__init__(config)
         self.config = config
         self.NP, self.maxFEs, self.lb, self.ub, self.v_max = 40, config.maxFEs, -5, 5, 1
@@ -51,9 +55,39 @@ class SAHLPSO(Basic_Optimizer):
         self.full_meta_data = config.full_meta_data
         
     def __str__(self):  
+        """
+        # Introduction
+        Returns the string representation of the SAHLPSO class.
+        # Returns:
+        - str: The string 'SAHLPSO'.
+        """
+        
         return 'SAHLPSO'
 
     def run_episode(self,problem):
+        """
+        # Introduction
+        Executes a single optimization episode using the Self-Adaptive History Learning Particle Swarm Optimization (SAHLPSO) algorithm on the provided problem instance. The method manages the population, velocity, and adaptive parameters, and logs the optimization progress.
+        # Args:
+        - problem (object): An optimization problem instance that must provide the following attributes and methods:
+            - `dim` (int): Dimensionality of the problem.
+            - `lb` (array-like): Lower bounds for each dimension.
+            - `ub` (array-like): Upper bounds for each dimension.
+            - `optimum` (float or None): Known optimum value for the problem (optional).
+            - `eval(X)` (callable): Function to evaluate the fitness of a population `X`.
+        # Returns:
+        - dict: A dictionary containing:
+            - 'cost' (list): The best cost (fitness) found at each logging interval.
+            - 'fes' (int): The total number of function evaluations performed.
+            - 'metadata' (dict, optional): If `self.full_meta_data` is True, includes:
+                - 'X' (list): History of population positions.
+                - 'Cost' (list): History of population costs.
+        # Notes:
+        - The method adapts crossover and learning strategies based on historical success rates.
+        - Population size is dynamically reduced during the run.
+        - Logging intervals and meta-data collection are controlled by the class configuration.
+        """
+        
         self.dim = problem.dim
         self.lb = problem.lb
         self.ub = problem.ub
