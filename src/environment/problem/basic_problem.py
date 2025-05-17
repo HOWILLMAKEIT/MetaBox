@@ -18,7 +18,7 @@ class Basic_Problem:
         # Raises:
         None
         """
-        
+
         self.T1=0
 
     def eval(self, x):
@@ -32,11 +32,11 @@ class Basic_Problem:
         # Raises:
         - None explicitly, but may raise exceptions from the underlying `func` or if input shapes are incompatible.
         """
-        
+
         """
         A general version of func() with adaptation to evaluate both individual and population.
         """
-        
+
         start=time.perf_counter()
 
         if not isinstance(x, np.ndarray):
@@ -74,7 +74,7 @@ class Basic_Problem_Torch(Basic_Problem):
         # Returns:
         None
         """
-        
+
         self.T1 = 0
 
     def eval(self, x):
@@ -93,11 +93,14 @@ class Basic_Problem_Torch(Basic_Problem):
         """
         A general version of func() with adaptation to evaluate both individual and population.
         """
-        
-        torch.set_default_device(x.device)
+
         start = time.perf_counter()
+        # Check if input is a torch tensor, convert if not
         if not isinstance(x, torch.Tensor):
             x = torch.tensor(x)
+            torch.set_default_device("cpu")
+        else:
+            torch.set_default_device(x.device)
         if x.dtype != torch.float64:
             x = x.type(torch.float64)
         if x.ndim == 1:  # x is a single individual
@@ -126,5 +129,5 @@ class Basic_Problem_Torch(Basic_Problem):
         # Raises:
         - NotImplementedError: Always raised to indicate that this method must be implemented by a subclass.
         """
-        
+
         raise NotImplementedError
