@@ -6,7 +6,7 @@ import numpy as np
 class GLEET_Optimizer(Learnable_Optimizer):
     """
     # Introduction
-    GLEET is a **G**eneralizable **L**earning-based **E**xploration-**E**xploitation **T**radeoff framework, which could explicitly control the exploration-exploitation tradeoff hyper-parameters of a given EC algorithm to solve a class of problems via reinforcement learning. 
+    GLEET is a **G**eneralizable **L**earning-based **E**xploration-**E**xploitation **T**radeoff framework, which could explicitly control the exploration-exploitation tradeoff hyper-parameters of a given EC algorithm to solve a class of problems via reinforcement learning.
     # Original paper
     "[**Auto-configuring Exploration-Exploitation Tradeoff in Evolutionary Computation via Deep Reinforcement Learning**](https://dl.acm.org/doi/abs/10.1145/3638529.3653996)." Proceedings of the Genetic and Evolutionary Computation Conference (2024).
     # Official Implementation
@@ -55,7 +55,7 @@ class GLEET_Optimizer(Learnable_Optimizer):
     # Raises:
     - AssertionError: If calculated rewards are negative in certain reward functions.
     """
-    
+
     def __init__(self, config):
         super().__init__(config)
         self.__config = config
@@ -99,7 +99,7 @@ class GLEET_Optimizer(Learnable_Optimizer):
         - The method uses the optimizer's random number generator (`self.rng`) and assumes the existence of attributes such as `ps` (particle size), `dim` (problem dimensionality), and `max_velocity`.
         - The `particles` dictionary stores all relevant information for each particle, including current and best positions, costs, velocities, and the global best.
         """
-        
+
         # randomly generate the position and velocity
         self.dim = problem.dim
         rand_pos = self.rng.uniform(low = problem.lb, high = problem.ub, size = (self.ps, self.dim))
@@ -107,6 +107,10 @@ class GLEET_Optimizer(Learnable_Optimizer):
 
         # get the initial cost
         c_cost = self.get_costs(rand_pos, problem)  # ps
+
+        # Convert PyTorch tensor to NumPy array if needed
+        if isinstance(c_cost, torch.Tensor):
+            c_cost = c_cost.detach().cpu().numpy()
 
         # find out the gbest_val
         gbest_val = np.min(c_cost)
@@ -136,7 +140,7 @@ class GLEET_Optimizer(Learnable_Optimizer):
         - The method assumes that the `self.particles` dictionary contains the keys: 'current_position', 'c_cost', 'pbest_position', 'pbest', 'gbest_position', and 'gbest_val'.
         - The concatenation is performed along the last axis for position-value pairs and along the first axis to combine all groups.
         """
-        
+
         cur_x = self.particles['current_position']
         cur_y = self.particles['c_cost']
         cur_xy = np.concatenate((cur_x, cur_y), axis = -1)
@@ -164,7 +168,7 @@ class GLEET_Optimizer(Learnable_Optimizer):
         - Optionally stores meta-data if configured.
         - Prepares features for exploration and exploitation tracking.
         """
-        
+
         self.fes = 0
         self.per_no_improve = np.zeros((self.ps,))
         self.max_velocity = 0.1 * (problem.ub - problem.lb)
@@ -217,7 +221,7 @@ class GLEET_Optimizer(Learnable_Optimizer):
         # Notes:
         - Increments the `fes` (function evaluation steps) counter by the number of positions evaluated.
         """
-        
+
         ps = position.shape[0]
         self.fes += ps
         if problem.optimum is None:
@@ -246,7 +250,7 @@ class GLEET_Optimizer(Learnable_Optimizer):
         - Handles division by zero and NaN values in cosine similarity calculation.
         - Assumes all required attributes (such as `self.particles`, `self.max_cost`, etc.) are properly initialized.
         """
-        
+
         max_step = self.max_fes // self.ps
         # cost cur
         fea0 = self.particles['c_cost'] / self.max_cost
@@ -284,7 +288,7 @@ class GLEET_Optimizer(Learnable_Optimizer):
         - Assumes `self.gbest_feature` is an array of shape (n_features,).
         - The concatenation is performed along the last axis.
         """
-        
+
         return np.concatenate((self.pbest_feature, self.gbest_feature[None, :].repeat(self.ps, axis = 0)), axis = -1)  # ps, 18
 
     # direct reward function
@@ -300,7 +304,7 @@ class GLEET_Optimizer(Learnable_Optimizer):
         # Raises:
         - AssertionError: If any computed reward is less than 0, indicating that the new global best is not better than the previous one.
         """
-        
+
         bonus_reward = (pre_gbest - new_gbest) / self.max_cost
         assert np.min(bonus_reward) >= 0, 'reward should be bigger than 0!'
         return bonus_reward
@@ -316,7 +320,7 @@ class GLEET_Optimizer(Learnable_Optimizer):
         # Returns:
         - int: Returns 1 if the new global best is better (i.e., less than) the previous global best, otherwise returns -1.
         """
-        
+
         if new_gbest < pre_gbest:
             reward = 1
         else:
@@ -336,7 +340,7 @@ class GLEET_Optimizer(Learnable_Optimizer):
         # Raises:
         - ZeroDivisionError: If `pre_gbest` is zero, as division by zero is not allowed.
         """
-        
+
         return (pre_gbest - new_gbest) / pre_gbest
 
     # triangle reward function
@@ -352,7 +356,7 @@ class GLEET_Optimizer(Learnable_Optimizer):
         # Raises:
         - AssertionError: If the computed reward is negative, indicating an unexpected calculation error.
         """
-        
+
         reward = 0
         if new_gbest < pre_gbest:
             p_t = (self.max_cost - pre_gbest) / self.max_cost
@@ -378,7 +382,7 @@ class GLEET_Optimizer(Learnable_Optimizer):
         # Raises:
         - None explicitly, but may raise exceptions if input shapes are inconsistent or if required attributes are missing from `problem`.
         """
-        
+
         is_end = False
 
         # record the gbest_val in the begining
@@ -421,6 +425,10 @@ class GLEET_Optimizer(Learnable_Optimizer):
 
         # calculate the new costs
         new_cost = self.get_costs(new_position, problem)
+
+        # Convert PyTorch tensor to NumPy array if needed
+        if isinstance(new_cost, torch.Tensor):
+            new_cost = new_cost.detach().cpu().numpy()
 
         # update particles
         filters = new_cost < self.particles['pbest']
