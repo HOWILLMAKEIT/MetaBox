@@ -2,15 +2,15 @@
 
   <img src="https://github.com/MetaEvo/MetaBox/blob/v2.0.0/docs/source/_static/MetaBOX-title.png" width="50%" alt="MetaBOX Logo">
   
-  <div style="margin-top: 15px; margin-bottom: 15px;">
-    <a href="https://proceedings.neurips.cc/paper_files/paper/2023/hash/232eee8ef411a0a316efa298d7be3c2b-Abstract-Datasets_and_Benchmarks.html"><img src="https://img.shields.io/badge/NeurIPS-2023-b31b1b.svg" alt="NeurIPS 2023"></a>
-  </div>
-  
-  <h2 style="font-size: 0.9em; font-weight: normal; line-height: 1.5;">
+  <h2 style="margin-top: 20px; font-size: 0.9em; font-weight: normal; line-height: 1.5;">
     Benchmarking Meta-Black-Box Optimization under<br>
     Diverse Optimization Scenarios with Efficiency and Flexibility
   </h2>
 
+  <div style="margin-top: 15px;">
+    <a href="https://proceedings.neurips.cc/paper_files/paper/2023/hash/232eee8ef411a0a316efa298d7be3c2b-Abstract-Datasets_and_Benchmarks.html"><img src="https://img.shields.io/badge/NeurIPS-2023-b31b1b.svg" alt="NeurIPS 2023"></a>
+  </div>
+  
 </div>
 
 
