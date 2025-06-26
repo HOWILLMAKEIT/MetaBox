@@ -15,12 +15,10 @@
 
 
 <div align="center">
-  <a href="https://arxiv.org/abs/2311.02708"><img src="https://img.shields.io/badge/arxiv-2311.02708-red" alt="arXiv"></a>
-  <a href="https://proceedings.neurips.cc/paper_files/paper/2023/hash/232eee8ef411a0a316efa298d7be3c2b-Abstract-Datasets_and_Benchmarks.html"><img src="https://img.shields.io/badge/NeurIPS-2023-b31b1b.svg" alt="NeurIPS 2023"></a>
-  <a href="https://github.com/metaevo/metabox"><img src="https://img.shields.io/github/stars/metaevo/metabox?style=social" alt="GitHub Stars"></a>
-  <a href="https://pypi.org/project/meta-box/"><img src="https://img.shields.io/pypi/v/meta-box?logo=python" alt="PyPI Version"></a>
-  <a href="https://pypi.org/project/meta-box/"><img src="https://img.shields.io/pypi/pyversions/meta-box?logo=python" alt="Python Version"></a>
-  <a href="https://metaevo.github.io/MetaBox/"><img src="https://img.shields.io/badge/readthedocs-docs-green?logo=readthedocs" alt="Documentation"></a>
+  <a href="https://nips.cc/virtual/2023/poster/73497"><img src="https://img.shields.io/badge/NeurIPS-2023-b31b1b.svg" alt="NeurIPS 2023"></a>
+  <a href="https://arxiv.org/abs/2505.17745"><img src="https://img.shields.io/badge/arxiv-2311.02708-red" alt="arXiv"></a>
+  <a href="https://pypi.org/project/metaevobox/"><img src="https://img.shields.io/pypi/v/meta-box?logo=python" alt="PyPI Version"></a>
+  <a href="https://metaboxdoc.readthedocs.io/en/stable/index.html"><img src="https://img.shields.io/badge/readthedocs-docs-green?logo=readthedocs" alt="Documentation"></a>
   </div>
 
 <h2 align="center" style="font-size: 1.2em; font-weight: normal; margin-top: 20px;">
