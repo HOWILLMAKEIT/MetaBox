@@ -13,9 +13,6 @@
 
 </div>
 
-<p align="center">
-  <strong>MetaBox-v1 has been accepted as an oral presentation at NeurIPS 2023!</strong>
-</p>
 
 **MetaBox-v1 has been accepted as an oral presentation at NeurIPS 2023!**
 
