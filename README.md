@@ -1,30 +1,67 @@
+好的，完全没问题。
+
+参考您提供的 `pypop` 项目徽章风格，其特点是：
+
+  * **样式统一**：大部分徽章采用的是默认的扁平样式（plastic style），而不是 `for-the-badge` 的大方块样式。
+  * **颜色和 Logo 清晰**：为每个徽章精心挑选了品牌颜色和 Logo，辨识度很高。
+  * **分类清晰**：通过换行将不同类别的徽章（如论文、包信息、平台、工具等）进行了分组。
+
+我将**保留您现有的全部徽章**，并按照 `pypop` 的风格对它们进行重新设计和排版，使其更加专业和美观。
+
+-----
+
+### 全新徽章区域预览
+
+下面是为您重新设计和排版后的徽章区域，您可以直接复制下方的**完整 `README.md` 源码**。
+
+\<div align="center"\>
+\<a href="[https://nips.cc/virtual/2023/poster/73497](https://nips.cc/virtual/2023/poster/73497)"\>\<img src="[https://img.shields.io/badge/NeurIPS-2023-9cf?logo=files\&logoColor=white](https://www.google.com/url?sa=E&source=gmail&q=https://img.shields.io/badge/NeurIPS-2023-9cf?logo=files%26logoColor=white)" alt="NeurIPS 2023"\>\</a\>
+\<a href="[https://arxiv.org/abs/2505.17745](https://arxiv.org/abs/2505.17745)"\>\<img src="[https://img.shields.io/badge/arXiv-2311.02708-b31b1b?logo=arxiv\&logoColor=white](https://www.google.com/url?sa=E&source=gmail&q=https://img.shields.io/badge/arXiv-2311.02708-b31b1b?logo=arxiv%26logoColor=white)" alt="arXiv"\>\</a\>
+\<a href="[https://metaboxdoc.readthedocs.io/en/stable/index.html](https://metaboxdoc.readthedocs.io/en/stable/index.html)"\>\<img src="[https://img.shields.io/readthedocs/metaboxdoc?logo=read-the-docs\&logoColor=white](https://www.google.com/url?sa=E&source=gmail&q=https://img.shields.io/readthedocs/metaboxdoc?logo=read-the-docs%26logoColor=white)" alt="Documentation"\>\</a\>
+\<a href="[https://github.com/metaevo/metabox](https://www.google.com/url?sa=E&source=gmail&q=https://github.com/metaevo/metabox)"\>\<img src="[https://img.shields.io/github/stars/metaevo/metabox?style=social](https://www.google.com/url?sa=E&source=gmail&q=https://img.shields.io/github/stars/metaevo/metabox?style=social)" alt="GitHub Stars"\>\</a\>
+\<a href="[https://visitorbadge.io/status?path=https%3A%2F%2Fgithub.com%2Fmetaevo%2Fmetabox](https://visitorbadge.io/status?path=https%3A%2F%2Fgithub.com%2Fmetaevo%2Fmetabox)"\>\<img src="[https://api.visitorbadge.io/api/visitors?path=https%3A%2F%2Fgithub.com%2Fmetaevo%2Fmetabox\&label=visitors\&labelColor=555555\&countColor=%23263759](https://www.google.com/url?sa=E&source=gmail&q=https://api.visitorbadge.io/api/visitors?path=https%3A%2F%2Fgithub.com%2Fmetaevo%2Fmetabox%26label=visitors%26labelColor=555555%26countColor=%23263759)" alt="Visitors"/\>\</a\>
+\<br/\>
+\<a href="[https://pypi.org/project/metaevobox/](https://pypi.org/project/metaevobox/)"\>\<img src="[https://img.shields.io/pypi/v/metaevobox?logo=pypi\&label=PyPI](https://www.google.com/url?sa=E&source=gmail&q=https://img.shields.io/pypi/v/metaevobox?logo=pypi%26label=PyPI)" alt="PyPI Version"\>\</a\>
+\<a href="[https://pypi.org/project/metaevobox/](https://pypi.org/project/metaevobox/)"\>\<img src="[https://img.shields.io/pypi/pyversions/metaevobox?logo=python\&labelColor=306998](https://www.google.com/url?sa=E&source=gmail&q=https://img.shields.io/pypi/pyversions/metaevobox?logo=python%26labelColor=306998)" alt="Python Version"\>\</a\>
+\<a href="[https://pypi.org/project/metaevobox/](https://pypi.org/project/metaevobox/)"\>\<img src="[https://static.pepy.tech/badge/metaevobox/month?logo=pypi](https://www.google.com/url?sa=E&source=gmail&q=https://static.pepy.tech/badge/metaevobox/month?logo=pypi)" alt="PyPI Downloads"\>\</a\>
+\<a href="[https://qm.qq.com/q/vTPvoMUGAw](https://qm.qq.com/q/vTPvoMUGAw)"\>\<img src="[https://img.shields.io/badge/QQ%20Group-297969717-07C160?logo=tencent-qq\&logoColor=white](https://www.google.com/url?sa=E&source=gmail&q=https://img.shields.io/badge/QQ%20Group-297969717-07C160?logo=tencent-qq%26logoColor=white)" alt="QQ Group"\>\</a\>
+\</div\>
+
+-----
+
+### 完整 `README.md` 源码
+
+请直接复制并替换您现有的 `README.md` 文件内容。
+
+```markdown
 <div align="center">
-  <picture>
-    <source media="(prefers-color-scheme: light)" srcset="https://github.com/MetaEvo/MetaBox/blob/v2.0.0/docs/source/_static/MetaBOX-title.png">
-    <img alt="MetaBox Logo" src="https://github.com/MetaEvo/MetaBox/blob/v2.0.0/docs/source/_static/MetaBOX-title.png" width="600px">
-  </picture>
+  <picture>
+    <source media="(prefers-color-scheme: light)" srcset="https://github.com/MetaEvo/MetaBox/blob/v2.0.0/docs/source/_static/MetaBOX-title.png">
+    <source media="(prefers-color-scheme: dark)" srcset="https://github.com/MetaEvo/MetaBox/blob/v2.0.0/docs/source/_static/MetaBOX-title.png">
+    <img alt="MetaBox Logo" src="https://github.com/MetaEvo/MetaBox/blob/v2.0.0/docs/source/_static/MetaBOX-title.png" width="600px">
+  </picture>
 </div>
 
 <p align="center">
-  <img src="https://via.placeholder.com/220x150.gif?text=Your+Result+1" alt="Result 1 Demo" height="150">
-  &nbsp;&nbsp;&nbsp;&nbsp;
-  <img src="https://via.placeholder.com/220x150.gif?text=Your+Result+2" alt="Result 2 Demo" height="150">
-  &nbsp;&nbsp;&nbsp;&nbsp;
-  <img src="https://via.placeholder.com/220x150.gif?text=Your+Result+3" alt="Result 3 Demo" height="150">
+  <img src="https://via.placeholder.com/220x150.gif?text=Your+Result+1" alt="Result 1 Demo" height="150">
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="https://via.placeholder.com/220x150.gif?text=Your+Result+2" alt="Result 2 Demo" height="150">
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="https://via.placeholder.com/220x150.gif?text=Your+Result+3" alt="Result 3 Demo" height="150">
 </p>
 
-
 <div align="center">
-  <a href="https://nips.cc/virtual/2023/poster/73497"><img src="https://img.shields.io/badge/NeurIPS-2023-b31b1b.svg" alt="NeurIPS 2023"></a>
-  <a href="https://arxiv.org/abs/2505.17745"><img src="https://img.shields.io/badge/arxiv-2311.02708-red" alt="arXiv"></a>
-  <a href="https://pypi.org/project/metaevobox/"><img src="https://img.shields.io/pypi/v/metaevobox?logo=python" alt="PyPI Version"></a>
-  <a href="https://pypi.org/project/metaevobox/"><img src="https://img.shields.io/pypi/dm/metaevobox?color=blue&logo=pypi&style=for-the-badge" alt="PyPI Downloads"></a>
-  <a href="https://visitorbadge.io/status?path=https%3A%2F%2Fgithub.com%2Fmetaevo%2Fmetabox"><img src="https://api.visitorbadge.io/api/visitors?path=https%3A%2F%2Fgithub.com%2Fmetaevo%2Fmetabox&label=visitors&countColor=%23263759&style=for-the-badge" alt="Visitors"/></a>
-  <a href="https://metaboxdoc.readthedocs.io/en/stable/index.html"><img src="https://img.shields.io/badge/readthedocs-docs-green?logo=readthedocs" alt="Documentation"></a>
-  
-  <a href="https://qm.qq.com/q/vTPvoMUGAw"><img src="https://img.shields.io/badge/QQ%20Group-297969717-blue.svg?logo=tencent-qq&style=for-the-badge" alt="QQ Group"></a>
-
-  </div>
+  <a href="https://nips.cc/virtual/2023/poster/73497"><img src="https://img.shields.io/badge/NeurIPS-2023-9cf?logo=files&logoColor=white" alt="NeurIPS 2023"></a>
+  <a href="https://arxiv.org/abs/2505.17745"><img src="https://img.shields.io/badge/arXiv-2311.02708-b31b1b?logo=arxiv&logoColor=white" alt="arXiv"></a>
+  <a href="https://metaboxdoc.readthedocs.io/en/stable/index.html"><img src="https://img.shields.io/readthedocs/metaboxdoc?logo=read-the-docs&logoColor=white" alt="Documentation"></a>
+  <a href="https://github.com/metaevo/metabox"><img src="https://img.shields.io/github/stars/metaevo/metabox?style=social" alt="GitHub Stars"></a>
+  <a href="https://visitorbadge.io/status?path=https%3A%2F%2Fgithub.com%2Fmetaevo%2Fmetabox"><img src="https://api.visitorbadge.io/api/visitors?path=https%3A%2F%2Fgithub.com%2Fmetaevo%2Fmetabox&label=visitors&labelColor=555555&countColor=%23263759" alt="Visitors"/></a>
+  <br/>
+  <a href="https://pypi.org/project/metaevobox/"><img src="https://img.shields.io/pypi/v/metaevobox?logo=pypi&label=PyPI" alt="PyPI Version"></a>
+  <a href="https://pypi.org/project/metaevobox/"><img src="https://img.shields.io/pypi/pyversions/metaevobox?logo=python&labelColor=306998" alt="Python Version"></a>
+  <a href="https://pypi.org/project/metaevobox/"><img src="https://static.pepy.tech/badge/metaevobox/month?logo=pypi" alt="PyPI Downloads"></a>
+  <a href="https://qm.qq.com/q/vTPvoMUGAw"><img src="https://img.shields.io/badge/QQ%20Group-297969717-07C160?logo=tencent-qq&logoColor=white" alt="QQ Group"></a>
+</div>
 
 <h2 align="center" style="font-size: 1.2em; font-weight: normal; margin-top: 20px;">
   Benchmarking Meta-Black-Box Optimization under<br>
