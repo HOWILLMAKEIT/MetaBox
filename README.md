@@ -1,17 +1,37 @@
 <div align="center">
-
-  <img src="https://github.com/MetaEvo/MetaBox/blob/v2.0.0/docs/source/_static/MetaBOX-title.png" width="50%" alt="MetaBOX Logo">
-  
-  <h2 style="margin-top: 20px; font-size: 0.9em; font-weight: normal; line-height: 1.5;">
-    Benchmarking Meta-Black-Box Optimization under<br>
-    Diverse Optimization Scenarios with Efficiency and Flexibility
-  </h2>
-
-  <div style="margin-top: 15px;">
-    <a href="https://proceedings.neurips.cc/paper_files/paper/2023/hash/232eee8ef411a0a316efa298d7be3c2b-Abstract-Datasets_and_Benchmarks.html"><img src="https://img.shields.io/badge/NeurIPS-2023-b31b1b.svg" alt="NeurIPS 2023"></a>
-  </div>
-  
+  <picture>
+    <source media="(prefers-color-scheme: light)" srcset="https://github.com/MetaEvo/MetaBox/blob/v2.0.0/docs/source/_static/MetaBOX-title.png">
+    <img alt="MetaBox Logo" src="https://github.com/MetaEvo/MetaBox/blob/v2.0.0/docs/source/_static/MetaBOX-title.png" width="600px">
+  </picture>
 </div>
+
+<p align="center">
+  <img src="https://via.placeholder.com/220x150.gif?text=Your+Result+1" alt="Result 1 Demo" height="150">
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="https://via.placeholder.com/220x150.gif?text=Your+Result+2" alt="Result 2 Demo" height="150">
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="https://via.placeholder.com/220x150.gif?text=Your+Result+3" alt="Result 3 Demo" height="150">
+</p>
+
+
+<div align="center">
+  <a href="https://arxiv.org/abs/2311.02708"><img src="https://img.shields.io/badge/arxiv-2311.02708-red" alt="arXiv"></a>
+  <a href="https://proceedings.neurips.cc/paper_files/paper/2023/hash/232eee8ef411a0a316efa298d7be3c2b-Abstract-Datasets_and_Benchmarks.html"><img src="https://img.shields.io/badge/NeurIPS-2023-b31b1b.svg" alt="NeurIPS 2023"></a>
+  <a href="https://github.com/metaevo/metabox"><img src="https://img.shields.io/github/stars/metaevo/metabox?style=social" alt="GitHub Stars"></a>
+  <a href="https://pypi.org/project/meta-box/"><img src="https://img.shields.io/pypi/v/meta-box?logo=python" alt="PyPI Version"></a>
+  <a href="https://pypi.org/project/meta-box/"><img src="https://img.shields.io/pypi/pyversions/meta-box?logo=python" alt="Python Version"></a>
+  <a href="https://metaevo.github.io/MetaBox/"><img src="https://img.shields.io/badge/readthedocs-docs-green?logo=readthedocs" alt="Documentation"></a>
+  </div>
+
+<h2 align="center" style="font-size: 1.2em; font-weight: normal; margin-top: 20px;">
+  Benchmarking Meta-Black-Box Optimization under<br>
+  Diverse Optimization Scenarios with Efficiency and Flexibility
+</h2>
+
+<p align="center">
+  <a href="./README_EN.md"><img src="https://img.shields.io/badge/English-f6f5f4" alt="English README"></a>
+  <a href="./README.md"><img src="https://img.shields.io/badge/中文-f6f5f4" alt="中文 README"></a>
+</p>
 
 
 **MetaBox-v1 has been accepted as an oral presentation at NeurIPS 2023!**
