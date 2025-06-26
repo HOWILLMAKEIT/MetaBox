@@ -1,7 +1,7 @@
 <div align="center">
+  <img src="https://github.com/MetaEvo/MetaBox/blob/v2.0.0/docs/source/_static/MetaBOX-title.png" width="50%">
   <a href="https://proceedings.neurips.cc/paper_files/paper/2023/hash/232eee8ef411a0a316efa298d7be3c2b-Abstract-Datasets_and_Benchmarks.html"><img src="https://img.shields.io/badge/NeurIPS-2023-b31b1b.svg" alt="NeurIPS 2023"></a>
   <br><br>
-  <img src="https://github.com/MetaEvo/MetaBox/blob/v2.0.0/docs/source/_static/MetaBOX-title.png" width="50%">
 </div>
 
 <h2 align="center">
