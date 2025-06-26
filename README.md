@@ -18,13 +18,11 @@
   <a href="https://nips.cc/virtual/2023/poster/73497"><img src="https://img.shields.io/badge/NeurIPS-2023-9cf?logo=files&logoColor=white" alt="NeurIPS 2023"></a>
   <a href="https://arxiv.org/abs/2505.17745"><img src="https://img.shields.io/badge/arXiv-2311.02708-b31b1b?logo=arxiv&logoColor=white" alt="arXiv"></a>
   <a href="https://metaboxdoc.readthedocs.io/en/stable/index.html"><img src="https://img.shields.io/readthedocs/metaboxdoc?logo=read-the-docs&logoColor=white" alt="Documentation"></a>
-  <a href="https://github.com/metaevo/metabox"><img src="https://img.shields.io/github/stars/metaevo/metabox?style=social" alt="GitHub Stars"></a>
   <a href="https://visitorbadge.io/status?path=https%3A%2F%2Fgithub.com%2Fmetaevo%2Fmetabox"><img src="https://api.visitorbadge.io/api/visitors?path=https%3A%2F%2Fgithub.com%2Fmetaevo%2Fmetabox&label=visitors&labelColor=555555&countColor=%23263759" alt="Visitors"/></a>
   <br/>
   <a href="https://pypi.org/project/metaevobox/"><img src="https://img.shields.io/pypi/v/metaevobox?logo=pypi&label=PyPI" alt="PyPI Version"></a>
-  <a href="https://pypi.org/project/metaevobox/"><img src="https://img.shields.io/pypi/pyversions/metaevobox?logo=python&labelColor=306998" alt="Python Version"></a>
   <a href="https://pypi.org/project/metaevobox/"><img src="https://static.pepy.tech/badge/metaevobox/month?logo=pypi" alt="PyPI Downloads"></a>
-  <a href="https://qm.qq.com/q/vTPvoMUGAw"><img src="https://img.shields.io/badge/QQ%20Group-297969717-07C160?logo=tencent-qq&logoColor=white" alt="QQ Group"></a>
+  <a href="https://qm.qq.com/q/vTPvoMUGAw"><img src="https://img.shields.io/badge/QQ%20Group-952185139-07C160?logo=tencent-qq&logoColor=white" alt="QQ Group"></a>
 </div>
 
 <h2 align="center" style="font-size: 1.2em; font-weight: normal; margin-top: 20px;">
