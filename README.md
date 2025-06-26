@@ -28,12 +28,6 @@
   Diverse Optimization Scenarios with Efficiency and Flexibility
 </h2>
 
-<p align="center">
-  <a href="./README_EN.md"><img src="https://img.shields.io/badge/English-f6f5f4" alt="English README"></a>
-  <a href="./README.md"><img src="https://img.shields.io/badge/中文-f6f5f4" alt="中文 README"></a>
-</p>
-
-
 **MetaBox-v1 has been accepted as an oral presentation at NeurIPS 2023!**
 
 😀[Online Documentation](https://metaboxdoc.readthedocs.io/en/stable/index.html) is here, you can get started quickly！😀
