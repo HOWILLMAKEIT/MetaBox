@@ -18,7 +18,12 @@
   <a href="https://nips.cc/virtual/2023/poster/73497"><img src="https://img.shields.io/badge/NeurIPS-2023-b31b1b.svg" alt="NeurIPS 2023"></a>
   <a href="https://arxiv.org/abs/2505.17745"><img src="https://img.shields.io/badge/arxiv-2311.02708-red" alt="arXiv"></a>
   <a href="https://pypi.org/project/metaevobox/"><img src="https://img.shields.io/pypi/v/metaevobox?logo=python" alt="PyPI Version"></a>
+  <a href="https://pypi.org/project/metaevobox/"><img src="https://img.shields.io/pypi/dm/metaevobox?color=blue&logo=pypi&style=for-the-badge" alt="PyPI Downloads"></a>
+  <a href="https://visitorbadge.io/status?path=https%3A%2F%2Fgithub.com%2Fmetaevo%2Fmetabox"><img src="https://api.visitorbadge.io/api/visitors?path=https%3A%2F%2Fgithub.com%2Fmetaevo%2Fmetabox&label=visitors&countColor=%23263759&style=for-the-badge" alt="Visitors"/></a>
   <a href="https://metaboxdoc.readthedocs.io/en/stable/index.html"><img src="https://img.shields.io/badge/readthedocs-docs-green?logo=readthedocs" alt="Documentation"></a>
+  
+  <a href="https://qm.qq.com/q/vTPvoMUGAw"><img src="https://img.shields.io/badge/QQ%20Group-297969717-blue.svg?logo=tencent-qq&style=for-the-badge" alt="QQ Group"></a>
+
   </div>
 
 <h2 align="center" style="font-size: 1.2em; font-weight: normal; margin-top: 20px;">
