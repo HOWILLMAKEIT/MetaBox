@@ -21,8 +21,10 @@
   Diverse Optimization Scenarios with Efficiency and Flexibility
 </h2>
 
-**MetaBox-v1 has been accepted as an oral presentation at NeurIPS 2023!**
-
+<a href="https://nips.cc/virtual/2023/poster/73497" style="text-decoration: none; color: inherit;">
+    <img src="https://img.shields.io/badge/NeurIPS-2023-b31b1b?logo=files&logoColor=white" alt="NeurIPS 2023" style="vertical-align:middle;">
+    <strong style="vertical-align:middle; margin-left: 5px;">MetaBox-v1 has been accepted as an oral presentation at NeurIPS 2023!</strong>
+</a>
 😀[Online Documentation](https://metaboxdoc.readthedocs.io/en/stable/index.html) is here, you can get started quickly！😀
 
 <div align="center">
